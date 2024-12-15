@@ -1,0 +1,3 @@
+{
+  "extends": "@vimmer/typescript-config/base.json"
+}
