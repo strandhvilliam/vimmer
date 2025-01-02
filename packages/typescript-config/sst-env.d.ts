@@ -2,13 +2,17 @@
 /* tslint:disable */
 /* eslint-disable */
 /* deno-fmt-ignore-file */
-import 'sst'
+import "sst"
 export {}
-declare module 'sst' {
+declare module "sst" {
   export interface Resource {
-    Web: {
-      type: 'sst.aws.Nextjs'
-      url: string
+    "ProcessPhotoQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
+    }
+    "SubmissionBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
     }
   }
 }

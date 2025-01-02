@@ -12,11 +12,16 @@
     "server-only": "^0.0.1"
   },
   "devDependencies": {
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "@vimmer/typescript-config": "workspace:*",
+    "@vimmer/eslint-config": "workspace:*"
   },
   "exports": {
-    "./server": "./src/server.ts",
-    "./client": "./src/client.ts",
-    "./queries": "./src/queries.ts"
+    "./types": "./src/types/index.ts",
+    "./server": "./src/clients/server.ts",
+    "./browser": "./src/clients/browser.ts",
+    "./lambda": "./src/clients/lambda.ts",
+    "./queries": "./src/queries.ts",
+    "./mutations": "./src/mutations.ts"
   }
 }

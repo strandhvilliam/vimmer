@@ -1,0 +1,17 @@
+{
+  "name": "@vimmer/photo-processor",
+  "module": "index.ts",
+  "type": "module",
+  "dependencies": {
+    "@vimmer/supabase": "workspace:*",
+    "exifr": "^7.1.3"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@vimmer/typescript-config": "workspace:*",
+    "@vimmer/eslint-config": "workspace:*"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

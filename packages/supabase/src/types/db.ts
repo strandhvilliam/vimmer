@@ -9,6 +9,51 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      competitions: {
+        Row: {
+          created_at: string
+          domain: string
+          id: number
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: number
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: number
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      demologs: {
+        Row: {
+          created_at: string
+          id: number
+          message: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          message: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          message?: string
+          type?: string
+        }
+        Relationships: []
+      }
       participants: {
         Row: {
           created_at: string
@@ -38,58 +83,25 @@ export type Database = {
       }
       submissions: {
         Row: {
-          captured_at: string | null
           created_at: string | null
-          failed_message: string | null
-          file_key: string | null
-          file_type: string | null
-          filename: string | null
+          file_key: string
           id: number
-          image_url: string | null
-          is_suspicious: boolean
-          metadata: Json | null
-          original_filename: string
           participant_id: number
-          suspicion_message: string | null
-          thumbnail_url: string | null
           updated_at: string | null
-          upload_status: number
         }
         Insert: {
-          captured_at?: string | null
           created_at?: string | null
-          failed_message?: string | null
-          file_key?: string | null
-          file_type?: string | null
-          filename?: string | null
+          file_key: string
           id?: number
-          image_url?: string | null
-          is_suspicious?: boolean
-          metadata?: Json | null
-          original_filename: string
           participant_id: number
-          suspicion_message?: string | null
-          thumbnail_url?: string | null
           updated_at?: string | null
-          upload_status?: number
         }
         Update: {
-          captured_at?: string | null
           created_at?: string | null
-          failed_message?: string | null
-          file_key?: string | null
-          file_type?: string | null
-          filename?: string | null
+          file_key?: string
           id?: number
-          image_url?: string | null
-          is_suspicious?: boolean
-          metadata?: Json | null
-          original_filename?: string
           participant_id?: number
-          suspicion_message?: string | null
-          thumbnail_url?: string | null
           updated_at?: string | null
-          upload_status?: number
         }
         Relationships: [
           {
