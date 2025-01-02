@@ -18,8 +18,8 @@ export default function RealtimeDemo() {
           {
             event: 'UPDATE',
             schema: 'public',
-            table: 'participants',
-            filter: 'id=eq.2',
+            table: 'submissions',
+            filter: 'participant_id=eq.2',
           },
           payload => {
             console.log('payload', payload)

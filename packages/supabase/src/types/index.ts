@@ -2,7 +2,7 @@ import {
   SupabaseClient as DBClient,
   RealtimeChannel,
 } from '@supabase/supabase-js'
-import { Database, Tables, TablesInsert } from './db'
+import { Database, Tables, TablesInsert, TablesUpdate } from './db'
 
 type ToCamelCase<S extends string> = S extends `${infer T}_${infer U}`
   ? `${T}${Capitalize<ToCamelCase<U>>}`
@@ -26,8 +26,17 @@ export * from './db'
 
 export type InsertParticipant = ToCamelCaseObject<TablesInsert<'participants'>>
 export type SelectParticipant = ToCamelCaseObject<Tables<'participants'>>
+export type UpdateParticipant = ToCamelCaseObject<TablesUpdate<'participants'>>
 
 export type InsertSubmission = ToCamelCaseObject<TablesInsert<'submissions'>>
 export type SelectSubmission = ToCamelCaseObject<Tables<'submissions'>>
+export type UpdateSubmission = ToCamelCaseObject<TablesUpdate<'submissions'>>
 
 export type InsertLog = ToCamelCaseObject<TablesInsert<'demologs'>>
+
+export type SelectSubmissionError = ToCamelCaseObject<
+  Tables<'submission_errors'>
+>
+export type InsertSubmissionError = ToCamelCaseObject<
+  TablesInsert<'submission_errors'>
+>

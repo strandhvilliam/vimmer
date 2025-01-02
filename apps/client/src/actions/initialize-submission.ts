@@ -54,13 +54,13 @@ export const initializeSubmission = actionClient
 
     const resp = await Promise.all(
       Array.from({ length: numberOfSubmissions }).map(async (_, index) => {
-        const { photoKey } = formatSubmissionKeys({
+        const { originalKey } = formatSubmissionKey({
           ref: participantRef,
           index,
           domain: competitionDomain,
         })
         const cmd = new PutObjectCommand({
-          Key: photoKey,
+          Key: originalKey,
           //TODO: Get Bucket name from sst resource
           Bucket: BUCKET_NAME,
         })
@@ -68,7 +68,7 @@ export const initializeSubmission = actionClient
 
         const dto: InsertSubmission = {
           participantId: participant.id,
-          fileKey: photoKey,
+          key: originalKey,
         }
         return { presignedUrl, dto }
       }),
@@ -91,9 +91,7 @@ export const initializeSubmission = actionClient
     }
 
     return resp.map(({ presignedUrl, dto }) => {
-      const submission = initializedSubmissions.find(
-        s => s.fileKey === dto.fileKey,
-      )
+      const submission = initializedSubmissions.find(s => s.key === dto.key)
       return {
         presignedUrl,
         submission,
@@ -101,7 +99,7 @@ export const initializeSubmission = actionClient
     })
   })
 
-function formatSubmissionKeys({
+function formatSubmissionKey({
   ref,
   index,
   domain,
@@ -115,8 +113,6 @@ function formatSubmissionKeys({
   const displayRef = isOnlyDigits ? trimmedRef.padStart(4, '0') : trimmedRef
   const displayIndex = (index + 1).toString().padStart(2, '0')
   const fileName = `${displayRef}_${displayIndex}.jpg`
-  const thumbnailFileName = `thumbnail_${fileName}`
-  const photoKey = `submissions/${domain}/${displayRef}/${displayIndex}/${fileName}`
-  const thumbnailKey = `submissions/${domain}/${displayRef}/${displayIndex}/${thumbnailFileName}`
-  return { photoKey, thumbnailKey }
+  const originalKey = `${domain}/original/${displayRef}/${displayIndex}/${fileName}`
+  return { originalKey }
 }

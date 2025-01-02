@@ -59,7 +59,6 @@ export type Database = {
           created_at: string
           email: string | null
           id: number
-          is_finished: boolean
           ref: string
           updated_at: string
         }
@@ -67,7 +66,6 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: number
-          is_finished?: boolean
           ref: string
           updated_at?: string
         }
@@ -75,32 +73,76 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: number
-          is_finished?: boolean
           ref?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      submission_errors: {
+        Row: {
+          context: Json | null
+          created_at: string
+          description: string | null
+          error_code: string
+          id: number
+          message: string
+          severity: string
+          submission_id: number | null
+          submission_key: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          description?: string | null
+          error_code: string
+          id?: number
+          message: string
+          severity?: string
+          submission_id?: number | null
+          submission_key?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          description?: string | null
+          error_code?: string
+          id?: number
+          message?: string
+          severity?: string
+          submission_id?: number | null
+          submission_key?: string | null
         }
         Relationships: []
       }
       submissions: {
         Row: {
           created_at: string | null
-          file_key: string
           id: number
+          original_key: string
           participant_id: number
+          preview_key: string | null
+          status: Database["public"]["Enums"]["upload_status"]
+          thumbnail_key: string | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
-          file_key: string
           id?: number
+          original_key: string
           participant_id: number
+          preview_key?: string | null
+          status?: Database["public"]["Enums"]["upload_status"]
+          thumbnail_key?: string | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
-          file_key?: string
           id?: number
+          original_key?: string
           participant_id?: number
+          preview_key?: string | null
+          status?: Database["public"]["Enums"]["upload_status"]
+          thumbnail_key?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -121,7 +163,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      upload_status: "initialized" | "processing" | "error" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
