@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      competition_class: {
+        Row: {
+          created_at: string
+          id: number
+          name: string
+          number_of_photos: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          name: string
+          number_of_photos: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          name?: string
+          number_of_photos?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       competitions: {
         Row: {
           created_at: string
@@ -54,26 +78,71 @@ export type Database = {
         }
         Relationships: []
       }
+      device_group: {
+        Row: {
+          created_at: string
+          id: number
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      marathons: {
+        Row: {
+          created_at: string
+          domain: string
+          id: number
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at: string
+          domain: string
+          id?: number
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: number
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       participants: {
         Row: {
           created_at: string
           email: string | null
           id: number
-          ref: string
+          reference: string
           updated_at: string
         }
         Insert: {
           created_at?: string
           email?: string | null
           id?: number
-          ref: string
+          reference: string
           updated_at?: string
         }
         Update: {
           created_at?: string
           email?: string | null
           id?: number
-          ref?: string
+          reference?: string
           updated_at?: string
         }
         Relationships: []
