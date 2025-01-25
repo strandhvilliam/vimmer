@@ -3,13 +3,16 @@
   "module": "index.ts",
   "type": "module",
   "exports": {
-    "./errors": "./src/errors.ts"
+    "./errors": "./src/errors.ts",
+    "./validator": "./src/submission-validator.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "exifr": "^7.1.3"
   }
 }
-
