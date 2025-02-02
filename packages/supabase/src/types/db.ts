@@ -9,10 +9,11 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      competition_class: {
+      competition_classes: {
         Row: {
           created_at: string
           id: number
+          marathon_id: number
           name: string
           number_of_photos: number
           updated_at: string | null
@@ -20,6 +21,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: number
+          marathon_id: number
           name: string
           number_of_photos: number
           updated_at?: string | null
@@ -27,35 +29,20 @@ export type Database = {
         Update: {
           created_at?: string
           id?: number
+          marathon_id?: number
           name?: string
           number_of_photos?: number
           updated_at?: string | null
         }
-        Relationships: []
-      }
-      competitions: {
-        Row: {
-          created_at: string
-          domain: string
-          id: number
-          name: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string
-          domain: string
-          id?: number
-          name: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string
-          domain?: string
-          id?: number
-          name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "competition_classes_marathon_id_fkey"
+            columns: ["marathon_id"]
+            isOneToOne: false
+            referencedRelation: "marathons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       demologs: {
         Row: {
@@ -78,26 +65,37 @@ export type Database = {
         }
         Relationships: []
       }
-      device_group: {
+      device_groups: {
         Row: {
           created_at: string
           id: number
+          marathon_id: number
           name: string
           updated_at: string | null
         }
         Insert: {
           created_at?: string
           id?: number
+          marathon_id: number
           name: string
           updated_at?: string | null
         }
         Update: {
           created_at?: string
           id?: number
+          marathon_id?: number
           name?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "device_groups_marathon_id_fkey"
+            columns: ["marathon_id"]
+            isOneToOne: false
+            referencedRelation: "marathons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       marathons: {
         Row: {
@@ -108,7 +106,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          created_at: string
+          created_at?: string
           domain: string
           id?: number
           name: string
@@ -128,24 +126,41 @@ export type Database = {
           created_at: string
           email: string | null
           id: number
+          marathon_id: number
           reference: string
+          status: string
           updated_at: string
+          upload_count: number
         }
         Insert: {
           created_at?: string
           email?: string | null
           id?: number
+          marathon_id: number
           reference: string
-          updated_at?: string
+          status?: string
+          updated_at: string
+          upload_count?: number
         }
         Update: {
           created_at?: string
           email?: string | null
           id?: number
+          marathon_id?: number
           reference?: string
+          status?: string
           updated_at?: string
+          upload_count?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "participants_marathon_id_fkey"
+            columns: ["marathon_id"]
+            isOneToOne: false
+            referencedRelation: "marathons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       submission_errors: {
         Row: {
@@ -185,9 +200,11 @@ export type Database = {
       }
       submissions: {
         Row: {
-          created_at: string | null
+          created_at: string
+          exif: Json | null
           id: number
-          original_key: string
+          image_key: string
+          marathon_id: number
           participant_id: number
           preview_key: string | null
           status: Database["public"]["Enums"]["upload_status"]
@@ -195,9 +212,11 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
+          exif?: Json | null
           id?: number
-          original_key: string
+          image_key: string
+          marathon_id: number
           participant_id: number
           preview_key?: string | null
           status?: Database["public"]["Enums"]["upload_status"]
@@ -205,9 +224,11 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
+          exif?: Json | null
           id?: number
-          original_key?: string
+          image_key?: string
+          marathon_id?: number
           participant_id?: number
           preview_key?: string | null
           status?: Database["public"]["Enums"]["upload_status"]
@@ -215,6 +236,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "submissions_marathon_id_fkey"
+            columns: ["marathon_id"]
+            isOneToOne: false
+            referencedRelation: "marathons"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "submissions_participant_id_fkey"
             columns: ["participant_id"]
@@ -224,12 +252,50 @@ export type Database = {
           },
         ]
       }
+      topics: {
+        Row: {
+          created_at: string
+          id: number
+          marathon_id: number
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          marathon_id: number
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          marathon_id?: number
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topics_marathon_id_fkey"
+            columns: ["marathon_id"]
+            isOneToOne: false
+            referencedRelation: "marathons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_upload_counter: {
+        Args: {
+          participant_id: number
+          total_expected: number
+        }
+        Returns: Json
+      }
     }
     Enums: {
       upload_status: "initialized" | "processing" | "error" | "completed"
