@@ -68,6 +68,7 @@ export type Database = {
       device_groups: {
         Row: {
           created_at: string
+          icon: string
           id: number
           marathon_id: number
           name: string
@@ -75,6 +76,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          icon?: string
           id?: number
           marathon_id: number
           name: string
@@ -82,6 +84,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          icon?: string
           id?: number
           marathon_id?: number
           name?: string
@@ -129,7 +132,7 @@ export type Database = {
           marathon_id: number
           reference: string
           status: string
-          updated_at: string
+          updated_at: string | null
           upload_count: number
         }
         Insert: {
@@ -139,7 +142,7 @@ export type Database = {
           marathon_id: number
           reference: string
           status?: string
-          updated_at: string
+          updated_at?: string | null
           upload_count?: number
         }
         Update: {
@@ -149,7 +152,7 @@ export type Database = {
           marathon_id?: number
           reference?: string
           status?: string
-          updated_at?: string
+          updated_at?: string | null
           upload_count?: number
         }
         Relationships: [

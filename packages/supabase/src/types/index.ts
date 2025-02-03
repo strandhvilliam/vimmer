@@ -8,21 +8,19 @@ import { ToCamelCaseObject } from "./helpers";
 export type SupabaseClient = DBClient<Database>;
 export type SupabaseRealtimeChannel = RealtimeChannel;
 
-export type Participant = ToCamelCaseObject<TablesInsert<"participants">>;
-export type SelectParticipant = ToCamelCaseObject<Tables<"participants">>;
+export type Participant = ToCamelCaseObject<Tables<"participants">>;
+export type InsertParticipant = ToCamelCaseObject<TablesInsert<"participants">>;
 export type UpdateParticipant = ToCamelCaseObject<TablesUpdate<"participants">>;
 
-export type Submission = ToCamelCaseObject<TablesInsert<"submissions">>;
-export type SelectSubmission = ToCamelCaseObject<Tables<"submissions">>;
+export type Submission = ToCamelCaseObject<Tables<"submissions">>;
+export type InsrtSubmission = ToCamelCaseObject<TablesInsert<"submissions">>;
 export type UpdateSubmission = ToCamelCaseObject<TablesUpdate<"submissions">>;
 
 export type Marathon = ToCamelCaseObject<Tables<"marathons">>;
 export type InsertMarathon = ToCamelCaseObject<TablesInsert<"marathons">>;
 export type UpdateMarathon = ToCamelCaseObject<TablesUpdate<"marathons">>;
 
-export type CompetitionClass = ToCamelCaseObject<
-  TablesInsert<"competition_classes">
->;
+export type CompetitionClass = ToCamelCaseObject<Tables<"competition_classes">>;
 export type InsertCompetitionClass = ToCamelCaseObject<
   TablesInsert<"competition_classes">
 >;
@@ -30,7 +28,7 @@ export type UpdateCompetitionClass = ToCamelCaseObject<
   TablesUpdate<"competition_classes">
 >;
 
-export type DeviceGroup = ToCamelCaseObject<TablesInsert<"device_groups">>;
+export type DeviceGroup = ToCamelCaseObject<Tables<"device_groups">>;
 export type InsertDeviceGroup = ToCamelCaseObject<
   TablesInsert<"device_groups">
 >;
@@ -38,7 +36,7 @@ export type UpdateDeviceGroup = ToCamelCaseObject<
   TablesUpdate<"device_groups">
 >;
 
-export type Topic = ToCamelCaseObject<TablesInsert<"topics">>;
+export type Topic = ToCamelCaseObject<Tables<"topics">>;
 export type InsertTopic = ToCamelCaseObject<TablesInsert<"topics">>;
 export type UpdateTopic = ToCamelCaseObject<TablesUpdate<"topics">>;
 
