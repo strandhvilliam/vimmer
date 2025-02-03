@@ -29,17 +29,8 @@ export const initializeParticipant = actionClient
       );
     }
 
-    const { data: participant, error: createError } = await createParticipant(
-      supabase,
-      {
-        reference: participantRef,
-      },
-    );
-    if (createError || null) {
-      throw new ActionError(
-        `Failed to create participant ${participantRef}`,
-        createError || new Error("Function returned null"),
-      );
-    }
+    const participant = await createParticipant(supabase, {
+      reference: participantRef,
+    });
     return participant;
   });

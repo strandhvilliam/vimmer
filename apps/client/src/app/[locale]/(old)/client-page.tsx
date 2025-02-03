@@ -1,21 +1,21 @@
 "use client";
 
-import { useChangeLocale } from "@/locales/client";
+import { useChangeLocale, useI18n } from "@/locales/client";
+import { Button } from "@vimmer/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@vimmer/ui/components/card";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@vimmer/ui/components/accordion";
-import { Button } from "@vimmer/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@vimmer/ui/components/card";
 import { ArrowRight, Globe } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
@@ -50,6 +50,7 @@ const competitionInfo: CompetitionInfo = {
 };
 
 export function LanguageSelectionPage() {
+  const t = useI18n();
   const changeLocale = useChangeLocale();
 
   return (
@@ -105,7 +106,7 @@ export function LanguageSelectionPage() {
         </CardContent>
 
         <CardFooter className="flex justify-center pt-6">
-          <Link href="/submission">
+          <Link href="/participant">
             <Button size="lg" className="w-full md:w-auto">
               Continue
               <ArrowRight className="ml-2 h-5 w-5" />

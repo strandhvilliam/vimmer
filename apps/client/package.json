@@ -14,6 +14,8 @@
     "@hookform/resolvers": "^3.9.1",
     "@vimmer/supabase": "workspace:*",
     "@vimmer/ui": "workspace:*",
+    "@vimmer/utils": "workspace:*",
+    "exifr": "^7.1.3",
     "geist": "^1.3.1",
     "lucide-react": "^0.473.0",
     "motion": "^11.18.2",

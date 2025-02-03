@@ -1,7 +1,10 @@
-import { connection } from "next/server";
+import { getMarathonWithConfigByDomain } from "@vimmer/supabase/queries";
 import { SubmissionClientPage } from "./client-page";
+import { createClient } from "@vimmer/supabase/server";
 
 export default async function SubmissionPage() {
-  await connection();
-  return <SubmissionClientPage />;
+  const domain = "dev0";
+  const supabase = await createClient();
+  const marathon = await getMarathonWithConfigByDomain(supabase, domain);
+  return <SubmissionClientPage marathon={marathon} />;
 }
