@@ -1,12 +1,7 @@
 "use client";
 
 import { useChangeLocale } from "@/locales/client";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@vimmer/ui/components/accordion";
+import { Marathon } from "@vimmer/supabase/types";
 import { Button } from "@vimmer/ui/components/button";
 import {
   Card,
@@ -19,37 +14,13 @@ import {
 import { ArrowRight, Globe } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-interface CompetitionInfo {
-  title: string;
-  welcomeMessage: string;
-  rules: Array<{ title: string; content: string }>;
+interface Props {
+  marathon: Marathon;
 }
 
-const competitionInfo: CompetitionInfo = {
-  title: "Marathon Championship 2025",
-  welcomeMessage:
-    "Welcome to the most exciting marathon event of the year! Choose your preferred language to continue.",
-  rules: [
-    {
-      title: "Registration Requirements",
-      content:
-        "Participants must be 18+ and provide valid identification. Medical clearance is required.",
-    },
-    {
-      title: "Race Day Rules",
-      content:
-        "Arrive 2 hours before start time. Wearing your official bib number is mandatory. No headphones allowed.",
-    },
-    {
-      title: "Course Guidelines",
-      content:
-        "Stay on marked course. Water stations every 5km. Medical support available throughout the route.",
-    },
-  ],
-};
-
-export function LanguageSelectionPage() {
+export function LanguageSelectionPage({ marathon }: Props) {
   const changeLocale = useChangeLocale();
 
   return (
@@ -63,10 +34,10 @@ export function LanguageSelectionPage() {
       <Card className="max-w-2xl mx-auto">
         <CardHeader className="space-y-4">
           <CardTitle className="text-3xl font-bold text-center">
-            {competitionInfo.title}
+            {marathon.name}
           </CardTitle>
           <CardDescription className="text-center text-lg">
-            {competitionInfo.welcomeMessage}
+            {marathon.domain}
           </CardDescription>
         </CardHeader>
 
@@ -92,16 +63,16 @@ export function LanguageSelectionPage() {
             </Button>
           </div>
 
-          <Accordion type="single" collapsible className="w-full">
-            {competitionInfo.rules.map((rule, index) => (
-              <AccordionItem key={index} value={`item-${index}`}>
-                <AccordionTrigger className="text-left">
-                  {rule.title}
-                </AccordionTrigger>
-                <AccordionContent>{rule.content}</AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+          {/* <Accordion type="single" collapsible className="w-full"> */}
+          {/*   {competitionInfo.rules.map((rule, index) => ( */}
+          {/*     <AccordionItem key={index} value={`item-${index}`}> */}
+          {/*       <AccordionTrigger className="text-left"> */}
+          {/*         {rule.title} */}
+          {/*       </AccordionTrigger> */}
+          {/*       <AccordionContent>{rule.content}</AccordionContent> */}
+          {/*     </AccordionItem> */}
+          {/*   ))} */}
+          {/* </Accordion> */}
         </CardContent>
 
         <CardFooter className="flex justify-center pt-6">
