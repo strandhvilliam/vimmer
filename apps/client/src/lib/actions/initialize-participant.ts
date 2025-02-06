@@ -1,14 +1,13 @@
 "use server";
-import { initParticipantSchema } from "@/lib/schemas/init-participant-schema";
+import { initializeParticipantSchema } from "@/lib/schemas/initialize-participant-schema";
 import { actionClient, ActionError } from "@/lib/safe-action";
 import { createParticipant } from "@vimmer/supabase/mutations";
 import { getParticipantByReference } from "@vimmer/supabase/queries";
 import { createClient } from "@vimmer/supabase/server";
-import { z } from "zod";
 import { returnValidationErrors } from "next-safe-action";
 
 export const initializeParticipant = actionClient
-  .schema(initParticipantSchema)
+  .schema(initializeParticipantSchema)
   .action(async ({ parsedInput: { participantRef, marathonId } }) => {
     const supabase = await createClient();
 
@@ -19,7 +18,7 @@ export const initializeParticipant = actionClient
     );
 
     if (existingParticipant !== null) {
-      returnValidationErrors(initParticipantSchema, {
+      returnValidationErrors(initializeParticipantSchema, {
         participantRef: {
           _errors: ["Participant already exists"],
         },
