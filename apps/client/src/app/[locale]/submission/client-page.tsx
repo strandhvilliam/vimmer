@@ -1,4 +1,10 @@
 "use client";
+import {
+  CompetitionClass,
+  DeviceGroup,
+  Marathon,
+  Topic,
+} from "@vimmer/supabase/types";
 import { CheckIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { parseAsInteger, useQueryState } from "nuqs";
@@ -7,15 +13,22 @@ import { AnimatedStepWrapper } from "./components/animated-step-wrapper";
 import { CompetitionClassSelection } from "./components/class-step";
 import { DeviceGroupSelection } from "./components/device-step";
 import ParticipantRegistration from "./components/participant-step";
-import { SubmitSubmissions } from "./components/submit-step";
-import { Marathon } from "@vimmer/supabase/types";
+import { UploadSubmissions } from "./components/upload-step";
 
-type MarathonWithData = Marathon & {
-  competitionClasses: CompetitionClass[];
-  deviceGroups: DeviceGroup[];
+export interface StepNavigationHandlers {
+  onNextStep?: () => void;
+  onPrevStep?: () => void;
+}
+
+type Props = {
+  marathon: Marathon & {
+    competitionClasses: CompetitionClass[];
+    deviceGroups: DeviceGroup[];
+    topics: Topic[];
+  };
 };
 
-export function SubmissionClientPage({ marathon }: { marathon: Marathon }) {
+export function SubmissionClientPage({ marathon }: Props) {
   const [step, setStep] = useQueryState(
     "s",
     parseAsInteger.withDefault(1).withOptions({ history: "push" }),
@@ -34,13 +47,21 @@ export function SubmissionClientPage({ marathon }: { marathon: Marathon }) {
     setStep(prevStep);
   };
 
+  const handleSetStep = (newStep: number) => {
+    setDirection(newStep > step ? 1 : -1);
+    setStep(newStep);
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-4">
-      <StepNavigator step={step} />
+      <StepNavigator handleSetStep={(s) => handleSetStep(s)} step={step} />
       <AnimatePresence initial={false} custom={direction} mode="wait">
         {step === 1 && (
           <AnimatedStepWrapper key="step1" direction={direction}>
-            <ParticipantRegistration onNextStep={handleNextStep} />
+            <ParticipantRegistration
+              marathonId={marathon.id}
+              onNextStep={handleNextStep}
+            />
           </AnimatedStepWrapper>
         )}
         {step === 2 && (
@@ -63,7 +84,12 @@ export function SubmissionClientPage({ marathon }: { marathon: Marathon }) {
         )}
         {step === 4 && (
           <AnimatedStepWrapper key="step4" direction={direction}>
-            <SubmitSubmissions onPrevStep={handlePrevStep} />
+            <UploadSubmissions
+              // add configuration from marathon
+              competitionClasses={marathon.competitionClasses}
+              topics={marathon.topics}
+              onPrevStep={handlePrevStep}
+            />
           </AnimatedStepWrapper>
         )}
       </AnimatePresence>
@@ -71,16 +97,23 @@ export function SubmissionClientPage({ marathon }: { marathon: Marathon }) {
   );
 }
 
-function StepNavigator({ step }: { step: number }) {
+function StepNavigator({
+  step,
+  handleSetStep,
+}: {
+  step: number;
+  handleSetStep: (s: number) => void;
+}) {
   return (
     <nav className="mb-8">
       <ol className="flex items-center justify-between">
         {[1, 2, 3, 4].map((stepNumber) => (
           <li
             key={stepNumber}
-            className={`flex items-center ${stepNumber !== 4 ? "flex-1" : ""}`}
+            className={`flex items-center ${stepNumber !== 4 ? "flex-1" : ""} `}
           >
             <motion.span
+              onClick={() => handleSetStep(stepNumber)}
               initial={false}
               animate={{
                 scale: step >= stepNumber ? 1.1 : 1,
@@ -91,7 +124,7 @@ function StepNavigator({ step }: { step: number }) {
                 color:
                   step >= stepNumber ? "hsl(0 0% 98%)" : "hsl(240 3.8% 46.1%)",
               }}
-              className="flex items-center justify-center w-8 h-8 rounded-full"
+              className="flex items-center justify-center w-8 h-8 rounded-full hover:cursor-pointer"
               transition={{ duration: 0.2 }}
             >
               {stepNumber < step ? <CheckIcon size={18} /> : stepNumber}
