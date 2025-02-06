@@ -74,6 +74,15 @@ export class SubmissionValidator {
       };
     });
 
+    ruleMap.set("same_device", (_, severity) => {
+      return {
+        name: "same_device",
+        validate: async (files) => this.validateSameDevice(files),
+        errorMessage: `All images must be taken from the same device`,
+        severity,
+      };
+    });
+
     ruleMap.set("allowed_file_types", (params, severity) => {
       const { extensions, mimeTypes } =
         params as RuleParams["allowed_file_types"];
@@ -202,6 +211,32 @@ export class SubmissionValidator {
         continue;
       }
       previousDateTime = exifDate;
+    }
+
+    return { invalidFiles };
+  }
+
+  private validateSameDevice(files: FileWithExif[]): {
+    invalidFiles: string[];
+  } {
+    const invalidFiles: string[] = [];
+    const devices = new Set<string>();
+    for (const { exif } of files) {
+      if (!exif.Make || !exif.Model) {
+        devices.add("Unknown");
+        break;
+      }
+
+      const device = exif.Make + exif.Model;
+      devices.add(device);
+    }
+
+    if (devices.size > 1) {
+      files.forEach(({ file }) => invalidFiles.push(file.name));
+    }
+
+    if (devices.size === 1 && devices.has("Unknown")) {
+      files.forEach(({ file }) => invalidFiles.push(file.name));
     }
 
     return { invalidFiles };
