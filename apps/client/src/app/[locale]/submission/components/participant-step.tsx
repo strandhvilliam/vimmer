@@ -1,133 +1,140 @@
+import { initializeParticipant } from "@/lib/actions/initialize-participant";
+import { initParticipantSchema } from "@/lib/schemas/init-participant-schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useHookFormActionErrorMapper } from "@next-safe-action/adapter-react-hook-form/hooks";
 import { Alert, AlertDescription } from "@vimmer/ui/components/alert";
 import { Button } from "@vimmer/ui/components/button";
 import {
-  Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@vimmer/ui/components/card";
+import { Form, FormItem } from "@vimmer/ui/components/form";
 import { Input } from "@vimmer/ui/components/input";
 import { AlertCircle, ArrowRight } from "lucide-react";
-import { parseAsString, useQueryState } from "nuqs";
-import { useState } from "react";
+import { useAction } from "next-safe-action/hooks";
+import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
+import { useForm } from "react-hook-form";
+import { StepNavigationHandlers } from "../client-page";
 
-interface ValidationError {
-  hasError: boolean;
-  message: string;
+interface Props extends StepNavigationHandlers {
+  marathonId: number;
 }
+
+const PARTICIPANT_REF_LENGTH = 4;
 
 export default function ParticipantRegistration({
   onNextStep,
-}: {
-  onNextStep?: () => void;
-  onPrevStep?: () => void;
-}) {
-  const [participantReference, setParticipantReference] = useQueryState(
+  marathonId,
+}: Props) {
+  const [participantRefQuery, setParticipantReference] = useQueryState(
     "pr",
     parseAsString.withDefault(""),
   );
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<ValidationError>({
-    hasError: false,
-    message: "",
+  const [participantId, setParticipantId] = useQueryState(
+    "pid",
+    parseAsInteger,
+  );
+
+  const action = useAction(initializeParticipant, {
+    onSuccess: async (result) => {
+      if (!result.data) {
+        return;
+      }
+      await Promise.all([
+        setParticipantId(result.data.id),
+        setParticipantReference(result.data.reference),
+      ]);
+      onNextStep?.();
+    },
+  });
+  const { hookFormValidationErrors } = useHookFormActionErrorMapper<
+    typeof initParticipantSchema
+  >(action.result.validationErrors, { joinBy: "\n" });
+  const form = useForm({
+    resolver: zodResolver(initParticipantSchema),
+    defaultValues: {
+      participantRef: participantRefQuery,
+      marathonId,
+    },
+    errors: hookFormValidationErrors,
+    mode: "onBlur",
+    reValidateMode: "onBlur",
   });
 
-  const validateParticipantNumber = (number: string | null): boolean => {
-    if (!number) {
-      setError({
-        hasError: true,
-        message: "Please enter a valid 6-digit participant number",
-      });
-      return false;
-    }
-    // Example validation - modify based on your actual participant number format
-    const isValidFormat = /^\d{6}$/.test(number);
-    if (!isValidFormat) {
-      setError({
-        hasError: true,
-        message: "Please enter a valid 6-digit participant number",
-      });
-      return false;
-    }
-    return true;
-  };
+  const disabledButton =
+    form.watch("participantRef")?.length !== PARTICIPANT_REF_LENGTH;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError({ hasError: false, message: "" });
+  const disabledInput = action.isPending || !!participantId;
 
-    if (!validateParticipantNumber(participantReference)) {
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      onNextStep?.();
-    } catch (_: unknown) {
-      setError({
-        hasError: true,
-        message: "Failed to verify participant number. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
   return (
-    <Card className="max-w-md mx-auto">
+    <div className="max-w-md mx-auto">
       <CardHeader className="space-y-4">
         <CardTitle className="text-2xl font-bold text-center">
           Enter Your Participant Number
         </CardTitle>
         <CardDescription className="text-center">
-          Please enter the 6-digit number from your registration confirmation
+          Please enter the {PARTICIPANT_REF_LENGTH}-digit number from your
+          registration confirmation
         </CardDescription>
       </CardHeader>
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(action.executeAsync)}
+          className="space-y-2"
+        >
+          <CardContent className="space-y-4">
+            <FormItem>
+              <Input
+                {...form.register("participantRef")}
+                type="text"
+                disabled={disabledInput}
+                placeholder={`Enter ${PARTICIPANT_REF_LENGTH}-digit number`}
+                className="text-center text-lg tracking-wider border-muted-foreground"
+                maxLength={PARTICIPANT_REF_LENGTH}
+              />
+            </FormItem>
+            {form.formState.errors.participantRef ? (
+              <Alert
+                variant="destructive"
+                className="flex items-center py-4 gap-4"
+              >
+                <div>
+                  <AlertCircle size={16} />
+                </div>
+                <AlertDescription>
+                  {form.formState.errors.participantRef.message}
+                </AlertDescription>
+              </Alert>
+            ) : null}
+          </CardContent>
 
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          {error.hasError && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error.message}</AlertDescription>
-            </Alert>
-          )}
-
-          <div className="space-y-2">
-            <Input
-              type="text"
-              placeholder="Enter 6-digit number"
-              value={participantReference}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, "").slice(0, 6);
-                setParticipantReference(value);
-                if (error.hasError) {
-                  setError({ hasError: false, message: "" });
-                }
-              }}
-              className="text-center text-lg tracking-wider"
-              maxLength={6}
-            />
-            <p className="text-sm text-muted-foreground text-center">
-              Example: 123456
-            </p>
-          </div>
-        </CardContent>
-
-        <CardFooter className="flex flex-col gap-4">
-          <Button
-            type="submit"
-            className="w-full"
-            size="lg"
-            disabled={isLoading || participantReference.length !== 6}
-          >
-            {isLoading ? "Verifying..." : "Continue"}
-            {!isLoading && <ArrowRight className="ml-2 h-5 w-5" />}
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
+          <CardFooter className="flex flex-col gap-4">
+            {participantId ? (
+              <Button
+                type="button"
+                className="w-full"
+                size="lg"
+                onClick={onNextStep}
+              >
+                Continue
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                className="w-full"
+                size="lg"
+                disabled={disabledButton}
+              >
+                {action.isPending ? "Verifying..." : "Continue"}
+                {!action.isPending && <ArrowRight className="ml-2 h-5 w-5" />}
+              </Button>
+            )}
+          </CardFooter>
+        </form>
+      </Form>
+    </div>
   );
 }

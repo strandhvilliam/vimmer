@@ -1,27 +1,20 @@
 "use client";
 
+import { CompetitionClass } from "@vimmer/supabase/types";
 import { Button } from "@vimmer/ui/components/button";
 import {
   Card,
-  CardContent,
-  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@vimmer/ui/components/card";
-import { on } from "events";
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2, Clock, Users } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useQueryState } from "nuqs";
-import { Marathon } from "../page";
+import { CheckCircle2 } from "lucide-react";
+import { parseAsInteger, useQueryState } from "nuqs";
+import { StepNavigationHandlers } from "../client-page";
 
-interface SubmissionNavigationProps {
-  onNextStep?: () => void;
-  onPrevStep?: () => void;
-}
-
-interface ClassSelectionClientProps extends SubmissionNavigationProps {
-  competitionClasses: Marathon["competitionClasses"];
+interface ClassSelectionClientProps extends StepNavigationHandlers {
+  competitionClasses: CompetitionClass[];
 }
 
 export function CompetitionClassSelection({
@@ -29,27 +22,10 @@ export function CompetitionClassSelection({
   onNextStep,
   onPrevStep,
 }: ClassSelectionClientProps) {
-  const router = useRouter();
-  const [selectedClass, setSelectedClass] = useQueryState("cc", {
-    defaultValue: "",
-  });
-
-  const handleContinue = () => {
-    if (selectedClass) {
-      onNextStep?.();
-    } else {
-      console.error("No class selected");
-    }
-  };
+  const [selectedClass, setSelectedClass] = useQueryState("cc", parseAsInteger);
 
   return (
-    <motion.div
-      className="max-w-4xl mx-auto space-y-8"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-    >
+    <div className="max-w-4xl mx-auto space-y-8">
       <div className="text-center">
         <h1 className="text-3xl font-bold mb-4">Choose Your Challenge</h1>
         <p className="text-muted-foreground">
@@ -57,15 +33,16 @@ export function CompetitionClassSelection({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="flex flex-wrap justify-center gap-6">
         {competitionClasses.map((competitionClass) => (
           <motion.div
             key={competitionClass.id}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            className="w-[300px]"
           >
             <Card
-              className={`cursor-pointer transition-colors ${
+              className={`cursor-pointer transition-colors h-full ${
                 selectedClass === competitionClass.id
                   ? "border-2 border-primary"
                   : "hover:border-primary/50"
@@ -79,41 +56,39 @@ export function CompetitionClassSelection({
                     <CheckCircle2 className="h-6 w-6 text-primary" />
                   )}
                 </CardTitle>
-                <CardDescription>
-                  Starts at {competitionClass.startTime}
-                </CardDescription>
+                <p className="text-sm text-muted-foreground">
+                  {competitionClass.numberOfPhotos} photos
+                </p>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <p>{competitionClass.description}</p>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    <span>{competitionClass.duration}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    <span>
-                      {competitionClass.participantCount} participants
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
+              <CardFooter className="mt-auto">
+                <span className="text-xs text-muted-foreground ml-auto">
+                  ID: {competitionClass.id}
+                </span>
+              </CardFooter>
             </Card>
           </motion.div>
         ))}
       </div>
 
-      <div className="flex justify-center">
+      <div className="w-full flex flex-col gap-4 items-center justify-center">
         <Button
           size="lg"
-          onClick={handleContinue}
+          onClick={onNextStep}
           disabled={!selectedClass}
-          className="min-w-[200px]"
+          className="w-[200px]"
         >
           Continue
-          <ArrowRight className="ml-2 h-5 w-5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="lg"
+          onClick={onPrevStep}
+          disabled={!selectedClass}
+          className="w-[200px]"
+        >
+          Back
         </Button>
       </div>
-    </motion.div>
+    </div>
   );
 }

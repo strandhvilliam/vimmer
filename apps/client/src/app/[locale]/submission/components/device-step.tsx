@@ -1,36 +1,22 @@
 "use client";
 
+import { DeviceGroup } from "@vimmer/supabase/types";
 import { Button } from "@vimmer/ui/components/button";
 import {
   Card,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@vimmer/ui/components/card";
 import { motion } from "framer-motion";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Camera,
-  CheckCircle2,
-  Smartphone,
-} from "lucide-react";
+import { Camera, CheckCircle2, Smartphone } from "lucide-react";
 import { parseAsInteger, useQueryState } from "nuqs";
-import { Marathon } from "../page";
+import { StepNavigationHandlers } from "../client-page";
 
-interface SubmissionNavigationProps {
-  onNextStep?: () => void;
-  onPrevStep?: () => void;
+interface DeviceGroupSelectionProps extends StepNavigationHandlers {
+  deviceGroups: DeviceGroup[];
 }
-
-interface DeviceGroupSelectionProps extends SubmissionNavigationProps {
-  deviceGroups: Marathon["deviceGroups"];
-}
-
-const DeviceIcons = {
-  smartphone: Smartphone,
-  camera: Camera,
-};
 
 export function DeviceGroupSelection({
   deviceGroups,
@@ -42,22 +28,17 @@ export function DeviceGroupSelection({
     parseAsInteger,
   );
 
-  const handleContinue = () => {
-    if (selectedDevice) {
-      onNextStep?.();
-    } else {
-      console.error("No device selected");
+  const getDeviceIcon = (icon: string) => {
+    switch (icon) {
+      case "smartphone":
+        return <Smartphone className="size-10" />;
+      case "camera":
+      default:
+        return <Camera className="size-10" />;
     }
   };
-
   return (
-    <motion.div
-      className="max-w-4xl mx-auto space-y-8"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-    >
+    <div className="max-w-4xl mx-auto space-y-8">
       <div className="text-center">
         <h1 className="text-3xl font-bold mb-4">Choose Your Device</h1>
         <p className="text-muted-foreground">
@@ -65,62 +46,61 @@ export function DeviceGroupSelection({
         </p>
       </div>
 
-      <div className="flex gap-6 items-center justify-center">
-        {deviceGroups.map((device) => {
-          const IconComponent = DeviceIcons[device.icon];
-
-          return (
-            <motion.div
-              key={device.id}
-              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-              whileTap={{ scale: 0.98 }}
+      <div className="flex flex-wrap justify-center gap-6">
+        {deviceGroups.map((device) => (
+          <motion.div
+            key={device.id}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-[300px]"
+          >
+            <Card
+              className={`cursor-pointer transition-colors h-full ${
+                selectedDevice === device.id
+                  ? "border-2 border-primary"
+                  : "hover:border-primary/50"
+              }`}
+              onClick={() => setSelectedDevice(device.id)}
             >
-              <Card
-                className={`cursor-pointer w-[200px] transition-all h-full ${
-                  selectedDevice === device.id
-                    ? "border-2 border-primary"
-                    : "hover:border-primary/50"
-                }`}
-                onClick={() => setSelectedDevice(device.id)}
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <CardTitle>{device.name}</CardTitle>
-                    </div>
-                    {selectedDevice === device.id && (
-                      <CheckCircle2 className="h-5 w-5 text-primary" />
-                    )}
-                  </div>
-                </CardHeader>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  {device.name}
+                  {selectedDevice === device.id && (
+                    <CheckCircle2 className="h-6 w-6 text-primary" />
+                  )}
+                </CardTitle>
                 <CardContent className="space-y-4">
-                  <IconComponent className="h-6 w-6" />
+                  {getDeviceIcon(device.icon)}
                 </CardContent>
-              </Card>
-            </motion.div>
-          );
-        })}
+              </CardHeader>
+              <CardFooter className="mt-auto">
+                <span className="text-xs text-muted-foreground ml-auto">
+                  ID: {device.id}
+                </span>
+              </CardFooter>
+            </Card>
+          </motion.div>
+        ))}
       </div>
-      <div className="flex gap-2 justify-center pt-6">
+      <div className="flex flex-col w-full items-center gap-2 justify-center pt-6">
         <Button
-          variant="outline"
+          size="lg"
+          onClick={onNextStep}
+          disabled={!selectedDevice}
+          className="w-[200px]"
+        >
+          Continue
+        </Button>
+        <Button
+          variant="ghost"
           size="lg"
           onClick={onPrevStep}
           disabled={!selectedDevice}
-          className=""
+          className="w-[200px]"
         >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <Button
-          size="lg"
-          onClick={handleContinue}
-          disabled={!selectedDevice}
-          className="min-w-[200px]"
-        >
-          Continue
-          <ArrowRight className="ml-2 h-5 w-5" />
+          Back
         </Button>
       </div>
-    </motion.div>
+    </div>
   );
 }
