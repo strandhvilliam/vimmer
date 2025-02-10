@@ -1,4 +1,11 @@
 "use client";
+import { AnimatedStepWrapper } from "@/components/animated-step-wrapper";
+import { ClassSelectionStep } from "@/components/class-selection-step";
+import { DeviceSelectionStep } from "@/components/device-selection-step";
+import { ParticipantRegistrationStep } from "@/components/participant-registration-step";
+import { StepNavigator } from "@/components/step-navigator";
+import { UploadSubmissionsStep } from "@/components/upload-submissions-step";
+import { STEPS } from "@/lib/constants";
 import {
   CompetitionClass,
   DeviceGroup,
@@ -8,25 +15,14 @@ import {
 import { AnimatePresence } from "motion/react";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { useState } from "react";
-import { AnimatedStepWrapper } from "./components/animated-step-wrapper";
-import { CompetitionClassSelection } from "./components/class-step";
-import { DeviceGroupSelection } from "./components/device-step";
-import ParticipantRegistration from "./components/participant-step";
-import { StepNavigator } from "./components/step-navigator";
-import { UploadSubmissions } from "./components/upload-step";
 
-export interface StepNavigationHandlers {
-  onNextStep?: () => void;
-  onPrevStep?: () => void;
-}
-
-type Props = {
+interface Props {
   marathon: Marathon & {
     competitionClasses: CompetitionClass[];
     deviceGroups: DeviceGroup[];
     topics: Topic[];
   };
-};
+}
 
 export function SubmissionClientPage({ marathon }: Props) {
   const [step, setStep] = useQueryState(
@@ -36,7 +32,7 @@ export function SubmissionClientPage({ marathon }: Props) {
   const [direction, setDirection] = useState(0);
 
   const handleNextStep = () => {
-    const nextStep = Math.min(step + 1, 4);
+    const nextStep = Math.min(step + 1, Object.keys(STEPS).length);
     setDirection(1);
     setStep(nextStep);
   };
@@ -54,37 +50,40 @@ export function SubmissionClientPage({ marathon }: Props) {
 
   return (
     <div className="max-w-2xl mx-auto p-4">
-      <StepNavigator handleSetStep={(s) => handleSetStep(s)} step={step} />
+      <StepNavigator
+        handleSetStep={(s) => handleSetStep(s)}
+        currentStep={step}
+      />
       <AnimatePresence initial={false} custom={direction} mode="wait">
-        {step === 1 && (
-          <AnimatedStepWrapper key="step1" direction={direction}>
-            <ParticipantRegistration
+        {step === STEPS.ParticipantRegistrationStep && (
+          <AnimatedStepWrapper direction={direction}>
+            <ParticipantRegistrationStep
               marathonId={marathon.id}
               onNextStep={handleNextStep}
             />
           </AnimatedStepWrapper>
         )}
-        {step === 2 && (
-          <AnimatedStepWrapper key="step2" direction={direction}>
-            <CompetitionClassSelection
+        {step === STEPS.ClassSelectionStep && (
+          <AnimatedStepWrapper direction={direction}>
+            <ClassSelectionStep
               competitionClasses={marathon.competitionClasses}
               onNextStep={handleNextStep}
               onPrevStep={handlePrevStep}
             />
           </AnimatedStepWrapper>
         )}
-        {step === 3 && (
-          <AnimatedStepWrapper key="step3" direction={direction}>
-            <DeviceGroupSelection
+        {step === STEPS.DeviceSelectionStep && (
+          <AnimatedStepWrapper direction={direction}>
+            <DeviceSelectionStep
               onNextStep={handleNextStep}
               onPrevStep={handlePrevStep}
               deviceGroups={marathon.deviceGroups}
             />
           </AnimatedStepWrapper>
         )}
-        {step === 4 && (
-          <AnimatedStepWrapper key="step4" direction={direction}>
-            <UploadSubmissions
+        {step === STEPS.UploadSubmissionStep && (
+          <AnimatedStepWrapper direction={direction}>
+            <UploadSubmissionsStep
               marathonDomain={marathon.domain}
               competitionClasses={marathon.competitionClasses}
               topics={marathon.topics}
