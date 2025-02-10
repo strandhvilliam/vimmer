@@ -12,3 +12,14 @@ export interface PhotoWithPresignedUrl extends SelectedPhoto {
   key: string;
   submissionId: number;
 }
+
+export type FileStatus = "pending" | "uploading" | "completed" | "error";
+
+export interface FileState extends PhotoWithPresignedUrl {
+  status: FileStatus;
+}
+
+export interface StepNavigationHandlers {
+  onNextStep?: () => void;
+  onPrevStep?: () => void;
+}

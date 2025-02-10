@@ -1,10 +1,10 @@
 "use server";
 import { initializeParticipantSchema } from "@/lib/schemas/initialize-participant-schema";
-import { actionClient, ActionError } from "@/lib/safe-action";
 import { createParticipant } from "@vimmer/supabase/mutations";
 import { getParticipantByReference } from "@vimmer/supabase/queries";
 import { createClient } from "@vimmer/supabase/server";
 import { returnValidationErrors } from "next-safe-action";
+import { actionClient, ActionError } from "./safe-action";
 
 export const initializeParticipant = actionClient
   .schema(initializeParticipantSchema)

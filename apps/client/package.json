@@ -9,9 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.713.0",
-    "@aws-sdk/s3-request-presigner": "^3.713.0",
+    "@aws-sdk/client-s3": "^3.741.0",
+    "@aws-sdk/s3-request-presigner": "^3.741.0",
     "@hookform/resolvers": "^3.9.1",
+    "@next-safe-action/adapter-react-hook-form": "^1.0.13",
     "@vimmer/supabase": "workspace:*",
     "@vimmer/ui": "workspace:*",
     "@vimmer/utils": "workspace:*",
@@ -31,17 +32,19 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@vimmer/typescript-config": "workspace:*",
-    "@vimmer/eslint-config": "workspace:*",
-    "typescript": "^5",
+    "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "19.0.7",
     "@types/react-dom": "19.0.3",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
+    "@vimmer/eslint-config": "workspace:*",
+    "@vimmer/typescript-config": "workspace:*",
+    "babel-plugin-react-compiler": "^19.0.0-beta-714736e-20250131",
     "eslint": "^9",
     "eslint-config-next": "15.1.5",
-    "@eslint/eslintrc": "^3"
+    "eslint-plugin-react-compiler": "^19.0.0-beta-714736e-20250131",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   },
   "overrides": {
     "@types/react": "19.0.7",

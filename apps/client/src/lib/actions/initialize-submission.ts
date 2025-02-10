@@ -1,6 +1,5 @@
 "use server";
 
-import { actionClient, ActionError } from "@/lib/safe-action";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createMultipleSubmissions } from "@vimmer/supabase/mutations";
@@ -11,6 +10,7 @@ import {
 import { createClient } from "@vimmer/supabase/server";
 import { Resource } from "sst";
 import { initializeSubmissionsSchema } from "../schemas/initialize-submissions-schema";
+import { actionClient, ActionError } from "./safe-action";
 
 export interface PresignedObject {
   presignedUrl: string;

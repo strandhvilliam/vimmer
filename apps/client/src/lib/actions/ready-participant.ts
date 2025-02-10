@@ -1,6 +1,6 @@
 "use server";
 import { readyParticipantSchema } from "@/lib/schemas/ready-participant-schema";
-import { actionClient } from "../safe-action";
+import { actionClient } from "./safe-action";
 import { updateParticipant } from "@vimmer/supabase/mutations";
 import { createClient } from "@vimmer/supabase/server";
 
