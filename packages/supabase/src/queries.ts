@@ -68,3 +68,15 @@ export async function getMarathonWithConfigByDomain(
     .throwOnError();
   return toCamelCase(data);
 }
+
+export async function getManySubmissionsByKeys(
+  supabase: SupabaseClient,
+  keys: string[],
+) {
+  const { data } = await supabase
+    .from("submissions")
+    .select()
+    .in("key", keys)
+    .throwOnError();
+  return data?.map(toCamelCase) ?? [];
+}

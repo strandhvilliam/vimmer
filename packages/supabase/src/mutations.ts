@@ -1,11 +1,11 @@
 import {
   InsertLog,
-  Submission,
+  InsertParticipant,
+  InsertSubmission,
   InsertSubmissionError,
   SupabaseClient,
   UpdateParticipant,
   UpdateSubmission,
-  InsertParticipant,
 } from "./types";
 import { toCamelCase, toSnakeCase } from "./utils/format-helpers";
 
@@ -27,6 +27,7 @@ export async function updateParticipant(
   id: number,
   dto: UpdateParticipant,
 ) {
+  console.log(toSnakeCase(dto));
   const { data } = await supabase
     .from("participants")
     .update(toSnakeCase(dto))
@@ -39,7 +40,7 @@ export async function updateParticipant(
 
 export async function createSubmission(
   supabase: SupabaseClient,
-  dto: Submission,
+  dto: InsertSubmission,
 ) {
   const { data } = await supabase
     .from("submissions")
@@ -52,14 +53,14 @@ export async function createSubmission(
 
 export async function createMultipleSubmissions(
   supabase: SupabaseClient,
-  dto: Submission[],
+  dto: InsertSubmission[],
 ) {
   const { data } = await supabase
     .from("submissions")
     .insert(dto.map(toSnakeCase))
     .select()
     .throwOnError();
-  return toCamelCase(data);
+  return data ? toCamelCase(data) : [];
 }
 
 export async function insertLog(supabase: SupabaseClient, data: InsertLog) {

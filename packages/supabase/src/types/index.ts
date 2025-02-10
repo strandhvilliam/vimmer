@@ -13,7 +13,7 @@ export type InsertParticipant = ToCamelCaseObject<TablesInsert<"participants">>;
 export type UpdateParticipant = ToCamelCaseObject<TablesUpdate<"participants">>;
 
 export type Submission = ToCamelCaseObject<Tables<"submissions">>;
-export type InsrtSubmission = ToCamelCaseObject<TablesInsert<"submissions">>;
+export type InsertSubmission = ToCamelCaseObject<TablesInsert<"submissions">>;
 export type UpdateSubmission = ToCamelCaseObject<TablesUpdate<"submissions">>;
 
 export type Marathon = ToCamelCaseObject<Tables<"marathons">>;

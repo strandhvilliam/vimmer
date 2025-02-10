@@ -16,6 +16,7 @@ export type Database = {
           marathon_id: number
           name: string
           number_of_photos: number
+          topic_start_index: number
           updated_at: string | null
         }
         Insert: {
@@ -24,6 +25,7 @@ export type Database = {
           marathon_id: number
           name: string
           number_of_photos: number
+          topic_start_index?: number
           updated_at?: string | null
         }
         Update: {
@@ -32,6 +34,7 @@ export type Database = {
           marathon_id?: number
           name?: string
           number_of_photos?: number
+          topic_start_index?: number
           updated_at?: string | null
         }
         Relationships: [
@@ -126,7 +129,9 @@ export type Database = {
       }
       participants: {
         Row: {
+          competition_class_id: number | null
           created_at: string
+          device_group_id: number | null
           email: string | null
           id: number
           marathon_id: number
@@ -136,7 +141,9 @@ export type Database = {
           upload_count: number
         }
         Insert: {
+          competition_class_id?: number | null
           created_at?: string
+          device_group_id?: number | null
           email?: string | null
           id?: number
           marathon_id: number
@@ -146,7 +153,9 @@ export type Database = {
           upload_count?: number
         }
         Update: {
+          competition_class_id?: number | null
           created_at?: string
+          device_group_id?: number | null
           email?: string | null
           id?: number
           marathon_id?: number
@@ -156,6 +165,20 @@ export type Database = {
           upload_count?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "participants_competition_class_id_fkey"
+            columns: ["competition_class_id"]
+            isOneToOne: false
+            referencedRelation: "competition_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "participants_device_group_id_fkey"
+            columns: ["device_group_id"]
+            isOneToOne: false
+            referencedRelation: "device_groups"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "participants_marathon_id_fkey"
             columns: ["marathon_id"]
@@ -206,36 +229,48 @@ export type Database = {
           created_at: string
           exif: Json | null
           id: number
-          image_key: string
+          key: string
           marathon_id: number
+          metadata: Json | null
+          mime_type: string | null
           participant_id: number
           preview_key: string | null
-          status: Database["public"]["Enums"]["upload_status"]
+          size: number | null
+          status: string
           thumbnail_key: string | null
+          topic_id: number
           updated_at: string | null
         }
         Insert: {
           created_at?: string
           exif?: Json | null
           id?: number
-          image_key: string
+          key: string
           marathon_id: number
+          metadata?: Json | null
+          mime_type?: string | null
           participant_id: number
           preview_key?: string | null
-          status?: Database["public"]["Enums"]["upload_status"]
+          size?: number | null
+          status?: string
           thumbnail_key?: string | null
+          topic_id: number
           updated_at?: string | null
         }
         Update: {
           created_at?: string
           exif?: Json | null
           id?: number
-          image_key?: string
+          key?: string
           marathon_id?: number
+          metadata?: Json | null
+          mime_type?: string | null
           participant_id?: number
           preview_key?: string | null
-          status?: Database["public"]["Enums"]["upload_status"]
+          size?: number | null
+          status?: string
           thumbnail_key?: string | null
+          topic_id?: number
           updated_at?: string | null
         }
         Relationships: [
@@ -253,6 +288,13 @@ export type Database = {
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "submissions_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
         ]
       }
       topics: {
@@ -261,6 +303,7 @@ export type Database = {
           id: number
           marathon_id: number
           name: string
+          order_index: number
           updated_at: string | null
         }
         Insert: {
@@ -268,6 +311,7 @@ export type Database = {
           id?: number
           marathon_id: number
           name: string
+          order_index?: number
           updated_at?: string | null
         }
         Update: {
@@ -275,6 +319,7 @@ export type Database = {
           id?: number
           marathon_id?: number
           name?: string
+          order_index?: number
           updated_at?: string | null
         }
         Relationships: [
