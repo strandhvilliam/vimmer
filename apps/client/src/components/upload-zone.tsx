@@ -1,98 +1,62 @@
-// "use client";
-// import { initializeSubmission } from "@/lib/actions/initialize-submission";
-// import { zodResolver } from "@hookform/resolvers/zod";
-// import { Button } from "@vimmer/ui/components/button";
-// import { Form, FormField } from "@vimmer/ui/components/form";
-// import { cn } from "@vimmer/ui/lib/utils";
-// import { useAction } from "next-safe-action/hooks";
-// import Dropzone from "react-dropzone";
-// import { useFieldArray, useForm } from "react-hook-form";
-// import { z } from "zod";
-//
-// const FileUploadSchema = z.object({
-//   files: z.array(z.object({ data: z.any().refine((v) => v instanceof File) })),
-// });
-//
-// type FileUploadValues = z.infer<typeof FileUploadSchema>;
-//
-// export default function UploadZone() {
-//   const { execute, isExecuting, result, hasErrored } =
-//     useAction(initializeSubmission);
-//   const form = useForm<FileUploadValues>({
-//     resolver: zodResolver(FileUploadSchema),
-//     defaultValues: {
-//       files: [],
-//     },
-//   });
-//
-//   const { fields, append } = useFieldArray({
-//     control: form.control,
-//     name: "files",
-//   });
-//
-//   const onSubmit = () => {
-//     console.log("fields", fields);
-//     // execute({ ref: "1232", competitionId: 1 });
-//   };
-//
-//   return (
-//     <Form {...form}>
-//       <form
-//         action=""
-//         onSubmit={form.handleSubmit(onSubmit)}
-//         className="flex-1 max-w-md space-y-5"
-//       >
-//         <FormField
-//           control={form.control}
-//           name="files"
-//           render={() => (
-//             <Dropzone
-//               accept={{
-//                 "image/*": [".jpg", ".jpeg"],
-//               }}
-//               onDropAccepted={(acceptedFiles) => {
-//                 acceptedFiles.map((acceptedFile) => {
-//                   console.log("acceptedFile", acceptedFile);
-//                   return append({
-//                     data: acceptedFile,
-//                   });
-//                 });
-//               }}
-//               multiple={true}
-//               maxSize={5000000}
-//             >
-//               {({ getRootProps, getInputProps }) => (
-//                 <div
-//                   {...getRootProps({
-//                     className: cn(
-//                       "p-3 mb-4 flex flex-col items-center justify-center w-full rounded-md cursor-pointer border border-[#e2e8f0]",
-//                     ),
-//                   })}
-//                 >
-//                   <div className="flex items-center gap-x-3 mt-2 mb-2">
-//                     <label
-//                       onClick={(e) => e.preventDefault()}
-//                       className={`text-sm text-[7E8DA0] cursor-pointer focus:outline-none focus:underline ${
-//                         form.formState.errors.files && "text-red-500"
-//                       }`}
-//                     >
-//                       Add your Product Images
-//                       <input {...getInputProps()} />
-//                     </label>
-//                   </div>
-//                 </div>
-//               )}
-//             </Dropzone>
-//           )}
-//         />
-//         <Button
-//           type="submit"
-//           variant="default"
-//           disabled={form.formState.isSubmitting}
-//         >
-//           Submit
-//         </Button>
-//       </form>
-//     </Form>
-//   );
-// }
+import { COMMON_IMAGE_EXTENSIONS } from "@/lib/constants";
+import { Button } from "@vimmer/ui/components/button";
+import { Upload } from "lucide-react";
+import { FileRejection, useDropzone } from "react-dropzone";
+
+interface UploadZoneProps {
+  onDrop: (acceptedFiles: File[]) => void;
+  isDisabled: boolean;
+  currentCount: number;
+  maxCount: number;
+  onDropRejected: (fileRejections: FileRejection[]) => void;
+}
+
+export function UploadZone({
+  onDrop,
+  isDisabled,
+  currentCount,
+  maxCount,
+  onDropRejected,
+}: UploadZoneProps) {
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    validator: (file) => {
+      console.log("type", file.type);
+      const fileExtension = file.name?.split(".").pop()?.trim()?.toLowerCase();
+      if (!fileExtension || !COMMON_IMAGE_EXTENSIONS.includes(fileExtension)) {
+        return {
+          message: `Invalid file type: ${fileExtension ?? "NO FILE EXTENSION"}`,
+          code: "invalid-file-type",
+        };
+      }
+      return null;
+    },
+    disabled: isDisabled,
+    onDropRejected,
+  });
+
+  return (
+    <div
+      {...getRootProps()}
+      className={`
+        border-2 border-dashed rounded-lg p-8 mb-6 transition-colors
+        ${isDragActive ? "border-primary bg-muted" : "border-muted"}
+        ${isDisabled ? "opacity-50 pointer-events-none" : ""}
+      `}
+    >
+      <input {...getInputProps()} />
+      <div className="text-center">
+        <Upload className="w-10 h-10 mx-auto mb-4 text-muted-foreground" />
+        <p className="text-muted-foreground mb-2">
+          Drag and drop your photos here, or click to select
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {currentCount} of {maxCount} photos uploaded
+        </p>
+        <Button variant="outline" disabled={isDisabled} className="mt-4">
+          Select Photos
+        </Button>
+      </div>
+    </div>
+  );
+}
