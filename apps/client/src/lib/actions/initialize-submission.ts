@@ -12,6 +12,14 @@ import { createClient } from "@vimmer/supabase/server";
 import { Resource } from "sst";
 import { initializeSubmissionsSchema } from "../schemas/initialize-submissions-schema";
 
+export interface PresignedObject {
+  presignedUrl: string;
+  key: string;
+  orderIndex: number;
+  topicId: number;
+  submissionId?: number;
+}
+
 export const initializeSubmission = actionClient
   .schema(initializeSubmissionsSchema)
   .action(
@@ -30,7 +38,9 @@ export const initializeSubmission = actionClient
         supabase,
         marathonDomain,
       );
-      if (!marathon) throw new ActionError("Marathon not found");
+      if (!marathon) {
+        throw new ActionError("Marathon not found");
+      }
 
       const competitionClass = marathon.competitionClasses.find(
         (cc) => cc.id === competitionClassId,
@@ -42,7 +52,7 @@ export const initializeSubmission = actionClient
         (a, b) => a.orderIndex - b.orderIndex,
       );
 
-      const result = await Promise.all(
+      const presignedObjects = await Promise.all(
         Array.from({ length: competitionClass.numberOfPhotos }).map(
           async (_, orderIndex) => {
             const topicId = orderedTopics[orderIndex]?.id;
@@ -62,16 +72,19 @@ export const initializeSubmission = actionClient
 
       const existing = await getManySubmissionsByKeys(
         supabase,
-        result.map((x) => x.key),
+        presignedObjects.map((x) => x.key),
       );
 
       if (existing.length >= competitionClass.numberOfPhotos) {
-        return result;
+        return presignedObjects.map((x) => ({
+          ...x,
+          submissionId: existing.find((s) => s.key === x.key)?.id,
+        }));
       }
       await createMultipleSubmissions(
         supabase,
-        result
-          .filter((x) => !existing.some((s) => s.key === x.key))
+        presignedObjects
+          .filter((po) => !existing.some((s) => s.key === po.key))
           .map(({ key, topicId }) => ({
             key,
             marathonId: marathon.id,
@@ -80,7 +93,10 @@ export const initializeSubmission = actionClient
             status: "initialized",
           })),
       );
-      return result;
+      return presignedObjects.map((x) => ({
+        ...x,
+        submissionId: existing.find((s) => s.key === x.key)?.id,
+      }));
     },
   );
 
@@ -115,5 +131,5 @@ function formatSubmissionKey({
   const displayRef = isOnlyDigits ? trimmedRef.padStart(4, "0") : trimmedRef;
   const displayIndex = (index + 1).toString().padStart(2, "0");
   const fileName = `${displayRef}_${displayIndex}.jpg`;
-  return `${domain}/submissions/${displayRef}/${displayIndex}/${fileName}`;
+  return `${domain}/${displayRef}/${displayIndex}/${fileName}`;
 }
