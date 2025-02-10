@@ -2,10 +2,17 @@
 /* tslint:disable */
 /* eslint-disable */
 /* deno-fmt-ignore-file */
-import "sst"
-export {}
+
 declare module "sst" {
   export interface Resource {
+    "ClientApp": {
+      "type": "sst.aws.Nextjs"
+      "url": string
+    }
+    "PreviewBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
     "ProcessPhotoQueue": {
       "type": "sst.aws.Queue"
       "url": string
@@ -14,5 +21,13 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
+    "ThumbnailBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
   }
 }
+/// <reference path="sst-env.d.ts" />
+
+import "sst"
+export {}

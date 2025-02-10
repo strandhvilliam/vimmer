@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "clean": "rm -rf .turbo node_modules",
-    "db:generate": "bunx supabase@latest gen types --lang=typescript --project-id $SUPABASE_PROJECT_ID --schema public > src/types/db.ts"
+    "db:generate": "bunx supabase@latest gen types --lang=typescript --project-id ythhxzrxhaoyosfrsdkz --schema public > src/types/db.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

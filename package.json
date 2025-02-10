@@ -24,6 +24,6 @@
     "functions/*"
   ],
   "dependencies": {
-    "sst": "latest"
+    "sst": "^3.5.13"
   }
 }
