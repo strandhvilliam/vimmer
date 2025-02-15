@@ -3,19 +3,28 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 import { createClient } from "@vimmer/supabase/lambda";
 import { S3Event, SQSEvent } from "aws-lambda";
 import sharp from "sharp";
 
 import {
   addMultipleSubmissionErrors,
+  incrementUploadCounter,
   updateSubmissionById,
   updateSubmissionByKey,
 } from "@vimmer/supabase/mutations";
 import { SupabaseClient } from "@vimmer/supabase/types";
-import { ErrorCode, SubmissionProcessingError } from "@vimmer/utils/errors";
+import {
+  ErrorCode,
+  SubmissionProcessingError,
+} from "@vimmer/validation/errors";
 import exifr from "exifr";
 import { Resource } from "sst";
+import {
+  getMarathonWithConfigByDomain,
+  getParticipantById,
+} from "@vimmer/supabase/queries";
 
 const IMAGE_VARIANTS = {
   thumbnail: { width: 200, prefix: "thumbnail" },
@@ -23,18 +32,23 @@ const IMAGE_VARIANTS = {
 } as const;
 
 export const handler = async (event: SQSEvent): Promise<void> => {
-  const s3 = new S3Client();
+  console.log("Event: ", JSON.stringify(event));
+  const s3Client = new S3Client();
+  const lambdaClient = new LambdaClient();
   const supabase = await createClient();
   const keys = event.Records.map((r) => JSON.parse(r.body) as S3Event)
     .flatMap((e) => e.Records?.map((r) => decodeURIComponent(r.s3.object.key)))
     .filter(Boolean);
 
-  await Promise.all(keys.map((key) => processSubmission(key, s3, supabase)));
+  await Promise.all(
+    keys.map((key) => processSubmission(key, s3Client, lambdaClient, supabase)),
+  );
 };
 
 async function processSubmission(
   key: string,
-  s3: S3Client,
+  s3Client: S3Client,
+  lambdaClient: LambdaClient,
   supabase: SupabaseClient,
 ) {
   try {
@@ -48,7 +62,19 @@ async function processSubmission(
       ]);
     }
 
-    const { file, size, metadata, mimeType } = await getFileFromS3(s3, key);
+    const participant = await getParticipantById(
+      supabase,
+      submission.participantId,
+    );
+
+    if (!participant) {
+      throw new SubmissionProcessingError([ErrorCode.UNKNOWN_ERROR]);
+    }
+
+    const { file, size, metadata, mimeType } = await getFileFromS3(
+      s3Client,
+      key,
+    );
     if (!file) {
       throw new SubmissionProcessingError([ErrorCode.FAILED_TO_FETCH_PHOTO]);
     }
@@ -60,14 +86,14 @@ async function processSubmission(
       });
     }
 
-    const variants = await generateImageVariants(key, file, s3);
+    const variants = await generateImageVariants(key, file, s3Client);
     if (!variants) {
       throw new SubmissionProcessingError([
         ErrorCode.IMAGE_VARIANT_CREATION_FAILED,
       ]);
     }
 
-    await updateSubmissionById(supabase, submission.id, {
+    await updateSubmissionByKey(supabase, key, {
       status: "uploaded",
       thumbnailKey: variants.thumbnailKey,
       previewKey: variants.previewKey,
@@ -76,6 +102,24 @@ async function processSubmission(
       mimeType,
       metadata,
     });
+
+    console.log(participant.competitionClasses);
+
+    const { isComplete, status, uploadCount } = await incrementUploadCounter(
+      supabase,
+      submission.participantId,
+      participant.competitionClasses?.numberOfPhotos!,
+    );
+
+    if (isComplete) {
+      const invokeCommand = new InvokeCommand({
+        FunctionName: Resource.PhotoValidatorFunction.name,
+        Payload: JSON.stringify({
+          participantId: submission.participantId,
+        }),
+      });
+      return lambdaClient.send(invokeCommand);
+    }
   } catch (error) {
     await handleProcessingError(supabase, key, error);
     throw error;
@@ -171,7 +215,6 @@ async function createVariant(
   s3: S3Client,
 ): Promise<string | null> {
   const parsedPath = parseKey(originalKey);
-  console.log({ parsedPath });
   const variantBuffer = await photoInstance
     .clone()
     .resize(config.width)

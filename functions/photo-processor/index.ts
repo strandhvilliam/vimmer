@@ -1,3 +1,3 @@
-import { handler } from './src/handler.js'
+import { handler } from "./src/handler.js";
 
-export { handler }
+export { handler };
