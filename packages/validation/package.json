@@ -1,10 +1,11 @@
 {
-  "name": "@vimmer/utils",
+  "name": "@vimmer/validation",
   "module": "index.ts",
   "type": "module",
   "exports": {
-    "./errors": "./src/errors.ts",
-    "./validator": "./src/submission-validator.ts"
+    "./client": "./src/client-validator.ts",
+    "./server": "./src/server-validator.ts",
+    "./errors": "./src/errors.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"

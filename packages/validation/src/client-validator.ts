@@ -43,7 +43,7 @@ export function createRule<K extends RuleKey>(
   return config;
 }
 
-export class SubmissionValidator {
+export class ClientValidator {
   private ruleMap: Map<
     RuleKey,
     (params: RuleParams[RuleKey], level: SeverityLevel) => ImageValidationRule
