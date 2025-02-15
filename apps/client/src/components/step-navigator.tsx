@@ -20,25 +20,25 @@ export function StepNavigator({ currentStep, handleSetStep }: Props) {
               onClick={() => handleSetStep(step)}
               initial={false}
               animate={{
-                scale: step >= currentStep ? 1.1 : 1,
+                scale: step <= currentStep ? 1.1 : 1,
                 backgroundColor:
-                  step >= currentStep
+                  step <= currentStep
                     ? "hsl(240 5.9% 10%)"
                     : "hsl(240 4.8% 95.9%)",
                 color:
-                  step >= currentStep ? "hsl(0 0% 98%)" : "hsl(240 3.8% 46.1%)",
+                  step <= currentStep ? "hsl(0 0% 98%)" : "hsl(240 3.8% 46.1%)",
               }}
               className="flex items-center justify-center w-8 h-8 rounded-full hover:cursor-pointer"
               transition={{ duration: 0.2 }}
             >
-              {currentStep < step ? <CheckIcon size={18} /> : currentStep}
+              {currentStep > step ? <CheckIcon size={18} /> : step}
             </motion.span>
-            {currentStep !== 4 && (
+            {step !== Object.keys(STEPS).length && (
               <motion.div
                 initial={false}
                 animate={{
                   backgroundColor:
-                    step > currentStep
+                    step < currentStep
                       ? "hsl(240 5.9% 8%)"
                       : "hsl(240 4.8% 90%)",
                 }}

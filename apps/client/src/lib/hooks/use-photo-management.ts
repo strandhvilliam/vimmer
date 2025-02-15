@@ -1,5 +1,5 @@
 import { Topic } from "@vimmer/supabase/types";
-import { SubmissionValidator, createRule } from "@vimmer/utils/validator";
+import { ClientValidator, createRule } from "@vimmer/validation/client";
 import { useState } from "react";
 import { SelectedPhoto } from "../types";
 
@@ -42,7 +42,7 @@ export const usePhotoManagement = ({ topics }: { topics: Topic[] }) => {
     });
 
     const toValidate = [...photos, ...newPhotos];
-    const validator = new SubmissionValidator([
+    const validator = new ClientValidator([
       createRule({
         key: "allowed_file_types",
         level: "error",

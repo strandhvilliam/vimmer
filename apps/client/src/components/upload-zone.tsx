@@ -21,7 +21,6 @@ export function UploadZone({
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     validator: (file) => {
-      console.log("type", file.type);
       const fileExtension = file.name?.split(".").pop()?.trim()?.toLowerCase();
       if (!fileExtension || !COMMON_IMAGE_EXTENSIONS.includes(fileExtension)) {
         return {

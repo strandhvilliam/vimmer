@@ -14,7 +14,7 @@ import {
 } from "@vimmer/supabase/types";
 import { AnimatePresence } from "motion/react";
 import { parseAsInteger, useQueryState } from "nuqs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Props {
   marathon: Marathon & {
@@ -47,6 +47,16 @@ export function SubmissionClientPage({ marathon }: Props) {
     setDirection(newStep > step ? 1 : -1);
     setStep(newStep);
   };
+
+  useEffect(() => {
+    const unloadCallback = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      return "";
+    };
+
+    window.addEventListener("beforeunload", unloadCallback);
+    return () => window.removeEventListener("beforeunload", unloadCallback);
+  }, []);
 
   return (
     <div className="max-w-2xl mx-auto p-4">

@@ -36,6 +36,7 @@ export const useUploadManagement = ({
       await Promise.all(
         combinedPhotos.map(async (photo) => {
           if (!photo.presignedUrl) return;
+          console.log("uploading photo", photo);
 
           const response = await fetch(photo.presignedUrl, {
             method: "PUT",

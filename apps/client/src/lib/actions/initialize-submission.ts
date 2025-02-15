@@ -2,7 +2,10 @@
 
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { createMultipleSubmissions } from "@vimmer/supabase/mutations";
+import {
+  createMultipleSubmissions,
+  updateParticipant,
+} from "@vimmer/supabase/mutations";
 import {
   getManySubmissionsByKeys,
   getMarathonWithConfigByDomain,
@@ -33,6 +36,10 @@ export const initializeSubmission = actionClient
     }) => {
       const supabase = await createClient();
       const s3 = new S3Client({ region: "eu-north-1" });
+
+      await updateParticipant(supabase, participantId, {
+        uploadCount: 0,
+      });
 
       const marathon = await getMarathonWithConfigByDomain(
         supabase,
