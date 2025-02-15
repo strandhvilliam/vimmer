@@ -4,7 +4,14 @@ import { toCamelCase } from "./utils/format-helpers";
 export async function getParticipantById(supabase: SupabaseClient, id: number) {
   const { data } = await supabase
     .from("participants")
-    .select("*, submissions(*)")
+    .select(
+      `
+        *, 
+        submissions(*),
+        competition_classes(*),
+        device_groups(*)
+    `,
+    )
     .eq("id", id)
     .maybeSingle()
     .throwOnError();
