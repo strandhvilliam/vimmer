@@ -9,6 +9,11 @@ declare module "sst" {
       "type": "sst.aws.Nextjs"
       "url": string
     }
+    "PhotoValidatorFunction": {
+      "name": string
+      "type": "sst.aws.Function"
+      "url": string
+    }
     "PreviewBucket": {
       "name": string
       "type": "sst.aws.Bucket"

@@ -28,6 +28,15 @@ export default $config({
       access: "public",
     });
     const processSubmissionQueue = new sst.aws.Queue("ProcessPhotoQueue");
+    const photoValidatorFunction = new sst.aws.Function(
+      "PhotoValidatorFunction",
+      {
+        handler: "functions/photo-validator/index.handler",
+        environment: env,
+        link: [submissionBucket],
+        url: true,
+      },
+    );
 
     const clientApp = new sst.aws.Nextjs("ClientApp", {
       path: "apps/client",
@@ -37,7 +46,12 @@ export default $config({
     processSubmissionQueue.subscribe({
       handler: "./functions/photo-processor/index.handler",
       environment: env,
-      link: [submissionBucket, thumbnailBucket, previewBucket],
+      link: [
+        submissionBucket,
+        thumbnailBucket,
+        previewBucket,
+        photoValidatorFunction,
+      ],
     });
 
     submissionBucket.notify({
@@ -52,13 +66,16 @@ export default $config({
 
     return {
       apps: {
-        client: clientApp,
+        client: clientApp.url,
       },
       buckets: {
         submissionBucket: submissionBucket.name,
       },
       queues: {
         processSubmissionQueue: processSubmissionQueue.url,
+      },
+      functions: {
+        photoValidatorFunction: photoValidatorFunction.url,
       },
     };
   },
