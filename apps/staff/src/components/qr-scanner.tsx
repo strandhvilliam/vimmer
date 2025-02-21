@@ -1,5 +1,3 @@
-"use client";
-
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { useEffect, useState } from "react";
 
