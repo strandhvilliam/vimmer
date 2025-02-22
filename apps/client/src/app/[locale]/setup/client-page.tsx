@@ -1,5 +1,6 @@
 "use client";
 
+import { demoaction } from "@/lib/actions/demo";
 import { useChangeLocale } from "@/locales/client";
 import { Marathon } from "@vimmer/supabase/types";
 import { Button } from "@vimmer/ui/components/button";
@@ -31,6 +32,7 @@ export function LanguageSelectionPage({ marathon }: Props) {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
     >
+      <Button onClick={async () => await demoaction()}>Demoaction</Button>
       <Card className="max-w-2xl mx-auto">
         <CardHeader className="space-y-4">
           <CardTitle className="text-3xl font-bold text-center">

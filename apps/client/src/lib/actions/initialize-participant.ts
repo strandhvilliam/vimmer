@@ -11,11 +11,10 @@ export const initializeParticipant = actionClient
   .action(async ({ parsedInput: { participantRef, marathonId } }) => {
     const supabase = await createClient();
 
-    const existingParticipant = await getParticipantByReference(
-      supabase,
-      participantRef,
+    const existingParticipant = await getParticipantByReference(supabase, {
+      reference: participantRef,
       marathonId,
-    );
+    });
 
     if (existingParticipant !== null) {
       returnValidationErrors(initializeParticipantSchema, {
