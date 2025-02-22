@@ -28,16 +28,5 @@ export default function QrScanner({ onScan, onError }: QrScannerProps) {
       }}
       onError={(error) => (error instanceof Error ? onError(error) : {})}
     />
-    // <QrReader
-    //   onResult={(result, error) => {
-    //     if (result) {
-    //       onScan(result.gekktText());
-    //     }
-    //     if (error) {
-    //       onError(error);
-    //     }
-    //   }}
-    //   constraints={{ facingMode: "environment" }}
-    // />
   );
 }

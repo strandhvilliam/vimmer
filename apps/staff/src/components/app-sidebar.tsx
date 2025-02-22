@@ -1,4 +1,5 @@
 "use client";
+import { NAVIGATION_ITEMS } from "@/lib/constants";
 import {
   Sidebar,
   SidebarContent,
@@ -9,36 +10,23 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@vimmer/ui/components/sidebar";
-import { Command, QrCode, Scroll } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { Command } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { NavUser } from "./nav-user";
-
-const NAVIGATION_ITEMS = [
-  {
-    title: "Verification",
-    url: "#",
-    icon: QrCode,
-  },
-  {
-    title: "History",
-    url: "#",
-    icon: Scroll,
-  },
-];
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { toggleSidebar } = useSidebar();
 
   return (
-    <Sidebar
-      collapsible="icon"
-      className="overflow-hidden [&>[data-sidebar=sidebar]]:flex-row"
-    >
+    <Sidebar collapsible="icon" className="overflow-hidden ">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild className="md:h-8 md:p-0">
+            <SidebarMenuButton size="lg" className="md:h-8 md:p-0">
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                 <Command className="size-4" />
               </div>
@@ -58,8 +46,8 @@ export default function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     onClick={() => {
-                      // setActiveItem(item);
-                      // setOpen(true);
+                      router.push(item.url);
+                      toggleSidebar();
                     }}
                     isActive={pathname === item.url}
                     className="px-2.5 md:px-2"

@@ -1,60 +1,58 @@
-"use client";
-
-import { useEffect, useRef } from "react";
+import { useMarathonDomain } from "@/lib/hooks/use-marathon-domain";
+import { QrDataArgs } from "@/lib/schemas/verification-data-schema";
+import { Button } from "@vimmer/ui/components/button";
+import { Input } from "@vimmer/ui/components/input";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
-  SheetHeader,
   SheetTitle,
+  SheetTrigger,
 } from "@vimmer/ui/components/sheet";
-import { Input } from "@vimmer/ui/components/input";
-import { Button } from "@vimmer/ui/components/button";
-import * as React from "react";
 import { cn } from "@vimmer/ui/lib/utils";
+import * as React from "react";
+import { useRef, useState } from "react";
 
 interface ManualEntrySheetProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (value: string) => void;
+  onEnterAction(args: QrDataArgs): void;
 }
 
-export function ManualEntrySheet({
-  isOpen,
-  onClose,
-  onSubmit,
-}: ManualEntrySheetProps) {
+export function ManualEntrySheet({ onEnterAction }: ManualEntrySheetProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = React.useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const domain = useMarathonDomain();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(inputValue);
-    setInputValue("");
-    onClose();
+    setIsOpen(false);
+    onEnterAction({ reference: inputValue, domain });
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose} modal={true}>
+    <Sheet modal={true} onOpenChange={setIsOpen} open={isOpen}>
+      <SheetTrigger className="text-black underline">
+        Enter Manually
+      </SheetTrigger>
       <SheetContent hideClose side="top" className="w-full max-h-[95vh] p-0">
         <form onSubmit={handleSubmit} className="pb-4">
           <div className="px-4 py-4 flex flex-row items-center justify-between">
             <Button
+              onClick={() => setIsOpen(false)}
               type="button"
-              onClick={onClose}
               variant="ghost"
-              className="text-gray-500 text-sm font-medium h-auto p-0"
+              className="text-sm font-medium"
             >
               Cancel
             </Button>
             <SheetTitle className="text-base font-medium">
-              Enter Value
+              Enter Participant Number
             </SheetTitle>
             <Button
+              onClick={handleSubmit}
               type="submit"
               variant="ghost"
               className={cn(
-                "text-primary text-sm font-medium h-auto p-0",
+                "text-primary text-sm font-medium",
                 !inputValue.trim() && "opacity-50 cursor-not-allowed",
               )}
               disabled={!inputValue.trim()}
@@ -63,14 +61,14 @@ export function ManualEntrySheet({
             </Button>
           </div>
 
-          <div className="px-6">
+          <div className="px-4">
             <Input
-              autoFocus={isOpen}
+              autoFocus
               ref={inputRef}
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              className="w-full text-lg bg-secondary"
+              className="w-full text-lg bg-secondary rounded-sm"
               placeholder="Enter value..."
             />
           </div>
