@@ -8,6 +8,7 @@ type RuleParams = {
   strict_timestamp_ordering: {};
   same_device: {};
   within_timerange: { start: string; end: string };
+  must_contain_exif: {};
 };
 
 type RuleKey = keyof RuleParams;
@@ -103,6 +104,14 @@ export class ClientValidator {
         severity,
       };
     });
+    ruleMap.set("must_contain_exif", (_, severity) => {
+      return {
+        name: "must_contain_exif",
+        validate: async (files) => this.validateMustContainExif(files),
+        errorMessage: "Image must contain EXIF data",
+        severity,
+      };
+    });
 
     return ruleMap;
   }
@@ -114,6 +123,8 @@ export class ClientValidator {
         return ruleBuilder?.(config.params, config.level);
       })
       .filter((rule): rule is ImageValidationRule => rule !== undefined);
+
+    this.rules.push(this.ruleMap.get("must_contain_exif")!({}, "error"));
   }
 
   async validate(files: File[]): Promise<ValidationError[]> {
@@ -167,6 +178,18 @@ export class ClientValidator {
       return acc;
     }, [] as string[]);
 
+    return { invalidFiles };
+  }
+
+  private async validateMustContainExif(files: FileWithExif[]): Promise<{
+    invalidFiles: string[];
+  }> {
+    const invalidFiles = files.reduce((acc, { file, exif }) => {
+      if (!exif) {
+        return [...acc, file.name];
+      }
+      return acc;
+    }, [] as string[]);
     return { invalidFiles };
   }
 

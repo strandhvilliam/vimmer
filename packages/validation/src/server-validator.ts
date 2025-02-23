@@ -8,6 +8,7 @@ type RuleParams = {
   strict_timestamp_ordering: {};
   same_device: {};
   within_timerange: { start: string; end: string };
+  must_contain_exif: {};
 };
 
 type RuleKey = keyof RuleParams;
@@ -18,21 +19,17 @@ interface RuleConfig<K extends RuleKey> {
   params: RuleParams[K];
 }
 
-interface ServerFile {
-  buffer: Buffer;
+export interface ServerFile {
+  buffer?: Buffer;
+  exif?: any;
   originalname: string;
   mimetype: string;
   size: number;
 }
 
-interface FileWithExif {
-  file: ServerFile;
-  exif: any;
-}
-
 interface ImageValidationRule {
   name: string;
-  validate: (files: FileWithExif[]) => Promise<{ invalidFiles: string[] }>;
+  validate: (files: ServerFile[]) => Promise<{ invalidFiles: string[] }>;
   errorMessage: string;
   severity: SeverityLevel;
 }
@@ -59,7 +56,7 @@ export class ServerValidator {
 
   constructor(rules: RuleConfig<RuleKey>[]) {
     this.ruleMap = this.initRuleMap();
-    // this.buildRules(rules);
+    this.buildRules(rules);
   }
 
   private initRuleMap() {
@@ -93,17 +90,27 @@ export class ServerValidator {
     //   };
     // });
     //
-    // ruleMap.set("allowed_file_types", (params, severity) => {
-    //   const { extensions, mimeTypes } =
-    //     params as RuleParams["allowed_file_types"];
-    //   return {
-    //     name: "allowed_file_types",
-    //     validate: async (files) =>
-    //       this.validateFileTypes(files, extensions, mimeTypes),
-    //     errorMessage: `File must be one of these types: ${extensions.join(", ")}`,
-    //     severity,
-    //   };
-    // });
+    ruleMap.set("allowed_file_types", (params, severity) => {
+      const { extensions, mimeTypes } =
+        params as RuleParams["allowed_file_types"];
+      return {
+        name: "allowed_file_types",
+        validate: async (files) =>
+          this.validateFileTypes(files, extensions, mimeTypes),
+        errorMessage: `File must be one of these types: ${extensions.join(", ")}`,
+        severity,
+      };
+    });
+
+    ruleMap.set("must_contain_exif", (_, severity) => {
+      return {
+        name: "must_contain_exif",
+        validate: async (files) => this.validateMustContainExif(files),
+        errorMessage: "Image must contain EXIF data",
+        severity,
+      };
+    });
+
     //
     // ruleMap.set("strict_timestamp_ordering", (_, severity) => {
     //   return {
@@ -117,15 +124,20 @@ export class ServerValidator {
     return ruleMap;
   }
 
-  // private buildRules(ruleConfigs: RuleConfig<RuleKey>[]) {
-  //   this.rules = ruleConfigs
-  //     .map((config) => {
-  //       const ruleBuilder = this.ruleMap.get(config.key);
-  //       return ruleBuilder?.(config.params, config.level);
-  //     })
-  //     .filter((rule): rule is ImageValidationRule => rule !== undefined);
-  // }
-  //
+  private buildRules(ruleConfigs: RuleConfig<RuleKey>[]) {
+    this.rules = ruleConfigs
+      .map((config) => {
+        const ruleBuilder = this.ruleMap.get(config.key);
+        return ruleBuilder?.(config.params, config.level);
+      })
+      .filter((rule): rule is ImageValidationRule => rule !== undefined);
+
+    const mustContainExifRule = this.ruleMap.get("must_contain_exif");
+    if (mustContainExifRule) {
+      this.rules.push(mustContainExifRule({}, "error"));
+    }
+  }
+
   async validate(files: ServerFile[]): Promise<ValidationError[]> {
     const errors: ValidationError[] = [];
     const filesWithExif = await this.extractFilesWithExif(files);
@@ -146,43 +158,63 @@ export class ServerValidator {
 
   private async extractFilesWithExif(
     files: ServerFile[],
-  ): Promise<FileWithExif[]> {
+  ): Promise<ServerFile[]> {
     return Promise.all(
       files.map(async (file) => {
         try {
-          const exif = await exifr.parse(file.buffer);
-          return { file, exif };
+          if (file.exif) {
+            return file;
+          }
+          if (file.buffer) {
+            const exif = await exifr.parse(file.buffer);
+            return { ...file, exif };
+          }
+          return { ...file, exif: undefined };
         } catch (error) {
           console.error(
             `Error extracting EXIF data from ${file.originalname}:`,
             error,
           );
-          return { file, exif: null };
+          return { ...file, exif: undefined };
         }
       }),
     );
   }
   //
-  // private validateFileTypes(
-  //   files: FileWithExif[],
-  //   extensions: string[],
-  //   mimeTypes: string[],
-  // ): { invalidFiles: string[] } {
-  //   const invalidFiles = files.reduce((acc, { file }) => {
-  //     const ext = file.originalname.split(".").pop()?.toLowerCase();
-  //     const normalizedExt = ext === "jpeg" ? "jpg" : ext;
-  //
-  //     const isExtValid = normalizedExt && extensions.includes(normalizedExt);
-  //     const isMimeValid = mimeTypes.includes(file.mimetype);
-  //
-  //     if (!isExtValid || !isMimeValid) {
-  //       return [...acc, file.originalname];
-  //     }
-  //     return acc;
-  //   }, [] as string[]);
-  //
-  //   return { invalidFiles };
-  // }
+  private validateFileTypes(
+    files: ServerFile[],
+    validExtensions: string[],
+    validMimetypes: string[],
+  ): { invalidFiles: string[] } {
+    const invalidFiles = files.reduce((acc, { originalname, mimetype }) => {
+      const ext = originalname.split(".").pop()?.toLowerCase();
+      const normalizedExt = ext === "jpeg" ? "jpg" : ext;
+
+      const isExtValid =
+        normalizedExt && validExtensions.includes(normalizedExt);
+      const isMimeValid = validMimetypes.includes(mimetype);
+
+      if (!isExtValid || !isMimeValid) {
+        return [...acc, originalname];
+      }
+      return acc;
+    }, [] as string[]);
+
+    return { invalidFiles };
+  }
+
+  private async validateMustContainExif(files: ServerFile[]): Promise<{
+    invalidFiles: string[];
+  }> {
+    const invalidFiles = files.reduce((acc, { originalname, exif }) => {
+      if (!exif) {
+        return [...acc, originalname];
+      }
+      return acc;
+    }, [] as string[]);
+    return { invalidFiles };
+  }
+
   //
   // private validateMaxFileSize(
   //   files: FileWithExif[],
