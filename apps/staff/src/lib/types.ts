@@ -1,8 +1,12 @@
-export interface ParticipantData {
-  participantNumber: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  submissions: number;
-  warnings: string[];
+import {
+  CompetitionClass,
+  DeviceGroup,
+  Participant,
+  Submission,
+} from "@vimmer/supabase/types";
+
+export interface ParticipantData extends Participant {
+  submissions: Submission[];
+  competitionClass: CompetitionClass | null;
+  deviceGroup: DeviceGroup | null;
 }
