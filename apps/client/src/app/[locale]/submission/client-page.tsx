@@ -101,6 +101,16 @@ export function SubmissionClientPage({ marathon }: Props) {
             />
           </AnimatedStepWrapper>
         )}
+        {step === STEPS.VerificationStep && (
+          <AnimatedStepWrapper direction={direction}>
+            <UploadSubmissionsStep
+              marathonDomain={marathon.domain}
+              competitionClasses={marathon.competitionClasses}
+              topics={marathon.topics}
+              onPrevStep={handlePrevStep}
+            />
+          </AnimatedStepWrapper>
+        )}
       </AnimatePresence>
     </div>
   );
