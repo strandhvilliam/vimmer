@@ -132,6 +132,7 @@ export type Database = {
           competition_class_id: number | null
           created_at: string
           device_group_id: number | null
+          domain: string
           email: string | null
           id: number
           marathon_id: number
@@ -144,6 +145,7 @@ export type Database = {
           competition_class_id?: number | null
           created_at?: string
           device_group_id?: number | null
+          domain?: string
           email?: string | null
           id?: number
           marathon_id: number
@@ -156,6 +158,7 @@ export type Database = {
           competition_class_id?: number | null
           created_at?: string
           device_group_id?: number | null
+          domain?: string
           email?: string | null
           id?: number
           marathon_id?: number
@@ -328,6 +331,44 @@ export type Database = {
             columns: ["marathon_id"]
             isOneToOne: false
             referencedRelation: "marathons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      validation_errors: {
+        Row: {
+          created_at: string
+          dismissed: boolean
+          id: number
+          message: string | null
+          participant_id: number
+          severity: string
+          submission_id: number | null
+        }
+        Insert: {
+          created_at?: string
+          dismissed?: boolean
+          id?: number
+          message?: string | null
+          participant_id: number
+          severity?: string
+          submission_id?: number | null
+        }
+        Update: {
+          created_at?: string
+          dismissed?: boolean
+          id?: number
+          message?: string | null
+          participant_id?: number
+          severity?: string
+          submission_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "validation_errors_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
             referencedColumns: ["id"]
           },
         ]

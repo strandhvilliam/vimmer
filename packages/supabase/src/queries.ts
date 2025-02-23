@@ -8,8 +8,8 @@ export async function getParticipantById(supabase: SupabaseClient, id: number) {
       `
         *, 
         submissions(*),
-        competition_classes(*),
-        device_groups(*)
+        competition_class:competition_classes(*),
+        device_group:device_groups(*)
     `,
     )
     .eq("id", id)
@@ -19,20 +19,51 @@ export async function getParticipantById(supabase: SupabaseClient, id: number) {
   return toCamelCase(data);
 }
 
+type ParticipantQuery =
+  | {
+      reference: string;
+      domain: string;
+      marathonId?: never;
+    }
+  | {
+      reference: string;
+      domain?: never;
+      marathonId: number;
+    };
+
 export async function getParticipantByReference(
   supabase: SupabaseClient,
-  reference: string,
-  marathonId: number,
+  { reference, marathonId, domain }: ParticipantQuery,
 ) {
-  const { data } = await supabase
+  const query = supabase
     .from("participants")
-    .select("*, submissions(*)")
-    .eq("reference", reference)
-    .eq("marathon_id", marathonId)
-    .maybeSingle()
-    .throwOnError();
+    .select(
+      `
+        *, 
+        submissions(*),
+        competition_class:competition_classes(*),
+        device_group:device_groups(*)
+    `,
+    )
+    .eq("reference", reference);
 
-  return toCamelCase(data);
+  if (domain) {
+    const { data } = await query
+      .eq("domain", domain)
+      .maybeSingle()
+      .throwOnError();
+    return toCamelCase(data);
+  }
+
+  if (marathonId) {
+    const { data } = await query
+      .eq("marathon_id", marathonId)
+      .maybeSingle()
+      .throwOnError();
+    return toCamelCase(data);
+  }
+
+  throw new Error("marathonId or domain must be provided");
 }
 
 export async function getMarathonWithConfigById(

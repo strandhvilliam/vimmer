@@ -27,7 +27,6 @@ export async function updateParticipant(
   id: number,
   dto: UpdateParticipant,
 ) {
-  console.log(toSnakeCase(dto));
   const { data } = await supabase
     .from("participants")
     .update(toSnakeCase(dto))
