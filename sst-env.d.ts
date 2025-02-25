@@ -22,6 +22,10 @@ declare module "sst" {
       "type": "sst.aws.Queue"
       "url": string
     }
+    "StaffApp": {
+      "type": "sst.aws.Nextjs"
+      "url": string
+    }
     "SubmissionBucket": {
       "name": string
       "type": "sst.aws.Bucket"

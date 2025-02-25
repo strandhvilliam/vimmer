@@ -43,6 +43,10 @@ export default $config({
       link: [submissionBucket],
     });
 
+    const staffApp = new sst.aws.Nextjs("StaffApp", {
+      path: "apps/staff",
+    });
+
     processSubmissionQueue.subscribe({
       handler: "./functions/photo-processor/index.handler",
       environment: env,
@@ -67,6 +71,7 @@ export default $config({
     return {
       apps: {
         client: clientApp.url,
+        staff: staffApp.url,
       },
       buckets: {
         submissionBucket: submissionBucket.name,
