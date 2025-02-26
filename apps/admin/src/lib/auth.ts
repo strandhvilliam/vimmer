@@ -1,18 +1,29 @@
 import { betterAuth } from "better-auth";
 import { emailOTP } from "better-auth/plugins";
+import { OTPEmail } from "@vimmer/email";
 import { Pool } from "pg";
+import { resend } from "./resend";
+import { render } from "@react-email/render";
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 export const auth = betterAuth({
-  database: new Pool({
-    connectionString: process.env.DATABASE_URL,
-  }),
+  database: pool,
   secret: process.env.BETTER_AUTH_SECRET,
   plugins: [
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
         switch (type) {
           case "sign-in":
-            console.log(`Login OTP for ${email}: ${otp}`);
+            const { data, error } = await resend.emails.send({
+              from: "Acme <onboarding@resend.dev>",
+              to: [email],
+              subject: "Sign in to Your Account",
+              html: await render(OTPEmail({ otp, username: email })),
+            });
+            console.log({data, error})
             break;
           case "forget-password":
             console.log(`Register OTP for ${email}: ${otp}`);

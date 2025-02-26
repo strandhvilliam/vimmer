@@ -9,7 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@react-email/render": "^1.0.5",
+    "@react-email/tailwind": "^1.0.4",
     "@types/pg": "^8.11.11",
+    "@vimmer/email": "workspace:*",
     "@vimmer/supabase": "workspace:*",
     "@vimmer/ui": "workspace:*",
     "@vimmer/validation": "workspace:*",
@@ -19,7 +22,9 @@
     "next-international": "^1.3.1",
     "pg": "^8.13.3",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-email": "^3.0.7",
+    "resend": "^4.1.2"
   },
   "devDependencies": {
     "typescript": "^5",
