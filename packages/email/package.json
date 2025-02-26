@@ -1,0 +1,19 @@
+{
+  "name": "@vimmer/email",
+  "type": "module",
+  "dependencies": {
+    "@react-email/components": "^0.0.33",
+    "@react-email/render": "^1.0.5",
+    "@react-email/tailwind": "^1.0.4",
+    "react-email": "^3.0.7"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "exports": {
+    ".": "./emails/index.ts"
+  }
+}
