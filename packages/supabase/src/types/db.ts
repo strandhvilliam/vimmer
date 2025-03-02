@@ -462,6 +462,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_marathons: {
+        Row: {
+          created_at: string
+          id: number
+          marathon_id: number
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          marathon_id: number
+          role?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          marathon_id?: number
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_marathons_marathon_id_fkey"
+            columns: ["marathon_id"]
+            isOneToOne: false
+            referencedRelation: "marathons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       validation_errors: {
         Row: {
           created_at: string
