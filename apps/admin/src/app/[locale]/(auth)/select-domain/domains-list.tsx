@@ -10,43 +10,36 @@ import {
 import { Button } from "@vimmer/ui/components/button";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-
-interface Domain {
-  id: string;
-  name: string;
-  description?: string;
-}
+import { Marathon } from "@vimmer/supabase/types";
 
 interface DomainListProps {
-  domains: Domain[];
+  marathons: Marathon[];
 }
 
-export function DomainList({ domains }: DomainListProps) {
+export function DomainList({ marathons }: DomainListProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      {domains.map((domain) => (
-        <DomainCard key={domain.id} domain={domain} />
+      {marathons.map((marathon) => (
+        <DomainCard key={marathon.id} marathon={marathon} />
       ))}
     </div>
   );
 }
 
 interface DomainCardProps {
-  domain: Domain;
+  marathon: Marathon;
 }
 
-function DomainCard({ domain }: DomainCardProps) {
+function DomainCard({ marathon }: DomainCardProps) {
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>
-        <CardTitle>{domain.name}</CardTitle>
-        {domain.description && (
-          <CardDescription>{domain.description}</CardDescription>
-        )}
+        <CardTitle>{marathon.name}</CardTitle>
+        <CardDescription>{marathon.domain}</CardDescription>
       </CardHeader>
 
       <CardFooter className="mt-auto">
-        <Link href={`/domains/${domain.id}`} className="w-full">
+        <Link href={`/domains/${marathon.id}`} className="w-full">
           <Button className="w-full" variant="default">
             <span>Enter domain</span>
             <ArrowRight className="ml-2 h-4 w-4" />

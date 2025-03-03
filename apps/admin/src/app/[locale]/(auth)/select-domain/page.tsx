@@ -11,72 +11,40 @@ import {
 import Link from "next/link";
 import { DomainList } from "./domains-list";
 import { ContactDomainButton } from "./contact-button";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
+import { getUserWithMarathons } from "@vimmer/supabase/queries";
+import { createClient } from "@vimmer/supabase/server";
+import { Marathon } from "@vimmer/supabase/types";
 
-interface Domain {
-  id: string;
-  name: string;
-  description?: string;
-}
+export async function getUserDomains(): Promise<Marathon[]> {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-interface Domain {
-  id: string;
-  name: string;
-  description?: string;
-}
-
-/**
- * Fetches the domains connected to the authenticated user
- * Replace this with your actual API implementation
- */
-export async function getDomains(): Promise<Domain[]> {
-  // This is a placeholder for your actual API call
-  // In a real implementation, you would:
-  // 1. Get the authenticated user (e.g., from a session)
-  // 2. Call your backend API to fetch their domains
-
-  try {
-    // Example of how you might implement this with fetch:
-    // const response = await fetch('/api/domains', {
-    //   headers: {
-    //     'Authorization': `Bearer ${session.token}`,
-    //   },
-    // });
-    // if (!response.ok) throw new Error('Failed to fetch domains');
-    // return response.json();
-
-    // For demonstration purposes, we'll return an empty array
-    // Replace this with your actual implementation
-    return [];
-
-    // Sample data for testing:
-    // return [
-    //   {
-    //     id: "domain-1",
-    //     name: "Organization Alpha",
-    //     description: "Main organization for product development teams"
-    //   },
-    //   {
-    //     id: "domain-2",
-    //     name: "Marketing Department",
-    //     description: "Domain for marketing team members"
-    //   }
-    // ];
-  } catch (error) {
-    console.error("Failed to fetch domains:", error);
+  if (!session) {
     return [];
   }
+  const supabase = await createClient();
+  const user = await getUserWithMarathons(supabase, session.user.id);
+  return (
+    user?.userMarathons.map((userMarathon) => userMarathon.marathons) ?? []
+  );
 }
 
 export default async function DomainsPage() {
   // Fetch domains for the authenticated user
-  const domains = await getDomains();
-  const hasDomains = domains.length > 0;
+  const marathons = await getUserDomains();
 
   return (
     <div className="container max-w-4xl py-10">
       <h1 className="mb-6 text-3xl font-bold">Your Domains</h1>
 
-      {hasDomains ? <DomainList domains={domains} /> : <EmptyDomainsState />}
+      {marathons.length > 0 ? (
+        <DomainList marathons={marathons} />
+      ) : (
+        <EmptyDomainsState />
+      )}
     </div>
   );
 }
