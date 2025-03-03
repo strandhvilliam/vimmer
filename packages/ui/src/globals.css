@@ -103,3 +103,33 @@
     transform: translateY(-8px);
   }
 }
+
+/* Custom dot pattern backgrounds */
+@layer utilities {
+  .bg-dot-pattern-light {
+    background-image: radial-gradient(
+      circle,
+      rgb(212 212 212) 1px,
+      transparent 1px
+    );
+    background-size: 16px 16px;
+  }
+
+  .bg-dot-pattern-dark {
+    background-image: radial-gradient(
+      circle,
+      rgb(38 38 38) 1px,
+      transparent 1px
+    );
+    background-size: 16px 16px;
+  }
+}
+
+@keyframes highlightAnimation {
+  0% {
+    transform: scaleX(0);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
