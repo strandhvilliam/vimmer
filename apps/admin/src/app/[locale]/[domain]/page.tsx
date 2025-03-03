@@ -1,10 +1,10 @@
 interface PageProps {
-  params: {
+  params: Promise<{
     domain: string;
-  };
+  }>;
 }
 
-export default function DomainPage({ params }: PageProps) {
-  const { domain } = params;
+export default async function DomainPage({ params }: PageProps) {
+  const { domain } = await params;
   return <div>DomainPage {domain}</div>;
 }
