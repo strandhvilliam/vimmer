@@ -37,6 +37,8 @@ export async function middleware(request: NextRequest) {
   const url = new URL(pathnameWithoutLocale || "/", request.url);
 
   const session = getSessionCookie(request);
+  console.log(request.cookies);
+  console.log(session);
 
   if (!session && !authRoutes.includes(url.pathname)) {
     const returnUrl = `${url.pathname.substring(1)}${url.search}`;
@@ -67,7 +69,13 @@ export async function middleware(request: NextRequest) {
       response.cookies.delete("domainAccessToken");
       return response;
     }
+
+    if (url.pathname === "/") {
+      const redirectUrl = new URL(`/${activeDomainCookie}`, request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
   }
+
   return response;
 }
 

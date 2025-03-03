@@ -10,7 +10,7 @@ export async function getParticipantById(supabase: SupabaseClient, id: number) {
         submissions(*),
         competition_class:competition_classes(*),
         device_group:device_groups(*)
-    `,
+    `
     )
     .eq("id", id)
     .maybeSingle()
@@ -33,7 +33,7 @@ type ParticipantQuery =
 
 export async function getParticipantByReference(
   supabase: SupabaseClient,
-  { reference, marathonId, domain }: ParticipantQuery,
+  { reference, marathonId, domain }: ParticipantQuery
 ) {
   const query = supabase
     .from("participants")
@@ -43,7 +43,7 @@ export async function getParticipantByReference(
         submissions(*),
         competition_class:competition_classes(*),
         device_group:device_groups(*)
-    `,
+    `
     )
     .eq("reference", reference);
 
@@ -68,7 +68,7 @@ export async function getParticipantByReference(
 
 export async function getMarathonWithConfigById(
   supabase: SupabaseClient,
-  id: number,
+  id: number
 ) {
   const { data } = await supabase
     .from("marathons")
@@ -78,7 +78,7 @@ export async function getMarathonWithConfigById(
       competition_classes (*),
       device_groups (*),
       topics (*)
-      `,
+      `
     )
     .eq("id", id)
     .maybeSingle()
@@ -89,7 +89,7 @@ export async function getMarathonWithConfigById(
 
 export async function getMarathonWithConfigByDomain(
   supabase: SupabaseClient,
-  domain: string,
+  domain: string
 ) {
   const { data } = await supabase
     .from("marathons")
@@ -99,7 +99,7 @@ export async function getMarathonWithConfigByDomain(
       competition_classes (*),
       device_groups (*),
       topics (*)
-      `,
+      `
     )
     .eq("domain", domain)
     .maybeSingle()
@@ -109,7 +109,7 @@ export async function getMarathonWithConfigByDomain(
 
 export async function getManySubmissionsByKeys(
   supabase: SupabaseClient,
-  keys: string[],
+  keys: string[]
 ) {
   const { data } = await supabase
     .from("submissions")
@@ -117,4 +117,22 @@ export async function getManySubmissionsByKeys(
     .in("key", keys)
     .throwOnError();
   return data?.map(toCamelCase) ?? [];
+}
+
+export async function getUserWithMarathons(
+  supabase: SupabaseClient,
+  userId: string
+) {
+  const { data } = await supabase
+    .from("user")
+    .select(
+      `
+      *,
+      user_marathons (*, marathons (*))
+      `
+    )
+    .eq("id", userId)
+    .maybeSingle()
+    .throwOnError();
+  return toCamelCase(data);
 }

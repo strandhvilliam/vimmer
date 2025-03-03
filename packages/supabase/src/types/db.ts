@@ -468,18 +468,21 @@ export type Database = {
           id: number
           marathon_id: number
           role: string
+          user_id: string
         }
         Insert: {
           created_at?: string
           id?: number
           marathon_id: number
           role?: string
+          user_id: string
         }
         Update: {
           created_at?: string
           id?: number
           marathon_id?: number
           role?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -487,6 +490,13 @@ export type Database = {
             columns: ["marathon_id"]
             isOneToOne: false
             referencedRelation: "marathons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_marathons_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
         ]
