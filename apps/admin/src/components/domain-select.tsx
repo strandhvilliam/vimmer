@@ -68,7 +68,7 @@ export function DomainSelect({ marathonsPromise }: DomainSelectProps) {
             </div>
             <Button
               className="ml-auto"
-              onClick={() => handleDomainSelect(marathon.id.toString())}
+              onClick={() => handleDomainSelect(marathon.domain)}
               disabled={isExecuting}
             >
               {isExecuting && selectedDomainId === marathon.id.toString() ? (
