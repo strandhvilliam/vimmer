@@ -37,8 +37,6 @@ export async function middleware(request: NextRequest) {
   const url = new URL(pathnameWithoutLocale || "/", request.url);
 
   const session = getSessionCookie(request);
-  console.log(request.cookies);
-  console.log(session);
 
   if (!session && !authRoutes.includes(url.pathname)) {
     const returnUrl = `${url.pathname.substring(1)}${url.search}`;
