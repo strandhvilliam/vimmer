@@ -136,3 +136,15 @@ export async function getUserWithMarathons(
     .throwOnError();
   return toCamelCase(data);
 }
+
+export async function getMarathonsByUserId(
+  supabase: SupabaseClient,
+  userId: string
+) {
+  const { data } = await supabase
+    .from("user_marathons")
+    .select("marathons(*)")
+    .eq("user_id", userId)
+    .throwOnError();
+  return data?.flatMap(({ marathons }) => marathons).map(toCamelCase) ?? [];
+}

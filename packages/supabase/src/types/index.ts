@@ -48,4 +48,9 @@ export type SelectSubmissionError = ToCamelCaseObject<
 export type InsertSubmissionError = ToCamelCaseObject<
   TablesInsert<"submission_errors">
 >;
+
+export type UserData = ToCamelCaseObject<Tables<"user">>;
+export type InsertUserData = ToCamelCaseObject<TablesInsert<"user">>;
+export type UpdateUserData = ToCamelCaseObject<TablesUpdate<"user">>;
+
 export * from "./db";
