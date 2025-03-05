@@ -1,20 +1,19 @@
 import { createClient } from "@vimmer/supabase/server";
 import { getMarathonWithConfigByDomain } from "@vimmer/supabase/queries";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@vimmer/ui/components/card";
-import { Button } from "@vimmer/ui/components/button";
-import { Plus } from "lucide-react";
-import { TopicsTable } from "@/components/topics-table";
+import { TopicsWrapper } from "@/components/topics-wrapper";
+import { Metadata } from "next";
 
 interface TopicsPageProps {
   params: Promise<{
     domain: string;
   }>;
 }
+
+export const metadata: Metadata = {
+  title: "Topics Management",
+  description:
+    "Manage and organize your marathon topics, control their visibility and scheduling.",
+};
 
 export default async function TopicsPage({ params }: TopicsPageProps) {
   const supabase = await createClient();
@@ -30,16 +29,11 @@ export default async function TopicsPage({ params }: TopicsPageProps) {
   );
 
   return (
-    <div className="container py-8 flex flex-col max-h-screen">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Topics</h1>
-        <Button>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Topic
-        </Button>
-      </div>
-
-      {/* <TopicsTable topics={sortedTopics} /> */}
+    <div className="flex flex-col h-screen">
+      <TopicsWrapper
+        initialTopics={sortedTopics}
+        marathonId={marathon.id.toString()}
+      />
     </div>
   );
 }
