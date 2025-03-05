@@ -4,6 +4,7 @@ import {
 } from "@supabase/supabase-js";
 import { Database, Tables, TablesInsert, TablesUpdate } from "./db";
 import { ToCamelCaseObject } from "./helpers";
+import { MarathonConfig } from "./marathon-config";
 
 export type SupabaseClient = DBClient<Database>;
 export type SupabaseRealtimeChannel = RealtimeChannel;
@@ -16,7 +17,9 @@ export type Submission = ToCamelCaseObject<Tables<"submissions">>;
 export type InsertSubmission = ToCamelCaseObject<TablesInsert<"submissions">>;
 export type UpdateSubmission = ToCamelCaseObject<TablesUpdate<"submissions">>;
 
-export type Marathon = ToCamelCaseObject<Tables<"marathons">>;
+export type Marathon = ToCamelCaseObject<Tables<"marathons">> & {
+  config?: MarathonConfig;
+};
 export type InsertMarathon = ToCamelCaseObject<TablesInsert<"marathons">>;
 export type UpdateMarathon = ToCamelCaseObject<TablesUpdate<"marathons">>;
 
@@ -54,3 +57,5 @@ export type InsertUserData = ToCamelCaseObject<TablesInsert<"user">>;
 export type UpdateUserData = ToCamelCaseObject<TablesUpdate<"user">>;
 
 export * from "./db";
+export * from "./helpers";
+export * from "./marathon-config";

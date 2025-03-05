@@ -1,34 +1,28 @@
 import { AppSidebar } from "../../../components/app-sidebar";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@vimmer/ui/components/breadcrumb";
-import { Separator } from "@vimmer/ui/components/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@vimmer/ui/components/sidebar";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { AppHeader } from "../../../components/app-header";
+import { SidebarInset, SidebarProvider } from "@vimmer/ui/components/sidebar";
 import { Suspense } from "react";
 
-export default async function Layout({
-  children,
-}: {
+interface LayoutProps {
   children: React.ReactNode;
-}) {
+  params: Promise<{
+    domain: string;
+  }>;
+}
+
+export default async function Layout({ children, params }: LayoutProps) {
+  const { domain } = await params;
+
   return (
     <SidebarProvider>
       <Suspense fallback={<div>Loading...</div>}>
         <AppSidebar />
       </Suspense>
       <SidebarInset>
-        <div className="flex flex-1 flex-col">{children}</div>
+        <div className="flex flex-1 flex-col">
+          <AppHeader domain={domain} />
+          {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );
