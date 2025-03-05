@@ -104,7 +104,19 @@ export async function getMarathonWithConfigByDomain(
     .eq("domain", domain)
     .maybeSingle()
     .throwOnError();
-  return toCamelCase(data);
+
+  const marathon = toCamelCase(data);
+  if (marathon) {
+    const { startDate, endDate, ...rest } = marathon;
+    return {
+      ...rest,
+      config: {
+        startDate,
+        endDate,
+      },
+    };
+  }
+  return marathon;
 }
 
 export async function getManySubmissionsByKeys(

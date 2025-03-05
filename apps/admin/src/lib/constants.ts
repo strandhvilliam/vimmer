@@ -9,6 +9,7 @@ import {
   BookOpen,
   Settings,
   LucideIcon,
+  Tag,
 } from "lucide-react";
 
 export const NAV_LINKS = {
@@ -39,6 +40,11 @@ export const NAV_LINKS = {
       name: "Participants",
       url: "/participants",
       icon: Users as LucideIcon,
+    },
+    {
+      name: "Topics",
+      url: "/topics",
+      icon: Tag as LucideIcon,
     },
     {
       name: "Staff",
