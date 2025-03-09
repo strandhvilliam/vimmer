@@ -1,41 +1,82 @@
-import { auth } from "@/lib/auth";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
+  SidebarMenuItem,
+  SidebarMenu,
   SidebarHeader,
-  SidebarRail,
+  SidebarFooter,
 } from "@vimmer/ui/components/sidebar";
-import { headers } from "next/headers";
 import SidebarLinks from "./sidebar-links";
-import { DomainSwitcher } from "./domain-switch-popup";
-import { getMarathonsByUserId } from "@vimmer/supabase/queries";
-import { createClient } from "@vimmer/supabase/server";
+import { Suspense } from "react";
+import { getSession } from "@/lib/auth";
+import { getUserMarathons } from "@vimmer/supabase/cached-queries";
 import { NavUser } from "./nav-user";
+import { DomainSwitchDropdown } from "./domain-switch-dropdown";
+import { Skeleton } from "@vimmer/ui/components/skeleton";
 
 export async function AppSidebar() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    return null;
-  }
-
-  const supabase = await createClient();
-  const marathonsPromise = getMarathonsByUserId(supabase, session.user.id);
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
-        <DomainSwitcher marathonsPromise={marathonsPromise} />
-      </SidebarHeader>
+      <Suspense fallback={<SidebarTopSkeleton />}>
+        <SidebarTop />
+      </Suspense>
       <SidebarContent>
         <SidebarLinks />
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={session.user} />
-      </SidebarFooter>
-      <SidebarRail />
+      <Suspense fallback={<SidebarBottomSkeleton />}>
+        <SidebarBottom />
+      </Suspense>
     </Sidebar>
+  );
+}
+
+async function SidebarTop() {
+  const session = await getSession();
+  if (!session) {
+    return null;
+  }
+  const marathons = await getUserMarathons(session.user.id);
+  return (
+    <SidebarHeader>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <DomainSwitchDropdown marathons={marathons} />
+        </SidebarMenuItem>
+      </SidebarMenu>
+    </SidebarHeader>
+  );
+}
+
+async function SidebarBottom() {
+  const session = await getSession();
+  if (!session) {
+    return null;
+  }
+  return (
+    <SidebarFooter>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <NavUser user={session.user} />
+        </SidebarMenuItem>
+      </SidebarMenu>
+    </SidebarFooter>
+  );
+}
+
+//TODO: Make better skeleton
+async function SidebarBottomSkeleton() {
+  return (
+    <SidebarFooter>
+      <Skeleton className="h-12 w-full" />
+    </SidebarFooter>
+  );
+}
+
+//TODO: Make better skeleton
+async function SidebarTopSkeleton() {
+  return (
+    <SidebarHeader>
+      <Skeleton className="h-12 w-full" />
+    </SidebarHeader>
   );
 }

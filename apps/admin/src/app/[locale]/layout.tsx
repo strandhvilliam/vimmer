@@ -27,7 +27,7 @@ export default async function RootLayout({
 }) {
   const { locale } = await params;
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.className} antialiased`}>
         <Providers locale={locale}>{children}</Providers>
       </body>

@@ -12,21 +12,6 @@ const config = {
   ],
   prefix: "",
   theme: {
-    colors: {
-      pomegranate: {
-        "50": "#fff2f1",
-        "100": "#ffe3e0",
-        "200": "#ffcbc5",
-        "300": "#ffa79d",
-        "400": "#ff7465",
-        "500": "#fe3923",
-        "600": "#ec2b16",
-        "700": "#c7210e",
-        "800": "#a41f10",
-        "900": "#882014",
-        "950": "#4a0c05",
-      },
-    },
     container: {
       center: true,
       padding: "2rem",
@@ -40,6 +25,19 @@ const config = {
         mono: ["var(--font-geist-mono)"],
       },
       colors: {
+        pomegranate: {
+          "50": "#fff2f1",
+          "100": "#ffe3e0",
+          "200": "#ffcbc5",
+          "300": "#ffa79d",
+          "400": "#ff7465",
+          "500": "#fe3923",
+          "600": "#ec2b16",
+          "700": "#c7210e",
+          "800": "#a41f10",
+          "900": "#882014",
+          "950": "#4a0c05",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

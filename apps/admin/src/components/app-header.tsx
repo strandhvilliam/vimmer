@@ -1,5 +1,4 @@
-import { createClient } from "@vimmer/supabase/server";
-import { getMarathonWithConfigByDomain } from "@vimmer/supabase/queries";
+import { getMarathonWithConfigByDomain } from "@vimmer/supabase/cached-queries";
 import { SidebarTriggerButton } from "./sidebar-trigger-button";
 import { MarathonStatusDisplay } from "./marathon-status-display";
 
@@ -8,9 +7,7 @@ interface AppHeaderProps {
 }
 
 export async function AppHeader({ domain }: AppHeaderProps) {
-  //TODO: Use cached version in future
-  const supabase = await createClient();
-  const marathon = await getMarathonWithConfigByDomain(supabase, domain);
+  const marathon = await getMarathonWithConfigByDomain(domain);
 
   return (
     <div className="z-50 w-full border-b px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -18,8 +15,8 @@ export async function AppHeader({ domain }: AppHeaderProps) {
         <SidebarTriggerButton />
         <div className="flex-1" />
         <MarathonStatusDisplay
-          marathonStartDate={marathon?.config?.startDate}
-          marathonEndDate={marathon?.config?.endDate}
+          marathonStartDate={marathon?.startDate}
+          marathonEndDate={marathon?.endDate}
           isSetupComplete={true}
         />
       </div>

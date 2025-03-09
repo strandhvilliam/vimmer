@@ -1,7 +1,10 @@
 import type { Marathon, Participant, SupabaseClient } from "./types/";
 import { toCamelCase } from "./utils/format-helpers";
 
-export async function getParticipantById(supabase: SupabaseClient, id: number) {
+export async function getParticipantByIdQuery(
+  supabase: SupabaseClient,
+  id: number
+) {
   const { data } = await supabase
     .from("participants")
     .select(
@@ -31,7 +34,7 @@ type ParticipantQuery =
       marathonId: number;
     };
 
-export async function getParticipantByReference(
+export async function getParticipantByReferenceQuery(
   supabase: SupabaseClient,
   { reference, marathonId, domain }: ParticipantQuery
 ) {
@@ -66,7 +69,7 @@ export async function getParticipantByReference(
   throw new Error("marathonId or domain must be provided");
 }
 
-export async function getMarathonWithConfigById(
+export async function getMarathonWithConfigByIdQuery(
   supabase: SupabaseClient,
   id: number
 ) {
@@ -87,7 +90,7 @@ export async function getMarathonWithConfigById(
   return toCamelCase(data);
 }
 
-export async function getMarathonWithConfigByDomain(
+export async function getMarathonWithConfigByDomainQuery(
   supabase: SupabaseClient,
   domain: string
 ) {
@@ -105,21 +108,10 @@ export async function getMarathonWithConfigByDomain(
     .maybeSingle()
     .throwOnError();
 
-  const marathon = toCamelCase(data);
-  if (marathon) {
-    const { startDate, endDate, ...rest } = marathon;
-    return {
-      ...rest,
-      config: {
-        startDate,
-        endDate,
-      },
-    };
-  }
-  return marathon;
+  return toCamelCase(data);
 }
 
-export async function getManySubmissionsByKeys(
+export async function getManySubmissionsByKeysQuery(
   supabase: SupabaseClient,
   keys: string[]
 ) {
@@ -131,7 +123,7 @@ export async function getManySubmissionsByKeys(
   return data?.map(toCamelCase) ?? [];
 }
 
-export async function getUserWithMarathons(
+export async function getUserWithMarathonsQuery(
   supabase: SupabaseClient,
   userId: string
 ) {
@@ -149,7 +141,7 @@ export async function getUserWithMarathons(
   return toCamelCase(data);
 }
 
-export async function getMarathonsByUserId(
+export async function getMarathonsByUserIdQuery(
   supabase: SupabaseClient,
   userId: string
 ) {

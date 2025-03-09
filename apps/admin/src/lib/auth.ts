@@ -1,9 +1,10 @@
-import { betterAuth } from "better-auth";
+import { betterAuth, Session, User } from "better-auth";
 import { emailOTP } from "better-auth/plugins";
-import { OTPEmail } from "@vimmer/email";
+import { OTPEmail } from "@vimmer/email/otp-email";
 import { Pool } from "pg";
 import { resend } from "./resend";
 import { render } from "@react-email/render";
+import { headers } from "next/headers";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -12,6 +13,10 @@ const pool = new Pool({
 export const auth = betterAuth({
   database: pool,
   secret: process.env.BETTER_AUTH_SECRET,
+  cookieCache: {
+    enabled: true,
+    maxAge: 5 * 60,
+  },
   plugins: [
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
@@ -23,7 +28,7 @@ export const auth = betterAuth({
               subject: "Sign in to Your Account",
               html: await render(OTPEmail({ otp, username: email })),
             });
-            console.log({data, error})
+            console.log({ data, error });
             break;
           case "forget-password":
             console.log(`Register OTP for ${email}: ${otp}`);
@@ -38,3 +43,12 @@ export const auth = betterAuth({
     }),
   ],
 });
+
+export async function getSession(): Promise<{
+  session: Session;
+  user: User;
+} | null> {
+  return auth.api.getSession({
+    headers: await headers(),
+  });
+}

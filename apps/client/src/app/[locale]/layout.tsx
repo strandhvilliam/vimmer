@@ -24,7 +24,7 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
     >
-      <body className="bg-muted">
+      <body className="bg-muted ">
         <Providers locale={locale}>{children}</Providers>
       </body>
     </html>

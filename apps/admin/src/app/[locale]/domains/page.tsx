@@ -12,7 +12,7 @@ import { LanguageToggle } from "../(auth)/components/language-toggle";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { createClient } from "@vimmer/supabase/server";
-import { getUserWithMarathons } from "@vimmer/supabase/queries";
+import { getUserWithMarathonsQuery } from "@vimmer/supabase/queries";
 import { Marathon } from "@vimmer/supabase/types";
 import { SelectDomainTitle } from "@/components/select-domain-title";
 import { DomainSelectSkeleton } from "@/components/domain-select-skeleton";
@@ -26,7 +26,7 @@ export async function getUserDomains(): Promise<Marathon[]> {
     return [];
   }
   const supabase = await createClient();
-  const user = await getUserWithMarathons(supabase, session.user.id);
+  const user = await getUserWithMarathonsQuery(supabase, session.user.id);
   return (
     user?.userMarathons.map((userMarathon) => userMarathon.marathons) ?? []
   );

@@ -277,7 +277,7 @@ export function TopicsTable({ topics, onTopicsChange }: TopicsTableProps) {
       id: "submissions",
       header: "Submissions",
       cell: ({ row }) => {
-        const count = Math.floor(Math.random() * 50) + 10;
+        const count = row.original.orderIndex + 1 * 10;
         return (
           <TooltipProvider>
             <Tooltip>
@@ -331,7 +331,7 @@ export function TopicsTable({ topics, onTopicsChange }: TopicsTableProps) {
       cell: ({ row }) => {
         const topic = row.original;
         // For demo purposes, generate a random number of submissions
-        const submissionCount = Math.floor(Math.random() * 50) + 10;
+        const submissionCount = topic.orderIndex + 1 * 10;
 
         return (
           <TooltipProvider>

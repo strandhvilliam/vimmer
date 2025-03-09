@@ -1,5 +1,5 @@
 import { createClient } from "@vimmer/supabase/lambda";
-import { getParticipantById } from "@vimmer/supabase/queries";
+import { getParticipantByIdQuery } from "@vimmer/supabase/queries";
 import {
   createRule,
   ServerValidator,
@@ -16,9 +16,9 @@ export const handler: Handler = async (event): Promise<void> => {
 
   const supabase = await createClient();
 
-  const participantWithSubmissions = await getParticipantById(
+  const participantWithSubmissions = await getParticipantByIdQuery(
     supabase,
-    participantId,
+    participantId
   );
   if (!participantWithSubmissions) {
     throw new Error(`Participant with id ${participantId} not found`);

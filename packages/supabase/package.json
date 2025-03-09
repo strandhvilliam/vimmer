@@ -22,6 +22,7 @@
     "./browser": "./src/clients/browser.ts",
     "./lambda": "./src/clients/lambda.ts",
     "./queries": "./src/queries.ts",
-    "./mutations": "./src/mutations.ts"
+    "./mutations": "./src/mutations.ts",
+    "./cached-queries": "./src/cached-queries.ts"
   }
 }

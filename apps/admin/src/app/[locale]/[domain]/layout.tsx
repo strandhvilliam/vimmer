@@ -1,7 +1,8 @@
-import { AppSidebar } from "../../../components/app-sidebar";
-import { AppHeader } from "../../../components/app-header";
+import { AppSidebar } from "@/components/app-sidebar";
+import { AppHeader } from "@/components/app-header";
 import { SidebarInset, SidebarProvider } from "@vimmer/ui/components/sidebar";
-import { Suspense } from "react";
+import { getSession } from "@/lib/auth";
+import { SessionProvider } from "@/lib/hooks/use-session";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,20 +11,24 @@ interface LayoutProps {
   }>;
 }
 
-export default async function Layout({ children, params }: LayoutProps) {
+export default async function DashboardLayout({
+  children,
+  params,
+}: LayoutProps) {
   const { domain } = await params;
+  const sessionPromise = getSession();
 
   return (
-    <SidebarProvider>
-      <Suspense fallback={<div>Loading...</div>}>
+    <SessionProvider sessionPromise={sessionPromise}>
+      <SidebarProvider>
         <AppSidebar />
-      </Suspense>
-      <SidebarInset>
-        <div className="flex flex-1 flex-col">
-          <AppHeader domain={domain} />
-          {children}
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+        <SidebarInset>
+          <div className="flex flex-1 flex-col max-h-screen">
+            <AppHeader domain={domain} />
+            {children}
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
+    </SessionProvider>
   );
 }

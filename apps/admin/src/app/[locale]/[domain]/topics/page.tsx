@@ -1,5 +1,4 @@
-import { createClient } from "@vimmer/supabase/server";
-import { getMarathonWithConfigByDomain } from "@vimmer/supabase/queries";
+import { getMarathonWithConfigByDomain } from "@vimmer/supabase/cached-queries";
 import { TopicsWrapper } from "@/components/topics-wrapper";
 import { Metadata } from "next";
 
@@ -16,9 +15,8 @@ export const metadata: Metadata = {
 };
 
 export default async function TopicsPage({ params }: TopicsPageProps) {
-  const supabase = await createClient();
   const { domain } = await params;
-  const marathon = await getMarathonWithConfigByDomain(supabase, domain);
+  const marathon = await getMarathonWithConfigByDomain(domain);
 
   if (!marathon) {
     return <div>Marathon not found</div>;
@@ -29,11 +27,9 @@ export default async function TopicsPage({ params }: TopicsPageProps) {
   );
 
   return (
-    <div className="flex flex-col h-screen">
-      <TopicsWrapper
-        initialTopics={sortedTopics}
-        marathonId={marathon.id.toString()}
-      />
-    </div>
+    <TopicsWrapper
+      initialTopics={sortedTopics}
+      marathonId={marathon.id.toString()}
+    />
   );
 }
