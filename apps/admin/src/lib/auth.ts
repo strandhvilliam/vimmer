@@ -48,7 +48,9 @@ export async function getSession(): Promise<{
   session: Session;
   user: User;
 } | null> {
-  return auth.api.getSession({
-    headers: await headers(),
-  });
+  return headers().then((headers) =>
+    auth.api.getSession({
+      headers: headers,
+    })
+  );
 }

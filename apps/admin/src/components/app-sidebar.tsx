@@ -23,9 +23,13 @@ export async function AppSidebar() {
       <SidebarContent>
         <SidebarLinks />
       </SidebarContent>
-      <Suspense fallback={<SidebarBottomSkeleton />}>
-        <SidebarBottom />
-      </Suspense>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <NavUser />
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
@@ -44,31 +48,6 @@ async function SidebarTop() {
         </SidebarMenuItem>
       </SidebarMenu>
     </SidebarHeader>
-  );
-}
-
-async function SidebarBottom() {
-  const session = await getSession();
-  if (!session) {
-    return null;
-  }
-  return (
-    <SidebarFooter>
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <NavUser user={session.user} />
-        </SidebarMenuItem>
-      </SidebarMenu>
-    </SidebarFooter>
-  );
-}
-
-//TODO: Make better skeleton
-async function SidebarBottomSkeleton() {
-  return (
-    <SidebarFooter>
-      <Skeleton className="h-12 w-full" />
-    </SidebarFooter>
   );
 }
 

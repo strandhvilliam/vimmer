@@ -24,10 +24,13 @@ import {
   DropdownMenuTrigger,
 } from "@vimmer/ui/components/dropdown-menu";
 import { SidebarMenuButton, useSidebar } from "@vimmer/ui/components/sidebar";
-import { User } from "better-auth";
+import { useSession } from "@/lib/hooks/use-session";
 
-export function NavUser({ user }: { user: User }) {
+export function NavUser() {
+  const { user } = useSession();
   const { isMobile } = useSidebar();
+  if (!user) return null;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

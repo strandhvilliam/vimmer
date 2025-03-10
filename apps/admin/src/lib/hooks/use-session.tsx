@@ -2,10 +2,11 @@
 
 import { Session } from "better-auth";
 import { User } from "better-auth";
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, ReactNode, use } from "react";
 
 type SessionContextType = {
-  sessionPromise: Promise<{ session: Session; user: User } | null>;
+  session: Session | null;
+  user: User | null;
 };
 
 const SessionContext = createContext<SessionContextType | null>(null);
@@ -25,9 +26,10 @@ export function SessionProvider({
   children: ReactNode;
   sessionPromise: Promise<{ session: Session; user: User } | null>;
 }) {
+  const data = use(sessionPromise);
+  const value = data ?? { session: null, user: null };
+
   return (
-    <SessionContext.Provider value={{ sessionPromise }}>
-      {children}
-    </SessionContext.Provider>
+    <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
   );
 }

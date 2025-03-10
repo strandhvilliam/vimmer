@@ -5,7 +5,7 @@ import { SessionProvider } from "@/lib/hooks/use-session";
 import { I18nProviderClient } from "@/locales/client";
 import { Toaster } from "@vimmer/ui/components/toaster";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { ThemeProvider } from "@/contexts/theme-context";
+import { ThemeProvider } from "@/lib/contexts/theme-context";
 import type { ReactNode } from "react";
 
 type ProviderProps = {
