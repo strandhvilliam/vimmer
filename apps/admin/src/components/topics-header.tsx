@@ -6,7 +6,6 @@ import { AddTopicButton } from "./add-topic-button";
 
 interface TopicsHeaderProps {
   marathonId: string;
-  hasChanges: boolean;
   isLoading: boolean;
   onSave: () => Promise<void>;
   hasOrderChanges?: boolean;
@@ -14,7 +13,6 @@ interface TopicsHeaderProps {
 
 export function TopicsHeader({
   marathonId,
-  hasChanges,
   isLoading,
   onSave,
   hasOrderChanges,
@@ -40,12 +38,6 @@ export function TopicsHeader({
               <Button onClick={onSave} disabled={isLoading} variant="secondary">
                 <ArrowUpDown className="w-4 h-4 mr-2" />
                 Update Order
-              </Button>
-            )}
-            {hasChanges && !hasOrderChanges && (
-              <Button onClick={onSave} disabled={isLoading}>
-                <Save className="w-4 h-4 mr-2" />
-                Save Changes
               </Button>
             )}
             <AddTopicButton marathonId={parseInt(marathonId)} />
