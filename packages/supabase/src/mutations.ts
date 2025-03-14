@@ -6,12 +6,13 @@ import {
   SupabaseClient,
   UpdateParticipant,
   UpdateSubmission,
+  UpdateTopic,
 } from "./types";
 import { toCamelCase, toSnakeCase } from "./utils/format-helpers";
 
 export async function createParticipant(
   supabase: SupabaseClient,
-  dto: InsertParticipant,
+  dto: InsertParticipant
 ) {
   const { data } = await supabase
     .from("participants")
@@ -25,7 +26,7 @@ export async function createParticipant(
 export async function updateParticipant(
   supabase: SupabaseClient,
   id: number,
-  dto: UpdateParticipant,
+  dto: UpdateParticipant
 ) {
   const { data } = await supabase
     .from("participants")
@@ -39,7 +40,7 @@ export async function updateParticipant(
 
 export async function createSubmission(
   supabase: SupabaseClient,
-  dto: InsertSubmission,
+  dto: InsertSubmission
 ) {
   const { data } = await supabase
     .from("submissions")
@@ -52,7 +53,7 @@ export async function createSubmission(
 
 export async function createMultipleSubmissions(
   supabase: SupabaseClient,
-  dto: InsertSubmission[],
+  dto: InsertSubmission[]
 ) {
   const { data } = await supabase
     .from("submissions")
@@ -74,7 +75,7 @@ export async function insertLog(supabase: SupabaseClient, data: InsertLog) {
 export async function updateSubmissionByKey(
   supabase: SupabaseClient,
   key: string,
-  dto: UpdateSubmission,
+  dto: UpdateSubmission
 ) {
   const { data } = await supabase
     .from("submissions")
@@ -89,7 +90,7 @@ export async function updateSubmissionByKey(
 export async function updateSubmissionById(
   supabase: SupabaseClient,
   id: number,
-  dto: UpdateSubmission,
+  dto: UpdateSubmission
 ) {
   const { data } = await supabase
     .from("submissions")
@@ -103,14 +104,14 @@ export async function updateSubmissionById(
 
 export async function addSubmissionError(
   supabase: SupabaseClient,
-  dto: InsertSubmissionError,
+  dto: InsertSubmissionError
 ) {
   await supabase.from("submission_errors").insert(toSnakeCase(dto));
 }
 
 export async function addMultipleSubmissionErrors(
   supabase: SupabaseClient,
-  dtos: InsertSubmissionError[],
+  dtos: InsertSubmissionError[]
 ) {
   await supabase.from("submission_errors").insert(dtos.map(toSnakeCase));
 }
@@ -118,7 +119,7 @@ export async function addMultipleSubmissionErrors(
 export async function incrementUploadCounter(
   supabase: SupabaseClient,
   participantId: number,
-  totalExpected: number,
+  totalExpected: number
 ) {
   const { data } = await supabase
     .rpc("increment_upload_counter", {
@@ -132,4 +133,19 @@ export async function incrementUploadCounter(
     status: string;
     isComplete: boolean;
   };
+}
+
+export async function updateTopic(
+  supabase: SupabaseClient,
+  id: number,
+  dto: UpdateTopic
+) {
+  const { data } = await supabase
+    .from("topics")
+    .update(toSnakeCase(dto))
+    .eq("id", id)
+    .select()
+    .single()
+    .throwOnError();
+  return toCamelCase(data);
 }

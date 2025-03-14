@@ -163,22 +163,28 @@ export type Database = {
         Row: {
           created_at: string
           domain: string
+          end_date: string | null
           id: number
           name: string
+          start_date: string | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string
           domain: string
+          end_date?: string | null
           id?: number
           name: string
+          start_date?: string | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string
           domain?: string
+          end_date?: string | null
           id?: number
           name?: string
+          start_date?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -583,6 +589,13 @@ export type Database = {
           total_expected: number
         }
         Returns: Json
+      }
+      update_topic_order: {
+        Args: {
+          p_marathon_id: number
+          p_topic_ids: number[]
+        }
+        Returns: undefined
       }
     }
     Enums: {

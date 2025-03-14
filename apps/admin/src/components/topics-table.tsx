@@ -8,6 +8,7 @@ import {
   getSortedRowModel,
   SortingState,
   useReactTable,
+  Row,
 } from "@tanstack/react-table";
 import { Button } from "@vimmer/ui/components/button";
 import {
@@ -18,13 +19,16 @@ import {
   TableHeader,
   TableRow,
 } from "@vimmer/ui/components/table";
-import { useState } from "react";
+import { CSSProperties, useEffect, useRef, useState } from "react";
+import React from "react";
+
 import {
   ArrowUpDown,
   ChevronDown,
   ChevronUp,
   Edit,
   ExternalLink,
+  GripVertical,
   Images,
   Trash2,
 } from "lucide-react";
@@ -38,50 +42,107 @@ import { Dialog, DialogTrigger } from "@vimmer/ui/components/dialog";
 import { Badge } from "@vimmer/ui/components/badge";
 import { TopicsEditDialog } from "./topics-edit-dialog";
 import { DeleteTopicDialog } from "./topics-delete-dialog";
+import { useSortable } from "@dnd-kit/react/sortable";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import {
+  DndContext,
+  DragEndEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { arrayMove } from "@dnd-kit/sortable";
+import { cn } from "@vimmer/ui/lib/utils";
+
+interface DragHandleProps {
+  row: Row<Topic>;
+  index: number;
+}
+
+function DragHandle({ row, index }: DragHandleProps) {
+  const dragRef = useRef(null);
+  const { ref } = useSortable({
+    id: row.original.id,
+    index,
+    handle: dragRef,
+  });
+
+  return (
+    <div className="flex items-center gap-2" ref={ref}>
+      <button
+        ref={dragRef}
+        className="flex items-center cursor-grab active:cursor-grabbing"
+      >
+        <GripVertical className="h-4 w-4 text-muted-foreground" />
+      </button>
+      <div className="font-medium text-center w-6">
+        {row.original.orderIndex}
+      </div>
+    </div>
+  );
+}
 
 interface TopicsTableProps {
   topics: Topic[];
-  onTopicsChange: (topics: Topic[], isOrderChange?: boolean) => void;
+  onTopicsChange: (newTopics: Topic[]) => void;
+  isLoading?: boolean;
 }
 
-export function TopicsTable({ topics, onTopicsChange }: TopicsTableProps) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+interface SortableRowProps {
+  row: Row<Topic>;
+  index: number;
+  children: React.ReactNode;
+}
+
+function SortableRow({ row, index, children }: SortableRowProps) {
+  const { ref, isDragging } = useSortable({
+    id: row.original.id,
+    index,
+  });
+
+  return (
+    <TableRow
+      className={cn(isDragging ? "bg-muted/50" : "bg-background")}
+      ref={ref}
+    >
+      {children}
+    </TableRow>
+  );
+}
+
+export function TopicsTable({
+  topics,
+  onTopicsChange,
+  isLoading,
+}: TopicsTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
 
-  const handleMoveUp = (index: number) => {
-    if (index <= 0) return;
+  const [data, setData] = useState<Topic[]>(topics);
 
-    const newTopics = [...topics];
-    [newTopics[index - 1], newTopics[index]] = [
-      newTopics[index]!,
-      newTopics[index - 1]!,
-    ];
+  const sensors = useSensors(useSensor(PointerSensor));
 
-    const updatedTopics = newTopics.map((topic, idx) => ({
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over) return;
+    if (active.id === over.id) return;
+
+    const oldIndex = data.findIndex((topic) => topic.id === active.id);
+    const newIndex = data.findIndex((topic) => topic.id === over.id);
+
+    const newData = arrayMove(data, oldIndex, newIndex).map((topic, index) => ({
       ...topic,
-      orderIndex: idx,
+      orderIndex: index,
     }));
 
-    onTopicsChange(updatedTopics, true);
-  };
-
-  const handleMoveDown = (index: number) => {
-    if (index >= topics.length - 1) return;
-
-    const newTopics = [...topics];
-    [newTopics[index], newTopics[index + 1]] = [
-      newTopics[index + 1]!,
-      newTopics[index]!,
-    ];
-
-    const updatedTopics = newTopics.map((topic, idx) => ({
-      ...topic,
-      orderIndex: idx,
-    }));
-
-    onTopicsChange(updatedTopics, true);
+    setData(newData);
+    onTopicsChange(newData);
   };
 
   const handleDeleteClick = (topic: Topic) => {
@@ -97,7 +158,7 @@ export function TopicsTable({ topics, onTopicsChange }: TopicsTableProps) {
         orderIndex: idx,
       }));
 
-    onTopicsChange(updatedTopics);
+    // onTopicsChange(updatedTopics);
     setDeleteDialogOpen(false);
     setSelectedTopic(null);
   };
@@ -111,62 +172,22 @@ export function TopicsTable({ topics, onTopicsChange }: TopicsTableProps) {
     const updatedTopics = topics.map((t) =>
       t.id === updatedTopic.id ? updatedTopic : t
     );
-
-    onTopicsChange(updatedTopics);
+    // onTopicsChange(updatedTopics);
     setEditDialogOpen(false);
     setSelectedTopic(null);
   };
 
   const columns: ColumnDef<Topic>[] = [
     {
-      id: "reorderAndIndex",
+      id: "order",
       header: "Order",
       cell: ({ row }) => {
-        const index = row.index;
-        return (
-          <div className="flex items-center gap-6">
-            <div className="font-medium text-center w-6">
-              {row.original.orderIndex + 1}
-            </div>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-8 h-8 p-0"
-                disabled={index === 0}
-                onClick={() => handleMoveUp(index)}
-              >
-                <ChevronUp className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-8 h-8 p-0"
-                disabled={index === topics.length - 1}
-                onClick={() => handleMoveDown(index)}
-              >
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        );
+        return <DragHandle row={row} index={row.index} />;
       },
-      enableSorting: false,
     },
     {
       accessorKey: "name",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="px-0 font-medium"
-          >
-            Topic
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
+      header: "Topic",
       cell: ({ row }) => {
         const topic = row.original;
         return <div className="font-medium">{topic.name}</div>;
@@ -186,7 +207,7 @@ export function TopicsTable({ topics, onTopicsChange }: TopicsTableProps) {
                   size="sm"
                   className="flex items-center gap-2 h-8 hover:bg-accent group"
                   onClick={() => {
-                    console.log("Show submissions for topic", row.original.id);
+                    console.log("Show submissions for topic", row.id);
                   }}
                 >
                   <div className="flex items-center gap-2">
@@ -279,29 +300,31 @@ export function TopicsTable({ topics, onTopicsChange }: TopicsTableProps) {
   ];
 
   const table = useReactTable({
-    data: topics,
+    data,
     columns,
-    state: {
-      sorting,
-    },
-    onSortingChange: setSorting,
+    getRowId: (row) => row.orderIndex.toString(),
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    initialState: {
-      sorting: [{ id: "reorderAndIndex", desc: false }],
-    },
   });
 
   return (
     <>
       <div className="space-y-4">
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
+        <div
+          className={cn(
+            "rounded-md border relative",
+            isLoading && "opacity-50 pointer-events-none"
+          )}
+        >
+          <DndContext
+            sensors={sensors}
+            modifiers={[restrictToVerticalAxis]}
+            onDragEnd={handleDragEnd}
+          >
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
                       <TableHead key={header.id}>
                         {header.isPlaceholder
                           ? null
@@ -310,37 +333,35 @@ export function TopicsTable({ topics, onTopicsChange }: TopicsTableProps) {
                               header.getContext()
                             )}
                       </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
                     ))}
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No topics found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                ))}
+              </TableHeader>
+              <TableBody>
+                <SortableContext
+                  items={data.map((topic) => topic.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {table.getRowModel().rows.map((row) => (
+                    <SortableRow
+                      key={row.original.id}
+                      row={row}
+                      index={row.index}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </SortableRow>
+                  ))}
+                </SortableContext>
+              </TableBody>
+            </Table>
+          </DndContext>
         </div>
       </div>
 

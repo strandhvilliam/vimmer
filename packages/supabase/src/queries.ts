@@ -152,3 +152,29 @@ export async function getMarathonsByUserIdQuery(
     .throwOnError();
   return data?.flatMap(({ marathons }) => marathons).map(toCamelCase) ?? [];
 }
+
+export async function getTopicsByDomainQuery(
+  supabase: SupabaseClient,
+  domain: string
+) {
+  const { data } = await supabase
+    .from("marathons")
+    .select("topics(*)")
+    .eq("domain", domain)
+    .throwOnError();
+
+  return data?.flatMap(({ topics }) => topics).map(toCamelCase) ?? [];
+}
+
+export async function getMarathonByDomainQuery(
+  supabase: SupabaseClient,
+  domain: string
+) {
+  const { data } = await supabase
+    .from("marathons")
+    .select("*")
+    .eq("domain", domain)
+    .maybeSingle()
+    .throwOnError();
+  return toCamelCase(data);
+}
