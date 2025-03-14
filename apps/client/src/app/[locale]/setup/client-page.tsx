@@ -15,7 +15,6 @@ import {
 import { ArrowRight, Globe } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
 
 interface Props {
   marathon: Marathon;

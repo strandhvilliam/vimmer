@@ -26,7 +26,6 @@ async function verifyDomainAccessToken(
 }
 
 export async function middleware(request: NextRequest) {
-  //@ts-expect-error
   const response = I18nMiddleware(request);
 
   const pathnameLocale = request.nextUrl.pathname.split("/", 2)?.[1];

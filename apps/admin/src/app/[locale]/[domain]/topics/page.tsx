@@ -1,5 +1,8 @@
-import { getMarathonWithConfigByDomain } from "@vimmer/supabase/cached-queries";
-import { TopicsWrapper } from "@/components/topics-wrapper";
+import {
+  getMarathonByDomain,
+  getTopicsByDomain,
+} from "@vimmer/supabase/cached-queries";
+import { TopicsWrapper } from "@/components/topics/topics-wrapper";
 import { Metadata } from "next";
 
 interface TopicsPageProps {
@@ -16,20 +19,14 @@ export const metadata: Metadata = {
 
 export default async function TopicsPage({ params }: TopicsPageProps) {
   const { domain } = await params;
-  const marathon = await getMarathonWithConfigByDomain(domain);
+  const marathon = await getMarathonByDomain(domain);
+  const topics = await getTopicsByDomain(domain);
 
-  if (!marathon) {
-    return <div>Marathon not found</div>;
+  if (!topics || !marathon) {
+    return <div>Topics not found</div>;
   }
 
-  const sortedTopics = [...marathon.topics].sort(
-    (a, b) => a.orderIndex - b.orderIndex
-  );
+  const sortedTopics = [...topics].sort((a, b) => a.orderIndex - b.orderIndex);
 
-  return (
-    <TopicsWrapper
-      initialTopics={sortedTopics}
-      marathonId={marathon.id.toString()}
-    />
-  );
+  return <TopicsWrapper marathonId={marathon.id} topics={sortedTopics} />;
 }
