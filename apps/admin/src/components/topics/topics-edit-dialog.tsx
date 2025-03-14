@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { Calendar } from "lucide-react";
+import { Calendar, X } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import {
   Dialog,
@@ -32,9 +32,8 @@ import { cn } from "@vimmer/ui/lib/utils";
 
 const EditTopicFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  orderIndex: z.number(),
-  visibility: z.enum(["public", "private"]),
-  scheduledStart: z.date().optional(),
+  visibility: z.boolean(),
+  scheduledStart: z.date().nullable(),
 });
 
 type EditTopicFormValues = z.infer<typeof EditTopicFormSchema>;
@@ -55,24 +54,21 @@ export function TopicsEditDialog({
     resolver: zodResolver(EditTopicFormSchema),
     defaultValues: {
       name: topic?.name || "",
-      orderIndex: topic?.orderIndex || 0,
-      visibility: (topic?.visibility || "private") as "public" | "private",
+      visibility: topic?.visibility === "public",
       scheduledStart: topic?.scheduledStart
         ? new Date(topic.scheduledStart)
-        : undefined,
+        : null,
     },
   });
 
-  // Reset form when topic changes
   useEffect(() => {
     if (topic) {
       form.reset({
         name: topic.name,
-        orderIndex: topic.orderIndex,
-        visibility: topic.visibility as "public" | "private",
+        visibility: topic.visibility === "public",
         scheduledStart: topic.scheduledStart
           ? new Date(topic.scheduledStart)
-          : undefined,
+          : null,
       });
     }
   }, [topic, form]);
@@ -83,8 +79,7 @@ export function TopicsEditDialog({
     const updatedTopic: Topic = {
       ...topic,
       name: data.name,
-      orderIndex: data.orderIndex,
-      visibility: data.visibility,
+      visibility: data.visibility ? "public" : "private",
       scheduledStart: data.scheduledStart
         ? format(data.scheduledStart, "yyyy-MM-dd'T'HH:mm")
         : null,
@@ -113,6 +108,7 @@ export function TopicsEditDialog({
     form.setValue("scheduledStart", newDate);
   };
 
+  const isScheduled = form.watch("scheduledStart") !== null;
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -138,42 +134,33 @@ export function TopicsEditDialog({
             />
             <FormField
               control={form.control}
-              name="orderIndex"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Order</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      value={field.value + 1}
-                      onChange={(e) =>
-                        field.onChange(parseInt(e.target.value) - 1)
-                      }
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
               name="visibility"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                  <div className="space-y-0.5">
-                    <FormLabel>Visibility</FormLabel>
-                    <FormDescription>
-                      Make topic visible to participants
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value === "public"}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
+              render={({ field }) => {
+                return (
+                  <FormItem
+                    className={cn(
+                      "flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm",
+                      isScheduled && "opacity-50"
+                    )}
+                  >
+                    <div className="space-y-0.5">
+                      <FormLabel>Visibility</FormLabel>
+                      <FormDescription>
+                        {isScheduled
+                          ? "Visibility will be controlled by schedule"
+                          : "Make topic visible to participants"}
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={isScheduled}
+                      />
+                    </FormControl>
+                  </FormItem>
+                );
+              }}
             />
             <FormField
               control={form.control}
@@ -181,66 +168,72 @@ export function TopicsEditDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Schedule Start</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "MM/dd/yyyy HH:mm")
-                          ) : (
-                            <span>Schedule start time (optional)</span>
-                          )}
-                          <Calendar className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <div className="sm:flex">
-                        <CalendarComponent
-                          mode="single"
-                          selected={field.value}
-                          onSelect={handleDateSelect}
-                          initialFocus
-                        />
-                        <div className="flex flex-col sm:flex-row sm:h-[300px] divide-y sm:divide-y-0 sm:divide-x">
-                          <ScrollArea className="w-64 sm:w-auto">
-                            <div className="flex sm:flex-col p-2">
-                              {Array.from({ length: 24 }, (_, i) => i)
-                                .reverse()
-                                .map((hour) => (
-                                  <Button
-                                    key={hour}
-                                    size="icon"
-                                    variant={
-                                      field.value &&
-                                      field.value.getHours() === hour
-                                        ? "default"
-                                        : "ghost"
-                                    }
-                                    className="sm:w-full shrink-0 aspect-square"
-                                    onClick={() =>
-                                      handleTimeChange("hour", hour.toString())
-                                    }
-                                  >
-                                    {hour}
-                                  </Button>
-                                ))}
-                            </div>
-                            <ScrollBar
-                              orientation="horizontal"
-                              className="sm:hidden"
-                            />
-                          </ScrollArea>
-                          <ScrollArea className="w-64 sm:w-auto">
-                            <div className="flex sm:flex-col p-2">
-                              {Array.from({ length: 12 }, (_, i) => i * 5).map(
-                                (minute) => (
+                  <div className="flex gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "MM/dd/yyyy HH:mm")
+                            ) : (
+                              <span>Schedule start time (optional)</span>
+                            )}
+                            <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <div className="sm:flex">
+                          <CalendarComponent
+                            mode="single"
+                            selected={field.value || undefined}
+                            onSelect={handleDateSelect}
+                            initialFocus
+                          />
+                          <div className="flex flex-col sm:flex-row sm:h-[300px] divide-y sm:divide-y-0 sm:divide-x">
+                            <ScrollArea className="w-64 sm:w-auto">
+                              <div className="flex sm:flex-col p-2">
+                                {Array.from({ length: 24 }, (_, i) => i)
+                                  .reverse()
+                                  .map((hour) => (
+                                    <Button
+                                      key={hour}
+                                      size="icon"
+                                      variant={
+                                        field.value &&
+                                        field.value.getHours() === hour
+                                          ? "default"
+                                          : "ghost"
+                                      }
+                                      className="sm:w-full shrink-0 aspect-square"
+                                      onClick={() =>
+                                        handleTimeChange(
+                                          "hour",
+                                          hour.toString()
+                                        )
+                                      }
+                                    >
+                                      {hour}
+                                    </Button>
+                                  ))}
+                              </div>
+                              <ScrollBar
+                                orientation="horizontal"
+                                className="sm:hidden"
+                              />
+                            </ScrollArea>
+                            <ScrollArea className="w-64 sm:w-auto">
+                              <div className="flex sm:flex-col p-2">
+                                {Array.from(
+                                  { length: 12 },
+                                  (_, i) => i * 5
+                                ).map((minute) => (
                                   <Button
                                     key={minute}
                                     size="icon"
@@ -260,18 +253,28 @@ export function TopicsEditDialog({
                                   >
                                     {minute.toString().padStart(2, "0")}
                                   </Button>
-                                )
-                              )}
-                            </div>
-                            <ScrollBar
-                              orientation="horizontal"
-                              className="sm:hidden"
-                            />
-                          </ScrollArea>
+                                ))}
+                              </div>
+                              <ScrollBar
+                                orientation="horizontal"
+                                className="sm:hidden"
+                              />
+                            </ScrollArea>
+                          </div>
                         </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                      </PopoverContent>
+                    </Popover>
+                    {field.value && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => form.setValue("scheduledStart", null)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                   <FormDescription>
                     If set, the topic will only be visible after this date and
                     time. Leave empty for immediate visibility.
