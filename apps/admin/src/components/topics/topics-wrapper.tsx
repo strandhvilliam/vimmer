@@ -2,7 +2,8 @@
 
 import { Topic } from "@vimmer/supabase/types";
 import { TopicsHeader } from "./topics-header";
-import { updateTopicOrder, updateTopic } from "../../lib/actions/topics";
+import { updateTopicOrder } from "../../lib/actions/topics-update-order-action";
+import { editTopicAction } from "../../lib/actions/topics-edit-action";
 import { toast, useToast } from "@vimmer/ui/hooks/use-toast";
 import { useAction } from "next-safe-action/hooks";
 
@@ -39,7 +40,7 @@ export function TopicsWrapper({ marathonId, topics }: TopicsWrapperProps) {
     });
 
   const { execute: updateTopicAction, isExecuting: isUpdatingTopic } =
-    useAction(updateTopic, {
+    useAction(editTopicAction, {
       onError: (error) => {
         toast({
           title: "Failed to update topic",

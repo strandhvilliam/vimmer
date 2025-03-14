@@ -151,13 +151,12 @@ export function TopicsTable({
       id: "status",
       header: "Status",
       cell: ({ row }) => {
-        const topic = row.original;
-        const isScheduled = !!topic.scheduledStart;
-        const isPublic = topic.visibility === "public";
-        let status = "Private";
-        if (isPublic) {
-          status = isScheduled ? "Scheduled" : "Public";
-        }
+        const { scheduledStart, visibility } = row.original;
+        const status = scheduledStart
+          ? "Scheduled"
+          : visibility === "public"
+            ? "Public"
+            : "Private";
         return (
           <Badge variant={status === "Public" ? "default" : "secondary"}>
             {status}

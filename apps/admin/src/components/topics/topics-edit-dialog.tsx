@@ -76,12 +76,16 @@ export function TopicsEditDialog({
   const handleSave = (data: EditTopicFormValues) => {
     if (!topic) return;
 
+    let visibility = "private";
+    if (data.visibility) visibility = "public";
+    if (data.scheduledStart) visibility = "scheduled";
+
     const updatedTopic: Topic = {
       ...topic,
       name: data.name,
-      visibility: data.visibility ? "public" : "private",
+      visibility,
       scheduledStart: data.scheduledStart
-        ? format(data.scheduledStart, "yyyy-MM-dd'T'HH:mm")
+        ? data.scheduledStart.toISOString()
         : null,
     };
 
