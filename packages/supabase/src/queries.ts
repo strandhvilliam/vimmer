@@ -178,3 +178,12 @@ export async function getMarathonByDomainQuery(
     .throwOnError();
   return toCamelCase(data);
 }
+
+export async function getScheduledTopicsQuery(supabase: SupabaseClient) {
+  const { data } = await supabase
+    .from("topics")
+    .select("*, marathon:marathons(*)")
+    .eq("visibility", "scheduled")
+    .throwOnError();
+  return data?.map(toCamelCase) ?? [];
+}

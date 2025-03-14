@@ -14,10 +14,6 @@ export default $config({
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     };
 
-    // submissionsbucket
-    // thumbnailbucket
-    // previewbucket
-
     const submissionBucket = new sst.aws.Bucket("SubmissionBucket", {
       access: "public",
     });
@@ -35,7 +31,7 @@ export default $config({
         environment: env,
         link: [submissionBucket],
         url: true,
-      },
+      }
     );
 
     const clientApp = new sst.aws.Nextjs("ClientApp", {
@@ -45,6 +41,18 @@ export default $config({
 
     const staffApp = new sst.aws.Nextjs("StaffApp", {
       path: "apps/staff",
+    });
+
+    const adminApp = new sst.aws.Nextjs("AdminApp", {
+      path: "apps/admin",
+    });
+
+    new sst.aws.Cron("ScheduledTopicsCron", {
+      function: {
+        handler: "lambdas/scheduled-topics-cron/index.handler",
+        environment: env,
+      },
+      schedule: "rate(1 minute)",
     });
 
     processSubmissionQueue.subscribe({
@@ -72,6 +80,7 @@ export default $config({
       apps: {
         client: clientApp.url,
         staff: staffApp.url,
+        admin: adminApp.url,
       },
       buckets: {
         submissionBucket: submissionBucket.name,
@@ -79,7 +88,7 @@ export default $config({
       queues: {
         processSubmissionQueue: processSubmissionQueue.url,
       },
-      functions: {
+      lambdas: {
         photoValidatorFunction: photoValidatorFunction.url,
       },
     };

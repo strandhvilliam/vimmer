@@ -5,6 +5,39 @@
 
 declare module "sst" {
   export interface Resource {
+    "AdminApp": {
+      "type": "sst.aws.Nextjs"
+      "url": string
+    }
+    "ClientApp": {
+      "type": "sst.aws.Nextjs"
+      "url": string
+    }
+    "PhotoValidatorFunction": {
+      "name": string
+      "type": "sst.aws.Function"
+      "url": string
+    }
+    "PreviewBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
+    "ProcessPhotoQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
+    }
+    "StaffApp": {
+      "type": "sst.aws.Nextjs"
+      "url": string
+    }
+    "SubmissionBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
+    "ThumbnailBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
   }
 }
 /// <reference path="sst-env.d.ts" />
