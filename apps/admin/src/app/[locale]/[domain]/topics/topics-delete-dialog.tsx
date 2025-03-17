@@ -82,10 +82,15 @@ export function DeleteTopicDialog({
           </div>
         </DialogHeader>
         <DialogFooter className="sm:justify-between mt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button
+            size="sm"
             variant="destructive"
             onClick={handleConfirm}
             disabled={!topic || deleteConfirmation !== topic.name}

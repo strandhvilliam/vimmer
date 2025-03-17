@@ -24,7 +24,7 @@ export default async function DashboardLayout({
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
-          <div className="flex flex-1 flex-col max-h-screen overflow-hidden">
+          <div className="bg-muted/40 flex flex-1 flex-col max-h-screen overflow-hidden">
             <AppHeader domain={domain} />
             <div className="flex-1 overflow-auto">{children}</div>
           </div>

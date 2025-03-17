@@ -3,9 +3,9 @@ import React from "react";
 
 export function TopicsTableSkeleton() {
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border bg-background">
       <div className="divide-y">
-        <div className="bg-muted/50">
+        <div className="">
           <div className="grid grid-cols-5 gap-4 p-4">
             {Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-4 w-24" />

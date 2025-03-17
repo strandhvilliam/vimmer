@@ -260,10 +260,13 @@ export function TopicsCreateDialog({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 type="button"
+                size="sm"
               >
                 Cancel
               </Button>
-              <Button type="submit">Create Topic</Button>
+              <Button type="submit" size="sm">
+                Create Topic
+              </Button>
             </DialogFooter>
           </form>
         </Form>

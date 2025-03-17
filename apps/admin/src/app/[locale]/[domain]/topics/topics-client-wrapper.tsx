@@ -13,10 +13,7 @@ import { TopicsTableSkeleton } from "./topics-table-skeleton";
 
 // Dynamically import the DnD-dependent component
 const TopicsTable = dynamic(
-  () =>
-    import("../../../../components/topics/topics-table").then(
-      (mod) => mod.TopicsTable
-    ),
+  () => import("./topics-table").then((mod) => mod.TopicsTable),
   {
     ssr: false,
     loading: () => <TopicsTableSkeleton />,

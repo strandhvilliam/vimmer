@@ -185,10 +185,13 @@ export function TopicsEditDialog({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 type="button"
+                size="sm"
               >
                 Cancel
               </Button>
-              <Button type="submit">Save changes</Button>
+              <Button type="submit" size="sm">
+                Save changes
+              </Button>
             </DialogFooter>
           </form>
         </Form>

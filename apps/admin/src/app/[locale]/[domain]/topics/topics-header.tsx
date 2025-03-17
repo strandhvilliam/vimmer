@@ -34,7 +34,7 @@ export function TopicsHeader({ marathonId }: TopicsHeaderProps) {
   );
 
   return (
-    <div className="w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="w-full">
       <div className="container pt-8">
         <div className="flex items-center justify-between">
           <div className="space-y-1">

@@ -167,7 +167,7 @@ export function TopicsTable({
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="space-y-4 bg-background">
         <div
           className={cn(
             "rounded-md border relative",
