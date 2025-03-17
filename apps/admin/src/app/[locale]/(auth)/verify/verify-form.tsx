@@ -79,7 +79,6 @@ export function VerifyForm({ email }: VerifyFormProps) {
         variant: "destructive",
       });
       form.reset();
-    } finally {
       setIsLoading(false);
     }
   }
