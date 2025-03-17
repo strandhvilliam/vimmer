@@ -16,7 +16,7 @@ import { Skeleton } from "@vimmer/ui/components/skeleton";
 
 export async function AppSidebar() {
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="border-none ">
       <Suspense fallback={<SidebarTopSkeleton />}>
         <SidebarTop />
       </Suspense>

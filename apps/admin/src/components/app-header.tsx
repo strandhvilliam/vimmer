@@ -10,7 +10,7 @@ export async function AppHeader({ domain }: AppHeaderProps) {
   const marathon = await getMarathonByDomain(domain);
 
   return (
-    <div className="z-50 w-full border-b px-4 bg-background">
+    <div className="z-50 w-full px-4 ">
       <div className="flex h-14 items-center">
         <SidebarTriggerButton />
         <div className="flex-1" />
