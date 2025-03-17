@@ -70,8 +70,8 @@ export function VerifyForm({ email }: VerifyFormProps) {
         title: "Success",
         description: "You have been signed in successfully.",
       });
-      
-      router.push("/dashboard");
+
+      router.push("/domains");
     } catch (error) {
       toast({
         title: "Error",
@@ -86,13 +86,15 @@ export function VerifyForm({ email }: VerifyFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
         <FormField
           control={form.control}
           name="otp"
           render={({ field }) => (
-            <FormItem>
-              <Label htmlFor="otp">Verification Code</Label>
+            <FormItem className="space-y-3">
+              <Label htmlFor="otp" className="text-sm font-medium">
+                Enter Code
+              </Label>
               <FormControl>
                 <InputOTP
                   pattern={REGEXP_ONLY_DIGITS}
@@ -100,8 +102,9 @@ export function VerifyForm({ email }: VerifyFormProps) {
                   value={field.value}
                   onChange={field.onChange}
                   disabled={isLoading}
+                  className="gap-2"
                 >
-                  <InputOTPGroup>
+                  <InputOTPGroup className="bg-background">
                     <InputOTPSlot index={0} />
                     <InputOTPSlot index={1} />
                     <InputOTPSlot index={2} />
@@ -111,19 +114,26 @@ export function VerifyForm({ email }: VerifyFormProps) {
                   </InputOTPGroup>
                 </InputOTP>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-sm text-red-500" />
             </FormItem>
           )}
         />
-        <Button 
-          type="submit" 
-          className="w-full" 
+        <Button
+          type="submit"
+          className="w-full font-semibold"
           disabled={isLoading || !form.formState.isValid}
+          size="lg"
         >
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Verify
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Verifying...
+            </>
+          ) : (
+            "Verify Email"
+          )}
         </Button>
       </form>
     </Form>
   );
-} 
+}

@@ -1,16 +1,12 @@
 import { redirect } from "next/navigation";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@vimmer/ui/components/card";
+import { Suspense } from "react";
 import { VerifyForm } from "./verify-form";
+import { Separator } from "@vimmer/ui/components/separator";
 
 interface PageProps {
   searchParams: Promise<{ email?: string }>;
 }
+
 export default async function VerifyPage({ searchParams }: PageProps) {
   const { email } = await searchParams;
 
@@ -19,18 +15,20 @@ export default async function VerifyPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50">
-    <Card className="w-full max-w-md">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Verify your email</CardTitle>
-        <CardDescription>
-          Enter the verification code sent to {email}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <VerifyForm email={email} />
-      </CardContent>
-    </Card>
+    <div className="container relative h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-1 lg:px-0">
+      <div className="w-full max-w-md mx-auto space-y-6">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Verify your email
+          </h1>
+          <div className="text-sm text-muted-foreground">
+            Enter the verification code sent to <span>{email}</span>
+          </div>
+        </div>
+        <Suspense fallback={<div>Loading...</div>}>
+          <VerifyForm email={email} />
+        </Suspense>
+      </div>
     </div>
   );
-} 
+}

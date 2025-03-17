@@ -4,14 +4,12 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import { Input } from "@vimmer/ui/components/input";
-import { Label } from "@vimmer/ui/components/label";
-import { toast } from "@vimmer/ui/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-
-interface LoginFormData {
-  email: string;
-}
+import { motion } from "motion/react";
+import { Card, CardContent } from "@vimmer/ui/components/card";
+import Link from "next/link";
+import { toast } from "sonner";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -27,20 +25,12 @@ export function LoginForm() {
         email,
         type: "sign-in",
       });
-      
+
       if (error) throw error;
-      
-      toast({
-        title: "Check your email",
-        description: "We've sent you a verification code.",
-      });
-      
       router.push(`/verify?email=${encodeURIComponent(email)}`);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
+      toast.error("Something went wrong. Please try again.", {
+        description: "Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -48,24 +38,46 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="email">Email address</Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="m@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="w-full"
-          disabled={isLoading}
-        />
-      </div>
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Send verification code
-      </Button>
-    </form>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.1 }}
+    >
+      <Card className="w-full border-0 shadow-none">
+        <CardContent className="p-0">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full"
+                disabled={isLoading}
+              />
+            </div>
+
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Send Login Code
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center text-sm">
+            <span className="text-neutral-500 dark:text-neutral-400">
+              Don't have an account?{" "}
+            </span>
+            <Link
+              href="/sign-up"
+              className="font-medium text-neutral-900 hover:text-neutral-700 dark:text-white dark:hover:text-neutral-300"
+            >
+              Request Access
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
-} 
+}

@@ -4,7 +4,6 @@ import {
 } from "@vimmer/supabase/cached-queries";
 import { Metadata } from "next";
 import { Suspense } from "react";
-import { TopicsPage } from "@/components/topics/topics-page";
 import { TopicsClientWrapper } from "@/components/topics/topics-client-wrapper";
 import { TopicsTableSkeleton } from "@/components/topics/topics-table-skeleton";
 import { TopicsHeader } from "@/components/topics/topics-header";
