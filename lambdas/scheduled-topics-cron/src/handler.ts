@@ -4,7 +4,10 @@ import { getScheduledTopicsQuery } from "@vimmer/supabase/queries";
 import { updateTopic } from "@vimmer/supabase/mutations";
 import { Resource } from "sst";
 
-const ADMIN_APP_URL = Resource.AdminApp.url;
+const ADMIN_APP_URL =
+  Resource.App.stage === "development"
+    ? "http://localhost:3001"
+    : Resource.AdminApp.url;
 const ADMIN_APP_REVALIDATE_PATH = "/api/revalidate";
 
 export const handler: Handler = async (event): Promise<void> => {
@@ -29,20 +32,23 @@ export const handler: Handler = async (event): Promise<void> => {
     return;
   }
 
-  const marathonDomains = topicsToUpdate.map((topic) => topic.marathon.domain);
-  const revalidateUrl = new URL(ADMIN_APP_REVALIDATE_PATH, ADMIN_APP_URL);
-  revalidateUrl.searchParams.set("type", "topics");
-  revalidateUrl.searchParams.set("domains", marathonDomains.join(","));
-  revalidateUrl.searchParams.set("secret", secret);
-
   try {
     await Promise.all(
-      topicsToUpdate.map((topic) => {
-        return updateTopic(supabase, topic.id, {
+      topicsToUpdate.map((topic) =>
+        updateTopic(supabase, topic.id, {
           visibility: "public",
-        });
-      })
+          scheduledStart: null,
+        })
+      )
     );
+
+    const marathonDomains = topicsToUpdate.map(
+      (topic) => topic.marathon.domain
+    );
+    const revalidateUrl = new URL(ADMIN_APP_REVALIDATE_PATH, ADMIN_APP_URL);
+    revalidateUrl.searchParams.set("type", "topics");
+    revalidateUrl.searchParams.set("domains", marathonDomains.join(","));
+    revalidateUrl.searchParams.set("secret", secret);
 
     await fetch(revalidateUrl.toString(), {
       method: "POST",

@@ -2,8 +2,13 @@ import {
   getMarathonByDomain,
   getTopicsByDomain,
 } from "@vimmer/supabase/cached-queries";
-import { TopicsWrapper } from "@/components/topics/topics-wrapper";
 import { Metadata } from "next";
+import { Suspense } from "react";
+import { TopicsPage } from "@/components/topics/topics-page";
+import { TopicsClientWrapper } from "@/components/topics/topics-client-wrapper";
+import { TopicsTableSkeleton } from "@/components/topics/topics-table-skeleton";
+import { TopicsHeader } from "@/components/topics/topics-header";
+import { notFound } from "next/navigation";
 
 interface TopicsPageProps {
   params: Promise<{
@@ -19,14 +24,35 @@ export const metadata: Metadata = {
 
 export default async function TopicsPage({ params }: TopicsPageProps) {
   const { domain } = await params;
-  const marathon = await getMarathonByDomain(domain);
-  const topics = await getTopicsByDomain(domain);
 
-  if (!topics || !marathon) {
-    return <div>Topics not found</div>;
+  const [marathon, topics] = await Promise.all([
+    getMarathonByDomain(domain),
+    getTopicsByDomain(domain),
+  ]);
+
+  if (!marathon || !topics) {
+    notFound();
   }
 
   const sortedTopics = [...topics].sort((a, b) => a.orderIndex - b.orderIndex);
 
-  return <TopicsWrapper marathonId={marathon.id} topics={sortedTopics} />;
+  return (
+    <div className="flex flex-col h-full">
+      <TopicsHeader marathonId={marathon.id} />
+      <div className="flex-1">
+        <div className="container h-full py-8">
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <Suspense fallback={<TopicsTableSkeleton />}>
+                <TopicsClientWrapper
+                  marathonId={marathon.id}
+                  initialTopics={sortedTopics}
+                />
+              </Suspense>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

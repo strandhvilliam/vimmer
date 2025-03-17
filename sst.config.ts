@@ -12,6 +12,7 @@ export default $config({
     const env = {
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL!,
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      REVALIDATE_SECRET: process.env.REVALIDATE_SECRET!,
     };
 
     const submissionBucket = new sst.aws.Bucket("SubmissionBucket", {
@@ -51,6 +52,7 @@ export default $config({
       function: {
         handler: "lambdas/scheduled-topics-cron/index.handler",
         environment: env,
+        link: [adminApp],
       },
       schedule: "rate(1 minute)",
     });

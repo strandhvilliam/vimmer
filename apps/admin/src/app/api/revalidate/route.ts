@@ -21,6 +21,8 @@ export async function POST(request: NextRequest) {
     const domains = searchParams.get("domains")?.split(",");
     const secret = searchParams.get("secret");
 
+    console.log("REVALIDATING", type, domains);
+
     if (secret !== process.env.REVALIDATE_SECRET) {
       return NextResponse.json({ message: "Invalid secret" }, { status: 401 });
     }
