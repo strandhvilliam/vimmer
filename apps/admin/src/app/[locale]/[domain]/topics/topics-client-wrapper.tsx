@@ -1,9 +1,9 @@
 "use client";
 
 import { Topic } from "@vimmer/supabase/types";
-import { updateTopicOrderAction } from "../../lib/actions/topics-update-order-action";
-import { editTopicAction } from "../../lib/actions/topics-edit-action";
-import { deleteTopicAction } from "../../lib/actions/topics-delete-action";
+import { updateTopicOrderAction } from "../../../../lib/actions/topics-update-order-action";
+import { editTopicAction } from "../../../../lib/actions/topics-edit-action";
+import { deleteTopicAction } from "../../../../lib/actions/topics-delete-action";
 import { toast } from "sonner";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useState } from "react";
@@ -13,7 +13,10 @@ import { TopicsTableSkeleton } from "./topics-table-skeleton";
 
 // Dynamically import the DnD-dependent component
 const TopicsTable = dynamic(
-  () => import("./topics-table").then((mod) => mod.TopicsTable),
+  () =>
+    import("../../../../components/topics/topics-table").then(
+      (mod) => mod.TopicsTable
+    ),
   {
     ssr: false,
     loading: () => <TopicsTableSkeleton />,

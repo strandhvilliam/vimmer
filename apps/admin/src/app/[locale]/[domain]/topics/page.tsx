@@ -4,9 +4,9 @@ import {
 } from "@vimmer/supabase/cached-queries";
 import { Metadata } from "next";
 import { Suspense } from "react";
-import { TopicsClientWrapper } from "@/components/topics/topics-client-wrapper";
-import { TopicsTableSkeleton } from "@/components/topics/topics-table-skeleton";
-import { TopicsHeader } from "@/components/topics/topics-header";
+import { TopicsClientWrapper } from "@/app/[locale]/[domain]/topics/topics-client-wrapper";
+import { TopicsTableSkeleton } from "@/app/[locale]/[domain]/topics/topics-table-skeleton";
+import { TopicsHeader } from "@/app/[locale]/[domain]/topics/topics-header";
 import { notFound } from "next/navigation";
 
 interface TopicsPageProps {

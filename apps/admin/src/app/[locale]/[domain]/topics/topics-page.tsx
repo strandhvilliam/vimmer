@@ -1,5 +1,5 @@
 import { createClient } from "@vimmer/supabase/server";
-import { TopicsWrapper } from "./topics-wrapper";
+import { TopicsWrapper } from "../../../../components/topics/topics-wrapper";
 import { TopicsHeader } from "./topics-header";
 import { getTopicsByDomainQuery } from "@vimmer/supabase/queries";
 import { cookies } from "next/headers";
