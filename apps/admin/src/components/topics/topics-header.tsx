@@ -1,14 +1,38 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@vimmer/ui/components/button";
-import { SlidersHorizontal } from "lucide-react";
-import { AddTopicButton } from "../add-topic-button";
+import { Plus, RefreshCw } from "lucide-react";
+import { TopicsCreateDialog } from "./topics-create-dialog";
+import {
+  createTopicAction,
+  CreateTopicInput,
+} from "@/lib/actions/topics-create-action";
+import { Topic } from "@vimmer/supabase/types";
+import { toast } from "sonner";
+import { useAction } from "next-safe-action/hooks";
 
 interface TopicsHeaderProps {
   marathonId: number;
 }
 
 export function TopicsHeader({ marathonId }: TopicsHeaderProps) {
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+  const { execute: createTopic, isExecuting: isCreatingTopic } = useAction(
+    createTopicAction,
+    {
+      onError: (error) => {
+        toast.error("Failed to create topic", {
+          description: error.error.serverError,
+        });
+      },
+      onSuccess: () => {
+        toast.success("Topic created");
+      },
+    }
+  );
+
   return (
     <div className="w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container pt-8">
@@ -21,10 +45,26 @@ export function TopicsHeader({ marathonId }: TopicsHeaderProps) {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <AddTopicButton marathonId={marathonId} />
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setCreateDialogOpen(true)}
+              disabled={isCreatingTopic}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Topic
+            </Button>
           </div>
         </div>
       </div>
+
+      <TopicsCreateDialog
+        marathonId={marathonId}
+        isOpen={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSave={createTopic}
+      />
     </div>
   );
 }

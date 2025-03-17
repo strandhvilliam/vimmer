@@ -34,6 +34,7 @@ export function TopicsSortableRow({ row }: TopicsSortableRowProps) {
 
   return (
     <TableRow
+      key={row.original.id}
       ref={setNodeRef}
       style={style}
       className={cn("bg-background cursor-default", isDragging && "opacity-50")}

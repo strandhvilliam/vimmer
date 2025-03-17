@@ -1,9 +1,7 @@
-import { Topic } from "@vimmer/supabase/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format } from "date-fns";
-import { Calendar, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import {
   Dialog,
@@ -13,86 +11,94 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@vimmer/ui/components/dialog";
-import { useEffect } from "react";
 import { Input } from "@vimmer/ui/components/input";
 import { Checkbox } from "@vimmer/ui/components/checkbox";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@vimmer/ui/components/popover";
 import { Form, FormControl } from "@vimmer/ui/components/form";
 import { FormField } from "@vimmer/ui/components/form";
 import { FormItem } from "@vimmer/ui/components/form";
 import { FormLabel } from "@vimmer/ui/components/form";
 import { FormDescription } from "@vimmer/ui/components/form";
-import { ScrollArea, ScrollBar } from "@vimmer/ui/components/scroll-area";
-import { Calendar as CalendarComponent } from "@vimmer/ui/components/calendar";
 import { cn } from "@vimmer/ui/lib/utils";
 import { DateTimePicker } from "@vimmer/ui/components/date-time-picker";
-import { EditTopicInput } from "@/lib/actions/topics-edit-action";
+import { CreateTopicInput } from "@/lib/actions/topics-create-action";
+import { Topic } from "@vimmer/supabase/types";
+import { useEffect, useState } from "react";
+import { RadioGroup, RadioGroupItem } from "@vimmer/ui/components/radio-group";
 
-const EditTopicFormSchema = z.object({
+const CreateTopicFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   visibility: z.boolean(),
   scheduledStart: z.date().nullable(),
+  positionType: z.enum(["beginning", "end", "custom"]),
+  customPosition: z.number().min(1).optional(),
 });
 
-type EditTopicFormValues = z.infer<typeof EditTopicFormSchema>;
+type CreateTopicFormValues = z.infer<typeof CreateTopicFormSchema>;
 
-interface EditTopicDialogProps {
-  topic: Topic | null;
+interface CreateTopicDialogProps {
+  marathonId: number;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (updatedTopic: EditTopicInput) => void;
+  onSave: (newTopic: CreateTopicInput) => void;
 }
 
-export function TopicsEditDialog({
-  topic,
+export function TopicsCreateDialog({
+  marathonId,
   isOpen,
   onOpenChange,
   onSave,
-}: EditTopicDialogProps) {
-  const form = useForm<EditTopicFormValues>({
-    resolver: zodResolver(EditTopicFormSchema),
+}: CreateTopicDialogProps) {
+  const form = useForm<CreateTopicFormValues>({
+    resolver: zodResolver(CreateTopicFormSchema),
     defaultValues: {
-      name: topic?.name || "",
-      visibility: topic?.visibility === "public",
-      scheduledStart: topic?.scheduledStart
-        ? new Date(topic.scheduledStart)
-        : null,
+      name: "",
+      visibility: true,
+      scheduledStart: null,
+      positionType: "end",
+      customPosition: 1,
     },
   });
 
   useEffect(() => {
-    if (topic) {
+    if (isOpen) {
       form.reset({
-        name: topic.name,
-        visibility: topic.visibility === "public",
-        scheduledStart: topic.scheduledStart
-          ? new Date(topic.scheduledStart)
-          : null,
+        name: "",
+        visibility: true,
+        scheduledStart: null,
+        positionType: "end",
+        customPosition: 1,
       });
     }
-  }, [topic, form]);
+  }, [isOpen, form]);
 
-  const handleSave = (data: EditTopicFormValues) => {
-    if (!topic) return;
+  const positionType = form.watch("positionType");
+  const isCustomPosition = positionType === "custom";
 
+  const handleSave = (data: CreateTopicFormValues) => {
     let visibility = "private";
     if (data.visibility) visibility = "public";
     if (data.scheduledStart) visibility = "scheduled";
 
-    const updatedTopic: EditTopicInput = {
-      id: topic.id,
+    let orderIndex = -1;
+
+    if (data.positionType === "beginning") {
+      orderIndex = 0;
+    } else if (data.positionType === "custom" && data.customPosition) {
+      orderIndex = Math.max(0, data.customPosition - 1);
+    }
+
+    const newTopic: CreateTopicInput = {
+      marathonId,
       name: data.name,
       visibility: visibility as "public" | "private" | "scheduled",
       scheduledStart: data.scheduledStart
         ? data.scheduledStart.toISOString()
         : null,
+      orderIndex,
     };
 
-    onSave(updatedTopic);
+    onSave(newTopic);
+    form.reset();
     onOpenChange(false);
   };
 
@@ -102,9 +108,9 @@ export function TopicsEditDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Edit Topic</DialogTitle>
+          <DialogTitle>Create New Topic</DialogTitle>
           <DialogDescription>
-            Make changes to the topic details here. Click save when you're done.
+            Add a new topic to your marathon. Fill in the details below.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -116,11 +122,80 @@ export function TopicsEditDialog({
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} placeholder="Enter topic name" />
                   </FormControl>
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="positionType"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Position</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-col space-y-1"
+                    >
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="end" />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          At the end
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="beginning" />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          At the beginning
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="custom" />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          At specific position
+                        </FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            {isCustomPosition && (
+              <FormField
+                control={form.control}
+                name="customPosition"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Position Number</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={1}
+                        {...field}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          field.onChange(isNaN(value) ? 1 : value);
+                        }}
+                        value={field.value || 1}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Enter a position. The topic will be inserted at this
+                      position or at the end if the position is greater than the
+                      number of topics.
+                    </FormDescription>
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
               name="visibility"
@@ -188,7 +263,7 @@ export function TopicsEditDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit">Save changes</Button>
+              <Button type="submit">Create Topic</Button>
             </DialogFooter>
           </form>
         </Form>

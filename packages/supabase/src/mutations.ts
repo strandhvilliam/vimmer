@@ -1,8 +1,10 @@
+import { getTopicsByDomain } from "./cached-queries";
 import {
   InsertLog,
   InsertParticipant,
   InsertSubmission,
   InsertSubmissionError,
+  InsertTopic,
   SupabaseClient,
   UpdateParticipant,
   UpdateSubmission,
@@ -140,6 +142,10 @@ export async function updateTopic(
   id: number,
   dto: UpdateTopic
 ) {
+  if (!dto.updatedAt) {
+    dto.updatedAt = new Date().toISOString();
+  }
+
   const { data } = await supabase
     .from("topics")
     .update(toSnakeCase(dto))
@@ -148,4 +154,31 @@ export async function updateTopic(
     .single()
     .throwOnError();
   return toCamelCase(data);
+}
+
+export async function updateTopicsOrder(
+  supabase: SupabaseClient,
+  topicIds: number[],
+  marathonId: number
+) {
+  await supabase
+    .rpc("update_topic_order", {
+      p_topic_ids: topicIds,
+      p_marathon_id: marathonId,
+    })
+    .throwOnError();
+}
+
+export async function createTopic(supabase: SupabaseClient, dto: InsertTopic) {
+  const { data } = await supabase
+    .from("topics")
+    .insert(toSnakeCase(dto))
+    .select()
+    .single()
+    .throwOnError();
+  return toCamelCase(data);
+}
+
+export async function deleteTopic(supabase: SupabaseClient, id: number) {
+  await supabase.from("topics").delete().eq("id", id);
 }

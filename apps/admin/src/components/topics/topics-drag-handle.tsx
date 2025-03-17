@@ -4,22 +4,24 @@ import { useState } from "react";
 import { GripVertical } from "lucide-react";
 import { UniqueIdentifier } from "@dnd-kit/core";
 import NumberFlow from "@number-flow/react";
+import { Row } from "@tanstack/react-table";
+import { Topic } from "@vimmer/supabase/types";
 
 interface DragHandleProps {
-  id: number;
-  index: number;
-  dataIds: UniqueIdentifier[];
+  row: Row<Topic>;
 }
 
-export function TopicsDragHandle({ id, index, dataIds }: DragHandleProps) {
+export function TopicsDragHandle({ row }: DragHandleProps) {
   const { attributes, listeners } = useSortable({
-    id,
+    id: row.original.id,
   });
-  const [localIndex, setLocalIndex] = useState((index + 1) * 2);
+  const [localIndex, setLocalIndex] = useState(
+    (row.original.orderIndex + 1) * 2
+  );
 
   useEffect(() => {
-    setLocalIndex(index + 1);
-  }, []);
+    setLocalIndex(row.original.orderIndex + 1);
+  }, [row.original.orderIndex]);
 
   return (
     <div className="flex items-center gap-2">
