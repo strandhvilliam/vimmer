@@ -1,6 +1,7 @@
 import { Button } from "@vimmer/ui/components/button";
 import { Card } from "@vimmer/ui/components/card";
-import { Camera, Plus, Smartphone, XIcon } from "lucide-react";
+import { Camera, Smartphone, Tablet, XIcon } from "lucide-react";
+import { AddDeviceGroupDialog } from "./components/add-device-group-dialog";
 
 interface DeviceGroup {
   id: number;
@@ -13,6 +14,8 @@ function getDeviceIcon(icon: string) {
   switch (icon) {
     case "smartphone":
       return <Smartphone className="h-6 w-6" />;
+    case "tablet":
+      return <Tablet className="h-6 w-6" />;
     case "camera":
     default:
       return <Camera className="h-6 w-6" />;
@@ -44,10 +47,14 @@ export async function DeviceGroupsSection() {
     <section className="space-y-2">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Device Groups</h2>
-        <Button size="sm">
-          <Plus className="w-4 h-4 mr-2" />
-          Add New Group
-        </Button>
+        <AddDeviceGroupDialog
+          onAddGroup={async (data) => {
+            "use server";
+            // Here you would make an API call to create the group
+            // and then revalidate the page data
+            console.log("Adding group:", data);
+          }}
+        />
       </div>
       <p className="text-sm text-muted-foreground pb-4">
         Here you can manage the device groups that are available for the

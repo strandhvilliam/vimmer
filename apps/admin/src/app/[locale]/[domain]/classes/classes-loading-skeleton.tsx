@@ -9,7 +9,7 @@ export function ClassesLoadingSkeleton() {
         <Skeleton className="h-9 w-32" />
       </div>
       <Skeleton className="h-5 w-full max-w-2xl mb-4" />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="pt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[...Array(4)].map((_, i) => (
           <Card key={i} className="relative">
             <div className="flex flex-col gap-2 p-4">

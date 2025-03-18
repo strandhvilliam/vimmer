@@ -1,7 +1,7 @@
 import { Button } from "@vimmer/ui/components/button";
 import { Card } from "@vimmer/ui/components/card";
-import { Camera, Plus, Smartphone } from "lucide-react";
 import { XIcon } from "lucide-react";
+import { AddCompetitionClassDialog } from "./components/add-competition-class-dialog";
 
 interface CompetitionClass {
   id: number;
@@ -31,16 +31,6 @@ async function getCompetitionClasses(): Promise<CompetitionClass[]> {
   ];
 }
 
-function getDeviceIcon(icon: string) {
-  switch (icon) {
-    case "smartphone":
-      return <Smartphone className="h-6 w-6" />;
-    case "camera":
-    default:
-      return <Camera className="h-6 w-6" />;
-  }
-}
-
 export async function CompetitionClassesSection() {
   const classes = await getCompetitionClasses();
 
@@ -48,12 +38,16 @@ export async function CompetitionClassesSection() {
     <section className="space-y-2">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Competition Classes</h2>
-        <Button size="sm">
-          <Plus className="w-4 h-4 mr-2" />
-          Add New Class
-        </Button>
+        <AddCompetitionClassDialog
+          onAddClass={async (data) => {
+            "use server";
+            // Here you would make an API call to create the class
+            // and then revalidate the page data
+            console.log("Adding class:", data);
+          }}
+        />
       </div>
-      <p className="text-sm text-muted-foreground ">
+      <p className="text-sm text-muted-foreground pb-4">
         Here you can manage the classes that are available for the marathon.
         This will decide how many photos the participants need to take for each
         class.
@@ -69,8 +63,10 @@ export async function CompetitionClassesSection() {
               >
                 <XIcon className="w-4 h-4" />
               </Button>
-              <div className="flex h-fit items-center w-fit justify-between bg-muted rounded-lg shadow-sm border p-2">
-                {getDeviceIcon(classItem.icon)}
+              <div className="flex h-fit items-center w-fit justify-center bg-muted rounded-lg shadow-sm border p-2">
+                <span className="w-6 h-6 text-center text-lg font-medium font-mono">
+                  {classItem.numberOfPhotos}
+                </span>
               </div>
               <div className="flex flex-col tems-center justify-between">
                 <h3 className="text-lg font-semibold">{classItem.name}</h3>
