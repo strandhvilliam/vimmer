@@ -3,12 +3,12 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "@vimmer/ui/globals.css";
 import { Providers } from "./providers";
 
-const geistSans = Geist({
+const GeistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
+const GeistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
@@ -27,8 +27,12 @@ export default async function RootLayout({
 }) {
   const { locale } = await params;
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.className} antialiased`}>
+    <html
+      lang="en"
+      className={`${GeistSans.variable} ${GeistMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body className={`antialiased`}>
         <Providers locale={locale}>{children}</Providers>
       </body>
     </html>

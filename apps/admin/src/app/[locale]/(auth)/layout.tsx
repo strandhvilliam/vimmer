@@ -4,7 +4,9 @@ import AuthLoading from "./loading";
 import { LanguageToggle } from "./components/language-toggle";
 import dynamic from "next/dynamic";
 
-const ImageGrid = dynamic(() => import("./image-grid"), { ssr: false });
+const ImageGrid = dynamic(() => import("../../../components/image-grid"), {
+  ssr: false,
+});
 
 interface AuthLayoutProps {
   children: React.ReactNode;
