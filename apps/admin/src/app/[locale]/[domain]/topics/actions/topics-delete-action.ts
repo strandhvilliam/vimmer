@@ -1,7 +1,7 @@
 "use server";
 import { z } from "zod";
 import { createClient } from "@vimmer/supabase/server";
-import { actionClient } from "../safe-action";
+import { actionClient } from "../../../../../lib/safe-action";
 import { revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import { deleteTopic, updateTopicsOrder } from "@vimmer/supabase/mutations";

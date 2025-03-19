@@ -38,7 +38,7 @@ import { DeleteTopicDialog } from "./topics-delete-dialog";
 import { cn } from "@vimmer/ui/lib/utils";
 import { TopicsDragHandle } from "./topics-drag-handle";
 import { TopicsSortableRow } from "./topics-sortable-row";
-import { EditTopicInput } from "@/lib/actions/topics-edit-action";
+import { EditTopicInput } from "@/app/[locale]/[domain]/topics/actions/topics-edit-action";
 import { TopicsSubmissionsCell } from "./topics-submissions-cell";
 import { TopicsActionCell } from "./topics-action-cell";
 

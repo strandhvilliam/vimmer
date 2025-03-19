@@ -1,6 +1,6 @@
 "use server";
 import { createClient } from "@vimmer/supabase/server";
-import { actionClient } from "../safe-action";
+import { actionClient } from "../../../../../lib/safe-action";
 import { z } from "zod";
 import { cookies } from "next/headers";
 import { revalidateTag } from "next/cache";
