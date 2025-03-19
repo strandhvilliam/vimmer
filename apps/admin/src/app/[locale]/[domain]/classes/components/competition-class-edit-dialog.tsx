@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@vimmer/ui/components/button";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,6 @@ import {
   DialogTrigger,
 } from "@vimmer/ui/components/dialog";
 import { useState } from "react";
-import { z } from "zod";
 import { Form } from "@vimmer/ui/components/form";
 import {
   FormControl,
@@ -26,50 +25,62 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@vimmer/ui/components/input";
 import NumberFlow from "@number-flow/react";
 import { useAction } from "next-safe-action/hooks";
+import { editCompetitionClassAction } from "../actions/competition-class-edit-action";
 import {
-  createCompetitionClassSchema,
-  CreateCompetitionClassInput,
+  EditCompetitionClassInput,
+  editCompetitionClassSchema,
 } from "@/lib/schemas";
-import { createCompetitionClassAction } from "../actions/competition-class-create-action";
+import { toast } from "sonner";
+import { CompetitionClass } from "@vimmer/supabase/types";
 
-export function CompetitionClassCreateDialog() {
+interface CompetitionClassEditDialogProps {
+  classItem: CompetitionClass;
+  trigger?: React.ReactNode;
+}
+
+export function CompetitionClassEditDialog({
+  classItem,
+  trigger,
+}: CompetitionClassEditDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const { execute: createCompetitionClass, isExecuting: isCreatingClass } =
-    useAction(createCompetitionClassAction, {
+  const { execute: editCompetitionClass, isExecuting: isEditingClass } =
+    useAction(editCompetitionClassAction, {
       onSuccess: () => {
         setIsOpen(false);
+        toast.success("Competition class updated successfully");
+      },
+      onError: (error) => {
+        toast.error(error.error.serverError || "Something went wrong");
       },
     });
 
-  const form = useForm<CreateCompetitionClassInput>({
-    resolver: zodResolver(createCompetitionClassSchema),
+  const form = useForm<EditCompetitionClassInput>({
+    resolver: zodResolver(editCompetitionClassSchema),
     defaultValues: {
-      name: "",
-      description: "",
-      numberOfPhotos: 24,
+      id: classItem.id,
+      name: classItem.name || "",
+      description: classItem.description || "",
+      numberOfPhotos: classItem.numberOfPhotos,
     },
   });
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="w-4 h-4 mr-2" />
-          Add New Class
-        </Button>
+        {trigger || <Button variant="outline">Edit</Button>}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Competition Class</DialogTitle>
+          <DialogTitle>Edit Competition Class</DialogTitle>
           <DialogDescription>
-            Create a new competition class. This will be available for
-            participants to choose from.
+            Modify the competition class details. These changes will be
+            reflected immediately.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(createCompetitionClass)}
+            onSubmit={form.handleSubmit(editCompetitionClass)}
             className="space-y-6"
           >
             <FormField
@@ -133,7 +144,7 @@ export function CompetitionClassCreateDialog() {
                         <NumberFlow
                           value={field.value}
                           onChange={field.onChange}
-                          className="text-center !text-2xl  !font-mono"
+                          className="text-center !text-2xl !font-mono"
                         />
                       </div>
                       <Button
@@ -162,8 +173,23 @@ export function CompetitionClassCreateDialog() {
             />
 
             <div className="flex justify-end gap-3">
-              <Button type="submit" disabled={isCreatingClass}>
-                {isCreatingClass ? "Adding..." : "Add Class"}
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => setIsOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isEditingClass}
+                className="min-w-24"
+              >
+                {isEditingClass ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Save Changes"
+                )}
               </Button>
             </div>
           </form>

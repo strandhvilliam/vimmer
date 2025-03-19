@@ -16,6 +16,7 @@ import {
   AlertDialogFooter,
   AlertDialogDescription,
 } from "@vimmer/ui/components/alert-dialog";
+import { DeviceGroupEditDialog } from "./device-group-edit-dialog";
 
 interface DeviceGroupsListProps {
   groups: DeviceGroup[];
@@ -112,9 +113,14 @@ function DeviceGroupCard({
         </div>
       </div>
       <div className="flex items-center px-4 pb-4 gap-2">
-        <Button size="sm" variant="outline" className="flex-1">
-          Edit
-        </Button>
+        <DeviceGroupEditDialog
+          group={group}
+          trigger={
+            <Button size="sm" variant="outline" className="flex-1">
+              Edit
+            </Button>
+          }
+        />
         <Button size="sm" variant="outline" className="flex-1">
           View Submissions
         </Button>
