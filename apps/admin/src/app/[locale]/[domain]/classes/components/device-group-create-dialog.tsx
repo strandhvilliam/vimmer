@@ -4,6 +4,7 @@ import { Button } from "@vimmer/ui/components/button";
 import {
   Camera,
   Check,
+  Loader2,
   Plus,
   Smartphone,
   SwitchCamera,
@@ -33,15 +34,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@vimmer/ui/components/input";
 import { cn } from "@vimmer/ui/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-
-interface AddDeviceGroupDialogProps {
-  onAddGroup: (data: {
-    name: string;
-    description: string;
-    icon: string;
-  }) => void;
-}
-
+import { createDeviceGroupAction } from "../actions/device-group-create-action";
+import { useAction } from "next-safe-action/hooks";
+import { CreateDeviceGroupInput, createDeviceGroupSchema } from "@/lib/schemas";
+import { toast } from "sonner";
 const deviceTypes = [
   {
     value: "camera",
@@ -57,38 +53,27 @@ const deviceTypes = [
   },
 ] as const;
 
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  description: z.string().min(10, {
-    message: "Description must be at least 10 characters.",
-  }),
-  icon: z.enum(["camera", "smartphone", "tablet"] as const, {
-    required_error: "Please select a device type.",
-  }),
-});
-
-type FormData = z.infer<typeof formSchema>;
-
-export function AddDeviceGroupDialog({
-  onAddGroup,
-}: AddDeviceGroupDialogProps) {
+export function DeviceGroupCreateDialog() {
   const [isOpen, setIsOpen] = useState(false);
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const { execute: createDeviceGroup, isExecuting: isCreatingDeviceGroup } =
+    useAction(createDeviceGroupAction, {
+      onSuccess: () => {
+        setIsOpen(false);
+      },
+      onError: (error) => {
+        toast.error(error.error.serverError || "Something went wrong");
+      },
+    });
+
+  const form = useForm<CreateDeviceGroupInput>({
+    resolver: zodResolver(createDeviceGroupSchema),
     defaultValues: {
       name: "",
       description: "",
       icon: "camera",
     },
   });
-
-  const handleSubmit = (data: FormData) => {
-    onAddGroup(data);
-    setIsOpen(false);
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -108,7 +93,7 @@ export function AddDeviceGroupDialog({
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleSubmit)}
+            onSubmit={form.handleSubmit(createDeviceGroup)}
             className="space-y-6"
           >
             <FormField
@@ -206,7 +191,17 @@ export function AddDeviceGroupDialog({
             />
 
             <div className="flex justify-end gap-3">
-              <Button type="submit">Add Group</Button>
+              <Button
+                type="submit"
+                disabled={isCreatingDeviceGroup}
+                className="min-w-24"
+              >
+                {isCreatingDeviceGroup ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Add Group"
+                )}
+              </Button>
             </div>
           </form>
         </Form>

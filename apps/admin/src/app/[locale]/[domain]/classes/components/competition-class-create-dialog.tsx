@@ -25,14 +25,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@vimmer/ui/components/input";
 import NumberFlow from "@number-flow/react";
-
-interface AddCompetitionClassDialogProps {
-  onAddClass: (data: {
-    name: string;
-    description: string;
-    numberOfPhotos: number;
-  }) => void;
-}
+import { useAction } from "next-safe-action/hooks";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -53,9 +46,7 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export function AddCompetitionClassDialog({
-  onAddClass,
-}: AddCompetitionClassDialogProps) {
+export function CompetitionClassCreateDialog() {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSubmit = (data: {
@@ -63,7 +54,7 @@ export function AddCompetitionClassDialog({
     description: string;
     numberOfPhotos: number;
   }) => {
-    onAddClass(data);
+    // onAddClass(data);
     setIsOpen(false);
   };
 
@@ -141,24 +132,24 @@ export function AddCompetitionClassDialog({
                 <FormItem>
                   <FormLabel>Number of Photos</FormLabel>
                   <FormControl>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
-                        className="h-20 w-20 shrink-0"
+                        className="h-10 w-10 shrink-0"
                         onClick={() => {
                           const newValue = Math.max(1, Number(field.value) - 1);
                           field.onChange(newValue);
                         }}
                       >
-                        <Minus className="h-10 w-10" />
+                        <Minus className="h-6 w-6" />
                       </Button>
-                      <div className="flex justify-center items-center gap-3 px-4 mb-2">
+                      <div className="flex justify-center items-center gap-3 px-4">
                         <NumberFlow
                           value={field.value}
                           onChange={field.onChange}
-                          className="text-center !text-6xl h-20 !font-mono"
+                          className="text-center !text-2xl  !font-mono"
                         />
                       </div>
                       {/* <Input
@@ -172,7 +163,7 @@ export function AddCompetitionClassDialog({
                         type="button"
                         variant="outline"
                         size="icon"
-                        className="h-20 w-20 shrink-0"
+                        className="h-10 w-10 shrink-0"
                         onClick={() => {
                           const newValue = Math.min(
                             50,
@@ -181,7 +172,7 @@ export function AddCompetitionClassDialog({
                           field.onChange(newValue);
                         }}
                       >
-                        <Plus className="h-10 w-10" />
+                        <Plus className="h-6 w-6" />
                       </Button>
                     </div>
                   </FormControl>
