@@ -1,11 +1,15 @@
 import { getTopicsByDomain } from "./cached-queries";
 import {
+  InsertCompetitionClass,
+  InsertDeviceGroup,
   InsertLog,
   InsertParticipant,
   InsertSubmission,
   InsertSubmissionError,
   InsertTopic,
   SupabaseClient,
+  UpdateCompetitionClass,
+  UpdateDeviceGroup,
   UpdateParticipant,
   UpdateSubmission,
   UpdateTopic,
@@ -181,4 +185,71 @@ export async function createTopic(supabase: SupabaseClient, dto: InsertTopic) {
 
 export async function deleteTopic(supabase: SupabaseClient, id: number) {
   await supabase.from("topics").delete().eq("id", id);
+}
+
+export async function createDeviceGroup(
+  supabase: SupabaseClient,
+  dto: InsertDeviceGroup
+) {
+  const { data } = await supabase
+    .from("device_groups")
+    .insert(toSnakeCase(dto))
+    .select()
+    .single()
+    .throwOnError();
+  return toCamelCase(data);
+}
+
+export async function deleteDeviceGroup(supabase: SupabaseClient, id: number) {
+  await supabase.from("device_groups").delete().eq("id", id);
+}
+
+export async function updateDeviceGroup(
+  supabase: SupabaseClient,
+  id: number,
+  dto: UpdateDeviceGroup
+) {
+  const { data } = await supabase
+    .from("device_groups")
+    .update(toSnakeCase(dto))
+    .eq("id", id)
+    .select()
+    .single()
+    .throwOnError();
+  return toCamelCase(data);
+}
+
+export async function createCompetitionClass(
+  supabase: SupabaseClient,
+  dto: InsertCompetitionClass
+) {
+  const { data } = await supabase
+    .from("competition_classes")
+    .insert(toSnakeCase(dto))
+    .select()
+    .single()
+    .throwOnError();
+  return toCamelCase(data);
+}
+
+export async function deleteCompetitionClass(
+  supabase: SupabaseClient,
+  id: number
+) {
+  await supabase.from("competition_classes").delete().eq("id", id);
+}
+
+export async function updateCompetitionClass(
+  supabase: SupabaseClient,
+  id: number,
+  dto: UpdateCompetitionClass
+) {
+  const { data } = await supabase
+    .from("competition_classes")
+    .update(toSnakeCase(dto))
+    .eq("id", id)
+    .select()
+    .single()
+    .throwOnError();
+  return toCamelCase(data);
 }

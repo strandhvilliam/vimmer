@@ -6,6 +6,8 @@ import {
 
 import { createClient } from "./clients/lambda";
 import {
+  getCompetitionClassesByDomainQuery,
+  getDeviceGroupsByDomainQuery,
   getMarathonByDomainQuery,
   getMarathonsByUserIdQuery,
   getMarathonWithConfigByDomainQuery,
@@ -45,5 +47,23 @@ export async function getMarathonByDomain(domain: string) {
   cacheLife("hours");
   const supabase = await createClient();
   const data = await getMarathonByDomainQuery(supabase, domain);
+  return data;
+}
+
+export async function getCompetitionClassesByDomain(domain: string) {
+  "use cache";
+  cacheTag(`competition-classes-${domain}`);
+  cacheLife("hours");
+  const supabase = await createClient();
+  const data = await getCompetitionClassesByDomainQuery(supabase, domain);
+  return data;
+}
+
+export async function getDeviceGroupsByDomain(domain: string) {
+  "use cache";
+  cacheTag(`device-groups-${domain}`);
+  cacheLife("hours");
+  const supabase = await createClient();
+  const data = await getDeviceGroupsByDomainQuery(supabase, domain);
   return data;
 }

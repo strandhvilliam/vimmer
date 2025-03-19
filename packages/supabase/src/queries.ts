@@ -163,7 +163,7 @@ export async function getTopicsByDomainQuery(
     .eq("domain", domain)
     .throwOnError();
 
-  return data?.flatMap(({ topics }) => topics).map(toCamelCase) ?? [];
+  return data?.flatMap(({ topics }) => toCamelCase(topics)) ?? [];
 }
 
 export async function getMarathonByDomainQuery(
@@ -186,4 +186,32 @@ export async function getScheduledTopicsQuery(supabase: SupabaseClient) {
     .eq("visibility", "scheduled")
     .throwOnError();
   return data?.map(toCamelCase) ?? [];
+}
+
+export async function getCompetitionClassesByDomainQuery(
+  supabase: SupabaseClient,
+  domain: string
+) {
+  const { data } = await supabase
+    .from("marathons")
+    .select("competition_classes(*)")
+    .eq("domain", domain)
+    .throwOnError();
+  return (
+    data?.flatMap(({ competition_classes }) =>
+      toCamelCase(competition_classes)
+    ) ?? []
+  );
+}
+
+export async function getDeviceGroupsByDomainQuery(
+  supabase: SupabaseClient,
+  domain: string
+) {
+  const { data } = await supabase
+    .from("marathons")
+    .select("device_groups(*)")
+    .eq("domain", domain)
+    .throwOnError();
+  return data?.flatMap(({ device_groups }) => toCamelCase(device_groups)) ?? [];
 }

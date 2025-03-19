@@ -68,6 +68,7 @@ export type Database = {
       competition_classes: {
         Row: {
           created_at: string
+          description: string | null
           id: number
           marathon_id: number
           name: string
@@ -77,6 +78,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description?: string | null
           id?: number
           marathon_id: number
           name: string
@@ -86,6 +88,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description?: string | null
           id?: number
           marathon_id?: number
           name?: string
@@ -127,6 +130,7 @@ export type Database = {
       device_groups: {
         Row: {
           created_at: string
+          description: string | null
           icon: string
           id: number
           marathon_id: number
@@ -135,6 +139,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description?: string | null
           icon?: string
           id?: number
           marathon_id: number
@@ -143,6 +148,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description?: string | null
           icon?: string
           id?: number
           marathon_id?: number
