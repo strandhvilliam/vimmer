@@ -10,6 +10,7 @@ import {
   Settings,
   LucideIcon,
   Tag,
+  File,
 } from "lucide-react";
 
 export const NAV_LINKS = {
@@ -33,6 +34,11 @@ export const NAV_LINKS = {
       name: "Alerts",
       url: "/alerts",
       icon: Bell as LucideIcon,
+    },
+    {
+      name: "Export",
+      url: "/export",
+      icon: File as LucideIcon,
     },
   ],
   configuration: [

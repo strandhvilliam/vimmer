@@ -28,11 +28,12 @@ export default function SidebarLinks() {
     <>
       <SidebarGroup>
         <SidebarGroupLabel>Marathon</SidebarGroupLabel>
+
         <SidebarMenu>
           {NAV_LINKS.marathon.map((item) => (
             <SidebarMenuItem key={item.name}>
               <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                <Link href={`/${domain}${item.url}`}>
+                <Link prefetch={true} href={`/${domain}${item.url}`}>
                   <item.icon />
                   <span>{item.name}</span>
                 </Link>
@@ -48,7 +49,7 @@ export default function SidebarLinks() {
           {NAV_LINKS.configuration.map((item) => (
             <SidebarMenuItem key={item.name}>
               <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                <Link href={`/${domain}${item.url}`}>
+                <Link prefetch={true} href={`/${domain}${item.url}`}>
                   <item.icon />
                   <span>{item.name}</span>
                 </Link>

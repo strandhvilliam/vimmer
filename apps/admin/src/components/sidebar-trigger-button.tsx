@@ -3,7 +3,7 @@
 import { Button } from "@vimmer/ui/components/button";
 import { Menu } from "lucide-react";
 import { SidebarTrigger } from "@vimmer/ui/components/sidebar";
-
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 export function SidebarTriggerButton() {
   return (
     <SidebarTrigger>
