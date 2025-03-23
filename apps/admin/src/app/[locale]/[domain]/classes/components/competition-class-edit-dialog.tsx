@@ -32,6 +32,7 @@ import {
 } from "@/lib/schemas";
 import { toast } from "sonner";
 import { CompetitionClass } from "@vimmer/supabase/types";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 
 interface CompetitionClassEditDialogProps {
   classItem: CompetitionClass;
@@ -180,7 +181,7 @@ export function CompetitionClassEditDialog({
               >
                 Cancel
               </Button>
-              <Button
+              <PrimaryButton
                 type="submit"
                 disabled={isEditingClass}
                 className="min-w-24"
@@ -188,9 +189,9 @@ export function CompetitionClassEditDialog({
                 {isEditingClass ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  "Save Changes"
+                  "Save"
                 )}
-              </Button>
+              </PrimaryButton>
             </div>
           </form>
         </Form>

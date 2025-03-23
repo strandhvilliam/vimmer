@@ -37,7 +37,7 @@ import { useAction } from "next-safe-action/hooks";
 import { EditDeviceGroupInput, editDeviceGroupSchema } from "@/lib/schemas";
 import { toast } from "sonner";
 import { DeviceGroup } from "@vimmer/supabase/types";
-
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 const deviceTypes = [
   {
     value: "camera",
@@ -209,7 +209,7 @@ export function DeviceGroupEditDialog({
               >
                 Cancel
               </Button>
-              <Button
+              <PrimaryButton
                 type="submit"
                 disabled={isEditingDeviceGroup}
                 className="min-w-24"
@@ -219,7 +219,7 @@ export function DeviceGroupEditDialog({
                 ) : (
                   "Save Changes"
                 )}
-              </Button>
+              </PrimaryButton>
             </div>
           </form>
         </Form>

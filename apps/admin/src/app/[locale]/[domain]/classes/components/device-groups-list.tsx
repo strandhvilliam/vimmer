@@ -1,6 +1,6 @@
 "use client";
 import { DeviceGroup } from "@vimmer/supabase/types";
-import { Camera, Tablet, Smartphone, XIcon, Loader2 } from "lucide-react";
+import { Camera, Tablet, Smartphone, XIcon, Loader2, Plus } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import React, { useState } from "react";
 import { Card } from "@vimmer/ui/components/card";
@@ -17,6 +17,7 @@ import {
   AlertDialogDescription,
 } from "@vimmer/ui/components/alert-dialog";
 import { DeviceGroupEditDialog } from "./device-group-edit-dialog";
+import { DeviceGroupCreateDialog } from "./device-group-create-dialog";
 
 interface DeviceGroupsListProps {
   groups: DeviceGroup[];
@@ -52,6 +53,7 @@ export function DeviceGroupsList({ groups }: DeviceGroupsListProps) {
           isDeleting={isDeletingDeviceGroup}
         />
       ))}
+      <DeviceGroupCreateDialog />
     </div>
   );
 }

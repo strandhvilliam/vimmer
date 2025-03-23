@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@vimmer/ui/components/button";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +31,8 @@ import {
   CreateCompetitionClassInput,
 } from "@/lib/schemas";
 import { createCompetitionClassAction } from "../actions/competition-class-create-action";
-
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { Card } from "@vimmer/ui/components/card";
 export function CompetitionClassCreateDialog() {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -54,10 +55,15 @@ export function CompetitionClassCreateDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="w-4 h-4 mr-2" />
-          Add New Class
-        </Button>
+        <Card className="flex items-center justify-center bg-muted/50">
+          <Button
+            variant="ghost"
+            className="w-full transition duration-200 h-full flex flex-col items-center justify-center py-10 text-muted-foreground"
+          >
+            <Plus className="h-8 w-8" />
+            <span>Add Class</span>
+          </Button>
+        </Card>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -162,9 +168,13 @@ export function CompetitionClassCreateDialog() {
             />
 
             <div className="flex justify-end gap-3">
-              <Button type="submit" disabled={isCreatingClass}>
-                {isCreatingClass ? "Adding..." : "Add Class"}
-              </Button>
+              <PrimaryButton type="submit" disabled={isCreatingClass}>
+                {isCreatingClass ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Create"
+                )}
+              </PrimaryButton>
             </div>
           </form>
         </Form>

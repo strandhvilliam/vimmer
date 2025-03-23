@@ -8,7 +8,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@vimmer/ui/components/tooltip";
-import { XIcon, Loader2 } from "lucide-react";
+import { XIcon, Loader2, Plus } from "lucide-react";
 import React, { useState } from "react";
 import { CompetitionClassEditDialog } from "./competition-class-edit-dialog";
 import { useAction } from "next-safe-action/hooks";
@@ -22,6 +22,7 @@ import {
   AlertDialogFooter,
   AlertDialogDescription,
 } from "@vimmer/ui/components/alert-dialog";
+import { CompetitionClassCreateDialog } from "./competition-class-create-dialog";
 
 interface CompetitionClassListProps {
   classes: CompetitionClass[];
@@ -50,6 +51,7 @@ export default function CompetitionClassList({
           isDeleting={isDeletingClass}
         />
       ))}
+      <CompetitionClassCreateDialog />
     </div>
   );
 }

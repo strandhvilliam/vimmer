@@ -38,6 +38,8 @@ import { createDeviceGroupAction } from "../actions/device-group-create-action";
 import { useAction } from "next-safe-action/hooks";
 import { CreateDeviceGroupInput, createDeviceGroupSchema } from "@/lib/schemas";
 import { toast } from "sonner";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { Card } from "@vimmer/ui/components/card";
 const deviceTypes = [
   {
     value: "camera",
@@ -78,10 +80,15 @@ export function DeviceGroupCreateDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="w-4 h-4 mr-2" />
-          Add New Group
-        </Button>
+        <Card className="flex items-center justify-center bg-muted/50">
+          <Button
+            variant="ghost"
+            className="w-full transition duration-200 h-full flex flex-col items-center justify-center py-10 text-muted-foreground"
+          >
+            <Plus className="h-8 w-8" />
+            <span>Add Device Group</span>
+          </Button>
+        </Card>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -191,7 +198,7 @@ export function DeviceGroupCreateDialog() {
             />
 
             <div className="flex justify-end gap-3">
-              <Button
+              <PrimaryButton
                 type="submit"
                 disabled={isCreatingDeviceGroup}
                 className="min-w-24"
@@ -199,9 +206,9 @@ export function DeviceGroupCreateDialog() {
                 {isCreatingDeviceGroup ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  "Add Group"
+                  "Create"
                 )}
-              </Button>
+              </PrimaryButton>
             </div>
           </form>
         </Form>
