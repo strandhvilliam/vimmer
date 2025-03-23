@@ -1,32 +1,56 @@
-import React from "react";
+import React, { Suspense } from "react";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@vimmer/ui/components/tabs";
-import { ParticipantSubmissionsTable } from "./components/participant-submissions-table";
+import { Tables } from "@vimmer/supabase/types";
+import ParticipantsTab from "./components/submissions-participants-tab";
+import SubmissionsParticipantsTabSkeleton from "./components/submissions-participants-skeleton";
+import SubmissionsTopicsTab from "./components/submissions-topics-tab";
 
-export default function SubmissionsPage() {
+type ValidationError = Tables<"validation_errors">;
+type Participant = Tables<"participants"> & {
+  validationErrors?: ValidationError[];
+};
+
+export default async function SubmissionsPage() {
   return (
     <div className="container mx-auto py-8 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Submissions</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Submissions</h1>
         <p className="text-muted-foreground mt-2">
           View and manage photo submissions from participants
         </p>
       </div>
 
       <Tabs defaultValue="participants">
-        <TabsList>
-          <TabsTrigger value="participants">By Participant</TabsTrigger>
-          <TabsTrigger value="topics">By Topic</TabsTrigger>
+        <TabsList className="bg-background rounded-none p-0 h-auto border-b border-muted-foreground/25 w-full flex justify-start">
+          <TabsTrigger
+            value="participants"
+            className="px-4 py-2 bg-background rounded-none data-[state=active]:shadow-none data-[state=active]:border-primary border-b-2 border-transparent"
+          >
+            By Participant
+          </TabsTrigger>
+          <TabsTrigger
+            value="topics"
+            className="px-4 py-2 bg-background rounded-none data-[state=active]:shadow-none data-[state=active]:border-primary border-b-2 border-transparent"
+          >
+            By Topic
+          </TabsTrigger>
         </TabsList>
+
         <TabsContent value="participants" className="mt-6">
-          <ParticipantSubmissionsTable />
+          <Suspense fallback={<SubmissionsParticipantsTabSkeleton />}>
+            <ParticipantsTab />
+          </Suspense>
         </TabsContent>
+
         <TabsContent value="topics" className="mt-6">
-          <div className="text-muted-foreground">Topic view coming soon...</div>
+          <Suspense fallback={<div>Loading...</div>}>
+            <SubmissionsTopicsTab />
+          </Suspense>
         </TabsContent>
       </Tabs>
     </div>

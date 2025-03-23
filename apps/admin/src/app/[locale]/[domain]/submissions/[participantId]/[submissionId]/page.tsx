@@ -420,10 +420,11 @@ export default async function SubmissionDetailPage({ params }: PageProps) {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
-            <MessageCircle className="h-4 w-4 mr-2" />
+            <MessageCircle className="h-4 w-4 " />
             Notify Participant
           </Button>
-          <Button variant="destructive" size="sm">
+          <Button variant="outline" size="sm" className="">
+            <Trash2 className="h-4 w-4" />
             Cancel Submission
           </Button>
         </div>
