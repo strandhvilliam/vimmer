@@ -11,6 +11,7 @@ import {
   getMarathonByDomainQuery,
   getMarathonsByUserIdQuery,
   getMarathonWithConfigByDomainQuery,
+  getParticipantsByDomainQuery,
   getTopicsByDomainQuery,
 } from "./queries";
 
@@ -65,5 +66,14 @@ export async function getDeviceGroupsByDomain(domain: string) {
   cacheLife("hours");
   const supabase = await createClient();
   const data = await getDeviceGroupsByDomainQuery(supabase, domain);
+  return data;
+}
+
+export async function getParticipantsByDomain(domain: string) {
+  "use cache";
+  cacheTag(`participants-${domain}`);
+  cacheLife("minutes");
+  const supabase = await createClient();
+  const data = await getParticipantsByDomainQuery(supabase, domain);
   return data;
 }

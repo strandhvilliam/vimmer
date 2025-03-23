@@ -1,4 +1,4 @@
-import type { Marathon, Participant, SupabaseClient } from "./types/";
+import type { SupabaseClient } from "./types/";
 import { toCamelCase } from "./utils/format-helpers";
 
 export async function getParticipantByIdQuery(
@@ -214,4 +214,23 @@ export async function getDeviceGroupsByDomainQuery(
     .eq("domain", domain)
     .throwOnError();
   return data?.flatMap(({ device_groups }) => toCamelCase(device_groups)) ?? [];
+}
+
+export async function getParticipantsByDomainQuery(
+  supabase: SupabaseClient,
+  domain: string
+) {
+  const { data } = await supabase
+    .from("participants")
+    .select(
+      `
+      *,
+      competitionClass:competition_classes(*),
+      deviceGroup:device_groups(*),
+      validationErrors:validation_errors(*)
+      `
+    )
+    .eq("domain", domain)
+    .throwOnError();
+  return data?.map(toCamelCase) ?? [];
 }
