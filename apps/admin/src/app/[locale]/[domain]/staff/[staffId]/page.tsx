@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@vimmer/ui/components/table";
 import { format } from "date-fns";
-import { Mail, User2Icon } from "lucide-react";
+import { Mail, Trash2, User2Icon, Pencil } from "lucide-react";
 import { ScrollArea } from "@vimmer/ui/components/scroll-area";
 import { notFound } from "next/navigation";
 import { AcceptedParticipantsTable } from "./accepted-participants-table";
@@ -95,9 +95,11 @@ export default async function StaffDetailsPage({ params }: PageProps) {
           </div>
           <div className="flex gap-2">
             <Button size="sm" variant="outline">
+              <Pencil className="h-4 w-4" />
               Edit
             </Button>
-            <Button size="sm" variant="destructive">
+            <Button size="sm" variant="outline">
+              <Trash2 className="h-4 w-4" />
               Remove
             </Button>
           </div>

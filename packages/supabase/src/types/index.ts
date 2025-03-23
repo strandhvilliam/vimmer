@@ -56,6 +56,14 @@ export type UserData = ToCamelCaseObject<Tables<"user">>;
 export type InsertUserData = ToCamelCaseObject<TablesInsert<"user">>;
 export type UpdateUserData = ToCamelCaseObject<TablesUpdate<"user">>;
 
+export type ValidationError = ToCamelCaseObject<Tables<"validation_errors">>;
+export type InsertValidationError = ToCamelCaseObject<
+  TablesInsert<"validation_errors">
+>;
+export type UpdateValidationError = ToCamelCaseObject<
+  TablesUpdate<"validation_errors">
+>;
+
 export * from "./db";
 export * from "./helpers";
 export * from "./marathon-config";

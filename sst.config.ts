@@ -24,6 +24,12 @@ export default $config({
     const previewBucket = new sst.aws.Bucket("PreviewBucket", {
       access: "public",
     });
+    const marathonSettingsBucket = new sst.aws.Bucket(
+      "MarathonSettingsBucket",
+      {
+        access: "public",
+      }
+    );
     const processSubmissionQueue = new sst.aws.Queue("ProcessPhotoQueue");
     const photoValidatorFunction = new sst.aws.Function(
       "PhotoValidatorFunction",

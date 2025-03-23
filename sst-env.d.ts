@@ -13,6 +13,10 @@ declare module "sst" {
       "type": "sst.aws.Nextjs"
       "url": string
     }
+    "MarathonSettingsBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
     "PhotoValidatorFunction": {
       "name": string
       "type": "sst.aws.Function"

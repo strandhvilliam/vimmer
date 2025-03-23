@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@vimmer/ui/components/form";
 import { Input } from "@vimmer/ui/components/input";
-
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 const addStaffSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email address"),
@@ -50,10 +50,10 @@ export function AddStaffDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <PrimaryButton>
           <Plus className="h-4 w-4" />
           <span className="hidden md:block text-sm">Add Staff</span>
-        </Button>
+        </PrimaryButton>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
