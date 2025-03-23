@@ -30,7 +30,7 @@ import { ScrollArea, ScrollBar } from "@vimmer/ui/components/scroll-area";
 import { Calendar as CalendarComponent } from "@vimmer/ui/components/calendar";
 import { cn } from "@vimmer/ui/lib/utils";
 import { DateTimePicker } from "@vimmer/ui/components/date-time-picker";
-import { EditTopicInput } from "@/app/[locale]/[domain]/topics/actions/topics-edit-action";
+import { EditTopicInput } from "@/app/[locale]/[domain]/topics/_actions/topics-edit-action";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 const EditTopicFormSchema = z.object({
   name: z.string().min(1, "Name is required"),

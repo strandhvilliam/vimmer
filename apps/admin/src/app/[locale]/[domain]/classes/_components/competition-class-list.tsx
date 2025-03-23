@@ -1,75 +1,73 @@
 "use client";
-import { DeviceGroup } from "@vimmer/supabase/types";
-import { Camera, Tablet, Smartphone, XIcon, Loader2, Plus } from "lucide-react";
+
+import { CompetitionClass } from "@vimmer/supabase/types";
 import { Button } from "@vimmer/ui/components/button";
-import React, { useState } from "react";
 import { Card } from "@vimmer/ui/components/card";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@vimmer/ui/components/tooltip";
+import { XIcon, Loader2, Plus } from "lucide-react";
+import React, { useState } from "react";
+import { CompetitionClassEditDialog } from "./competition-class-edit-dialog";
 import { useAction } from "next-safe-action/hooks";
-import { deleteDeviceGroupAction } from "../actions/device-group-delete-action";
+import { deleteCompetitionClassAction } from "../_actions/competition-class-delete-action";
 import { toast } from "sonner";
 import {
   AlertDialog,
-  AlertDialogContent,
   AlertDialogTitle,
   AlertDialogHeader,
-  AlertDialogTrigger,
+  AlertDialogContent,
   AlertDialogFooter,
   AlertDialogDescription,
 } from "@vimmer/ui/components/alert-dialog";
-import { DeviceGroupEditDialog } from "./device-group-edit-dialog";
-import { DeviceGroupCreateDialog } from "./device-group-create-dialog";
+import { CompetitionClassCreateDialog } from "./competition-class-create-dialog";
 
-interface DeviceGroupsListProps {
-  groups: DeviceGroup[];
+interface CompetitionClassListProps {
+  classes: CompetitionClass[];
 }
 
-function getDeviceIcon(icon: string) {
-  switch (icon) {
-    case "smartphone":
-      return <Smartphone className="h-6 w-6" />;
-    case "tablet":
-      return <Tablet className="h-6 w-6" />;
-    case "camera":
-    default:
-      return <Camera className="h-6 w-6" />;
-  }
-}
-
-export function DeviceGroupsList({ groups }: DeviceGroupsListProps) {
-  const { execute: deleteDeviceGroup, isExecuting: isDeletingDeviceGroup } =
-    useAction(deleteDeviceGroupAction, {
+export default function CompetitionClassList({
+  classes,
+}: CompetitionClassListProps) {
+  const { execute: deleteCompetitionClass, isExecuting: isDeletingClass } =
+    useAction(deleteCompetitionClassAction, {
       onSuccess: () => {
-        toast.success("Device group deleted");
+        toast.success("Competition class deleted successfully");
+      },
+      onError: (error) => {
+        toast.error(error.error.serverError || "Something went wrong");
       },
     });
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {groups.map((group) => (
-        <DeviceGroupCard
-          key={group.id}
-          group={group}
-          onDelete={() => deleteDeviceGroup({ id: group.id })}
-          isDeleting={isDeletingDeviceGroup}
+      {classes.map((classItem) => (
+        <CompetitionClassCard
+          key={classItem.id}
+          classItem={classItem}
+          onDelete={() => deleteCompetitionClass({ id: classItem.id })}
+          isDeleting={isDeletingClass}
         />
       ))}
-      <DeviceGroupCreateDialog />
+      <CompetitionClassCreateDialog />
     </div>
   );
 }
 
-function DeviceGroupCard({
-  group,
+function CompetitionClassCard({
+  classItem,
   onDelete,
   isDeleting,
 }: {
-  group: DeviceGroup;
+  classItem: CompetitionClass;
   onDelete: () => void;
   isDeleting: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <Card key={group.id} className="relative">
+    <Card key={classItem.id} className="relative">
       <div className="flex flex-col gap-2 p-4">
         <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
           <Button
@@ -80,7 +78,7 @@ function DeviceGroupCard({
             onClick={() => setIsOpen(true)}
           >
             {isDeleting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <XIcon className="w-4 h-4" />
             )}
@@ -106,17 +104,28 @@ function DeviceGroupCard({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        <div className="flex h-fit items-center w-fit justify-between bg-muted rounded-lg shadow-sm border p-2">
-          {getDeviceIcon(group.icon)}
+        <div className="flex h-fit items-center w-fit justify-center bg-muted rounded-lg shadow-sm border p-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="w-6 h-6 text-center text-lg font-medium font-mono">
+                {classItem.numberOfPhotos}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              Number of photos: {classItem.numberOfPhotos}
+            </TooltipContent>
+          </Tooltip>
         </div>
         <div className="flex flex-col tems-center justify-between">
-          <h3 className="text-lg font-semibold">{group.name}</h3>
-          <p className="text-sm text-muted-foreground">{group.description}</p>
+          <h3 className="text-lg font-semibold">{classItem.name}</h3>
+          <p className="text-sm text-muted-foreground">
+            {classItem.description}
+          </p>
         </div>
       </div>
       <div className="flex items-center px-4 pb-4 gap-2">
-        <DeviceGroupEditDialog
-          group={group}
+        <CompetitionClassEditDialog
+          classItem={classItem}
           trigger={
             <Button size="sm" variant="outline" className="flex-1">
               Edit

@@ -85,7 +85,7 @@ const columnInfoMap: Record<string, { label: string; icon: LucideIcon }> = {
 const columns = [
   columnHelper.accessor("reference", {
     id: "reference",
-    header: "Number",
+    header: "Participant",
     cell: (info) => info.getValue(),
     sortingFn: "alphanumeric",
   }),
@@ -399,11 +399,6 @@ export function SubmissionsParticipantsTable({
                       header.column.columnDef.header,
                       header.getContext()
                     )}
-                    {header.column.getIsSorted() === "asc" ? (
-                      <span className="ml-1">↑</span>
-                    ) : header.column.getIsSorted() === "desc" ? (
-                      <span className="ml-1">↓</span>
-                    ) : null}
                   </div>
                 </TableHead>
               ))}

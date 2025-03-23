@@ -20,7 +20,7 @@ import { FormLabel } from "@vimmer/ui/components/form";
 import { FormDescription } from "@vimmer/ui/components/form";
 import { cn } from "@vimmer/ui/lib/utils";
 import { DateTimePicker } from "@vimmer/ui/components/date-time-picker";
-import { CreateTopicInput } from "@/app/[locale]/[domain]/topics/actions/topics-create-action";
+import { CreateTopicInput } from "@/app/[locale]/[domain]/topics/_actions/topics-create-action";
 import { Topic } from "@vimmer/supabase/types";
 import { useEffect, useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@vimmer/ui/components/radio-group";

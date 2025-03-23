@@ -34,12 +34,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@vimmer/ui/components/input";
 import { cn } from "@vimmer/ui/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { createDeviceGroupAction } from "../actions/device-group-create-action";
 import { useAction } from "next-safe-action/hooks";
 import { CreateDeviceGroupInput, createDeviceGroupSchema } from "@/lib/schemas";
 import { toast } from "sonner";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { Card } from "@vimmer/ui/components/card";
+import { createDeviceGroupAction } from "../_actions/device-group-create-action";
+
 const deviceTypes = [
   {
     value: "camera",

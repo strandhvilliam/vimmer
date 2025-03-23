@@ -32,12 +32,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@vimmer/ui/components/input";
 import { cn } from "@vimmer/ui/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { editDeviceGroupAction } from "../actions/device-group-edit-action";
 import { useAction } from "next-safe-action/hooks";
 import { EditDeviceGroupInput, editDeviceGroupSchema } from "@/lib/schemas";
 import { toast } from "sonner";
 import { DeviceGroup } from "@vimmer/supabase/types";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { editDeviceGroupAction } from "../_actions/device-group-edit-action";
 const deviceTypes = [
   {
     value: "camera",

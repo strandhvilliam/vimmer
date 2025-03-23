@@ -25,7 +25,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@vimmer/ui/components/input";
 import NumberFlow from "@number-flow/react";
 import { useAction } from "next-safe-action/hooks";
-import { editCompetitionClassAction } from "../actions/competition-class-edit-action";
+import { editCompetitionClassAction } from "../_actions/competition-class-edit-action";
 import {
   EditCompetitionClassInput,
   editCompetitionClassSchema,

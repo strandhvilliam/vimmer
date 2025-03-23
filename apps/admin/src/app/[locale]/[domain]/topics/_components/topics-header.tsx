@@ -7,7 +7,7 @@ import { TopicsCreateDialog } from "./topics-create-dialog";
 import {
   createTopicAction,
   CreateTopicInput,
-} from "@/app/[locale]/[domain]/topics/actions/topics-create-action";
+} from "@/app/[locale]/[domain]/topics/_actions/topics-create-action";
 import { Topic } from "@vimmer/supabase/types";
 import { toast } from "sonner";
 import { useAction } from "next-safe-action/hooks";

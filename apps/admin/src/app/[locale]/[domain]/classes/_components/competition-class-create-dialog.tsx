@@ -30,9 +30,10 @@ import {
   createCompetitionClassSchema,
   CreateCompetitionClassInput,
 } from "@/lib/schemas";
-import { createCompetitionClassAction } from "../actions/competition-class-create-action";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { Card } from "@vimmer/ui/components/card";
+import { createCompetitionClassAction } from "../_actions/competition-class-create-action";
+
 export function CompetitionClassCreateDialog() {
   const [isOpen, setIsOpen] = useState(false);
 
