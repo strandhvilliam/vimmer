@@ -34,6 +34,7 @@ export async function middleware(request: NextRequest) {
     : request.nextUrl.pathname;
 
   const url = new URL(pathnameWithoutLocale || "/", request.url);
+  const urlDomain = url.pathname.split("/")[1];
 
   const session = getSessionCookie(request);
 
@@ -65,6 +66,11 @@ export async function middleware(request: NextRequest) {
       response.cookies.delete("activeDomain");
       response.cookies.delete("domainAccessToken");
       return response;
+    }
+
+    if (urlDomain && urlDomain !== activeDomainCookie) {
+      const redirectUrl = new URL(`/${activeDomainCookie}`, request.url);
+      return NextResponse.redirect(redirectUrl);
     }
 
     if (url.pathname === "/") {
