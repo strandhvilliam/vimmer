@@ -31,7 +31,7 @@ import { Calendar as CalendarComponent } from "@vimmer/ui/components/calendar";
 import { cn } from "@vimmer/ui/lib/utils";
 import { DateTimePicker } from "@vimmer/ui/components/date-time-picker";
 import { EditTopicInput } from "@/app/[locale]/[domain]/topics/actions/topics-edit-action";
-
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 const EditTopicFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   visibility: z.boolean(),
@@ -189,9 +189,7 @@ export function TopicsEditDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit" size="sm">
-                Save changes
-              </Button>
+              <PrimaryButton type="submit">Save changes</PrimaryButton>
             </DialogFooter>
           </form>
         </Form>

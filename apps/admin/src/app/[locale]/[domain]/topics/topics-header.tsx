@@ -11,6 +11,7 @@ import {
 import { Topic } from "@vimmer/supabase/types";
 import { toast } from "sonner";
 import { useAction } from "next-safe-action/hooks";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 
 interface TopicsHeaderProps {
   marathonId: number;
@@ -45,16 +46,13 @@ export function TopicsHeader({ marathonId }: TopicsHeaderProps) {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <Button
-              variant="default"
-              size="sm"
+            <PrimaryButton
               onClick={() => setCreateDialogOpen(true)}
               disabled={isCreatingTopic}
-              className="flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
               Add Topic
-            </Button>
+            </PrimaryButton>
           </div>
         </div>
       </div>

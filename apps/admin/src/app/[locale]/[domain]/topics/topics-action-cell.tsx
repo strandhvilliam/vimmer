@@ -40,7 +40,7 @@ export function TopicsActionCell({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-destructive"
+              className="h-8 w-8 text-muted-foreground/50"
               onClick={onDeleteClick}
             >
               <Trash2 className="h-4 w-4" />
