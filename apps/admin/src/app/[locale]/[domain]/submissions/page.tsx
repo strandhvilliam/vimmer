@@ -6,14 +6,11 @@ import {
   TabsTrigger,
 } from "@vimmer/ui/components/tabs";
 import { Tables } from "@vimmer/supabase/types";
-import ParticipantsTab from "./components/submissions-participants-tab";
-import SubmissionsParticipantsTabSkeleton from "./components/submissions-participants-skeleton";
-import SubmissionsTopicsTab from "./components/submissions-topics-tab";
-
-type ValidationError = Tables<"validation_errors">;
-type Participant = Tables<"participants"> & {
-  validationErrors?: ValidationError[];
-};
+import SubmissionsParticipantsTab from "./_components/submissions-participants-tab";
+import SubmissionsParticipantsTabSkeleton from "./_components/submissions-participants-skeleton";
+import SubmissionsTopicsTab from "./_components/submissions-topics-tab";
+import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 
 export default async function SubmissionsPage() {
   return (
@@ -43,7 +40,7 @@ export default async function SubmissionsPage() {
 
         <TabsContent value="participants" className="mt-6">
           <Suspense fallback={<SubmissionsParticipantsTabSkeleton />}>
-            <ParticipantsTab />
+            <SubmissionsParticipantsTab />
           </Suspense>
         </TabsContent>
 

@@ -30,6 +30,14 @@ import {
   Search,
   AlertCircle,
   AlertOctagon,
+  Calendar,
+  LucideIcon,
+  User,
+  Mail,
+  Book,
+  Tag,
+  Hash,
+  RefreshCw,
 } from "lucide-react";
 import {
   Tooltip,
@@ -47,73 +55,100 @@ import {
 } from "@vimmer/ui/components/dropdown-menu";
 import { Participant, ValidationError } from "@vimmer/supabase/types";
 import { useState } from "react";
+import { format } from "date-fns";
+import { refreshParticipantsData } from "../_actions/refresh-participants-data";
 
-const columnHelper = createColumnHelper<
-  Participant & { validationErrors: ValidationError[] }
->();
+type ParticipantWithValidationErrors = Participant & {
+  validationErrors: ValidationError[];
+  competitionClass?: {
+    id: number;
+    name: string;
+  } | null;
+  deviceGroup?: {
+    id: number;
+    name: string;
+  } | null;
+};
 
-const columnInfoMap: Record<string, string> = {
-  reference: "Number",
-  email: "Email",
-  status: "Status",
-  competitionClassId: "Class",
-  deviceGroupId: "Device",
-  issues: "Issues",
+const columnHelper = createColumnHelper<ParticipantWithValidationErrors>();
+
+const columnInfoMap: Record<string, { label: string; icon: LucideIcon }> = {
+  reference: { label: "Participant", icon: Hash },
+  email: { label: "Email", icon: Mail },
+  status: { label: "Status", icon: Tag },
+  competitionClass: { label: "Class", icon: Book },
+  deviceGroup: { label: "Device", icon: Smartphone },
+  issues: { label: "Issues", icon: AlertTriangle },
+  createdAt: { label: "Registered", icon: Calendar },
 };
 
 const columns = [
   columnHelper.accessor("reference", {
+    id: "reference",
     header: "Number",
     cell: (info) => info.getValue(),
+    sortingFn: "alphanumeric",
   }),
   columnHelper.accessor("email", {
+    id: "email",
     header: "Email",
     cell: (info) => info.getValue() || "-",
+    sortingFn: "alphanumeric",
   }),
   columnHelper.accessor("status", {
+    id: "status",
     header: "Status",
     cell: (info) => {
       const status = info.getValue();
-      const variants = {
-        complete: "default",
-        incomplete: "secondary",
-        not_started: "outline",
-      } as const;
 
-      return (
-        <Badge
-          variant={variants[status as keyof typeof variants] || "secondary"}
-        >
-          {status}
-        </Badge>
-      );
+      return <Badge variant="secondary">{status}</Badge>;
+    },
+    sortingFn: "alphanumeric",
+  }),
+  columnHelper.accessor("createdAt", {
+    id: "createdAt",
+    header: "Created",
+    cell: (info) => {
+      const date = info.getValue();
+      try {
+        return format(new Date(date), "dd/MM/yyyy HH:mm");
+      } catch (error) {
+        return date || "-";
+      }
+    },
+    sortingFn: (rowA, rowB) => {
+      const dateA = new Date(rowA.original.createdAt).getTime();
+      const dateB = new Date(rowB.original.createdAt).getTime();
+      return dateA - dateB;
     },
   }),
-  columnHelper.accessor("competitionClassId", {
+  columnHelper.accessor((row) => row.competitionClass?.name, {
+    id: "competitionClass",
     header: "Class",
     cell: (info) => info.getValue() || "-",
+    sortingFn: "alphanumeric",
   }),
-  columnHelper.accessor("deviceGroupId", {
+  columnHelper.accessor((row) => row.deviceGroup?.name, {
+    id: "deviceGroup",
     header: "Device",
     cell: (info) => {
-      const deviceId = info.getValue();
+      const deviceName = info.getValue();
       return (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger>
-              {deviceId ? (
+              {deviceName ? (
                 <Camera className="h-4 w-4" />
               ) : (
                 <Smartphone className="h-4 w-4" />
               )}
             </TooltipTrigger>
-            <TooltipContent>
-              {deviceId ? "Camera" : "Smartphone"}
-            </TooltipContent>
+            <TooltipContent>{deviceName || "Smartphone"}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       );
     },
+    sortingFn: "alphanumeric",
   }),
   columnHelper.accessor((row) => row.validationErrors || [], {
     id: "issues",
@@ -205,15 +240,22 @@ const columns = [
         </TooltipProvider>
       );
     },
+    sortingFn: (rowA, rowB) => {
+      const errorsA = rowA.original.validationErrors?.length || 0;
+      const errorsB = rowB.original.validationErrors?.length || 0;
+      return errorsA - errorsB;
+    },
   }),
 ];
 
 interface SubmissionsParticipantsTableProps {
-  participants: (Participant & { validationErrors: ValidationError[] })[];
+  participants: ParticipantWithValidationErrors[];
+  domain: string;
 }
 
 export function SubmissionsParticipantsTable({
   participants,
+  domain,
 }: SubmissionsParticipantsTableProps) {
   const router = useRouter();
   const [sorting, setSorting] = useState<SortingState>([
@@ -221,6 +263,21 @@ export function SubmissionsParticipantsTable({
   ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+
+    setIsRefreshing(true);
+    try {
+      await refreshParticipantsData();
+      router.refresh();
+    } catch (error) {
+      console.error("Error refreshing participants data:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const table = useReactTable({
     data: participants,
@@ -246,7 +303,13 @@ export function SubmissionsParticipantsTable({
   });
 
   const getColumnDisplayName = (columnId: string): string => {
-    return columnInfoMap[columnId] || columnId;
+    const columnInfo = columnInfoMap[columnId];
+    return columnInfo ? columnInfo.label : columnId;
+  };
+
+  const getColumnIcon = (columnId: string): React.ReactNode => {
+    const columnInfo = columnInfoMap[columnId];
+    return columnInfo ? <columnInfo.icon className="h-3.5 w-3.5" /> : null;
   };
 
   return (
@@ -263,18 +326,37 @@ export function SubmissionsParticipantsTable({
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 rounded-lg shadow-sm flex items-center gap-1"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+            />
+            <span>Refresh</span>
+          </Button>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="h-9 rounded-lg shadow-sm">
                 Sort by:{" "}
-                {sorting.length > 0 && sorting[0]?.id
-                  ? getColumnDisplayName(sorting[0].id)
-                  : "Default"}{" "}
-                <ChevronDown className="ml-2 h-4 w-4" />
+                {sorting.length > 0 && sorting[0]?.id ? (
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <span>{getColumnIcon(sorting[0].id)}</span>
+                    {getColumnDisplayName(sorting[0].id)}
+                  </div>
+                ) : (
+                  <span>Default</span>
+                )}{" "}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {columns.map((column) => {
+                if (!column.id) return null;
+
                 return (
                   <DropdownMenuItem
                     key={column.id}
@@ -282,7 +364,10 @@ export function SubmissionsParticipantsTable({
                       column.id && setSorting([{ id: column.id, desc: false }])
                     }
                   >
-                    {column.id && getColumnDisplayName(column.id)}
+                    <div className="flex items-center gap-1">
+                      <span>{getColumnIcon(column.id)}</span>
+                      {getColumnDisplayName(column.id)}
+                    </div>
                   </DropdownMenuItem>
                 );
               })}
@@ -306,12 +391,20 @@ export function SubmissionsParticipantsTable({
               {table.getFlatHeaders().map((header) => (
                 <TableHead
                   key={header.id}
-                  className="font-medium text-muted-foreground h-10"
+                  className="font-medium text-muted-foreground h-10 cursor-pointer"
+                  onClick={header.column.getToggleSortingHandler()}
                 >
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  )}
+                  <div className="flex items-center gap-1">
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                    {header.column.getIsSorted() === "asc" ? (
+                      <span className="ml-1">↑</span>
+                    ) : header.column.getIsSorted() === "desc" ? (
+                      <span className="ml-1">↓</span>
+                    ) : null}
+                  </div>
                 </TableHead>
               ))}
             </TableRow>
@@ -323,7 +416,9 @@ export function SubmissionsParticipantsTable({
                   key={row.id}
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() =>
-                    router.push(`/dev0/submissions/${row.original.id}`)
+                    router.push(
+                      `/${row.original.domain}/submissions/${row.original.id}`
+                    )
                   }
                 >
                   {row.getVisibleCells().map((cell) => (

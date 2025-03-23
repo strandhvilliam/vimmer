@@ -7,6 +7,7 @@ export function SubmissionsParticipantsTabSkeleton() {
       <div className="flex items-center justify-between">
         <Skeleton className="h-9 w-72 rounded-lg" />
         <div className="flex items-center gap-2">
+          <Skeleton className="h-9 w-24 rounded-lg" />
           <Skeleton className="h-9 w-32 rounded-lg" />
           <Skeleton className="h-9 w-9 rounded-lg" />
         </div>
@@ -14,7 +15,7 @@ export function SubmissionsParticipantsTabSkeleton() {
 
       <div className="rounded-md border">
         <div className="bg-muted/50 h-10 border-b flex items-center">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 7 }).map((_, i) => (
             <div className="px-4 flex-1" key={i}>
               <Skeleton className="h-4 w-full max-w-24" />
             </div>
@@ -27,7 +28,7 @@ export function SubmissionsParticipantsTabSkeleton() {
               className="flex items-center h-12 border-b last:border-b-0"
               key={i}
             >
-              {Array.from({ length: 6 }).map((_, j) => (
+              {Array.from({ length: 7 }).map((_, j) => (
                 <div className="px-4 flex-1" key={j}>
                   <Skeleton className="h-4 w-full max-w-24" />
                 </div>
