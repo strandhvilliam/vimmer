@@ -10,7 +10,7 @@ import { Switch } from "@vimmer/ui/components/switch";
 import { Label } from "@vimmer/ui/components/label";
 import { Separator } from "@vimmer/ui/components/separator";
 import { Input } from "@vimmer/ui/components/input";
-import { Button } from "@vimmer/ui/components/button";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 
 interface RuleToggleProps {
   title: string;
@@ -50,7 +50,7 @@ export default function RulesPage() {
             Configure validation rules for photo submissions
           </p>
         </div>
-        <Button>Save Changes</Button>
+        <PrimaryButton>Save Changes</PrimaryButton>
       </div>
 
       <div className="grid gap-6">

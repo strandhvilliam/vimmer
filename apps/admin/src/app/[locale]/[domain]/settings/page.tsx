@@ -24,7 +24,10 @@ import {
 import { format, setDate } from "date-fns";
 import { Calendar } from "@vimmer/ui/components/calendar";
 import { TimePickerInput } from "@vimmer/ui/components/time-picker";
-
+import { getLogoUploadUrl } from "./actions";
+import { useParams } from "next/navigation";
+import { toast } from "@vimmer/ui/hooks/use-toast";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 interface ContestSettings {
   name: string;
   logo: string;
@@ -124,18 +127,53 @@ export default function SettingsPage() {
     rules: "",
   });
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const params = useParams();
 
   const handleSave = async () => {
     // TODO: Implement save functionality
     console.log("Saving settings:", settings);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // TODO: Implement actual file upload
-      const imageUrl = URL.createObjectURL(file);
-      setSettings({ ...settings, logo: imageUrl });
+    if (!file) return;
+
+    try {
+      const result = await getLogoUploadUrl({
+        domain: params.domain as string,
+      });
+      if (!result?.data) throw new Error("Failed to get upload URL");
+
+      const formData = new FormData();
+      Object.entries(result.data.fields).forEach(([key, value]) => {
+        formData.append(key, value as string);
+      });
+      formData.append("Content-Type", file.type);
+      formData.append("file", file);
+
+      const uploadResponse = await fetch(result.data.url, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload file");
+      }
+
+      const logoUrl = `${result.data.url}/${result.data.key}`;
+      setSettings({ ...settings, logo: logoUrl });
+
+      toast({
+        title: "Logo uploaded",
+        description: "Your logo has been successfully uploaded.",
+      });
+    } catch (error) {
+      console.error("Error uploading logo:", error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload logo. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -416,9 +454,7 @@ export default function SettingsPage() {
           </Tabs>
 
           <div className="flex mt-6">
-            <Button size="sm" onClick={handleSave}>
-              Save Changes
-            </Button>
+            <PrimaryButton onClick={handleSave}>Save Changes</PrimaryButton>
           </div>
         </div>
 
