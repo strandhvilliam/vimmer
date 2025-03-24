@@ -1,8 +1,8 @@
 import { Separator } from "@vimmer/ui/components/separator";
 import { Suspense } from "react";
-import { ClassesLoadingSkeleton } from "./components/class-loading-skeleton";
-import { DeviceGroupsSection } from "./components/device-groups-section";
-import { CompetitionClassSection } from "./components/competition-class-section";
+import { ClassesLoadingSkeleton } from "./_components/class-loading-skeleton";
+import { DeviceGroupsSection } from "./_components/device-groups-section";
+import { CompetitionClassSection } from "./_components/competition-class-section";
 
 export default async function ClassesPage({
   params,

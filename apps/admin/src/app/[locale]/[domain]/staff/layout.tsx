@@ -4,10 +4,10 @@ import { Search, User2Icon } from "lucide-react";
 import { Input } from "@vimmer/ui/components/input";
 import { ScrollArea } from "@vimmer/ui/components/scroll-area";
 import Link from "next/link";
-import { AddStaffDialog } from "./add-staff-dialog";
+import { AddStaffDialog } from "./_components/add-staff-dialog";
 import { useParams } from "next/navigation";
-import { StaffListMenu } from "./staff-list-menu";
-import { StaffListSkeleton } from "./staff-list-skeleton";
+import { StaffListMenu } from "./_components/staff-list-menu";
+import { StaffListSkeleton } from "./_components/staff-list-skeleton";
 
 const staffMembers = [
   {

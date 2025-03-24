@@ -31,6 +31,7 @@
     "next-safe-action": "^7.10.4",
     "pg": "^8.13.3",
     "react": "^19.1.0-canary-2980f277-20250301",
+    "react-blurhash": "^0.3.0",
     "react-dom": "^19.1.0-canary-2980f277-20250301",
     "react-email": "^3.0.7",
     "resend": "^4.1.2"

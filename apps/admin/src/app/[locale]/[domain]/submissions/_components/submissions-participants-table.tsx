@@ -312,6 +312,10 @@ export function SubmissionsParticipantsTable({
     return columnInfo ? <columnInfo.icon className="h-3.5 w-3.5" /> : null;
   };
 
+  const handleRowClick = (row: ParticipantWithValidationErrors) => {
+    router.push(`/${row.domain}/submissions/${row.reference}`);
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -410,11 +414,7 @@ export function SubmissionsParticipantsTable({
                 <TableRow
                   key={row.id}
                   className="cursor-pointer hover:bg-muted/50"
-                  onClick={() =>
-                    router.push(
-                      `/${row.original.domain}/submissions/${row.original.id}`
-                    )
-                  }
+                  onClick={() => handleRowClick(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
