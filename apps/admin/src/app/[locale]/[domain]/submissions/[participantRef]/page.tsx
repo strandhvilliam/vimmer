@@ -11,6 +11,7 @@ interface PageProps {
 }
 
 export default async function ParticipantSubmissionPage({ params }: PageProps) {
+  await new Promise((resolve) => setTimeout(resolve, 1000));
   const { domain, participantRef } = await params;
   const participant = await getParticipantByReference(domain, participantRef);
 
@@ -18,14 +19,18 @@ export default async function ParticipantSubmissionPage({ params }: PageProps) {
     notFound();
   }
 
+  const submissions = participant.submissions.sort(
+    (a, b) => a.topic.orderIndex - b.topic.orderIndex
+  );
+
   return (
     <div className="container mx-auto py-8 space-y-8">
       <ParticipantHeader participant={participant} />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {participant.submissions.map((submission) => (
+        {submissions.map((submission) => (
           <PhotoSubmissionCard key={submission.id} submission={submission} />
         ))}
-        {participant.submissions.length === 0 && (
+        {submissions.length === 0 && (
           <div className="col-span-full text-center text-muted-foreground py-12">
             No photos submitted yet
           </div>
