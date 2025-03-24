@@ -202,7 +202,9 @@ export type Database = {
           device_group_id: number | null
           domain: string
           email: string | null
+          firstname: string
           id: number
+          lastname: string
           marathon_id: number
           reference: string
           status: string
@@ -215,7 +217,9 @@ export type Database = {
           device_group_id?: number | null
           domain?: string
           email?: string | null
-          id?: number
+          firstname?: string
+          id: number
+          lastname?: string
           marathon_id: number
           reference: string
           status?: string
@@ -228,7 +232,9 @@ export type Database = {
           device_group_id?: number | null
           domain?: string
           email?: string | null
+          firstname?: string
           id?: number
+          lastname?: string
           marathon_id?: number
           reference?: string
           status?: string
@@ -553,6 +559,13 @@ export type Database = {
             columns: ["participant_id"]
             isOneToOne: false
             referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "validation_errors_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
             referencedColumns: ["id"]
           },
         ]

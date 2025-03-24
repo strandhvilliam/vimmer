@@ -10,7 +10,7 @@ export async function getParticipantByIdQuery(
     .select(
       `
         *, 
-        submissions(*),
+        submissions(*, topic:topics(*), validation_errors:validation_errors(*)),
         competition_class:competition_classes(*),
         device_group:device_groups(*)
     `
@@ -43,9 +43,10 @@ export async function getParticipantByReferenceQuery(
     .select(
       `
         *, 
-        submissions(*),
+        submissions(*, topic:topics(*), validation_errors:validation_errors(*)),
         competition_class:competition_classes(*),
-        device_group:device_groups(*)
+        device_group:device_groups(*),
+        validation_errors(*)
     `
     )
     .eq("reference", reference);
@@ -225,9 +226,9 @@ export async function getParticipantsByDomainQuery(
     .select(
       `
       *,
-      competitionClass:competition_classes(*),
-      deviceGroup:device_groups(*),
-      validationErrors:validation_errors(*)
+      competition_class:competition_classes(*),
+      device_group:device_groups(*),
+      validation_errors(*)
       `
     )
     .eq("domain", domain)

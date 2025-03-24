@@ -12,6 +12,7 @@ const RevalidateSchema = z.object({
     invalid_type_error: "Invalid content type",
   }),
   domains: z.array(z.string().min(1, "Domain cannot be empty")),
+  specifier: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -20,14 +21,19 @@ export async function POST(request: NextRequest) {
     const type = searchParams.get("type");
     const domains = searchParams.get("domains")?.split(",");
     const secret = searchParams.get("secret");
+    const specifier = searchParams.get("specifier");
 
-    console.log("REVALIDATING", type, domains);
+    console.log("REVALIDATING", type, domains, specifier || "");
 
     if (secret !== process.env.REVALIDATE_SECRET) {
       return NextResponse.json({ message: "Invalid secret" }, { status: 401 });
     }
 
-    const validationResult = RevalidateSchema.safeParse({ type, domains });
+    const validationResult = RevalidateSchema.safeParse({
+      type,
+      domains,
+      specifier,
+    });
 
     if (!validationResult.success) {
       return NextResponse.json(
@@ -43,7 +49,11 @@ export async function POST(request: NextRequest) {
       validationResult.data;
 
     validatedDomains.forEach((domain) => {
-      revalidateTag(`${validatedType}-${domain}`);
+      if (specifier) {
+        revalidateTag(`${validatedType}-${domain}-${specifier}`);
+      } else {
+        revalidateTag(`${validatedType}-${domain}`);
+      }
     });
 
     return NextResponse.json(
