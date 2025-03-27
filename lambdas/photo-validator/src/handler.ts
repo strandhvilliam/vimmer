@@ -20,6 +20,7 @@ export const handler: Handler = async (event): Promise<void> => {
     supabase,
     participantId
   );
+
   if (!participantWithSubmissions) {
     throw new Error(`Participant with id ${participantId} not found`);
   }

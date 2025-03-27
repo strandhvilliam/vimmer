@@ -13,10 +13,11 @@ export const usePhotoManagement = ({ topics }: { topics: Topic[] }) => {
         URL.revokeObjectURL(photoToRemove.preview);
       }
       const remainingPhotos = prev.filter((photo) => photo.topicId !== topicId);
+      const sortedTopics = topics.sort((a, b) => a.orderIndex - b.orderIndex);
       return remainingPhotos.map((photo, index) => ({
         ...photo,
-        topicId: topics[index]!.id,
-        topicName: topics[index]!.name,
+        topicId: sortedTopics[index]!.id,
+        topicName: sortedTopics[index]!.name,
       }));
     });
   };
@@ -24,20 +25,20 @@ export const usePhotoManagement = ({ topics }: { topics: Topic[] }) => {
   const validateAndAddPhotos = async (
     acceptedFiles: File[],
     currentLength: number,
-    maxPhotos: number,
+    maxPhotos: number
   ) => {
     const remainingSlots = maxPhotos - currentLength;
     const filesToProcess = acceptedFiles.slice(0, remainingSlots);
 
     const newPhotos = filesToProcess.map((file, index) => {
       const topicIndex = currentLength + index;
-      const topic = topics[topicIndex];
+      const sortedTopics = topics.sort((a, b) => a.orderIndex - b.orderIndex);
 
       return {
         file,
         preview: URL.createObjectURL(file),
-        topicId: topic!.id,
-        topicName: topic!.name,
+        topicId: sortedTopics[topicIndex]!.id,
+        topicName: sortedTopics[topicIndex]!.name,
       };
     });
 
@@ -55,11 +56,11 @@ export const usePhotoManagement = ({ topics }: { topics: Topic[] }) => {
       }),
     ]);
     const validation = await validator.validate(
-      toValidate.map((photo) => photo.file),
+      toValidate.map((photo) => photo.file)
     );
     const finalPhotos = toValidate.map((photo) => {
       const result = validation.find((r) =>
-        r.invalidFiles.includes(photo.file.name),
+        r.invalidFiles.includes(photo.file.name)
       );
       return result
         ? {

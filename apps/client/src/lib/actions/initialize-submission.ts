@@ -6,14 +6,16 @@ import {
   createMultipleSubmissions,
   updateParticipant,
 } from "@vimmer/supabase/mutations";
-import {
-  getManySubmissionsByKeys,
-  getMarathonWithConfigByDomain,
-} from "@vimmer/supabase/queries";
 import { createClient } from "@vimmer/supabase/server";
 import { Resource } from "sst";
 import { initializeSubmissionsSchema } from "../schemas/initialize-submissions-schema";
 import { actionClient, ActionError } from "./safe-action";
+import {
+  getMarathonByDomain,
+  getCompetitionClassesByDomain,
+  getTopicsByDomain,
+} from "@vimmer/supabase/cached-queries";
+import { getManySubmissionsByKeysQuery } from "@vimmer/supabase/queries";
 
 export interface PresignedObject {
   presignedUrl: string;
@@ -41,24 +43,21 @@ export const initializeSubmission = actionClient
         uploadCount: 0,
       });
 
-      const marathon = await getMarathonWithConfigByDomain(
-        supabase,
-        marathonDomain,
-      );
+      const marathon = await getMarathonByDomain(marathonDomain);
+      const competitionClasses =
+        await getCompetitionClassesByDomain(marathonDomain);
+      const topics = await getTopicsByDomain(marathonDomain);
       if (!marathon) {
         throw new ActionError("Marathon not found");
       }
 
-      const competitionClass = marathon.competitionClasses.find(
-        (cc) => cc.id === competitionClassId,
+      const competitionClass = competitionClasses.find(
+        (cc) => cc.id === competitionClassId
       );
       if (!competitionClass) {
         throw new ActionError("Competition class not found");
       }
-      const orderedTopics = marathon.topics.sort(
-        (a, b) => a.orderIndex - b.orderIndex,
-      );
-
+      const orderedTopics = topics.sort((a, b) => a.orderIndex - b.orderIndex);
       const presignedObjects = await Promise.all(
         Array.from({ length: competitionClass.numberOfPhotos }).map(
           async (_, orderIndex) => {
@@ -73,13 +72,13 @@ export const initializeSubmission = actionClient
             });
             const presignedUrl = await generatePresignedUrl(s3, key);
             return { presignedUrl, key, orderIndex, topicId };
-          },
-        ),
+          }
+        )
       );
 
-      const existing = await getManySubmissionsByKeys(
+      const existing = await getManySubmissionsByKeysQuery(
         supabase,
-        presignedObjects.map((x) => x.key),
+        presignedObjects.map((x) => x.key)
       );
 
       if (existing.length >= competitionClass.numberOfPhotos) {
@@ -98,13 +97,13 @@ export const initializeSubmission = actionClient
             participantId,
             topicId,
             status: "initialized",
-          })),
+          }))
       );
       return presignedObjects.map((x) => ({
         ...x,
         submissionId: existing.find((s) => s.key === x.key)?.id,
       }));
-    },
+    }
   );
 
 async function generatePresignedUrl(s3Client: S3Client, key: string) {
@@ -114,12 +113,12 @@ async function generatePresignedUrl(s3Client: S3Client, key: string) {
       new PutObjectCommand({
         Key: key,
         Bucket: Resource.SubmissionBucket.name,
-      }),
+      })
     );
   } catch (error: unknown) {
     console.error(error);
     throw new ActionError(
-      `Failed to generate presigned URL for submission ${key}. Please try again.`,
+      `Failed to generate presigned URL for submission ${key}. Please try again.`
     );
   }
 }

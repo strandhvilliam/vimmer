@@ -218,7 +218,7 @@ export type Database = {
           domain?: string
           email?: string | null
           firstname?: string
-          id: number
+          id?: number
           lastname?: string
           marathon_id: number
           reference: string

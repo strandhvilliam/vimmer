@@ -11,10 +11,11 @@ export const useUploadManagement = ({
   presignedObjects: PresignedObject[];
 }) => {
   const [isUploading, setIsUploading] = useState(false);
+  console.log({ photos, presignedObjects });
 
   const combinedPhotos = photos.reduce((acc, photo) => {
     const matchingPresigned = presignedObjects.find(
-      (obj) => obj.topicId === photo.topicId,
+      (obj) => obj.topicId === photo.topicId
     );
 
     if (!matchingPresigned || !matchingPresigned.submissionId) {
@@ -48,7 +49,7 @@ export const useUploadManagement = ({
           if (!response.ok) {
             throw new Error("Failed to upload file");
           }
-        }),
+        })
       );
     } catch (error) {
       setIsUploading(false);
