@@ -11,7 +11,6 @@ interface PageProps {
 }
 
 export default async function ParticipantSubmissionPage({ params }: PageProps) {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
   const { domain, participantRef } = await params;
   const participant = await getParticipantByReference(domain, participantRef);
 

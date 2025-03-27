@@ -16,25 +16,43 @@ export default $config({
     };
 
     const submissionBucket = new sst.aws.Bucket("SubmissionBucket", {
-      access: "public",
+      access: "cloudfront",
     });
     const thumbnailBucket = new sst.aws.Bucket("ThumbnailBucket", {
-      access: "public",
+      access: "cloudfront",
     });
     const previewBucket = new sst.aws.Bucket("PreviewBucket", {
-      access: "public",
+      access: "cloudfront",
     });
     const marathonSettingsBucket = new sst.aws.Bucket(
       "MarathonSettingsBucket",
       {
-        access: "public",
+        access: "cloudfront",
       }
     );
+
+    new sst.aws.Router("VimmerBucketRouter", {
+      routes: {
+        "/submissions/*": {
+          bucket: submissionBucket,
+        },
+        "/thumbnails/*": {
+          bucket: thumbnailBucket,
+        },
+        "/previews/*": {
+          bucket: previewBucket,
+        },
+        "/marathon-settings/*": {
+          bucket: marathonSettingsBucket,
+        },
+      },
+    });
+
     const processSubmissionQueue = new sst.aws.Queue("ProcessPhotoQueue");
     const photoValidatorFunction = new sst.aws.Function(
       "PhotoValidatorFunction",
       {
-        handler: "functions/photo-validator/index.handler",
+        handler: "lambdas/photo-validator/index.handler",
         environment: env,
         link: [submissionBucket],
         url: true,
@@ -64,7 +82,7 @@ export default $config({
     });
 
     processSubmissionQueue.subscribe({
-      handler: "./functions/photo-processor/index.handler",
+      handler: "./lambdas/photo-processor/index.handler",
       environment: env,
       link: [
         submissionBucket,

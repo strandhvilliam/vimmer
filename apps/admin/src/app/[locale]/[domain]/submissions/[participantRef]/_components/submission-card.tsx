@@ -25,9 +25,6 @@ interface PhotoSubmissionCardProps {
 const PLACEHOLDER_HASH = "LLI5Y-%M?bxuWBxu-;of~q%MWBt7";
 
 export function PhotoSubmissionCard({ submission }: PhotoSubmissionCardProps) {
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
-
   const handleClick = () => {};
 
   return (
@@ -66,7 +63,7 @@ export function PhotoSubmissionCard({ submission }: PhotoSubmissionCardProps) {
 
             <motion.img
               initial={{ opacity: 0 }}
-              animate={{ opacity: imageLoaded ? 0 : 1 }}
+              animate={{ opacity: 1 }}
               transition={{ opacity: { delay: 0.5, duration: 0.3 } }}
               loading="lazy"
               className={cn(
