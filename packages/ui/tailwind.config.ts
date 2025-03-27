@@ -23,6 +23,8 @@ const config = {
       fontFamily: {
         sans: ["var(--font-geist-sans)"],
         mono: ["var(--font-geist-mono)"],
+        rocgrotesk: ["roc-grotesk", "sans-serif"],
+        neuehaasgrotesk: ["neue-haas-grotesk-text", "sans-serif"],
       },
       colors: {
         pomegranate: {
