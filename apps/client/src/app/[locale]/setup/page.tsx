@@ -1,5 +1,5 @@
 import { createClient } from "@vimmer/supabase/server";
-import { LanguageSelectionPage } from "./client-page";
+import { SetupClientPage } from "./client-page";
 import { getMarathonByDomain } from "@vimmer/supabase/cached-queries";
 import { notFound } from "next/navigation";
 
@@ -11,5 +11,5 @@ export default async function SetupPage() {
     notFound();
   }
 
-  return <LanguageSelectionPage marathon={marathon} />;
+  return <SetupClientPage marathon={marathon} />;
 }

@@ -45,7 +45,7 @@ export function UploadSubmissionsStep({
   });
 
   const [presignedObjects, setPresignedObjects] = useState<PresignedObject[]>(
-    [],
+    []
   );
   const { isUploading, setIsUploading, handleUpload, combinedPhotos } =
     useUploadManagement({
@@ -57,14 +57,21 @@ export function UploadSubmissionsStep({
     onSuccess: (response) => setPresignedObjects(response.data ?? []),
     onError: ({ error }) => {
       toast({
-        title: "Unable to prepare submission failed",
+        title: "Unable to prepare submission",
         description: error.serverError,
       });
     },
   });
 
   useEffect(() => {
-    if (!competitionClassId || !participantRef || !participantId) return;
+    if (
+      !marathonDomain ||
+      !competitionClassId ||
+      !participantRef ||
+      !participantId
+    ) {
+      return;
+    }
     initSubmissions({
       marathonDomain,
       competitionClassId,
@@ -80,7 +87,7 @@ export function UploadSubmissionsStep({
   ]);
 
   const competitionClass = competitionClasses.find(
-    (cc) => cc.id === competitionClassId,
+    (cc) => cc.id === competitionClassId
   );
 
   if (!competitionClass) return null;
@@ -108,7 +115,7 @@ export function UploadSubmissionsStep({
                 validateAndAddPhotos(
                   acceptedFiles,
                   photos.length,
-                  competitionClass.numberOfPhotos,
+                  competitionClass.numberOfPhotos
                 )
               }
               isDisabled={photos.length >= competitionClass.numberOfPhotos}
@@ -143,7 +150,7 @@ export function UploadSubmissionsStep({
                     topic={topics[photos.length + index]}
                     index={photos.length + index}
                   />
-                ),
+                )
               )}
             </div>
           </CardContent>

@@ -2,7 +2,8 @@
 import { AnimatedStepWrapper } from "@/components/animated-step-wrapper";
 import { ClassSelectionStep } from "@/components/class-selection-step";
 import { DeviceSelectionStep } from "@/components/device-selection-step";
-import { ParticipantRegistrationStep } from "@/components/participant-registration-step";
+import { ParticipantNumberStep } from "@/components/participant-number-step";
+import { ParticipantDetailsStep } from "@/components/participant-details-step";
 import { StepNavigator } from "@/components/step-navigator";
 import { UploadSubmissionsStep } from "@/components/upload-submissions-step";
 import { STEPS } from "@/lib/constants";
@@ -13,23 +14,29 @@ import {
   Topic,
 } from "@vimmer/supabase/types";
 import { AnimatePresence } from "motion/react";
+import { usePathname } from "next/navigation";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
 
 interface Props {
-  marathon: Marathon & {
-    competitionClasses: CompetitionClass[];
-    deviceGroups: DeviceGroup[];
-    topics: Topic[];
-  };
+  marathon: Marathon;
+  topics: Topic[];
+  competitionClasses: CompetitionClass[];
+  deviceGroups: DeviceGroup[];
 }
 
-export function SubmissionClientPage({ marathon }: Props) {
+export function SubmissionClientPage({
+  marathon,
+  topics,
+  competitionClasses,
+  deviceGroups,
+}: Props) {
   const [step, setStep] = useQueryState(
     "s",
-    parseAsInteger.withDefault(1).withOptions({ history: "push" }),
+    parseAsInteger.withDefault(1).withOptions({ history: "push" })
   );
   const [direction, setDirection] = useState(0);
+  const pathname = usePathname();
 
   const handleNextStep = () => {
     const nextStep = Math.min(step + 1, Object.keys(STEPS).length);
@@ -48,35 +55,45 @@ export function SubmissionClientPage({ marathon }: Props) {
     setStep(newStep);
   };
 
-  useEffect(() => {
-    const unloadCallback = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      return "";
-    };
+  // useEffect(() => {
+  //   const unloadCallback = (event: BeforeUnloadEvent) => {
+  //     event.preventDefault();
+  //     return "";
+  //   };
 
-    window.addEventListener("beforeunload", unloadCallback);
-    return () => window.removeEventListener("beforeunload", unloadCallback);
-  }, []);
+  //   window.addEventListener("beforeunload", unloadCallback);
+  //   return () => window.removeEventListener("beforeunload", unloadCallback);
+  // }, []);
 
   return (
     <div className="max-w-2xl mx-auto p-4">
-      <StepNavigator
+      {/* <StepNavigator
         handleSetStep={(s) => handleSetStep(s)}
         currentStep={step}
-      />
+      /> */}
       <AnimatePresence initial={false} custom={direction} mode="wait">
-        {step === STEPS.ParticipantRegistrationStep && (
+        {step === STEPS.ParticipantNumberStep && (
           <AnimatedStepWrapper direction={direction}>
-            <ParticipantRegistrationStep
+            <ParticipantNumberStep
               marathonId={marathon.id}
               onNextStep={handleNextStep}
+            />
+          </AnimatedStepWrapper>
+        )}
+        {step === STEPS.ParticipantDetailsStep && (
+          <AnimatedStepWrapper direction={direction}>
+            <ParticipantDetailsStep
+              marathonId={marathon.id}
+              domain={marathon.domain}
+              onNextStep={handleNextStep}
+              onPrevStep={handlePrevStep}
             />
           </AnimatedStepWrapper>
         )}
         {step === STEPS.ClassSelectionStep && (
           <AnimatedStepWrapper direction={direction}>
             <ClassSelectionStep
-              competitionClasses={marathon.competitionClasses}
+              competitionClasses={competitionClasses}
               onNextStep={handleNextStep}
               onPrevStep={handlePrevStep}
             />
@@ -87,7 +104,7 @@ export function SubmissionClientPage({ marathon }: Props) {
             <DeviceSelectionStep
               onNextStep={handleNextStep}
               onPrevStep={handlePrevStep}
-              deviceGroups={marathon.deviceGroups}
+              deviceGroups={deviceGroups}
             />
           </AnimatedStepWrapper>
         )}
@@ -95,8 +112,8 @@ export function SubmissionClientPage({ marathon }: Props) {
           <AnimatedStepWrapper direction={direction}>
             <UploadSubmissionsStep
               marathonDomain={marathon.domain}
-              competitionClasses={marathon.competitionClasses}
-              topics={marathon.topics}
+              competitionClasses={competitionClasses}
+              topics={topics}
               onPrevStep={handlePrevStep}
             />
           </AnimatedStepWrapper>
@@ -105,8 +122,8 @@ export function SubmissionClientPage({ marathon }: Props) {
           <AnimatedStepWrapper direction={direction}>
             <UploadSubmissionsStep
               marathonDomain={marathon.domain}
-              competitionClasses={marathon.competitionClasses}
-              topics={marathon.topics}
+              competitionClasses={competitionClasses}
+              topics={topics}
               onPrevStep={handlePrevStep}
             />
           </AnimatedStepWrapper>

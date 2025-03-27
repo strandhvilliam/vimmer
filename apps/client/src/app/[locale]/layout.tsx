@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { Providers } from "./providers";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+import { DotPattern } from "@vimmer/ui/components/dot-pattern";
+import { AnimatedGradientBackground } from "@vimmer/ui/components/animated-gradient-background";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -22,9 +24,10 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
+      className={`font-neuehaasgrotesk font-normal antialiased`}
     >
       <body className="bg-muted ">
+        <DotPattern />
         <Providers locale={locale}>{children}</Providers>
       </body>
     </html>
