@@ -76,6 +76,7 @@ export function SubmissionClientPage({
           <AnimatedStepWrapper direction={direction}>
             <ParticipantNumberStep
               marathonId={marathon.id}
+              domain={marathon.domain}
               onNextStep={handleNextStep}
             />
           </AnimatedStepWrapper>

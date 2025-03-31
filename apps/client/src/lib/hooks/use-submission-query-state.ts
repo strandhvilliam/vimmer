@@ -1,12 +1,15 @@
 import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
 
 export function useSubmissionQueryState() {
-  const [params, setParams] = useQueryStates(
+  const [submissionState, setSubmissionState] = useQueryStates(
     {
       competitionClassId: parseAsInteger,
       deviceGroupId: parseAsInteger,
       participantId: parseAsInteger,
       participantRef: parseAsString,
+      participantEmail: parseAsString,
+      participantFirstName: parseAsString,
+      participantLastName: parseAsString,
     },
     {
       urlKeys: {
@@ -14,9 +17,12 @@ export function useSubmissionQueryState() {
         deviceGroupId: "dg",
         participantId: "pid",
         participantRef: "pr",
+        participantEmail: "pe",
+        participantFirstName: "pf",
+        participantLastName: "pl",
       },
-    },
+    }
   );
 
-  return { params, setParams };
+  return { submissionState, setSubmissionState };
 }

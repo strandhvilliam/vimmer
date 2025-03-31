@@ -22,23 +22,11 @@ export async function getParticipantByIdQuery(
   return toCamelCase(data);
 }
 
-type ParticipantQuery =
-  | {
-      reference: string;
-      domain: string;
-      marathonId?: never;
-    }
-  | {
-      reference: string;
-      domain?: never;
-      marathonId: number;
-    };
-
 export async function getParticipantByReferenceQuery(
   supabase: SupabaseClient,
-  { reference, marathonId, domain }: ParticipantQuery
+  { reference, domain }: { reference: string; domain: string }
 ) {
-  const query = supabase
+  const { data } = await supabase
     .from("participants")
     .select(
       `
@@ -49,25 +37,12 @@ export async function getParticipantByReferenceQuery(
         validation_errors(*)
     `
     )
-    .eq("reference", reference);
+    .eq("reference", reference)
+    .eq("domain", domain)
+    .maybeSingle()
+    .throwOnError();
 
-  if (domain) {
-    const { data } = await query
-      .eq("domain", domain)
-      .maybeSingle()
-      .throwOnError();
-    return toCamelCase(data);
-  }
-
-  if (marathonId) {
-    const { data } = await query
-      .eq("marathon_id", marathonId)
-      .maybeSingle()
-      .throwOnError();
-    return toCamelCase(data);
-  }
-
-  throw new Error("marathonId or domain must be provided");
+  return toCamelCase(data);
 }
 
 export async function getMarathonWithConfigByIdQuery(

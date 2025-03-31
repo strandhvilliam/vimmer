@@ -16,8 +16,8 @@ export function PrimaryButton({
   type?: "button" | "submit" | "reset";
   onClick?: () => void;
 }) {
-  const primaryColor = "#FE3923";
-  const secondaryColor = "#FF3A47";
+  const primaryColor = "#FF5D4B";
+  const secondaryColor = "#FE3923";
   const hoverPrimaryColor = "#E32D18";
   const shadowColor = "rgba(254, 57, 35, 0.2)";
   const disabledGradientStart = "#9CA3AF";

@@ -7,15 +7,20 @@ import { Button } from "@vimmer/ui/components/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@vimmer/ui/components/card";
-import { toast } from "@vimmer/ui/hooks/use-toast";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Camera, CheckCircle2, Smartphone } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { parseAsInteger, useQueryStates } from "nuqs";
+import { cn } from "@vimmer/ui/lib/utils";
+import { Icon } from "@iconify/react";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { useSubmissionQueryState } from "@/lib/hooks/use-submission-query-state";
 
 interface Props extends StepNavigationHandlers {
   deviceGroups: DeviceGroup[];
@@ -26,102 +31,183 @@ export function DeviceSelectionStep({
   onNextStep,
   onPrevStep,
 }: Props) {
-  const [params, setParams] = useQueryStates({
-    cc: parseAsInteger,
-    dg: parseAsInteger,
-    pid: parseAsInteger,
-  });
+  const {
+    submissionState: {
+      competitionClassId,
+      deviceGroupId,
+      participantId,
+      participantFirstName,
+      participantLastName,
+      participantEmail,
+    },
+    setSubmissionState,
+  } = useSubmissionQueryState();
 
-  const action = useAction(readyParticipant, {
+  const {
+    execute: readyParticipantAction,
+    isPending: isReadyParticipantPending,
+  } = useAction(readyParticipant, {
     onSuccess: async () => onNextStep?.(),
     onError: (error) => {
       console.log("error", error);
-      toast({
-        title: "Error",
-        description: error.error.serverError,
-      });
+      toast.error(error.error.serverError);
     },
   });
 
   const getDeviceIcon = (icon: string) => {
     switch (icon) {
       case "smartphone":
-        return <Smartphone className="size-10" />;
+        return (
+          <Icon
+            icon="solar:smartphone-broken"
+            className="w-16 h-16"
+            style={{ transform: "rotate(-5deg)" }}
+          />
+        );
       case "camera":
       default:
-        return <Camera className="size-10" />;
+        return (
+          <Icon
+            icon="solar:camera-minimalistic-broken"
+            className="w-16 h-16"
+            style={{ transform: "rotate(-5deg)" }}
+          />
+        );
     }
   };
 
+  const isValid =
+    deviceGroupId &&
+    competitionClassId &&
+    participantId &&
+    participantFirstName &&
+    participantLastName &&
+    participantEmail;
+
   const handleContinue = () => {
-    if (!params.dg || !params.cc || !params.pid) {
-      toast({
-        title: "Error",
-        description: "Please make sure you have selected all the options",
-      });
-      return;
-    }
-    action.execute({
-      participantId: params.pid,
-      competitionClassId: params.cc,
-      deviceGroupId: params.dg,
+    readyParticipantAction({
+      participantId: participantId!,
+      competitionClassId: competitionClassId!,
+      deviceGroupId: deviceGroupId!,
+      firstname: participantFirstName!,
+      lastname: participantLastName!,
+      email: participantEmail!,
     });
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold mb-4">Choose Your Device</h1>
-        <p className="text-muted-foreground">
-          Select the device you`&apos`ll use during the race
-        </p>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl font-bold text-center ">
+          Choose Your Device
+        </CardTitle>
+        <CardDescription className="text-center">
+          Select the device you'll use during the race
+        </CardDescription>
+      </CardHeader>
 
-      <div className="flex flex-wrap justify-center gap-6">
+      <CardContent className="flex flex-col gap-4">
         {deviceGroups.map((device) => (
           <motion.div
             key={device.id}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="w-[300px]"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="w-full"
           >
             <Card
-              className={`cursor-pointer transition-colors h-full ${
-                params.dg === device.id
-                  ? "border-2 border-primary"
-                  : "hover:border-primary/50"
-              }`}
-              onClick={() => setParams((prev) => ({ ...prev, dg: device.id }))}
+              className={cn(
+                "relative cursor-pointer overflow-hidden transition-all duration-200",
+                deviceGroupId === device.id &&
+                  "ring-2 ring-primary/20 shadow-lg"
+              )}
+              onClick={() => setSubmissionState({ deviceGroupId: device.id })}
             >
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  {device.name}
-                  {params.dg === device.id && (
-                    <CheckCircle2 className="h-6 w-6 text-primary" />
+              <motion.div
+                className="flex items-center p-4"
+                animate={{
+                  backgroundColor:
+                    deviceGroupId === device.id
+                      ? "rgba(var(--primary), 0.03)"
+                      : "transparent",
+                }}
+                transition={{ duration: 0.2 }}
+              >
+                <motion.div
+                  className={cn(
+                    "flex items-center justify-center w-20 h-20 rounded-2xl transition-colors duration-200",
+                    deviceGroupId === device.id
+                      ? "bg-primary/10"
+                      : "bg-muted/50"
                   )}
-                </CardTitle>
-                <CardContent className="space-y-4">
-                  {getDeviceIcon(device.icon)}
-                </CardContent>
-              </CardHeader>
-              <CardFooter className="mt-auto">
-                <span className="text-xs text-muted-foreground ml-auto">
-                  ID: {device.id}
-                </span>
-              </CardFooter>
+                  layout
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 30,
+                  }}
+                >
+                  <motion.div
+                    className={cn(
+                      "transition-colors duration-200",
+                      deviceGroupId === device.id
+                        ? "text-primary"
+                        : "text-foreground/80"
+                    )}
+                    whileHover={{ scale: 1.1, rotate: 0 }}
+                    initial={{ rotate: -5 }}
+                    layout
+                  >
+                    {getDeviceIcon(device.icon)}
+                  </motion.div>
+                </motion.div>
+
+                <div className="flex-1 ml-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-xl font-semibold">
+                        {device.name}
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground/60 mt-0.5">
+                        ID: {device.id}
+                      </p>
+                    </div>
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{
+                        scale: deviceGroupId === device.id ? 1 : 0,
+                        opacity: deviceGroupId === device.id ? 1 : 0,
+                      }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 25,
+                      }}
+                    >
+                      <CheckCircle2 className="h-6 w-6 text-primary" />
+                    </motion.div>
+                  </div>
+                </div>
+              </motion.div>
             </Card>
           </motion.div>
         ))}
-      </div>
-      <div className="flex flex-col w-full items-center gap-2 justify-center pt-6">
-        <Button
-          size="lg"
+      </CardContent>
+
+      <CardFooter className="flex flex-col gap-3 items-center justify-center pt-4 px-4 sm:px-0">
+        <PrimaryButton
           onClick={handleContinue}
-          disabled={!params.dg || !params.cc || action.isPending}
-          className="w-[200px]"
+          disabled={!isValid || isReadyParticipantPending}
+          className="w-full py-3 text-lg rounded-full"
         >
-          {action.isPending ? "Loading..." : "Continue"}
-        </Button>
+          {isReadyParticipantPending ? (
+            <Loader2 className="animate-spin" />
+          ) : (
+            "Continue"
+          )}
+        </PrimaryButton>
         <Button
           variant="ghost"
           size="lg"
@@ -130,7 +216,7 @@ export function DeviceSelectionStep({
         >
           Back
         </Button>
-      </div>
+      </CardFooter>
     </div>
   );
 }

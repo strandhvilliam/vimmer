@@ -16,6 +16,7 @@ import { Marathon } from "@vimmer/supabase/types";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import TermsAndConditionsDialog from "../../../components/terms-and-conditions-dialog";
 import { useTheme } from "next-themes";
+import { cn } from "@vimmer/ui/lib/utils";
 
 const LOGO =
   "https://www.stockholmfotomaraton.se/wp-content/uploads/2022/11/Logga-22-png-1024x1024-1.png";
@@ -75,16 +76,22 @@ export function SetupClientPage({ marathon }: { marathon: Marathon }) {
               </label>
               <div className="flex flex-col gap-3">
                 <Button
-                  variant={language === "en" ? "default" : "outline"}
-                  className="flex-1 flex items-center justify-center gap-2 py-4"
+                  variant="outline"
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-4 border-2",
+                    language === "en" && "border-foreground"
+                  )}
                   onClick={() => setLanguage("en")}
                 >
                   <ReactCountryFlag countryCode="GB" svg />
                   English
                 </Button>
                 <Button
-                  variant={language === "sv" ? "default" : "outline"}
-                  className="flex-1 flex items-center justify-center gap-2 py-4"
+                  variant="outline"
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-4 border-2",
+                    language === "sv" && "border-foreground"
+                  )}
                   onClick={() => setLanguage("sv")}
                 >
                   <ReactCountryFlag countryCode="SE" svg />

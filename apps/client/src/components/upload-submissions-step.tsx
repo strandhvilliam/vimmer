@@ -22,6 +22,7 @@ import { useEffect, useState } from "react";
 import { SubmissionItem } from "./submission-item";
 import { UploadProgress } from "./upload-progress";
 import { UploadZone } from "./upload-zone";
+import { AlertOctagon } from "lucide-react";
 
 interface Props {
   onPrevStep?: () => void;
@@ -37,7 +38,7 @@ export function UploadSubmissionsStep({
   competitionClasses,
 }: Props) {
   const {
-    params: { competitionClassId, participantRef, participantId },
+    submissionState: { competitionClassId, participantRef, participantId },
   } = useSubmissionQueryState();
 
   const { photos, removePhoto, validateAndAddPhotos } = usePhotoManagement({
@@ -47,6 +48,7 @@ export function UploadSubmissionsStep({
   const [presignedObjects, setPresignedObjects] = useState<PresignedObject[]>(
     []
   );
+  const [error, setError] = useState<string | null>(null);
   const { isUploading, setIsUploading, handleUpload, combinedPhotos } =
     useUploadManagement({
       photos,
@@ -54,12 +56,12 @@ export function UploadSubmissionsStep({
     });
 
   const { execute: initSubmissions } = useAction(initializeSubmission, {
-    onSuccess: (response) => setPresignedObjects(response.data ?? []),
+    onSuccess: (response) => {
+      setError(null);
+      setPresignedObjects(response.data ?? []);
+    },
     onError: ({ error }) => {
-      toast({
-        title: "Unable to prepare submission",
-        description: error.serverError,
-      });
+      setError(error.serverError ?? "An unexpected error occurred");
     },
   });
 
@@ -91,6 +93,39 @@ export function UploadSubmissionsStep({
   );
 
   if (!competitionClass) return null;
+
+  if (error) {
+    return (
+      <div className="min-h-screen py-12 px-4 bg-slate-50">
+        <Card className="max-w-4xl mx-auto">
+          <CardHeader>
+            <CardTitle className="text-center text-destructive">
+              Unable to Prepare Submission
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center py-12 space-y-6">
+            <AlertOctagon className="h-24 w-24 text-destructive" />
+            <p className="text-lg text-center text-muted-foreground max-w-md">
+              {error}
+            </p>
+            <p className="text-sm text-center text-muted-foreground">
+              Please contact a crew member for assistance
+            </p>
+          </CardContent>
+          <CardFooter className="flex justify-center">
+            <Button
+              variant="ghost"
+              size="lg"
+              onClick={onPrevStep}
+              className="min-w-[200px]"
+            >
+              Go Back
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <>

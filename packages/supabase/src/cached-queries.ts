@@ -11,6 +11,7 @@ import {
   getMarathonByDomainQuery,
   getMarathonsByUserIdQuery,
   getMarathonWithConfigByDomainQuery,
+  getParticipantByIdQuery,
   getParticipantByReferenceQuery,
   getParticipantsByDomainQuery,
   getTopicsByDomainQuery,

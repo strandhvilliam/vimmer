@@ -12,6 +12,7 @@
     "@aws-sdk/client-s3": "^3.741.0",
     "@aws-sdk/s3-request-presigner": "^3.741.0",
     "@hookform/resolvers": "^3.9.1",
+    "@iconify/react": "^5.2.0",
     "@next-safe-action/adapter-react-hook-form": "^1.0.13",
     "@vimmer/supabase": "workspace:*",
     "@vimmer/ui": "workspace:*",

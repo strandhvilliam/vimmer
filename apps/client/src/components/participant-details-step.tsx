@@ -1,10 +1,8 @@
 "use client";
-import { initializeParticipant } from "@/lib/actions/initialize-participant";
+import { updateParticipantDetails } from "@/lib/actions/update-participant-details";
 import { useSubmissionQueryState } from "@/lib/hooks/use-submission-query-state";
-import { initializeParticipantSchema } from "@/lib/schemas/initialize-participant-schema";
 import { StepNavigationHandlers } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useHookFormActionErrorMapper } from "@next-safe-action/adapter-react-hook-form/hooks";
 import { Alert, AlertDescription } from "@vimmer/ui/components/alert";
 import { Button } from "@vimmer/ui/components/button";
 import {
@@ -24,15 +22,28 @@ import {
 } from "@vimmer/ui/components/form";
 import { Input } from "@vimmer/ui/components/input";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
-import { AlertCircle, ArrowRight } from "lucide-react";
+import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useForm } from "react-hook-form";
 import { useRef } from "react";
+import { z } from "zod";
+import {
+  UpdateParticipantDetailsSchema,
+  updateParticipantDetailsSchema,
+} from "@/lib/schemas/update-participant-details-schema";
 
 interface Props extends StepNavigationHandlers {
   marathonId: number;
   domain: string;
 }
+
+const participantDetailsSchema = z.object({
+  firstname: z.string().min(1, "First name is required"),
+  lastname: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+});
+
+type ParticipantDetailsSchema = z.infer<typeof participantDetailsSchema>;
 
 export function ParticipantDetailsStep({
   onNextStep,
@@ -45,49 +56,37 @@ export function ParticipantDetailsStep({
   const emailRef = useRef<HTMLInputElement>(null);
 
   const {
-    params: { participantId, participantRef },
-    setParams,
+    submissionState: {
+      participantEmail,
+      participantFirstName,
+      participantLastName,
+    },
+    setSubmissionState,
   } = useSubmissionQueryState();
 
-  const action = useAction(initializeParticipant, {
-    onSuccess: async (result) => {
-      const participantId = result.data?.id;
-      const participantRef = result.data?.reference;
-      if (!participantId || !participantRef) {
-        return;
-      }
-      await setParams((prev) => ({
-        ...prev,
-        participantId,
-        participantRef,
-      }));
-      onNextStep?.();
-    },
-  });
-
-  const { hookFormValidationErrors } = useHookFormActionErrorMapper<
-    typeof initializeParticipantSchema
-  >(action.result.validationErrors, { joinBy: "\n" });
-
-  const form = useForm({
-    resolver: zodResolver(initializeParticipantSchema),
+  const form = useForm<ParticipantDetailsSchema>({
+    resolver: zodResolver(participantDetailsSchema),
     defaultValues: {
-      participantRef: participantRef ?? "",
-      firstname: "",
-      lastname: "",
-      email: "",
-      marathonId,
-      domain,
+      firstname: participantFirstName ?? "",
+      lastname: participantLastName ?? "",
+      email: participantEmail ?? "",
     },
-    errors: hookFormValidationErrors,
     mode: "onBlur",
     reValidateMode: "onBlur",
   });
 
+  const handleSubmit = async (data: ParticipantDetailsSchema) => {
+    await setSubmissionState((prev) => ({
+      ...prev,
+      participantFirstName: data.firstname,
+      participantLastName: data.lastname,
+      participantEmail: data.email,
+    }));
+    onNextStep?.();
+  };
+
   const disabledButton =
     !form.watch("firstname") || !form.watch("lastname") || !form.watch("email");
-
-  const disabledInput = action.isPending || !!participantId;
 
   return (
     <div className="max-w-md mx-auto">
@@ -100,10 +99,7 @@ export function ParticipantDetailsStep({
         </CardDescription>
       </CardHeader>
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(action.executeAsync)}
-          className="space-y-6"
-        >
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           <CardContent className="space-y-6">
             <FormField
               control={form.control}
@@ -119,15 +115,13 @@ export function ParticipantDetailsStep({
                       ref={firstNameRef}
                       className="rounded-xl text-lg py-6"
                       placeholder="James"
-                      disabled={disabledInput}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          lastNameRef.current?.focus();
-                        }
-                      }}
                     />
                   </FormControl>
-                  <FormMessage />
+                  {form.formState.errors.firstname && (
+                    <span className="flex flex-1 w-full justify-center text-center text-base text-destructive font-medium">
+                      {form.formState.errors.firstname.message}
+                    </span>
+                  )}
                 </FormItem>
               )}
             />
@@ -146,15 +140,13 @@ export function ParticipantDetailsStep({
                       ref={lastNameRef}
                       className="rounded-xl text-lg py-6"
                       placeholder="Bond"
-                      disabled={disabledInput}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          emailRef.current?.focus();
-                        }
-                      }}
                     />
                   </FormControl>
-                  <FormMessage />
+                  {form.formState.errors.lastname && (
+                    <span className="flex flex-1 w-full justify-center text-center text-base text-destructive font-medium">
+                      {form.formState.errors.lastname.message}
+                    </span>
+                  )}
                 </FormItem>
               )}
             />
@@ -171,69 +163,37 @@ export function ParticipantDetailsStep({
                     <Input
                       {...field}
                       ref={emailRef}
-                      type="email"
                       className="rounded-xl text-lg py-6"
                       placeholder="your@email.com"
-                      disabled={disabledInput}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !disabledButton) {
-                          form.handleSubmit(action.executeAsync)();
-                        }
-                      }}
                     />
                   </FormControl>
-                  <FormMessage />
+                  {form.formState.errors.email && (
+                    <span className="flex flex-1 w-full justify-center text-center text-base text-destructive font-medium">
+                      {form.formState.errors.email.message}
+                    </span>
+                  )}
                 </FormItem>
               )}
             />
-
-            {action.result.validationErrors ? (
-              <Alert
-                variant="destructive"
-                className="flex items-center py-4 gap-4"
-              >
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  {Object.values(action.result.validationErrors)
-                    .flatMap((error) =>
-                      Array.isArray(error) ? error : error._errors || []
-                    )
-                    .join("\n")}
-                </AlertDescription>
-              </Alert>
-            ) : null}
           </CardContent>
 
           <CardFooter className="flex flex-col gap-4">
-            {participantId ? (
-              <Button
-                type="button"
-                className="w-full"
-                size="lg"
-                onClick={onNextStep}
-              >
-                Continue
-              </Button>
-            ) : (
-              <>
-                <PrimaryButton
-                  type="submit"
-                  className="w-full py-3 text-lg rounded-full"
-                  disabled={disabledButton}
-                >
-                  {action.isPending ? "Verifying..." : "Continue"}
-                  {!action.isPending && <ArrowRight className="ml-2 h-5 w-5" />}
-                </PrimaryButton>
-                <Button
-                  variant="ghost"
-                  size="lg"
-                  onClick={onPrevStep}
-                  className="w-full"
-                >
-                  Back
-                </Button>
-              </>
-            )}
+            <PrimaryButton
+              type="submit"
+              className="w-full py-3 text-lg rounded-full"
+              disabled={disabledButton}
+            >
+              <span>Continue</span>
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </PrimaryButton>
+            <Button
+              variant="ghost"
+              size="lg"
+              onClick={onPrevStep}
+              className="w-full"
+            >
+              Back
+            </Button>
           </CardFooter>
         </form>
       </Form>
