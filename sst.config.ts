@@ -62,6 +62,12 @@ export default $config({
     const clientApp = new sst.aws.Nextjs("ClientApp", {
       path: "apps/client",
       link: [submissionBucket],
+      permissions: [
+        {
+          actions: ["s3:PutObject"],
+          resources: [submissionBucket.arn],
+        },
+      ],
     });
 
     const staffApp = new sst.aws.Nextjs("StaffApp", {
@@ -70,6 +76,17 @@ export default $config({
 
     const adminApp = new sst.aws.Nextjs("AdminApp", {
       path: "apps/admin",
+      link: [submissionBucket, thumbnailBucket, previewBucket],
+      permissions: [
+        {
+          actions: ["s3:PutObject", "s3:GetObject"],
+          resources: [
+            submissionBucket.arn,
+            thumbnailBucket.arn,
+            previewBucket.arn,
+          ],
+        },
+      ],
     });
 
     new sst.aws.Cron("ScheduledTopicsCron", {
