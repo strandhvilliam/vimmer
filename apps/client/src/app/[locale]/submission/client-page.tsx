@@ -1,11 +1,11 @@
 "use client";
-import { AnimatedStepWrapper } from "@/components/animated-step-wrapper";
-import { ClassSelectionStep } from "@/components/class-selection-step";
-import { DeviceSelectionStep } from "@/components/device-selection-step";
-import { ParticipantNumberStep } from "@/components/participant-number-step";
-import { ParticipantDetailsStep } from "@/components/participant-details-step";
+import { AnimatedStepWrapper } from "@/components/steps/animated-step-wrapper";
+import { ClassSelectionStep } from "@/components/steps/class-selection-step";
+import { DeviceSelectionStep } from "@/components/steps/device-selection-step";
+import { ParticipantNumberStep } from "@/components/steps/participant-number-step";
+import { ParticipantDetailsStep } from "@/components/steps/participant-details-step";
 import { StepNavigator } from "@/components/step-navigator";
-import { UploadSubmissionsStep } from "@/components/upload-submissions-step";
+import { UploadSubmissionsStep } from "@/components/steps/upload-submissions-step";
 import { STEPS } from "@/lib/constants";
 import {
   CompetitionClass,
@@ -112,14 +112,14 @@ export function SubmissionClientPage({
         {step === STEPS.UploadSubmissionStep && (
           <AnimatedStepWrapper direction={direction}>
             <UploadSubmissionsStep
-              marathonDomain={marathon.domain}
+              domain={marathon.domain}
               competitionClasses={competitionClasses}
               topics={topics}
               onPrevStep={handlePrevStep}
             />
           </AnimatedStepWrapper>
         )}
-        {step === STEPS.VerificationStep && (
+        {/* {step === STEPS.VerificationStep && (
           <AnimatedStepWrapper direction={direction}>
             <UploadSubmissionsStep
               marathonDomain={marathon.domain}
@@ -128,7 +128,7 @@ export function SubmissionClientPage({
               onPrevStep={handlePrevStep}
             />
           </AnimatedStepWrapper>
-        )}
+        )} */}
       </AnimatePresence>
     </div>
   );

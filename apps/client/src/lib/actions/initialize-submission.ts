@@ -31,7 +31,7 @@ export const initializeSubmission = actionClient
     async ({
       parsedInput: {
         participantRef,
-        marathonDomain,
+        domain,
         participantId,
         competitionClassId,
       },
@@ -43,10 +43,9 @@ export const initializeSubmission = actionClient
         uploadCount: 0,
       });
 
-      const marathon = await getMarathonByDomain(marathonDomain);
-      const competitionClasses =
-        await getCompetitionClassesByDomain(marathonDomain);
-      const topics = await getTopicsByDomain(marathonDomain);
+      const marathon = await getMarathonByDomain(domain);
+      const competitionClasses = await getCompetitionClassesByDomain(domain);
+      const topics = await getTopicsByDomain(domain);
       if (!marathon) {
         throw new ActionError("Marathon not found");
       }
@@ -68,7 +67,7 @@ export const initializeSubmission = actionClient
             const key = formatSubmissionKey({
               ref: participantRef,
               index: orderIndex,
-              domain: marathonDomain,
+              domain,
             });
             const presignedUrl = await generatePresignedUrl(s3, key);
             return { presignedUrl, key, orderIndex, topicId };

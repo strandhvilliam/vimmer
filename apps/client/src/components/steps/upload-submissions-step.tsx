@@ -19,20 +19,20 @@ import {
 import { toast } from "@vimmer/ui/hooks/use-toast";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useState } from "react";
-import { SubmissionItem } from "./submission-item";
-import { UploadProgress } from "./upload-progress";
-import { UploadZone } from "./upload-zone";
 import { AlertOctagon } from "lucide-react";
+import { SubmissionItem } from "../submission-item";
+import { UploadZone } from "../upload-zone";
+import { UploadProgress } from "../upload-progress";
 
 interface Props {
   onPrevStep?: () => void;
-  marathonDomain: string;
+  domain: string;
   competitionClasses: CompetitionClass[];
   topics: Topic[];
 }
 
 export function UploadSubmissionsStep({
-  marathonDomain,
+  domain,
   onPrevStep,
   topics,
   competitionClasses,
@@ -55,27 +55,24 @@ export function UploadSubmissionsStep({
       presignedObjects,
     });
 
-  const { execute: initSubmissions } = useAction(initializeSubmission, {
-    onSuccess: (response) => {
-      setError(null);
-      setPresignedObjects(response.data ?? []);
-    },
-    onError: ({ error }) => {
-      setError(error.serverError ?? "An unexpected error occurred");
-    },
-  });
+  const { execute: initializeSubmissionAction } = useAction(
+    initializeSubmission,
+    {
+      onSuccess: (response) => {
+        setError(null);
+        setPresignedObjects(response.data ?? []);
+      },
+      onError: ({ error }) => {
+        setError(error.serverError ?? "An unexpected error occurred");
+      },
+    }
+  );
 
   useEffect(() => {
-    if (
-      !marathonDomain ||
-      !competitionClassId ||
-      !participantRef ||
-      !participantId
-    ) {
-      return;
-    }
-    initSubmissions({
-      marathonDomain,
+    if (!competitionClassId || !participantRef || !participantId) return;
+
+    initializeSubmissionAction({
+      domain,
       competitionClassId,
       participantRef,
       participantId,
@@ -84,8 +81,8 @@ export function UploadSubmissionsStep({
     competitionClassId,
     participantRef,
     participantId,
-    initSubmissions,
-    marathonDomain,
+    initializeSubmissionAction,
+    domain,
   ]);
 
   const competitionClass = competitionClasses.find(
