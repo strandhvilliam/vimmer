@@ -14,9 +14,14 @@ import {
   Topic,
 } from "@vimmer/supabase/types";
 import { AnimatePresence } from "motion/react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { useEffect, useState } from "react";
+import {
+  submissionQueryClientParams,
+  submissionQueryClientParamSerializer,
+} from "@/lib/schemas/submission-query-client-schema";
+import { useSubmissionQueryState } from "@/lib/hooks/use-submission-query-state";
 
 interface Props {
   marathon: Marathon;
@@ -35,9 +40,10 @@ export function SubmissionClientPage({
     "s",
     parseAsInteger.withDefault(1).withOptions({ history: "push" })
   );
+  const { submissionState } = useSubmissionQueryState();
   const [direction, setDirection] = useState(0);
   const pathname = usePathname();
-
+  const router = useRouter();
   const handleNextStep = () => {
     const nextStep = Math.min(step + 1, Object.keys(STEPS).length);
     setDirection(1);
@@ -50,20 +56,15 @@ export function SubmissionClientPage({
     setStep(prevStep);
   };
 
+  const handleNavigateToVerification = () => {
+    const params = submissionQueryClientParamSerializer(submissionState);
+    router.push(`/verification${params}`);
+  };
+
   const handleSetStep = (newStep: number) => {
     setDirection(newStep > step ? 1 : -1);
     setStep(newStep);
   };
-
-  // useEffect(() => {
-  //   const unloadCallback = (event: BeforeUnloadEvent) => {
-  //     event.preventDefault();
-  //     return "";
-  //   };
-
-  //   window.addEventListener("beforeunload", unloadCallback);
-  //   return () => window.removeEventListener("beforeunload", unloadCallback);
-  // }, []);
 
   return (
     <div className="max-w-2xl mx-auto p-4">
@@ -116,6 +117,7 @@ export function SubmissionClientPage({
               competitionClasses={competitionClasses}
               topics={topics}
               onPrevStep={handlePrevStep}
+              onNextStep={handleNavigateToVerification}
             />
           </AnimatedStepWrapper>
         )}

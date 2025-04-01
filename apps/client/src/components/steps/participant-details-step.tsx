@@ -91,7 +91,7 @@ export function ParticipantDetailsStep({
   return (
     <div className="max-w-md mx-auto">
       <CardHeader className="space-y-2">
-        <CardTitle className="text-2xl font-bold text-center ">
+        <CardTitle className="text-2xl font-rocgrotesk font-bold text-center">
           Your Details
         </CardTitle>
         <CardDescription className="text-center">

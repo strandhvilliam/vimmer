@@ -96,7 +96,7 @@ export function ParticipantNumberStep({
   return (
     <div className="max-w-md mx-auto min-h-[80vh] flex flex-col justify-center">
       <CardHeader className="space-y-4">
-        <CardTitle className="text-2xl font-bold text-center">
+        <CardTitle className="text-2xl font-rocgrotesk font-bold text-center">
           Your Participant Number
         </CardTitle>
         <CardDescription className="text-center">

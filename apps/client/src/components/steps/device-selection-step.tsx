@@ -16,7 +16,6 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
-import { parseAsInteger, useQueryStates } from "nuqs";
 import { cn } from "@vimmer/ui/lib/utils";
 import { Icon } from "@iconify/react";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
@@ -76,7 +75,7 @@ export function DeviceSelectionStep({
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold text-center ">
+        <CardTitle className="text-2xl font-rocgrotesk font-bold text-center">
           Choose Your Device
         </CardTitle>
         <CardDescription className="text-center">
@@ -207,7 +206,7 @@ function DeviceGroupItem({
           <div className="flex-1 ml-4">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-xl font-semibold">
+                <CardTitle className="text-xl font-semibold font-rocgrotesk">
                   {deviceGroup.name}
                 </CardTitle>
                 <p className="text-xs text-muted-foreground/60 mt-0.5">

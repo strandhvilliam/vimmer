@@ -1,5 +1,7 @@
 import { COMMON_IMAGE_EXTENSIONS } from "@/lib/constants";
+import { Icon } from "@iconify/react";
 import { Button } from "@vimmer/ui/components/button";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { Upload } from "lucide-react";
 import { FileRejection, useDropzone } from "react-dropzone";
 
@@ -38,14 +40,17 @@ export function UploadZone({
     <div
       {...getRootProps()}
       className={`
-        border-2 border-dashed rounded-lg p-8 mb-6 transition-colors
+        border-2 border-dashed border-muted-foreground/40 bg-background/60 backdrop-blur-sm rounded-lg p-8 mb-6 transition-colors
         ${isDragActive ? "border-primary bg-muted" : "border-muted"}
         ${isDisabled ? "opacity-50 pointer-events-none" : ""}
       `}
     >
       <input {...getInputProps()} />
-      <div className="text-center">
-        <Upload className="w-10 h-10 mx-auto mb-4 text-muted-foreground" />
+      <div className="text-center flex flex-col justify-center items-center">
+        <PrimaryButton className="flex items-center justify-center p-4 rounded-full mb-4">
+          <Icon icon="solar:upload-broken" className="w-10 h-10 text-white" />
+        </PrimaryButton>
+
         <p className="text-muted-foreground mb-2">
           Drag and drop your photos here, or click to select
         </p>

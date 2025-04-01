@@ -34,7 +34,7 @@ export function ClassSelectionStep({
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold text-center ">
+        <CardTitle className="text-2xl font-rocgrotesk font-bold text-center">
           Choose Your Challenge
         </CardTitle>
         <CardDescription className="text-center">

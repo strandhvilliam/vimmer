@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@vimmer/ui/components/card";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { Progress } from "@vimmer/ui/components/progress";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -47,7 +48,9 @@ export function UploadProgress({
     >
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-center">Uploading Photos</CardTitle>
+          <CardTitle className="text-center text-xl font-rocgrotesk">
+            Uploading Photos
+          </CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-6">
@@ -75,10 +78,14 @@ export function UploadProgress({
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              className="w-[80%]"
             >
-              <Button size="lg" onClick={onComplete} className="min-w-[200px]">
+              <PrimaryButton
+                onClick={onComplete}
+                className="w-full text-lg rounded-full"
+              >
                 Continue
-              </Button>
+              </PrimaryButton>
             </motion.div>
           )}
         </CardFooter>

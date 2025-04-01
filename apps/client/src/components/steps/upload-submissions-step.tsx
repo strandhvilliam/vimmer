@@ -15,17 +15,21 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@vimmer/ui/components/card";
-import { toast } from "@vimmer/ui/hooks/use-toast";
+import { toast } from "sonner";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useState } from "react";
-import { AlertOctagon } from "lucide-react";
+import { AlertOctagon, ArrowRight, CloudUpload, Loader2 } from "lucide-react";
 import { SubmissionItem } from "../submission-item";
 import { UploadZone } from "../upload-zone";
 import { UploadProgress } from "../upload-progress";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { motion } from "framer-motion";
+import { StepNavigationHandlers } from "@/lib/types";
+import { cn } from "@vimmer/ui/lib/utils";
 
-interface Props {
-  onPrevStep?: () => void;
+interface Props extends StepNavigationHandlers {
   domain: string;
   competitionClasses: CompetitionClass[];
   topics: Topic[];
@@ -34,6 +38,7 @@ interface Props {
 export function UploadSubmissionsStep({
   domain,
   onPrevStep,
+  onNextStep,
   topics,
   competitionClasses,
 }: Props) {
@@ -55,9 +60,8 @@ export function UploadSubmissionsStep({
       presignedObjects,
     });
 
-  const { execute: initializeSubmissionAction } = useAction(
-    initializeSubmission,
-    {
+  const { execute: initializeSubmissionAction, isPending: isInitializing } =
+    useAction(initializeSubmission, {
       onSuccess: (response) => {
         setError(null);
         setPresignedObjects(response.data ?? []);
@@ -65,8 +69,7 @@ export function UploadSubmissionsStep({
       onError: ({ error }) => {
         setError(error.serverError ?? "An unexpected error occurred");
       },
-    }
-  );
+    });
 
   useEffect(() => {
     if (!competitionClassId || !participantRef || !participantId) return;
@@ -89,21 +92,35 @@ export function UploadSubmissionsStep({
     (cc) => cc.id === competitionClassId
   );
 
-  if (!competitionClass) return null;
+  const allPhotosSelected =
+    photos.length === competitionClass?.numberOfPhotos &&
+    photos.length > 0 &&
+    !isInitializing;
 
-  if (error) {
+  const handleCompleteUpload = () => {
+    setIsUploading(false);
+    onNextStep?.();
+  };
+
+  if (error || !competitionClass) {
     return (
-      <div className="min-h-screen py-12 px-4 bg-slate-50">
-        <Card className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto min-h-[80vh] flex flex-col justify-center py-12 px-4">
+        <Card className="overflow-hidden">
           <CardHeader>
-            <CardTitle className="text-center text-destructive">
+            <CardTitle className="text-2xl font-bold text-center text-destructive">
               Unable to Prepare Submission
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center py-12 space-y-6">
-            <AlertOctagon className="h-24 w-24 text-destructive" />
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <AlertOctagon className="h-24 w-24 text-destructive" />
+            </motion.div>
             <p className="text-lg text-center text-muted-foreground max-w-md">
-              {error}
+              {error ?? "An unexpected error occurred"}
             </p>
             <p className="text-sm text-center text-muted-foreground">
               Please contact a crew member for assistance
@@ -114,7 +131,7 @@ export function UploadSubmissionsStep({
               variant="ghost"
               size="lg"
               onClick={onPrevStep}
-              className="min-w-[200px]"
+              className="w-[200px]"
             >
               Go Back
             </Button>
@@ -130,82 +147,117 @@ export function UploadSubmissionsStep({
         <UploadProgress
           expectedCount={competitionClass.numberOfPhotos}
           files={combinedPhotos}
-          onComplete={() => {
-            setIsUploading(false);
-            // router.push("/confirmation");
-          }}
+          onComplete={handleCompleteUpload}
         />
       )}
-      <div className="min-h-screen py-12 px-4 bg-slate-50">
-        <Card className="max-w-4xl mx-auto">
-          <CardHeader>
-            <CardTitle className="text-center">Upload Your Photos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <UploadZone
-              onDrop={(acceptedFiles) =>
-                validateAndAddPhotos(
-                  acceptedFiles,
-                  photos.length,
-                  competitionClass.numberOfPhotos
-                )
-              }
-              isDisabled={photos.length >= competitionClass.numberOfPhotos}
-              currentCount={photos.length}
-              maxCount={competitionClass.numberOfPhotos}
-              onDropRejected={(fileRejections) => {
-                fileRejections.forEach((rejection) => {
-                  rejection.errors.forEach((error) => {
-                    toast({
-                      title: "Invalid file",
-                      description: error.message,
-                      variant: "destructive",
+      <div className="max-w-4xl mx-auto space-y-6">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-rocgrotesk font-bold text-center">
+            Upload Your Photos
+          </CardTitle>
+          <CardDescription className="text-center">
+            Submit your photos for each topic below
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {allPhotosSelected ? (
+            <motion.div
+              key="all-photos-selected"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card className="border-2 border-dashed border-muted-foreground/40 bg-background/40 backdrop-blur-sm rounded-lg p-8 mb-6 transition-colors">
+                <CardContent className="flex flex-col items-center justify-center space-y-6">
+                  <CloudUpload className="h-20 w-20 text-primary" />
+                  <p className="text-base text-center text-muted-foreground max-w-md">
+                    All photos selected - ready to upload
+                  </p>
+                  <PrimaryButton
+                    onClick={handleUpload}
+                    disabled={isInitializing}
+                    className="w-full py-3 text-base rounded-full"
+                  >
+                    Upload Now
+                  </PrimaryButton>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="upload-zone"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <UploadZone
+                onDrop={(acceptedFiles) =>
+                  validateAndAddPhotos(
+                    acceptedFiles,
+                    photos.length,
+                    competitionClass.numberOfPhotos
+                  )
+                }
+                isDisabled={photos.length >= competitionClass.numberOfPhotos}
+                currentCount={photos.length}
+                maxCount={competitionClass.numberOfPhotos}
+                onDropRejected={(fileRejections) => {
+                  fileRejections.forEach((rejection) => {
+                    rejection.errors.forEach((error) => {
+                      toast.error(error.message);
                     });
                   });
-                });
-              }}
-            />
+                }}
+              />
+            </motion.div>
+          )}
 
-            <div className="flex flex-col space-y-4">
-              {photos.map((photo, index) => (
+          <div className="flex flex-col space-y-2">
+            {photos.map((photo, index) => (
+              <motion.div
+                key={photo.topicId}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: index * 0.1 }}
+              >
                 <SubmissionItem
-                  key={photo.topicId}
                   photo={photo}
                   index={index}
                   onRemove={() => removePhoto(photo.topicId)}
                 />
-              ))}
-              {[...Array(competitionClass.numberOfPhotos - photos.length)].map(
-                (_, index) => (
+              </motion.div>
+            ))}
+            {[...Array(competitionClass.numberOfPhotos - photos.length)].map(
+              (_, index) => (
+                <motion.div
+                  key={`empty-${index}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.2,
+                    delay: (photos.length + index) * 0.1,
+                  }}
+                >
                   <SubmissionItem
-                    key={`empty-${index}`}
                     topic={topics[photos.length + index]}
                     index={photos.length + index}
                   />
-                )
-              )}
-            </div>
-          </CardContent>
+                </motion.div>
+              )
+            )}
+          </div>
+        </CardContent>
 
-          <CardFooter className="flex flex-col justify-between gap-4 flex-wrap">
-            <Button
-              size="lg"
-              onClick={handleUpload}
-              disabled={photos.length === 0}
-              className="min-w-[200px]"
-            >
-              Submit
-            </Button>
-            <Button
-              variant="ghost"
-              size="lg"
-              onClick={onPrevStep}
-              className="min-w-[200px]"
-            >
-              Back
-            </Button>
-          </CardFooter>
-        </Card>
+        <CardFooter className="flex flex-col gap-3 items-center justify-center">
+          <Button
+            variant="ghost"
+            size="lg"
+            onClick={onPrevStep}
+            className="w-[200px]"
+          >
+            Back
+          </Button>
+        </CardFooter>
       </div>
     </>
   );

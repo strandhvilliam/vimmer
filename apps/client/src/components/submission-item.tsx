@@ -12,14 +12,15 @@ interface Props {
 export function SubmissionItem({ photo, topic, index, onRemove }: Props) {
   if (!photo) {
     return (
-      <div className="flex flex-col sm:flex-row gap-4 p-4 border rounded-lg bg-muted/10">
+      <div className="flex flex-row gap-4 p-4 border rounded-lg bg-background">
         <div className="flex-1 space-y-2">
           <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Image {index + 1}</p>
-            <p className="font-medium">Topic: {topic?.name}</p>
+            <p className="text-base text-muted-foreground"># {index + 1}</p>
+            <p className="font-medium">{topic?.name}</p>
           </div>
+          <p className="text-sm text-muted-foreground">No photo selected</p>
         </div>
-        <div className="w-[100px] h-[100px] border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/50 shrink-0">
+        <div className="md:w-[100px] md:h-[100px] w-24 h-24 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/50 shrink-0">
           <ImageIcon className="w-8 h-8 text-muted-foreground/40" />
         </div>
       </div>
@@ -27,11 +28,11 @@ export function SubmissionItem({ photo, topic, index, onRemove }: Props) {
   }
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 p-4 border rounded-lg">
+    <div className="flex flex-row gap-4 p-4 border rounded-lg bg-background">
       <div className="flex-1 space-y-2">
         <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">Image {index + 1}</p>
-          <p className="font-medium">Topic: {photo.topicName}</p>
+          <p className="text-base text-muted-foreground"># {index + 1}</p>
+          <p className="font-medium">{photo.topicName}</p>
         </div>
         {!photo.isValid && (
           <p className="text-sm text-destructive">{photo.validationMessage}</p>
