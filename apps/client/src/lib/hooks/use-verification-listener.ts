@@ -1,17 +1,20 @@
 import { createClient } from "@vimmer/supabase/browser";
-import { Submission, SupabaseRealtimeChannel } from "@vimmer/supabase/types";
+import {
+  Participant,
+  Submission,
+  SupabaseRealtimeChannel,
+} from "@vimmer/supabase/types";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import { useSubmissionQueryState } from "./use-submission-query-state";
 
-export function useSubmissionsListener() {
+export function useVerificationListener() {
   const channel = useRef<SupabaseRealtimeChannel | null>(null);
   const {
     submissionState: { participantId },
   } = useSubmissionQueryState();
-  const [uploadedSubmissionIds, setUploadedSubmissionIds] = useState<number[]>(
-    []
-  );
+
+  const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
     if (!participantId) {
@@ -20,19 +23,19 @@ export function useSubmissionsListener() {
 
     const supabase = createClient();
     channel.current = supabase
-      .channel("submission-listener")
+      .channel("verification-listener")
       .on(
         "postgres_changes",
         {
           event: "UPDATE",
           schema: "public",
-          table: "submissions",
-          filter: `participant_id=eq.${participantId}`,
+          table: "participants",
+          filter: `id=eq.${participantId}`,
         },
         (payload) => {
-          const newSubmission = payload.new as Submission;
-          if (newSubmission.status === "uploaded") {
-            setUploadedSubmissionIds((prev) => [...prev, newSubmission.id]);
+          const newParticipant = payload.new as Participant;
+          if (newParticipant.status === "verified") {
+            setIsVerified(true);
           }
         }
       )
@@ -43,5 +46,5 @@ export function useSubmissionsListener() {
     };
   }, [participantId]);
 
-  return uploadedSubmissionIds;
+  return isVerified;
 }

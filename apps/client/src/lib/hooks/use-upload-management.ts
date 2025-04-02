@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PresignedObject } from "../actions/initialize-submission";
 import { PhotoWithPresignedUrl, SelectedPhoto } from "../types";
-import { toast } from "@vimmer/ui/hooks/use-toast";
+import { toast } from "sonner";
 
 export const useUploadManagement = ({
   photos,
@@ -54,11 +54,7 @@ export const useUploadManagement = ({
     } catch (error) {
       setIsUploading(false);
       console.error(error);
-      toast({
-        title: "Upload failed",
-        description: "Please try again later",
-        variant: "destructive",
-      });
+      toast.error("Upload failed");
     }
   };
 
