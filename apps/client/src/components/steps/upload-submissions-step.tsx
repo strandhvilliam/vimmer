@@ -68,7 +68,7 @@ export function UploadSubmissionsStep({
           return;
         }
         setError(null);
-        setPresignedObjects(response.data ?? []);
+        setPresignedObjects(response.data);
       },
       onError: ({ error }) => {
         setError(error.serverError ?? "An unexpected error occurred");
@@ -193,25 +193,31 @@ export function UploadSubmissionsStep({
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
             >
-              <UploadZone
-                onDrop={(acceptedFiles) =>
-                  validateAndAddPhotos(
-                    acceptedFiles,
-                    photos.length,
-                    competitionClass.numberOfPhotos
-                  )
-                }
-                isDisabled={photos.length >= competitionClass.numberOfPhotos}
-                currentCount={photos.length}
-                maxCount={competitionClass.numberOfPhotos}
-                onDropRejected={(fileRejections) => {
-                  fileRejections.forEach((rejection) => {
-                    rejection.errors.forEach((error) => {
-                      toast.error(error.message);
+              {presignedObjects.length > 0 ? (
+                <UploadZone
+                  onDrop={(acceptedFiles) =>
+                    validateAndAddPhotos(
+                      acceptedFiles,
+                      photos.length,
+                      competitionClass.numberOfPhotos
+                    )
+                  }
+                  isDisabled={photos.length >= competitionClass.numberOfPhotos}
+                  currentCount={photos.length}
+                  maxCount={competitionClass.numberOfPhotos}
+                  onDropRejected={(fileRejections) => {
+                    fileRejections.forEach((rejection) => {
+                      rejection.errors.forEach((error) => {
+                        toast.error(error.message);
+                      });
                     });
-                  });
-                }}
-              />
+                  }}
+                />
+              ) : (
+                <div className="flex justify-center items-center h-full">
+                  <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                </div>
+              )}
             </motion.div>
           )}
 

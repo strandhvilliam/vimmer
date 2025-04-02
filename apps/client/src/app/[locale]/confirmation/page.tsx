@@ -33,11 +33,9 @@ export default async function ConfirmationPage({
     redirect(`/verification${redirectParams}`);
   }
 
-  // Get CloudFront URL from SST resources
-  const cloudfrontUrl = Resource.VimmerBucketRouter.url;
+  const thumbnailsRouterUrl = Resource.ThumbnailsRouter.url;
+  const previewsRouterUrl = Resource.PreviewsRouter.url;
 
-  // Map submissions to the format expected by the client
-  // Only include necessary information, not personal data
   const images = participant.submissions
     .filter(
       (submission) =>
@@ -45,13 +43,18 @@ export default async function ConfirmationPage({
     )
     .map((submission) => ({
       id: submission.id.toString(),
-      url: `${cloudfrontUrl}/${submission.thumbnailKey}`,
+      url: `${thumbnailsRouterUrl}/${submission.thumbnailKey}`,
       previewUrl: submission.previewKey
-        ? `${cloudfrontUrl}/${submission.previewKey}`
+        ? `${previewsRouterUrl}/${submission.previewKey}`
         : undefined,
-      name: submission.topic?.name || `Photo ${submission.id}`,
-      topicId: submission.topicId,
+      name: submission.topic.name || `Photo ${submission.id}`,
+      orderIndex: submission.topic.orderIndex,
+      exif: submission.exif,
     }));
 
-  return <ConfirmationClient images={images} />;
+  return (
+    <div className="min-h-[100dvh]">
+      <ConfirmationClient images={images} />
+    </div>
+  );
 }
