@@ -31,22 +31,40 @@ export default $config({
       }
     );
 
-    new sst.aws.Router("VimmerBucketRouter", {
+    const submissionsRouter = new sst.aws.Router("SubmissionsRouter", {
       routes: {
-        "/submissions/*": {
+        "/*": {
           bucket: submissionBucket,
-        },
-        "/thumbnails/*": {
-          bucket: thumbnailBucket,
-        },
-        "/previews/*": {
-          bucket: previewBucket,
-        },
-        "/marathon-settings/*": {
-          bucket: marathonSettingsBucket,
         },
       },
     });
+
+    const thumbnailsRouter = new sst.aws.Router("ThumbnailsRouter", {
+      routes: {
+        "/*": {
+          bucket: thumbnailBucket,
+        },
+      },
+    });
+
+    const previewsRouter = new sst.aws.Router("PreviewsRouter", {
+      routes: {
+        "/*": {
+          bucket: previewBucket,
+        },
+      },
+    });
+
+    const marathonSettingsRouter = new sst.aws.Router(
+      "MarathonSettingsRouter",
+      {
+        routes: {
+          "/*": {
+            bucket: marathonSettingsBucket,
+          },
+        },
+      }
+    );
 
     const processSubmissionQueue = new sst.aws.Queue("ProcessPhotoQueue");
     const photoValidatorFunction = new sst.aws.Function(
@@ -61,7 +79,7 @@ export default $config({
 
     const clientApp = new sst.aws.Nextjs("ClientApp", {
       path: "apps/client",
-      link: [submissionBucket],
+      link: [submissionBucket, thumbnailsRouter, previewsRouter],
       permissions: [
         {
           actions: ["s3:PutObject"],
@@ -133,6 +151,12 @@ export default $config({
       },
       lambdas: {
         photoValidatorFunction: photoValidatorFunction.url,
+      },
+      routers: {
+        submissionsRouter: submissionsRouter.url,
+        thumbnailsRouter: thumbnailsRouter.url,
+        previewsRouter: previewsRouter.url,
+        marathonSettingsRouter: marathonSettingsRouter.url,
       },
     };
   },

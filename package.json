@@ -24,6 +24,6 @@
     "lambdas/*"
   ],
   "dependencies": {
-    "sst": "^3.5.13"
+    "sst": "^3.11.21"
   }
 }

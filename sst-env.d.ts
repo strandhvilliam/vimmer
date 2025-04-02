@@ -17,6 +17,10 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
+    "MarathonSettingsRouter": {
+      "type": "sst.aws.Router"
+      "url": string
+    }
     "PhotoValidatorFunction": {
       "name": string
       "type": "sst.aws.Function"
@@ -25,6 +29,10 @@ declare module "sst" {
     "PreviewBucket": {
       "name": string
       "type": "sst.aws.Bucket"
+    }
+    "PreviewsRouter": {
+      "type": "sst.aws.Router"
+      "url": string
     }
     "ProcessPhotoQueue": {
       "type": "sst.aws.Queue"
@@ -38,11 +46,15 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
+    "SubmissionsRouter": {
+      "type": "sst.aws.Router"
+      "url": string
+    }
     "ThumbnailBucket": {
       "name": string
       "type": "sst.aws.Bucket"
     }
-    "VimmerBucketRouter": {
+    "ThumbnailsRouter": {
       "type": "sst.aws.Router"
       "url": string
     }
