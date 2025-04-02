@@ -16,7 +16,9 @@ interface ConfirmationClientProps {
   images: Array<{
     id: string;
     url: string;
+    previewUrl?: string;
     name: string;
+    topicId?: number;
   }>;
 }
 
@@ -93,7 +95,9 @@ export function ConfirmationClient({ images }: ConfirmationClientProps) {
                     variant="outline"
                     size="icon"
                     className="text-white border-white hover:bg-white/20"
-                    onClick={() => window.open(image.url, "_blank")}
+                    onClick={() =>
+                      window.open(image.previewUrl || image.url, "_blank")
+                    }
                   >
                     <Download className="w-5 h-5" />
                   </Button>

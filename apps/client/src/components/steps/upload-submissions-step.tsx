@@ -63,6 +63,10 @@ export function UploadSubmissionsStep({
   const { execute: initializeSubmissionAction, isPending: isInitializing } =
     useAction(initializeSubmission, {
       onSuccess: (response) => {
+        if (!response.data) {
+          setError("An unexpected error occurred");
+          return;
+        }
         setError(null);
         setPresignedObjects(response.data ?? []);
       },
@@ -143,13 +147,12 @@ export function UploadSubmissionsStep({
 
   return (
     <>
-      {isUploading && (
-        <UploadProgress
-          expectedCount={competitionClass.numberOfPhotos}
-          files={combinedPhotos}
-          onComplete={handleCompleteUpload}
-        />
-      )}
+      <UploadProgress
+        expectedCount={competitionClass.numberOfPhotos}
+        files={combinedPhotos}
+        onComplete={handleCompleteUpload}
+        open={isUploading}
+      />
       <div className="max-w-4xl mx-auto space-y-6">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-rocgrotesk font-bold text-center">

@@ -8,6 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@vimmer/ui/components/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@vimmer/ui/components/dialog";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { Progress } from "@vimmer/ui/components/progress";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
@@ -17,12 +22,14 @@ interface Props {
   files: PhotoWithPresignedUrl[];
   expectedCount: number;
   onComplete: () => void;
+  open?: boolean;
 }
 
 export function UploadProgress({
   files,
   expectedCount: expectedFilesCount,
   onComplete,
+  open = true,
 }: Props) {
   const uploadedSubmissions = useSubmissionsListener();
 
@@ -40,57 +47,55 @@ export function UploadProgress({
   };
 
   return (
-    <motion.div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-xl font-rocgrotesk">
-            Uploading Photos
-          </CardTitle>
-        </CardHeader>
+    <Dialog open={open}>
+      <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-md">
+        <DialogTitle className="sr-only">Uploading Photos</DialogTitle>
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle className="text-center text-xl font-rocgrotesk">
+              Uploading Photos
+            </CardTitle>
+          </CardHeader>
 
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Overall Progress</span>
-              <span>
-                {progress.completed} of {progress.total} completed
-              </span>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Overall Progress</span>
+                <span>
+                  {progress.completed} of {progress.total} completed
+                </span>
+              </div>
+              <Progress value={progress.percentage} />
             </div>
-            <Progress value={progress.percentage} />
-          </div>
 
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            <AnimatePresence mode="popLayout">
-              {fileStates.map((file) => (
-                <FileProgressItem key={file.key} file={file} />
-              ))}
-            </AnimatePresence>
-          </div>
-        </CardContent>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              <AnimatePresence mode="popLayout">
+                {fileStates.map((file) => (
+                  <FileProgressItem key={file.key} file={file} />
+                ))}
+              </AnimatePresence>
+            </div>
+          </CardContent>
 
-        <CardFooter className="flex justify-center">
-          {progress.completed === expectedFilesCount && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="w-[80%]"
-            >
-              <PrimaryButton
-                onClick={onComplete}
-                className="w-full text-lg rounded-full"
+          <CardFooter className="flex justify-center">
+            {progress.completed === expectedFilesCount && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-[80%]"
               >
-                Continue
-              </PrimaryButton>
-            </motion.div>
-          )}
-        </CardFooter>
-      </Card>
-    </motion.div>
+                <PrimaryButton
+                  onClick={onComplete}
+                  className="w-full text-lg rounded-full"
+                >
+                  Continue
+                </PrimaryButton>
+              </motion.div>
+            )}
+          </CardFooter>
+        </Card>
+      </DialogContent>
+    </Dialog>
   );
 }
 

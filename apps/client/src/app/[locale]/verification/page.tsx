@@ -1,7 +1,7 @@
 import React from "react";
 import { type SearchParams } from "nuqs/server";
 import { loadSubmissionQueryServerParams } from "@/lib/schemas/submission-query-server-schema";
-import { QrDisplay } from "@/components/verification/qr-display";
+import { ClientVerificationPage } from "./client-page";
 
 export default async function VerificationPage({
   searchParams,
@@ -13,5 +13,5 @@ export default async function VerificationPage({
     await loadSubmissionQueryServerParams(searchParams);
   const qrCodeValue = `${domain}-${participantId}-${participantRef}`;
 
-  return <QrDisplay qrCodeValue={qrCodeValue} />;
+  return <ClientVerificationPage qrCodeValue={qrCodeValue} />;
 }

@@ -8,14 +8,22 @@ import {
   CardHeader,
 } from "@vimmer/ui/components/card";
 import { useState, useEffect } from "react";
+import { useVerificationListener } from "@/lib/hooks/use-verification-listener";
+import { useRouter } from "next/navigation";
+import { submissionQueryClientParamSerializer } from "@/lib/schemas/submission-query-client-schema";
+import { useSubmissionQueryState } from "@/lib/hooks/use-submission-query-state";
 
-interface QrDisplayProps {
+interface ClientVerificationPageProps {
   qrCodeValue: string;
 }
 
-export function QrDisplay({ qrCodeValue }: QrDisplayProps) {
+export function ClientVerificationPage({
+  qrCodeValue,
+}: ClientVerificationPageProps) {
+  const { submissionState } = useSubmissionQueryState();
+  const isVerified = useVerificationListener();
   const [isFlipped, setIsFlipped] = useState(false);
-
+  const router = useRouter();
   useEffect(() => {
     const style = document.createElement("style");
     style.textContent = `
@@ -33,6 +41,13 @@ export function QrDisplay({ qrCodeValue }: QrDisplayProps) {
       document.head.removeChild(style);
     };
   }, []);
+
+  useEffect(() => {
+    if (isVerified) {
+      const params = submissionQueryClientParamSerializer(submissionState);
+      router.push(`/confirmation${params}`);
+    }
+  }, [isVerified, router, submissionState]);
 
   return (
     <div className="flex flex-col items-center justify-center h-[100dvh] p-4 space-y-8">
