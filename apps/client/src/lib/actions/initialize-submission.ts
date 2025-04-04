@@ -86,7 +86,7 @@ export const initializeSubmission = actionClient
           submissionId: existing.find((s) => s.key === x.key)?.id,
         }));
       }
-      await createMultipleSubmissions(
+      const newSubmissions = await createMultipleSubmissions(
         supabase,
         presignedObjects
           .filter((po) => !existing.some((s) => s.key === po.key))
@@ -100,7 +100,7 @@ export const initializeSubmission = actionClient
       );
       return presignedObjects.map((x) => ({
         ...x,
-        submissionId: existing.find((s) => s.key === x.key)?.id,
+        submissionId: newSubmissions.find((s) => s.key === x.key)?.id,
       }));
     }
   );

@@ -18,9 +18,8 @@ export default async function ConfirmationPage({
   const domain = "dev0";
   const params = await loadSubmissionQueryServerParams(searchParams);
 
-  if (!params.participantRef) {
-    notFound();
-  }
+  if (!params.participantRef) notFound();
+
   const participant = await getParticipantByReference(
     domain,
     params.participantRef
@@ -33,23 +32,20 @@ export default async function ConfirmationPage({
     redirect(`/verification${redirectParams}`);
   }
 
-  const thumbnailsRouterUrl = Resource.ThumbnailsRouter.url;
-  const previewsRouterUrl = Resource.PreviewsRouter.url;
-
   const images = participant.submissions
-    .filter(
-      (submission) =>
-        submission.status === "uploaded" && submission.thumbnailKey
-    )
+    .filter((submission) => submission.status === "uploaded")
+    .sort((a, b) => a.topic.orderIndex - b.topic.orderIndex)
     .map((submission) => ({
       id: submission.id.toString(),
-      url: `${thumbnailsRouterUrl}/${submission.thumbnailKey}`,
+      url: submission.thumbnailKey
+        ? `${Resource.ThumbnailsRouter.url}/${submission.thumbnailKey}`
+        : undefined,
       previewUrl: submission.previewKey
-        ? `${previewsRouterUrl}/${submission.previewKey}`
+        ? `${Resource.PreviewsRouter.url}/${submission.previewKey}`
         : undefined,
       name: submission.topic.name || `Photo ${submission.id}`,
       orderIndex: submission.topic.orderIndex,
-      exif: submission.exif,
+      exif: submission.exif as Record<string, unknown>,
     }));
 
   return (
