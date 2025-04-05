@@ -7,6 +7,7 @@ import {
 } from "@/lib/schemas/submission-query-server-schema";
 import { notFound, redirect } from "next/navigation";
 import { Resource } from "sst";
+import { ConfirmationData } from "@/lib/types";
 
 interface ConfirmationPageProps {
   searchParams: Promise<SearchParams>;
@@ -32,12 +33,12 @@ export default async function ConfirmationPage({
     redirect(`/verification${redirectParams}`);
   }
 
-  const images = participant.submissions
+  const images: ConfirmationData[] = participant.submissions
     .filter((submission) => submission.status === "uploaded")
     .sort((a, b) => a.topic.orderIndex - b.topic.orderIndex)
     .map((submission) => ({
       id: submission.id.toString(),
-      url: submission.thumbnailKey
+      thumbnailUrl: submission.thumbnailKey
         ? `${Resource.ThumbnailsRouter.url}/${submission.thumbnailKey}`
         : undefined,
       previewUrl: submission.previewKey

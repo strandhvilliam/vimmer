@@ -119,6 +119,7 @@ export function ParticipantNumberStep({
                     <InputOTP
                       {...field}
                       ref={participantRefRef}
+                      inputMode="numeric"
                       value={value}
                       onChange={(value) => {
                         onChange(value);

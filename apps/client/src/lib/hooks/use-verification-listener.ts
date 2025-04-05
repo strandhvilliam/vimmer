@@ -1,14 +1,16 @@
 import { createClient } from "@vimmer/supabase/browser";
-import {
-  Participant,
-  Submission,
-  SupabaseRealtimeChannel,
-} from "@vimmer/supabase/types";
+import { Participant, SupabaseRealtimeChannel } from "@vimmer/supabase/types";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import { useSubmissionQueryState } from "./use-submission-query-state";
 
-export function useVerificationListener() {
+const supabase = createClient();
+
+interface Props {
+  onVerified: () => void;
+}
+
+export function useVerificationListener(props?: Props) {
   const channel = useRef<SupabaseRealtimeChannel | null>(null);
   const {
     submissionState: { participantId },
@@ -21,7 +23,6 @@ export function useVerificationListener() {
       throw new Error("Participant ID is required");
     }
 
-    const supabase = createClient();
     channel.current = supabase
       .channel("verification-listener")
       .on(
@@ -36,6 +37,7 @@ export function useVerificationListener() {
           const newParticipant = payload.new as Participant;
           if (newParticipant.status === "verified") {
             setIsVerified(true);
+            props?.onVerified?.();
           }
         }
       )

@@ -125,6 +125,16 @@ export default $config({
         previewBucket,
         photoValidatorFunction,
       ],
+      permissions: [
+        {
+          actions: ["s3:GetObject", "s3:PutObject"],
+          resources: [
+            submissionBucket.arn,
+            thumbnailBucket.arn,
+            previewBucket.arn,
+          ],
+        },
+      ],
     });
 
     submissionBucket.notify({

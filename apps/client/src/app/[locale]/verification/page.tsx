@@ -7,6 +7,7 @@ import {
 import { ClientVerificationPage } from "./client-page";
 import { getParticipantByReference } from "@vimmer/supabase/cached-queries";
 import { notFound, redirect } from "next/navigation";
+import { revalidateTag } from "next/cache";
 
 export default async function VerificationPage({
   searchParams,
@@ -23,7 +24,10 @@ export default async function VerificationPage({
   );
   if (!participant) notFound();
 
+  console.log("participant", participant);
+
   if (participant.status === "verified") {
+    console.log("revalidating");
     const redirectParams = submissionQueryServerParamSerializer(params);
     redirect(`/confirmation${redirectParams}`);
   }
