@@ -8,6 +8,7 @@ import {
   DeviceGroup,
   Participant,
 } from "@vimmer/supabase/types";
+import { useParams } from "next/navigation";
 
 interface ParticipantHeaderProps {
   participant: Participant & {
@@ -17,10 +18,11 @@ interface ParticipantHeaderProps {
 }
 
 export function ParticipantHeader({ participant }: ParticipantHeaderProps) {
+  const { domain } = useParams();
   return (
     <div className="flex items-center gap-4">
       <Button variant="ghost" size="icon" asChild>
-        <Link href="/submissions">
+        <Link href={`/${domain}/submissions`}>
           <ArrowLeft className="h-4 w-4" />
         </Link>
       </Button>
