@@ -53,6 +53,8 @@ import {
   TableHeader,
   TableRow,
 } from "@vimmer/ui/components/table";
+import { getParticipantByReference } from "@vimmer/supabase/cached-queries";
+import { Submission, Topic, ValidationError } from "@vimmer/supabase/types";
 
 interface PageProps {
   params: Promise<{
@@ -251,16 +253,24 @@ interface ReviewStep {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-export default async function SubmissionDetailPage({ params }: PageProps) {
-  const { participantId, submissionId } = await params;
-  const participant = MOCK_DATA[parseInt(participantId)];
+export default async function SubmissionDetailPage({
+  params,
+}: {
+  params: Promise<{
+    domain: string;
+    participantRef: string;
+    submissionId: string;
+  }>;
+}) {
+  const { domain, participantRef, submissionId } = await params;
+  const participant = await getParticipantByReference(domain, participantRef);
 
   if (!participant) {
     notFound();
   }
 
   const submission = participant.submissions.find(
-    (s: PhotoSubmission) => s.id === parseInt(submissionId)
+    (s) => s.id === parseInt(submissionId)
   );
 
   if (!submission) {
@@ -279,23 +289,21 @@ export default async function SubmissionDetailPage({ params }: PageProps) {
     rejected: "Rejected",
   } as const;
 
-  const hasIssues =
-    (submission.warnings?.length ?? 0) > 0 ||
-    (submission.errors?.length ?? 0) > 0;
+  const hasIssues = submission.validationErrors.length > 0;
 
   const reviewSteps: ReviewStep[] = [
     {
       status: "completed",
       title: "Participant Initialized",
       description: "Participant registered in the system",
-      timestamp: format(new Date(submission.uploadedAt), "MMM d, yyyy HH:mm"),
+      timestamp: format(new Date(participant.createdAt), "MMM d, yyyy HH:mm"),
       icon: Clock3,
     },
     {
       status: "completed",
-      title: "Participant Uploaded",
+      title: "Photo Uploaded",
       description: "Photo uploaded by participant",
-      timestamp: format(new Date(submission.uploadedAt), "MMM d, yyyy HH:mm"),
+      timestamp: format(new Date(submission.createdAt), "MMM d, yyyy HH:mm"),
       icon: ImageIcon,
     },
     {
@@ -305,7 +313,7 @@ export default async function SubmissionDetailPage({ params }: PageProps) {
         ? "Issues found during processing"
         : "Technical validation complete",
       timestamp: hasIssues
-        ? format(new Date(submission.uploadedAt), "MMM d, yyyy HH:mm")
+        ? format(new Date(submission.createdAt), "MMM d, yyyy HH:mm")
         : undefined,
       icon: AlertTriangle,
     },
@@ -324,8 +332,8 @@ export default async function SubmissionDetailPage({ params }: PageProps) {
             ? "Photo rejected"
             : "Awaiting staff verification",
       timestamp:
-        submission.status !== "pending"
-          ? format(new Date(submission.uploadedAt), "MMM d, yyyy HH:mm")
+        submission.status !== "pending" && submission.updatedAt
+          ? format(new Date(submission.updatedAt), "MMM d, yyyy HH:mm")
           : undefined,
       icon:
         submission.status === "approved"
@@ -336,94 +344,43 @@ export default async function SubmissionDetailPage({ params }: PageProps) {
     },
   ];
 
-  // Add processing steps to the mock data
-  submission.processingSteps = [
-    {
-      location: "Upload Station 1, Main Venue",
-      timestamp: format(new Date(submission.uploadedAt), "MMM d, yyyy HH:mm"),
-      description: "Photo received from participant",
-    },
-    {
-      location: "Processing Server, Technical Review",
-      timestamp: format(
-        new Date(new Date(submission.uploadedAt).getTime() + 15 * 60000),
-        "MMM d, yyyy HH:mm"
-      ),
-      description: "Technical validation in progress",
-    },
-  ];
-  submission.totalProcessingTime = "2 hours, 30 minutes";
-  submission.expectedCompletionTime = format(
-    new Date(new Date(submission.uploadedAt).getTime() + 3 * 60 * 60000),
-    "MMM d, yyyy HH:mm"
-  );
-
-  // Add validation steps mock data
-  submission.validationSteps = [
-    {
-      name: "EXIF Data Validation",
-      status: "valid",
-      message: "All required EXIF data is present and valid",
-    },
-    {
-      name: "Image Resolution Check",
-      status: "warning",
-      message:
-        "Image resolution is below recommended specifications (1200x800)",
-    },
-    {
-      name: "Submission Time Verification",
-      status: "valid",
-      message: "Submission time is within the allowed competition window",
-    },
-    {
-      name: "Duplicate Image Detection",
-      status: "error",
-      message: "Possible duplicate of a previously submitted image",
-    },
-    {
-      name: "AI Content Analysis",
-      status: "ai_warning",
-      message: "Potential AI-generated elements detected in image",
-    },
-    {
-      name: "Metadata Consistency",
-      status: "valid",
-      message: "Metadata is consistent with competition requirements",
-    },
-  ];
-
   return (
     <div className="container mx-auto py-8 space-y-8">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href={`/submissions/${participantId}`}>
+            <Link href={`/${domain}/submissions/${participantRef}`}>
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-semibold">
+              <h1 className="text-2xl font-semibold font-rocgrotesk">
                 SUB-{submission.id.toString().padStart(4, "0")}
               </h1>
-              <Badge variant={statusVariants[submission.status]}>
-                {statusLabels[submission.status]}
+              <Badge
+                variant={
+                  statusVariants[
+                    submission.status as keyof typeof statusVariants
+                  ]
+                }
+              >
+                {statusLabels[submission.status as keyof typeof statusLabels]}
               </Badge>
             </div>
             <div className="text-sm text-muted-foreground">
               Submission date{" "}
-              {format(new Date(submission.uploadedAt), "MMM d, yyyy")} • Photo #
-              {submission.order}
+              {format(new Date(submission.createdAt), "MMM d, yyyy")} • Photo #
+              {submission.topic.orderIndex + 1}
             </div>
           </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
-            <MessageCircle className="h-4 w-4 " />
+            <MessageCircle className="h-4 w-4" />
             Notify Participant
           </Button>
-          <Button variant="outline" size="sm" className="">
+          <Button variant="outline" size="sm">
             <Trash2 className="h-4 w-4" />
             Cancel Submission
           </Button>
@@ -431,12 +388,12 @@ export default async function SubmissionDetailPage({ params }: PageProps) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6">
-        <div className="">
+        <div>
           <Tabs defaultValue="details" className="">
             <TabsList className="bg-background rounded-none p-0 h-auto border-b border-muted-foreground/25 w-full flex justify-start">
               <TabsTrigger
                 value="details"
-                className="px-4 py-2 bg-background  rounded-none data-[state=active]:shadow-none data-[state=active]:border-primary border-b-2 border-transparent"
+                className="px-4 py-2 bg-background rounded-none data-[state=active]:shadow-none data-[state=active]:border-primary border-b-2 border-transparent"
               >
                 Details & Timeline
               </TabsTrigger>
@@ -454,47 +411,33 @@ export default async function SubmissionDetailPage({ params }: PageProps) {
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <h3 className="text-sm font-medium text-muted-foreground">
-                        Captured At
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <p>
-                          {format(
-                            new Date(submission.capturedAt),
-                            "MMM d, yyyy HH:mm"
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium text-muted-foreground">
                         Uploaded At
                       </h3>
                       <div className="flex items-center gap-2">
                         <Upload className="h-4 w-4 text-muted-foreground" />
                         <p>
                           {format(
-                            new Date(submission.uploadedAt),
+                            new Date(submission.createdAt),
                             "MMM d, yyyy HH:mm"
                           )}
                         </p>
                       </div>
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-sm font-medium text-muted-foreground">
+                        Topic
+                      </h3>
+                      <p>{submission.topic.name}</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <h3 className="text-sm font-medium text-muted-foreground">
-                        Topic
-                      </h3>
-                      <p>{submission.topicName}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium text-muted-foreground">
                         Device Type
                       </h3>
                       <div className="flex items-center gap-2">
-                        {participant.device === "smartphone" ? (
+                        {participant.deviceGroup?.icon === "smartphone" ? (
                           <>
                             <Smartphone className="h-4 w-4 text-muted-foreground" />
                             <p>Smartphone</p>
@@ -507,18 +450,24 @@ export default async function SubmissionDetailPage({ params }: PageProps) {
                         )}
                       </div>
                     </div>
+                    <div className="space-y-2">
+                      <h3 className="text-sm font-medium text-muted-foreground">
+                        Competition Class
+                      </h3>
+                      <p>
+                        {participant.competitionClass?.name || "Not assigned"}
+                      </p>
+                    </div>
                   </div>
 
                   {hasIssues && (
                     <div className="mt-6 p-4 bg-destructive/10 rounded-lg">
                       <div className="flex items-center gap-2 text-destructive">
                         <AlertTriangle className="h-4 w-4" />
-                        <p className="font-medium">Processing Delay</p>
+                        <p className="font-medium">Processing Issues</p>
                       </div>
                       <p className="text-sm mt-1">
-                        During peak competition hours, there can be a
-                        significant increase in the number of submissions being
-                        processed, leading to delays.
+                        There are validation issues that need to be addressed.
                       </p>
                     </div>
                   )}
@@ -527,7 +476,9 @@ export default async function SubmissionDetailPage({ params }: PageProps) {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Submission Timeline</CardTitle>
+                  <CardTitle className="text-base font-semibold">
+                    Submission Timeline
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="relative">
@@ -572,7 +523,7 @@ export default async function SubmissionDetailPage({ params }: PageProps) {
 
             <TabsContent value="validation" className="mt-4">
               <ValidationStepsTable
-                validationSteps={submission.validationSteps || []}
+                validationSteps={submission.validationErrors}
               />
             </TabsContent>
           </Tabs>
@@ -583,15 +534,24 @@ export default async function SubmissionDetailPage({ params }: PageProps) {
   );
 }
 
-function PhotoSubmissionCard({ submission }: { submission: PhotoSubmission }) {
+const PREVIEW_BASE_URL = "https://d2w93ix7jvihnu.cloudfront.net";
+function getThumbnailImageUrl(submission: Submission) {
+  return `${PREVIEW_BASE_URL}/${submission.previewKey}`;
+}
+
+function PhotoSubmissionCard({
+  submission,
+}: {
+  submission: Submission & { topic: Topic };
+}) {
   return (
     <div className="space-y-4">
       <Card className="sticky top-8 overflow-hidden shadow-2xl">
         <CardContent className="p-0 bg-black/50">
           <div className="relative w-full overflow-hidden">
             <img
-              src={submission.imageUrl}
-              alt={submission.topicName}
+              src={getThumbnailImageUrl(submission)}
+              alt={submission.topic.name}
               className="object-contain w-full h-full max-h-[70vh]"
             />
           </div>
@@ -599,8 +559,10 @@ function PhotoSubmissionCard({ submission }: { submission: PhotoSubmission }) {
 
         <div className="bg-black p-4 flex flex-col justify-end ">
           <div className="text-white">
-            <h3 className="text-xl font-bold">{submission.topicName}</h3>
-            <p className="text-sm opacity-90">Photo #{submission.order}</p>
+            <h3 className="text-xl font-bold">{submission.topic.name}</h3>
+            <p className="text-sm opacity-90">
+              Photo #{submission.topic.orderIndex + 1}
+            </p>
           </div>
         </div>
       </Card>
@@ -611,19 +573,17 @@ function PhotoSubmissionCard({ submission }: { submission: PhotoSubmission }) {
 function ValidationStepsTable({
   validationSteps,
 }: {
-  validationSteps: NonNullable<PhotoSubmission["validationSteps"]>;
+  validationSteps: ValidationError[];
 }) {
-  const getStatusContent = (
-    status: "valid" | "warning" | "error" | "ai_warning"
-  ) => {
-    switch (status) {
-      case "valid":
+  const getStatusContent = (severity: string) => {
+    switch (severity) {
+      case "info":
         return <CheckCircle2 className="h-5 w-5 text-green-500" />;
       case "warning":
         return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
       case "error":
         return <XCircle className="h-5 w-5 text-red-500" />;
-      case "ai_warning":
+      default:
         return <Star className="h-5 w-5 text-purple-500" />;
     }
   };
@@ -633,7 +593,6 @@ function ValidationStepsTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Check</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Details</TableHead>
           </TableRow>
@@ -641,10 +600,9 @@ function ValidationStepsTable({
         <TableBody>
           {validationSteps.map((step, index) => (
             <TableRow key={index}>
-              <TableCell>{step.name}</TableCell>
-              <TableCell>{getStatusContent(step.status)}</TableCell>
+              <TableCell>{getStatusContent(step.severity)}</TableCell>
               <TableCell className="text-sm text-muted-foreground">
-                {step.message}
+                {step.message || "No message provided"}
               </TableCell>
             </TableRow>
           ))}

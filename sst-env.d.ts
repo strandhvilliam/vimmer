@@ -5,14 +5,6 @@
 
 declare module "sst" {
   export interface Resource {
-    "AdminApp": {
-      "type": "sst.aws.Nextjs"
-      "url": string
-    }
-    "ClientApp": {
-      "type": "sst.aws.Nextjs"
-      "url": string
-    }
     "MarathonSettingsBucket": {
       "name": string
       "type": "sst.aws.Bucket"
@@ -36,10 +28,6 @@ declare module "sst" {
     }
     "ProcessPhotoQueue": {
       "type": "sst.aws.Queue"
-      "url": string
-    }
-    "StaffApp": {
-      "type": "sst.aws.Nextjs"
       "url": string
     }
     "SubmissionBucket": {

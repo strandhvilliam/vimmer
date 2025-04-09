@@ -26,12 +26,12 @@ function RuleToggle({
   onCheckedChange,
 }: RuleToggleProps) {
   return (
-    <div className="flex items-center justify-between space-x-4 py-4">
+    <div className="flex items-center justify-between space-x-4 pt-4 pb-2">
       <div className="flex-1 space-y-1">
-        <Label htmlFor={title} className="text-base font-semibold">
+        <Label htmlFor={title} className="text-sm">
           {title}
         </Label>
-        <p className="text-sm text-muted-foreground">{description}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
       </div>
       <Switch id={title} checked={checked} onCheckedChange={onCheckedChange} />
     </div>
@@ -43,7 +43,7 @@ export default function RulesPage() {
     <div className="container mx-auto py-8 space-y-8">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight font-rocgrotesk">
             Photo Submission Rules
           </h1>
           <p className="text-muted-foreground mt-2">
@@ -56,8 +56,10 @@ export default function RulesPage() {
       <div className="grid gap-6">
         {/* Camera Equipment Rules */}
         <Card>
-          <CardHeader>
-            <CardTitle>Camera Equipment</CardTitle>
+          <CardHeader className="space-y-0 border-b border-border">
+            <CardTitle className="font-rocgrotesk text-lg">
+              Camera Equipment
+            </CardTitle>
             <CardDescription>
               Define which types of cameras and equipment are allowed
             </CardDescription>
@@ -82,8 +84,10 @@ export default function RulesPage() {
 
         {/* File Format Rules */}
         <Card>
-          <CardHeader>
-            <CardTitle>File Format Requirements</CardTitle>
+          <CardHeader className="space-y-0 border-b border-border">
+            <CardTitle className="font-rocgrotesk text-lg">
+              File Format Requirements
+            </CardTitle>
             <CardDescription>
               Set acceptable file formats and specifications
             </CardDescription>
@@ -107,8 +111,10 @@ export default function RulesPage() {
 
         {/* Image Editing Rules */}
         <Card>
-          <CardHeader>
-            <CardTitle>Image Editing</CardTitle>
+          <CardHeader className="space-y-0 border-b border-border">
+            <CardTitle className="font-rocgrotesk text-lg">
+              Image Editing
+            </CardTitle>
             <CardDescription>
               Configure allowed post-processing and editing rules
             </CardDescription>
@@ -133,8 +139,10 @@ export default function RulesPage() {
 
         {/* Metadata Requirements */}
         <Card>
-          <CardHeader>
-            <CardTitle>Metadata Requirements</CardTitle>
+          <CardHeader className="space-y-0 border-b border-border">
+            <CardTitle className="font-rocgrotesk text-lg">
+              Metadata Requirements
+            </CardTitle>
             <CardDescription>
               Set requirements for image metadata validation
             </CardDescription>

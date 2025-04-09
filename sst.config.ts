@@ -77,41 +77,41 @@ export default $config({
       }
     );
 
-    const clientApp = new sst.aws.Nextjs("ClientApp", {
-      path: "apps/client",
-      link: [submissionBucket, thumbnailsRouter, previewsRouter],
-      permissions: [
-        {
-          actions: ["s3:PutObject"],
-          resources: [submissionBucket.arn],
-        },
-      ],
-    });
+    // const clientApp = new sst.aws.Nextjs("ClientApp", {
+    //   path: "apps/client",
+    //   link: [submissionBucket, thumbnailsRouter, previewsRouter],
+    //   permissions: [
+    //     {
+    //       actions: ["s3:PutObject"],
+    //       resources: [submissionBucket.arn],
+    //     },
+    //   ],
+    // });
 
-    const staffApp = new sst.aws.Nextjs("StaffApp", {
-      path: "apps/staff",
-    });
+    // const staffApp = new sst.aws.Nextjs("StaffApp", {
+    //   path: "apps/staff",
+    // });
 
-    const adminApp = new sst.aws.Nextjs("AdminApp", {
-      path: "apps/admin",
-      link: [submissionBucket, thumbnailBucket, previewBucket],
-      permissions: [
-        {
-          actions: ["s3:PutObject", "s3:GetObject"],
-          resources: [
-            submissionBucket.arn,
-            thumbnailBucket.arn,
-            previewBucket.arn,
-          ],
-        },
-      ],
-    });
+    // const adminApp = new sst.aws.Nextjs("AdminApp", {
+    //   path: "apps/admin",
+    //   link: [submissionBucket, thumbnailBucket, previewBucket],
+    //   permissions: [
+    //     {
+    //       actions: ["s3:PutObject", "s3:GetObject"],
+    //       resources: [
+    //         submissionBucket.arn,
+    //         thumbnailBucket.arn,
+    //         previewBucket.arn,
+    //       ],
+    //     },
+    //   ],
+    // });
 
     new sst.aws.Cron("ScheduledTopicsCron", {
       function: {
         handler: "lambdas/scheduled-topics-cron/index.handler",
         environment: env,
-        link: [adminApp],
+        // link: [adminApp],
       },
       schedule: "rate(1 minute)",
     });
@@ -149,9 +149,9 @@ export default $config({
 
     return {
       apps: {
-        client: clientApp.url,
-        staff: staffApp.url,
-        admin: adminApp.url,
+        // client: clientApp.url,
+        // staff: staffApp.url,
+        // admin: adminApp.url,
       },
       buckets: {
         submissionBucket: submissionBucket.name,

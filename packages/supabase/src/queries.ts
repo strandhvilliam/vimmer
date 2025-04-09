@@ -1,6 +1,13 @@
-import type { SupabaseClient } from "./types/";
+import type {
+  DeviceGroup,
+  CompetitionClass,
+  Participant,
+  Submission,
+  ValidationError,
+  Topic,
+  SupabaseClient,
+} from "./types/";
 import { toCamelCase } from "./utils/format-helpers";
-
 export async function getParticipantByIdQuery(
   supabase: SupabaseClient,
   id: number
@@ -25,7 +32,18 @@ export async function getParticipantByIdQuery(
 export async function getParticipantByReferenceQuery(
   supabase: SupabaseClient,
   { reference, domain }: { reference: string; domain: string }
-) {
+): Promise<
+  | (Participant & {
+      submissions: (Submission & {
+        topic: Topic;
+        validationErrors: ValidationError[];
+      })[];
+      competitionClass: CompetitionClass | null;
+      deviceGroup: DeviceGroup | null;
+      validationErrors: ValidationError[];
+    })
+  | null
+> {
   const { data } = await supabase
     .from("participants")
     .select(

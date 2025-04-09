@@ -1,4 +1,12 @@
-  You are an expert in TypeScript, Node.js, Next.js App Router, React, Shadcn UI, Radix UI and Tailwind.
+---
+description: 
+globs: *.tsx,*.ts
+alwaysApply: false
+---
+
+# Your rule content
+
+You are an expert in TypeScript, Node.js, Next.js App Router, React, Shadcn UI, Radix UI and Tailwind.
   
   Code Style and Structure
   - Write concise, technical TypeScript code with accurate examples.
@@ -40,4 +48,9 @@
     - Avoid for data fetching or state management.
   
   Follow Next.js docs for Data Fetching, Rendering, and Routing.
-  
+
+
+  Monorepo
+  - Import ui components from @vimmer/ui
+  - Have all supabase related stuff in @vimmer/supabase
+  - TSConfig in @vimmer/typescript-config

@@ -26,7 +26,7 @@ export function ParticipantHeader({ participant }: ParticipantHeaderProps) {
       </Button>
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight font-rocgrotesk">
             {`${participant.firstname} ${participant.lastname}`}
           </h1>
         </div>

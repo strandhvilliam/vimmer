@@ -39,7 +39,9 @@ export function TopicsHeader({ marathonId }: TopicsHeaderProps) {
       <div className="container pt-8">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight">Topics</h1>
+            <h1 className="text-2xl font-semibold tracking-tight font-rocgrotesk">
+              Topics
+            </h1>
             <p className="text-sm text-muted-foreground">
               Manage and organize your marathon topics. Drag topics to reorder
               them.

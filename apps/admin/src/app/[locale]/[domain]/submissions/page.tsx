@@ -16,7 +16,9 @@ export default async function SubmissionsPage() {
   return (
     <div className="container mx-auto py-8 space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Submissions</h1>
+        <h1 className="text-2xl font-semibold tracking-tight font-rocgrotesk">
+          Submissions
+        </h1>
         <p className="text-muted-foreground mt-2">
           View and manage photo submissions from participants
         </p>

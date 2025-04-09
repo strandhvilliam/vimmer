@@ -1,5 +1,5 @@
 {
-  "name": "staff",
+  "name": "@vimmer/staff",
   "version": "0.1.0",
   "private": true,
   "scripts": {

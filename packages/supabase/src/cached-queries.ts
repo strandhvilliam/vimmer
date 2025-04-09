@@ -16,6 +16,7 @@ import {
   getParticipantsByDomainQuery,
   getTopicsByDomainQuery,
 } from "./queries";
+import { Participant } from "./types";
 
 export async function getUserMarathons(userId: string) {
   "use cache";

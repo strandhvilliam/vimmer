@@ -1,27 +1,19 @@
 "use client";
 
 import React from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@vimmer/ui/components/card";
+import { Card } from "@vimmer/ui/components/card";
 import { Input } from "@vimmer/ui/components/input";
-import { Button } from "@vimmer/ui/components/button";
 import { Textarea } from "@vimmer/ui/components/textarea";
 import { Label } from "@vimmer/ui/components/label";
-import { DateTimePicker } from "@vimmer/ui/components/date-time-picker";
 import { Separator } from "@vimmer/ui/components/separator";
-import { ImagePlus, X, CalendarIcon, Clock } from "lucide-react";
+import { ImagePlus, X } from "lucide-react";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@vimmer/ui/components/tabs";
-import { format, setDate } from "date-fns";
+import { format } from "date-fns";
 import { Calendar } from "@vimmer/ui/components/calendar";
 import { TimePickerInput } from "@vimmer/ui/components/time-picker";
 import { getLogoUploadUrl } from "./actions";
@@ -40,7 +32,7 @@ interface ContestSettings {
 function PhonePreview({ settings }: { settings: ContestSettings }) {
   return (
     <div className="w-[320px] h-[640px] bg-muted border-8 border-muted rounded-3xl overflow-hidden shadow-2xl flex flex-col fixed">
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 ">
         <div className="relative h-48 bg-muted flex items-start pt-4 justify-center">
           {settings.logo ? (
             <div className="w-32 h-32 rounded-full overflow-hidden shadow-xl">
@@ -187,7 +179,9 @@ export default function SettingsPage() {
   return (
     <div className="container max-w-[1400px] mx-auto py-8">
       <div className="flex flex-col mb-8 gap-1">
-        <h1 className="text-2xl font-bold">Contest Settings</h1>
+        <h1 className="text-2xl font-semibold font-rocgrotesk">
+          Contest Settings
+        </h1>
         <p className="text-muted-foreground text-sm">
           Configure your marathon settings here.
         </p>
