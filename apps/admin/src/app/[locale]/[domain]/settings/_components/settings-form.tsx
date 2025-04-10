@@ -5,7 +5,15 @@ import { Card } from "@vimmer/ui/components/card";
 import { Input } from "@vimmer/ui/components/input";
 import { Textarea } from "@vimmer/ui/components/textarea";
 import { Label } from "@vimmer/ui/components/label";
-import { ImagePlus, X, Check, Globe, Search } from "lucide-react";
+import {
+  ImagePlus,
+  X,
+  Check,
+  Globe,
+  Search,
+  Calendar as CalendarIcon,
+  Clock,
+} from "lucide-react";
 import {
   Tabs,
   TabsContent,
@@ -42,6 +50,14 @@ import {
   CommandItem,
   CommandList,
 } from "@vimmer/ui/components/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@vimmer/ui/components/popover";
+import { Button } from "@vimmer/ui/components/button";
+import { cn } from "@vimmer/ui/lib/utils";
+import { format } from "date-fns";
 
 interface SettingsFormProps {
   domain: string;
@@ -416,57 +432,390 @@ export default function SettingsForm({
 
               <TabsContent value="date-time" className="space-y-6">
                 <div className="grid grid-cols-1 gap-6 max-w-2xl">
-                  <div className="space-y-2">
-                    <Label className="">Contest Schedule</Label>
-                    <FormField
-                      control={form.control}
-                      name="startDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Card className="p-2 w-full">
-                              <Calendar
-                                initialFocus
-                                mode="range"
-                                defaultMonth={field.value || undefined}
-                                selected={{
-                                  from: field.value || undefined,
-                                  to: form.watch("endDate") || undefined,
-                                }}
-                                onSelect={(range) => {
-                                  if (range?.from) {
-                                    field.onChange(range.from);
-                                    const currentEnd = form.watch("endDate");
-                                    if (
-                                      !currentEnd ||
-                                      range.from > currentEnd
-                                    ) {
-                                      form.setValue(
-                                        "endDate",
-                                        range.to || range.from
-                                      );
+                  <div className="space-y-4">
+                    <div className="flex gap-1 flex-col">
+                      <h3 className="font-medium">Contest Schedule</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Set the start and end dates for your marathon
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="startDate"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel>Start Date</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      "w-full pl-3 text-left font-normal",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                  >
+                                    {field.value ? (
+                                      format(field.value, "PPP")
+                                    ) : (
+                                      <span>Pick a start date</span>
+                                    )}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent
+                                className="w-auto p-0"
+                                align="start"
+                              >
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value || undefined}
+                                  onSelect={(date) => {
+                                    if (date) {
+                                      // Preserve current time or set default time (12:00)
+                                      const newDate = new Date(date);
+                                      if (field.value) {
+                                        newDate.setHours(
+                                          field.value.getHours()
+                                        );
+                                        newDate.setMinutes(
+                                          field.value.getMinutes()
+                                        );
+                                      } else {
+                                        newDate.setHours(12);
+                                        newDate.setMinutes(0);
+                                      }
+                                      field.onChange(newDate);
+
+                                      // If end date is before this date, update end date
+                                      const endDate = form.getValues("endDate");
+                                      if (endDate && endDate < newDate) {
+                                        // Clone the new date and add 1 hour for end time
+                                        const suggestedEndDate = new Date(
+                                          newDate
+                                        );
+                                        suggestedEndDate.setHours(
+                                          suggestedEndDate.getHours() + 1
+                                        );
+                                        form.setValue(
+                                          "endDate",
+                                          suggestedEndDate,
+                                          { shouldDirty: true }
+                                        );
+                                      }
                                     }
-                                  }
-                                }}
-                                numberOfMonths={2}
-                              />
-                            </Card>
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
+                                  }}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="endDate"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel>End Date</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      "w-full pl-3 text-left font-normal",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                  >
+                                    {field.value ? (
+                                      format(field.value, "PPP")
+                                    ) : (
+                                      <span>Pick an end date</span>
+                                    )}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent
+                                className="w-auto p-0"
+                                align="start"
+                              >
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value || undefined}
+                                  onSelect={(date) => {
+                                    if (date) {
+                                      const newDate = new Date(date);
+                                      if (field.value) {
+                                        newDate.setHours(
+                                          field.value.getHours()
+                                        );
+                                        newDate.setMinutes(
+                                          field.value.getMinutes()
+                                        );
+                                      } else {
+                                        newDate.setHours(13);
+                                        newDate.setMinutes(0);
+                                      }
+
+                                      const startDate =
+                                        form.getValues("startDate");
+                                      if (
+                                        startDate &&
+                                        date.getFullYear() ===
+                                          startDate.getFullYear() &&
+                                        date.getMonth() ===
+                                          startDate.getMonth() &&
+                                        date.getDate() === startDate.getDate()
+                                      ) {
+                                        if (newDate <= startDate) {
+                                          newDate.setHours(
+                                            startDate.getHours() + 1
+                                          );
+                                          newDate.setMinutes(
+                                            startDate.getMinutes()
+                                          );
+                                        }
+                                      }
+
+                                      field.onChange(newDate);
+                                    }
+                                  }}
+                                  disabled={(date) => {
+                                    const startDate =
+                                      form.getValues("startDate");
+                                    if (!startDate) return false;
+
+                                    return (
+                                      date <
+                                      new Date(
+                                        startDate.getFullYear(),
+                                        startDate.getMonth(),
+                                        startDate.getDate()
+                                      )
+                                    );
+                                  }}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
                     <div className="grid grid-cols-2 gap-4 mt-4">
-                      <TimePickerField
-                        label="Start Time"
-                        name="startDate"
-                        control={form.control}
-                      />
-                      <TimePickerField
-                        label="End Time"
-                        name="endDate"
-                        control={form.control}
-                      />
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="startDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Start Time</FormLabel>
+                              <FormControl>
+                                <div className="flex items-center space-x-2">
+                                  <div className="p-2 border rounded-lg flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-muted-foreground" />
+                                    <TimePickerInput
+                                      date={field.value || undefined}
+                                      setDate={(date) => {
+                                        if (date && field.value) {
+                                          const newDate = new Date(field.value);
+                                          newDate.setHours(date.getHours());
+                                          newDate.setMinutes(date.getMinutes());
+
+                                          const endDate =
+                                            form.getValues("endDate");
+                                          if (
+                                            endDate &&
+                                            newDate.getFullYear() ===
+                                              endDate.getFullYear() &&
+                                            newDate.getMonth() ===
+                                              endDate.getMonth() &&
+                                            newDate.getDate() ===
+                                              endDate.getDate() &&
+                                            newDate >= endDate
+                                          ) {
+                                            const updatedEndDate = new Date(
+                                              newDate
+                                            );
+                                            updatedEndDate.setHours(
+                                              updatedEndDate.getHours() + 1
+                                            );
+                                            form.setValue(
+                                              "endDate",
+                                              updatedEndDate,
+                                              { shouldDirty: true }
+                                            );
+                                          }
+
+                                          field.onChange(newDate);
+                                        }
+                                      }}
+                                      picker="hours"
+                                      aria-label="Hours"
+                                    />
+                                    <span className="text-sm">:</span>
+                                    <TimePickerInput
+                                      date={field.value || undefined}
+                                      setDate={(date) => {
+                                        if (date && field.value) {
+                                          const newDate = new Date(field.value);
+                                          newDate.setHours(date.getHours());
+                                          newDate.setMinutes(date.getMinutes());
+
+                                          const endDate =
+                                            form.getValues("endDate");
+                                          if (
+                                            endDate &&
+                                            newDate.getFullYear() ===
+                                              endDate.getFullYear() &&
+                                            newDate.getMonth() ===
+                                              endDate.getMonth() &&
+                                            newDate.getDate() ===
+                                              endDate.getDate() &&
+                                            newDate >= endDate
+                                          ) {
+                                            const updatedEndDate = new Date(
+                                              newDate
+                                            );
+                                            updatedEndDate.setHours(
+                                              updatedEndDate.getHours() + 1
+                                            );
+                                            form.setValue(
+                                              "endDate",
+                                              updatedEndDate,
+                                              { shouldDirty: true }
+                                            );
+                                          }
+
+                                          field.onChange(newDate);
+                                        }
+                                      }}
+                                      picker="minutes"
+                                      aria-label="Minutes"
+                                    />
+                                  </div>
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <FormField
+                          control={form.control}
+                          name="endDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>End Time</FormLabel>
+                              <FormControl>
+                                <div className="flex items-center space-x-2">
+                                  <div className="p-2 border rounded-lg flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-muted-foreground" />
+                                    <TimePickerInput
+                                      date={field.value || undefined}
+                                      setDate={(date) => {
+                                        if (date && field.value) {
+                                          const newDate = new Date(field.value);
+                                          newDate.setHours(date.getHours());
+                                          newDate.setMinutes(date.getMinutes());
+
+                                          const startDate =
+                                            form.getValues("startDate");
+                                          if (
+                                            startDate &&
+                                            newDate.getFullYear() ===
+                                              startDate.getFullYear() &&
+                                            newDate.getMonth() ===
+                                              startDate.getMonth() &&
+                                            newDate.getDate() ===
+                                              startDate.getDate() &&
+                                            newDate <= startDate
+                                          ) {
+                                            return;
+                                          }
+
+                                          field.onChange(newDate);
+                                        }
+                                      }}
+                                      picker="hours"
+                                      aria-label="Hours"
+                                    />
+                                    <span className="text-sm">:</span>
+                                    <TimePickerInput
+                                      date={field.value || undefined}
+                                      setDate={(date) => {
+                                        if (date && field.value) {
+                                          const newDate = new Date(field.value);
+                                          newDate.setHours(date.getHours());
+                                          newDate.setMinutes(date.getMinutes());
+
+                                          const startDate =
+                                            form.getValues("startDate");
+                                          if (
+                                            startDate &&
+                                            newDate.getFullYear() ===
+                                              startDate.getFullYear() &&
+                                            newDate.getMonth() ===
+                                              startDate.getMonth() &&
+                                            newDate.getDate() ===
+                                              startDate.getDate() &&
+                                            newDate <= startDate
+                                          ) {
+                                            return;
+                                          }
+
+                                          field.onChange(newDate);
+                                        }
+                                      }}
+                                      picker="minutes"
+                                      aria-label="Minutes"
+                                    />
+                                  </div>
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-4 p-4 bg-muted/30 rounded-lg border border-muted flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary"></div>
+                        <span className="text-sm font-medium">
+                          Marathon Duration:
+                        </span>
+                        {formValues.startDate && formValues.endDate ? (
+                          <span className="text-sm">
+                            {format(formValues.startDate, "PPP")} -{" "}
+                            {format(formValues.endDate, "PPP")}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">
+                            Select both dates to see duration
+                          </span>
+                        )}
+                      </div>
+                      {formValues.startDate && formValues.endDate && (
+                        <div className="flex items-center gap-2 ml-4">
+                          <span className="text-xs text-muted-foreground">
+                            {format(formValues.startDate, "kk:mm")} -{" "}
+                            {format(formValues.endDate, "kk:mm")}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -548,61 +897,5 @@ export default function SettingsForm({
         </div>
       </form>
     </Form>
-  );
-}
-
-// Helper component for time picker fields
-function TimePickerField({
-  label,
-  name,
-  control,
-}: {
-  label: string;
-  name: "startDate" | "endDate";
-  control: any;
-}) {
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      <FormField
-        control={control}
-        name={name}
-        render={({ field }) => (
-          <FormItem>
-            <FormControl>
-              <div className="p-1 space-x-2 flex items-center justify-center border rounded-lg">
-                <TimePickerInput
-                  date={field.value || undefined}
-                  setDate={(date) => {
-                    if (date && field.value) {
-                      const newDate = new Date(field.value);
-                      newDate.setHours(date.getHours());
-                      newDate.setMinutes(date.getMinutes());
-                      field.onChange(newDate);
-                    }
-                  }}
-                  picker="hours"
-                  aria-label="Hours"
-                />
-                <span className="text-sm">:</span>
-                <TimePickerInput
-                  date={field.value || undefined}
-                  setDate={(date) => {
-                    if (date && field.value) {
-                      const newDate = new Date(field.value);
-                      newDate.setHours(date.getHours());
-                      newDate.setMinutes(date.getMinutes());
-                      field.onChange(newDate);
-                    }
-                  }}
-                  picker="minutes"
-                  aria-label="Minutes"
-                />
-              </div>
-            </FormControl>
-          </FormItem>
-        )}
-      />
-    </div>
   );
 }
