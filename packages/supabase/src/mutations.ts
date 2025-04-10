@@ -13,6 +13,7 @@ import {
   UpdateParticipant,
   UpdateSubmission,
   UpdateTopic,
+  UpdateMarathon,
 } from "./types";
 import { toCamelCase, toSnakeCase } from "./utils/format-helpers";
 
@@ -248,6 +249,25 @@ export async function updateCompetitionClass(
     .from("competition_classes")
     .update(toSnakeCase(dto))
     .eq("id", id)
+    .select()
+    .single()
+    .throwOnError();
+  return toCamelCase(data);
+}
+
+export async function updateMarathonByDomain(
+  supabase: SupabaseClient,
+  domain: string,
+  dto: UpdateMarathon
+) {
+  if (!dto.updatedAt) {
+    dto.updatedAt = new Date().toISOString();
+  }
+
+  const { data } = await supabase
+    .from("marathons")
+    .update(toSnakeCase(dto))
+    .eq("domain", domain)
     .select()
     .single()
     .throwOnError();

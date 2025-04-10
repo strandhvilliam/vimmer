@@ -69,7 +69,7 @@ function DeviceGroupCard({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <Card key={group.id} className="relative">
+    <Card key={group.id} className="relative justify-between flex flex-col">
       <div className="flex flex-col gap-2 p-4">
         <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
           <Button
@@ -114,16 +114,16 @@ function DeviceGroupCard({
           <p className="text-sm text-muted-foreground">{group.description}</p>
         </div>
       </div>
-      <div className="flex items-center px-4 pb-4 gap-2">
+      <div className="flex items-center px-4 pb-4 gap-2 ">
         <DeviceGroupEditDialog
           group={group}
           trigger={
-            <Button size="sm" variant="outline" className="flex-1">
+            <Button size="sm" variant="outline" className="flex-1 text-xs">
               Edit
             </Button>
           }
         />
-        <Button size="sm" variant="outline" className="flex-1">
+        <Button size="sm" variant="outline" className="flex-1 text-xs">
           View Submissions
         </Button>
       </div>

@@ -67,7 +67,7 @@ function CompetitionClassCard({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <Card key={classItem.id} className="relative">
+    <Card key={classItem.id} className="relative justify-between flex flex-col">
       <div className="flex flex-col gap-2 p-4">
         <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
           <Button
@@ -127,12 +127,12 @@ function CompetitionClassCard({
         <CompetitionClassEditDialog
           classItem={classItem}
           trigger={
-            <Button size="sm" variant="outline" className="flex-1">
+            <Button size="sm" variant="outline" className="flex-1 text-xs">
               Edit
             </Button>
           }
         />
-        <Button size="sm" variant="outline" className="flex-1">
+        <Button size="sm" variant="outline" className="flex-1 text-xs">
           View Submissions
         </Button>
       </div>

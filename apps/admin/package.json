@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-cloudfront": "^3.782.0",
     "@dnd-kit/helpers": "^0.0.9",
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/react": "0.0.10-beta-20250219015925",
