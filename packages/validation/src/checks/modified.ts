@@ -1,15 +1,18 @@
-import { EDITING_SOFTWARE_KEYWORDS } from "../constants";
-import type { ExifData, ValidationResult } from "../types";
-import { Parameter } from "../types";
+import { EDITING_SOFTWARE_KEYWORDS, RULE_KEYS } from "../constants";
+import type {
+  ValidationInput,
+  ValidationResult,
+  ValidationFunction,
+} from "../types";
 import { createValidationResult } from "../utils";
 
-function checkSoftware(exif: ExifData): ValidationResult {
-  const software = exif[Parameter.SOFTWARE] as string | undefined;
+function checkSoftware(input: ValidationInput): ValidationResult {
+  const software = input.exif[RULE_KEYS.MODIFIED] as string | undefined;
 
   if (!software || software === "") {
     return createValidationResult(
       true,
-      Parameter.SOFTWARE,
+      RULE_KEYS.MODIFIED,
       "No software used to edit the image"
     );
   }
@@ -21,19 +24,19 @@ function checkSoftware(exif: ExifData): ValidationResult {
   return hasEditingSoftwareKeyword
     ? createValidationResult(
         false,
-        Parameter.SOFTWARE,
+        RULE_KEYS.MODIFIED,
         `Image was edited using photo editing software: ${software}`
       )
     : createValidationResult(
         true,
-        Parameter.SOFTWARE,
+        RULE_KEYS.MODIFIED,
         "No software used to edit the image"
       );
 }
 
-function checkDateInconsistencies(exif: ExifData): ValidationResult {
-  const createDate = exif.DateTimeOriginal || exif.CreateDate;
-  const modifyDate = exif.ModifyDate || exif.DateTime;
+function checkDateInconsistencies(input: ValidationInput): ValidationResult {
+  const createDate = input.exif.DateTimeOriginal || input.exif.CreateDate;
+  const modifyDate = input.exif.ModifyDate || input.exif.DateTime;
 
   if (
     !createDate ||
@@ -43,7 +46,7 @@ function checkDateInconsistencies(exif: ExifData): ValidationResult {
   ) {
     return createValidationResult(
       true,
-      Parameter.TIMESTAMPS,
+      RULE_KEYS.MODIFIED,
       "No timestamps found"
     );
   }
@@ -58,16 +61,22 @@ function checkDateInconsistencies(exif: ExifData): ValidationResult {
   return isEdited
     ? createValidationResult(
         false,
-        Parameter.TIMESTAMPS,
+        RULE_KEYS.MODIFIED,
         "Image was likely edited"
       )
     : createValidationResult(
         true,
-        Parameter.TIMESTAMPS,
+        RULE_KEYS.MODIFIED,
         "No timestamp inconsistencies for editing found"
       );
 }
 
-export function validate(exif: ExifData): ValidationResult[] {
-  return [checkSoftware(exif), checkDateInconsistencies(exif)];
-}
+export const validate: ValidationFunction<typeof RULE_KEYS.MODIFIED> = (
+  _,
+  input
+) => {
+  return input.flatMap((singleInput) => [
+    checkSoftware(singleInput),
+    checkDateInconsistencies(singleInput),
+  ]);
+};
