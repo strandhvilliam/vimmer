@@ -11,6 +11,7 @@ export interface ValidationResult {
   ruleKey: RuleKey;
   message: string;
   filename?: string;
+  severity: SeverityLevel;
 }
 
 export interface RuleParams {
@@ -34,7 +35,7 @@ export type SeverityLevel = "error" | "warning";
 
 export interface RuleConfig<K extends RuleKey> {
   key: K;
-  level: SeverityLevel;
+  severity: SeverityLevel;
   params: RuleParams[K];
 }
 

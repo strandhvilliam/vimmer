@@ -16,7 +16,7 @@ import type {
   ValidationInput,
   ValidationResult,
 } from "./types";
-import { createValidationPipeline } from "./utils";
+import { createValidationPipeline, pipe } from "./utils";
 
 const validationFunctions: Record<RuleKey, ValidationFunction<any>> = {
   [RULE_KEYS.MAX_FILE_SIZE]: checkFileSize,
@@ -28,17 +28,28 @@ const validationFunctions: Record<RuleKey, ValidationFunction<any>> = {
 };
 
 function applyValidation<K extends RuleKey>(
-  key: K,
-  params: RuleParams[K],
+  rule: RuleConfig<K>,
   input: ValidationInput[]
 ): ValidationResult[] {
-  const pipeline = createValidationPipeline(key);
-  return pipeline(validationFunctions[key])(params, input);
+  const pipeline = createValidationPipeline(rule.key);
+  return pipeline(validationFunctions[rule.key])(rule.params, input);
+}
+
+function applySeverity<K extends RuleKey>(
+  rule: RuleConfig<K>,
+  results: ValidationResult
+): ValidationResult {
+  return {
+    ...results,
+    severity: rule.severity,
+  };
 }
 
 export function runValidations(
   rules: RuleConfig<RuleKey>[],
   input: ValidationInput[]
 ): ValidationResult[] {
-  return rules.flatMap((rule) => applyValidation(rule.key, rule.params, input));
+  return rules.flatMap((rule) =>
+    applyValidation(rule, input).map((result) => applySeverity(rule, result))
+  );
 }

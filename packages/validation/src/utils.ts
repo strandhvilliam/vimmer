@@ -2,6 +2,7 @@ import type {
   ExifData,
   RuleKey,
   RuleParams,
+  SeverityLevel,
   ValidationFunction,
   ValidationInput,
 } from "./types";
@@ -17,6 +18,7 @@ export const createValidationResult = (
   isValid,
   ruleKey,
   message,
+  severity: "error",
 });
 
 export function withErrorHandling<K extends RuleKey>(
@@ -151,4 +153,23 @@ export function createValidationPipeline<K extends RuleKey>(
     (fn) => withParamValidation(ruleKey, fn),
     (fn) => withInputValidation(ruleKey, fn)
   );
+}
+
+export function createMockInput(overrides = {}): ValidationInput {
+  return {
+    exif: {
+      Make: "Sony",
+      Model: "Alpha A7III",
+      SerialNumber: "12345",
+      DateTimeOriginal: "2023-06-15T14:30:00Z",
+      CreateDate: "2023-06-15T14:30:00Z",
+      ModifyDate: "2023-06-15T14:35:00Z",
+      DateTime: "2023-06-15T14:35:00Z",
+    },
+    fileName: "test_image.jpg",
+    fileSize: 5000000, // 5MB
+    orderIndex: 0,
+    mimeType: "image/jpeg",
+    ...overrides,
+  };
 }
