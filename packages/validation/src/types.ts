@@ -1,8 +1,14 @@
-import type { RULE_KEYS, VALIDATION_OUTCOME } from "./constants";
+import type {
+  RULE_KEYS,
+  SEVERITY_LEVELS,
+  VALIDATION_OUTCOME,
+} from "./constants";
 
 export type ValidationOutcome =
   (typeof VALIDATION_OUTCOME)[keyof typeof VALIDATION_OUTCOME];
 export type RuleKey = (typeof RULE_KEYS)[keyof typeof RULE_KEYS];
+export type SeverityLevel =
+  (typeof SEVERITY_LEVELS)[keyof typeof SEVERITY_LEVELS];
 
 export interface ExifData {
   [key: string]: unknown;
@@ -32,8 +38,6 @@ export interface ValidationInput {
   orderIndex: number;
   mimeType: string;
 }
-
-export type SeverityLevel = "error" | "warning";
 
 export interface RuleConfig<K extends RuleKey> {
   key: K;

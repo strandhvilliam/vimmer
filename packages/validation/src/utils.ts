@@ -8,7 +8,7 @@ import type {
   ValidationOutcome,
 } from "./types";
 import type { ValidationResult } from "./types";
-import { z } from "zod";
+import { isValid, z } from "zod";
 import { RULE_KEYS, VALIDATION_OUTCOME } from "./constants";
 
 export const createValidationResult = (
@@ -98,22 +98,21 @@ export function withParamValidation<K extends RuleKey>(
 }
 
 export const validationInputSchema = z.object({
-  exif: z.record(z.unknown()),
-  fileName: z.string().min(1),
-  fileSize: z.number().nonnegative(),
+  exif: z.record(z.unknown(), { message: "No exif data found" }),
+  fileName: z.string().min(1, { message: "File name is required" }),
+  fileSize: z.number().nonnegative({ message: "File size is required" }),
   orderIndex: z.number().int().nonnegative(),
-  mimeType: z.string().min(1),
+  mimeType: z.string().min(1, { message: "Mime type is required" }),
 });
 
-function validateInputs(inputs: unknown[]): [boolean, string?] {
+function validateInput(input: unknown): [boolean, string?] {
   try {
-    z.array(validationInputSchema).parse(inputs);
+    validationInputSchema.parse(input);
     return [true];
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errorMessages = error.errors.map((err) => {
-        const path = err.path.join(".");
-        return `Item ${path}: ${err.message}`;
+        return `${err.message}`;
       });
       return [false, errorMessages.join("; ")];
     }
@@ -125,20 +124,28 @@ export function withInputValidation<K extends RuleKey>(
   ruleKey: K,
   validationFunction: ValidationFunction<K>
 ): ValidationFunction<K> {
-  return (rule, inputs) => {
-    const [isValid, errorMessage] = validateInputs(inputs);
+  return (rule, input) => {
+    const validationResults = input.reduce<ValidationResult[]>((acc, inp) => {
+      const [isValid, errorMessage] = validateInput(inp);
+      if (!isValid) {
+        acc.push(
+          attachFileName(
+            createValidationResult(
+              VALIDATION_OUTCOME.FAILED,
+              ruleKey,
+              errorMessage ?? "Invalid input data"
+            ),
+            inp
+          )
+        );
+      }
+      return acc;
+    }, []);
 
-    if (!isValid) {
-      return [
-        createValidationResult(
-          VALIDATION_OUTCOME.FAILED,
-          ruleKey,
-          `Invalid input data: ${errorMessage}`
-        ),
-      ];
+    if (validationResults.length > 0) {
+      return validationResults;
     }
-
-    return validationFunction(rule, inputs);
+    return validationFunction(rule, input);
   };
 }
 
@@ -164,6 +171,7 @@ export function attachFileName(
   result: ValidationResult,
   input: ValidationInput
 ): ValidationResult {
+  console.log("attaching file name", result, input);
   return { ...result, fileName: input.fileName };
 }
 

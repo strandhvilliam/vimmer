@@ -40,3 +40,8 @@ export const VALIDATION_OUTCOME = {
   FAILED: "failed",
   SKIPPED: "skipped",
 } as const;
+
+export const SEVERITY_LEVELS = {
+  ERROR: "error",
+  WARNING: "warning",
+} as const;

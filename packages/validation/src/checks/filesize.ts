@@ -15,7 +15,7 @@ function checkFileSize(
     return createValidationResult(
       VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.MAX_FILE_SIZE,
-      "File size is too large"
+      `File size is too large: ${input.fileSize / 1024 / 1024} mb (max ${rule.maxBytes / 1024 / 1024} mb)`
     );
   }
   return createValidationResult(

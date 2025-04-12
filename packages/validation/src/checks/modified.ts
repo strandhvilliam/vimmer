@@ -15,7 +15,7 @@ function checkSoftware(input: ValidationInput): ValidationResult {
 
   if (!software || software === "") {
     return createValidationResult(
-      VALIDATION_OUTCOME.SKIPPED,
+      VALIDATION_OUTCOME.PASSED,
       RULE_KEYS.MODIFIED,
       "No software used to edit the image"
     );
@@ -29,7 +29,7 @@ function checkSoftware(input: ValidationInput): ValidationResult {
     ? createValidationResult(
         VALIDATION_OUTCOME.FAILED,
         RULE_KEYS.MODIFIED,
-        `Image was edited using photo editing software: ${software}`
+        `Detected usage of photo editing software: ${software}`
       )
     : createValidationResult(
         VALIDATION_OUTCOME.PASSED,
@@ -49,7 +49,7 @@ function checkDateInconsistencies(input: ValidationInput): ValidationResult {
     typeof modifyDate !== "string"
   ) {
     return createValidationResult(
-      VALIDATION_OUTCOME.SKIPPED,
+      VALIDATION_OUTCOME.PASSED,
       RULE_KEYS.MODIFIED,
       "No timestamps found"
     );
@@ -66,13 +66,42 @@ function checkDateInconsistencies(input: ValidationInput): ValidationResult {
     ? createValidationResult(
         VALIDATION_OUTCOME.FAILED,
         RULE_KEYS.MODIFIED,
-        "Image was likely edited"
+        "Detected timestamp inconsistencies. Possible editing."
       )
     : createValidationResult(
         VALIDATION_OUTCOME.PASSED,
         RULE_KEYS.MODIFIED,
         "No timestamp inconsistencies for editing found"
       );
+}
+
+function checkLimitedExifData(input: ValidationInput): ValidationResult {
+  const exifData = input.exif;
+
+  // Count the number of meaningful EXIF properties
+  // Ignore empty strings, null, undefined values
+  const meaningfulProperties = Object.entries(exifData).filter(([_, value]) => {
+    if (value === null || value === undefined || value === "") return false;
+    if (typeof value === "string" && value.trim() === "") return false;
+    return true;
+  });
+
+  const propertyCount = meaningfulProperties.length;
+  const MIN_EXPECTED_PROPERTIES = 15;
+
+  if (propertyCount < MIN_EXPECTED_PROPERTIES) {
+    return createValidationResult(
+      VALIDATION_OUTCOME.FAILED,
+      RULE_KEYS.MODIFIED,
+      `Limited EXIF data detected (${propertyCount} properties). Possible editing or export from editing software.`
+    );
+  }
+
+  return createValidationResult(
+    VALIDATION_OUTCOME.PASSED,
+    RULE_KEYS.MODIFIED,
+    "Sufficient EXIF data properties present"
+  );
 }
 
 export const validate: ValidationFunction<typeof RULE_KEYS.MODIFIED> = (
@@ -82,5 +111,6 @@ export const validate: ValidationFunction<typeof RULE_KEYS.MODIFIED> = (
   return inputs.flatMap((input) => [
     attachFileName(checkSoftware(input), input),
     attachFileName(checkDateInconsistencies(input), input),
+    attachFileName(checkLimitedExifData(input), input),
   ]);
 };

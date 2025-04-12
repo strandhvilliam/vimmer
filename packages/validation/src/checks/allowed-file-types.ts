@@ -37,7 +37,7 @@ function checkIfValidExtension(
     return createValidationResult(
       VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.ALLOWED_FILE_TYPES,
-      "Invalid file extension"
+      `Invalid file extension: ${extension} (allowed: ${rule.allowedFileTypes.join(", ")})`
     );
   }
 
@@ -60,7 +60,7 @@ function checkIfValidMimeType(
     return createValidationResult(
       VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.ALLOWED_FILE_TYPES,
-      "Invalid mime type"
+      `Invalid mime type: ${input.mimeType} (allowed: ${filteredMimeTypes.map(([key]) => key).join(", ")})`
     );
   }
 
@@ -72,7 +72,7 @@ function checkIfValidMimeType(
     return createValidationResult(
       VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.ALLOWED_FILE_TYPES,
-      "Invalid file mime type"
+      `Invalid file mime type: ${input.mimeType} (allowed: ${filteredMimeTypes.map(([key]) => key).join(", ")})`
     );
   }
 

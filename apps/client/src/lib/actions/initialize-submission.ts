@@ -7,7 +7,7 @@ import {
   updateParticipant,
 } from "@vimmer/supabase/mutations";
 import { createClient } from "@vimmer/supabase/server";
-import { Resource } from "sst";
+// import { Resource } from "sst";
 import { initializeSubmissionsSchema } from "../schemas/initialize-submissions-schema";
 import { actionClient, ActionError } from "./safe-action";
 import {
@@ -111,7 +111,7 @@ async function generatePresignedUrl(s3Client: S3Client, key: string) {
       s3Client,
       new PutObjectCommand({
         Key: key,
-        Bucket: Resource.SubmissionBucket.name,
+        Bucket: "vimmer-development-submissionbucketbucket-mssednck",
       })
     );
   } catch (error: unknown) {

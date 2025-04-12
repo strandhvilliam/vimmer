@@ -15,6 +15,7 @@ import type {
   ValidationFunction,
   ValidationInput,
   ValidationResult,
+  SeverityLevel,
 } from "./types";
 import { createValidationPipeline, pipe } from "./utils";
 
@@ -46,9 +47,15 @@ function applySeverity<K extends RuleKey>(
 }
 
 export function createRule<K extends RuleKey>(
-  config: RuleConfig<K>
+  key: K,
+  severity: SeverityLevel,
+  params?: RuleParams[K]
 ): RuleConfig<K> {
-  return config;
+  return {
+    key,
+    severity,
+    params: params ?? ({} as RuleParams[K]),
+  };
 }
 
 export function runValidations(

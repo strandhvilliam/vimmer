@@ -36,11 +36,11 @@ function checkSameDevice(input: ValidationInput[]): ValidationResult {
     (identifier): identifier is string => identifier !== null
   );
 
-  if (validIdentifiers.length === 0) {
+  if (validIdentifiers.length !== input.length) {
     return createValidationResult(
       VALIDATION_OUTCOME.SKIPPED,
       RULE_KEYS.SAME_DEVICE,
-      "No device information found"
+      `No device information found for ${input.length - validIdentifiers.length} images`
     );
   }
 
@@ -58,7 +58,7 @@ function checkSameDevice(input: ValidationInput[]): ValidationResult {
     : createValidationResult(
         VALIDATION_OUTCOME.FAILED,
         RULE_KEYS.SAME_DEVICE,
-        "Images were taken with different devices"
+        `Different devices detected: ${validIdentifiers.join(", ")}`
       );
 }
 

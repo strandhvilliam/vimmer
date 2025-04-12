@@ -27,6 +27,7 @@ import { UploadProgress } from "@/components/upload-progress";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { motion } from "framer-motion";
 import { StepNavigationHandlers } from "@/lib/types";
+import { GroupValidationStatus } from "@/components/group-validation-status";
 
 interface Props extends StepNavigationHandlers {
   domain: string;
@@ -45,9 +46,10 @@ export function UploadSubmissionsStep({
     submissionState: { competitionClassId, participantRef, participantId },
   } = useSubmissionQueryState();
 
-  const { photos, removePhoto, validateAndAddPhotos } = usePhotoManagement({
-    topics,
-  });
+  const { photos, groupValidations, removePhoto, validateAndAddPhotos } =
+    usePhotoManagement({
+      topics,
+    });
 
   const [presignedObjects, setPresignedObjects] = useState<PresignedObject[]>(
     []
@@ -252,6 +254,11 @@ export function UploadSubmissionsStep({
                   />
                 </motion.div>
               )
+            )}
+
+            {/* Display group validation results */}
+            {groupValidations.length > 0 && photos.length > 1 && (
+              <GroupValidationStatus results={groupValidations} />
             )}
           </div>
         </CardContent>

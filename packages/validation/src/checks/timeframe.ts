@@ -11,11 +11,15 @@ function checkTimeframe(
   rule: RuleParams["within_timerange"],
   input: ValidationInput
 ): ValidationResult {
-  const { start, end } = rule;
+  const start =
+    typeof rule.start === "string" ? new Date(rule.start) : rule.start;
+  const end = typeof rule.end === "string" ? new Date(rule.end) : rule.end;
   const { DateTimeOriginal, DateTimeDigitized, CreateDate } = input.exif;
   const timestamp = DateTimeOriginal || DateTimeDigitized || CreateDate;
 
-  if (!timestamp || typeof timestamp !== "string") {
+  console.log({ timestamp });
+
+  if (!timestamp) {
     return createValidationResult(
       VALIDATION_OUTCOME.SKIPPED,
       RULE_KEYS.WITHIN_TIMERANGE,
@@ -23,13 +27,22 @@ function checkTimeframe(
     );
   }
 
-  const timestampDate = new Date(timestamp);
+  const timestampDate =
+    typeof timestamp === "string" ? new Date(timestamp) : (timestamp as Date);
+
+  if (isNaN(timestampDate.getTime())) {
+    return createValidationResult(
+      VALIDATION_OUTCOME.FAILED,
+      RULE_KEYS.WITHIN_TIMERANGE,
+      "Invalid timestamp"
+    );
+  }
 
   if (timestampDate < start || timestampDate > end) {
     return createValidationResult(
       VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.WITHIN_TIMERANGE,
-      "Timestamp is out of range of the specified timeframe"
+      `Timestamp is out of range of the specified timeframe: ${timestampDate.toISOString()} (allowed range: ${start.toISOString()} - ${end.toISOString()})`
     );
   }
 

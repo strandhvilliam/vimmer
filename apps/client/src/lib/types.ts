@@ -1,10 +1,17 @@
+import { ValidationOutcome, RuleKey, SeverityLevel } from "@vimmer/validation";
+
 export interface SelectedPhoto {
   file: File;
+  exif: { [key: string]: unknown };
   preview: string;
   topicId: number;
   topicName: string;
+  orderIndex: number;
   isValid?: boolean;
   validationMessage?: string;
+  validationOutcome?: ValidationOutcome;
+  validationSeverity?: SeverityLevel;
+  validationRuleKey?: RuleKey;
 }
 
 export interface PhotoWithPresignedUrl extends SelectedPhoto {
