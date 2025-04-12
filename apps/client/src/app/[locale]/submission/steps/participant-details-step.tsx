@@ -27,10 +27,6 @@ import { useAction } from "next-safe-action/hooks";
 import { useForm } from "react-hook-form";
 import { useRef } from "react";
 import { z } from "zod";
-import {
-  UpdateParticipantDetailsSchema,
-  updateParticipantDetailsSchema,
-} from "@/lib/schemas/update-participant-details-schema";
 
 interface Props extends StepNavigationHandlers {
   marathonId: number;

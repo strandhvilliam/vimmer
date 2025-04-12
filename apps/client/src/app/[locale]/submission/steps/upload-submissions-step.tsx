@@ -21,13 +21,12 @@ import { toast } from "sonner";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useState } from "react";
 import { AlertOctagon, ArrowRight, CloudUpload, Loader2 } from "lucide-react";
-import { SubmissionItem } from "../submission-item";
-import { UploadZone } from "../upload-zone";
-import { UploadProgress } from "../upload-progress";
+import { SubmissionItem } from "@/components/submission-item";
+import { UploadZone } from "@/components/upload-zone";
+import { UploadProgress } from "@/components/upload-progress";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { motion } from "framer-motion";
 import { StepNavigationHandlers } from "@/lib/types";
-import { cn } from "@vimmer/ui/lib/utils";
 
 interface Props extends StepNavigationHandlers {
   domain: string;

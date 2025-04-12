@@ -1,11 +1,11 @@
 "use client";
-import { AnimatedStepWrapper } from "@/components/steps/animated-step-wrapper";
-import { ClassSelectionStep } from "@/components/steps/class-selection-step";
-import { DeviceSelectionStep } from "@/components/steps/device-selection-step";
-import { ParticipantNumberStep } from "@/components/steps/participant-number-step";
-import { ParticipantDetailsStep } from "@/components/steps/participant-details-step";
+import { AnimatedStepWrapper } from "@/components/animated-step-wrapper";
+import { ClassSelectionStep } from "@/app/[locale]/submission/steps/class-selection-step";
+import { DeviceSelectionStep } from "@/app/[locale]/submission/steps/device-selection-step";
+import { ParticipantNumberStep } from "@/app/[locale]/submission/steps/participant-number-step";
+import { ParticipantDetailsStep } from "@/app/[locale]/submission/steps/participant-details-step";
 import { StepNavigator } from "@/components/step-navigator";
-import { UploadSubmissionsStep } from "@/components/steps/upload-submissions-step";
+import { UploadSubmissionsStep } from "@/app/[locale]/submission/steps/upload-submissions-step";
 import { STEPS } from "@/lib/constants";
 import {
   CompetitionClass,
