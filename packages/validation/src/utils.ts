@@ -5,17 +5,18 @@ import type {
   SeverityLevel,
   ValidationFunction,
   ValidationInput,
+  ValidationOutcome,
 } from "./types";
 import type { ValidationResult } from "./types";
 import { z } from "zod";
-import { RULE_KEYS } from "./constants";
+import { RULE_KEYS, VALIDATION_OUTCOME } from "./constants";
 
 export const createValidationResult = (
-  isValid: boolean,
+  outcome: ValidationOutcome,
   ruleKey: RuleKey,
   message: string
 ): ValidationResult => ({
-  isValid,
+  outcome,
   ruleKey,
   message,
   severity: "error",
@@ -30,7 +31,11 @@ export function withErrorHandling<K extends RuleKey>(
       return validationFunction(rule, input);
     } catch (error) {
       return [
-        createValidationResult(false, ruleKey, "Unknown validation error"),
+        createValidationResult(
+          VALIDATION_OUTCOME.FAILED,
+          ruleKey,
+          "Unknown validation error"
+        ),
       ];
     }
   };
@@ -81,7 +86,7 @@ export function withParamValidation<K extends RuleKey>(
     if (!isValid) {
       return [
         createValidationResult(
-          false,
+          VALIDATION_OUTCOME.FAILED,
           ruleKey,
           `Invalid rule configuration: ${errorMessage}`
         ),
@@ -126,7 +131,7 @@ export function withInputValidation<K extends RuleKey>(
     if (!isValid) {
       return [
         createValidationResult(
-          false,
+          VALIDATION_OUTCOME.FAILED,
           ruleKey,
           `Invalid input data: ${errorMessage}`
         ),
@@ -153,6 +158,13 @@ export function createValidationPipeline<K extends RuleKey>(
     (fn) => withParamValidation(ruleKey, fn),
     (fn) => withInputValidation(ruleKey, fn)
   );
+}
+
+export function attachFileName(
+  result: ValidationResult,
+  input: ValidationInput
+): ValidationResult {
+  return { ...result, fileName: input.fileName };
 }
 
 export function createMockInput(overrides = {}): ValidationInput {

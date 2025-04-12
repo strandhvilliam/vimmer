@@ -1,25 +1,25 @@
-import { RULE_KEYS } from "../constants";
+import { RULE_KEYS, VALIDATION_OUTCOME } from "../constants";
 import {
   type RuleParams,
   type ValidationInput,
   type ValidationResult,
   type ValidationFunction,
 } from "../types";
-import { createValidationResult } from "../utils";
+import { attachFileName, createValidationResult } from "../utils";
 
 function checkFileSize(
   rule: RuleParams["max_file_size"],
-  args: ValidationInput
+  input: ValidationInput
 ): ValidationResult {
-  if (args.fileSize > rule.maxBytes) {
+  if (input.fileSize > rule.maxBytes) {
     return createValidationResult(
-      false,
+      VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.MAX_FILE_SIZE,
       "File size is too large"
     );
   }
   return createValidationResult(
-    true,
+    VALIDATION_OUTCOME.PASSED,
     RULE_KEYS.MAX_FILE_SIZE,
     "File size is valid"
   );
@@ -27,7 +27,9 @@ function checkFileSize(
 
 export const validate: ValidationFunction<typeof RULE_KEYS.MAX_FILE_SIZE> = (
   rule,
-  input
+  inputs
 ) => {
-  return input.map((singleInput) => checkFileSize(rule, singleInput));
+  return inputs.map((input) =>
+    attachFileName(checkFileSize(rule, input), input)
+  );
 };

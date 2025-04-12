@@ -34,3 +34,9 @@ export const RULE_KEYS = {
   WITHIN_TIMERANGE: "within_timerange",
   MODIFIED: "modified",
 } as const;
+
+export const VALIDATION_OUTCOME = {
+  PASSED: "passed",
+  FAILED: "failed",
+  SKIPPED: "skipped",
+} as const;

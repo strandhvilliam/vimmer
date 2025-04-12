@@ -1,6 +1,7 @@
 import { test, expect, describe } from "bun:test";
 import { validate as checkFileSize } from "./filesize";
 import { createMockInput } from "../utils";
+import { VALIDATION_OUTCOME } from "../constants";
 
 describe("filesize check", () => {
   test("should validate files under the size limit", () => {
@@ -10,7 +11,7 @@ describe("filesize check", () => {
     const results = checkFileSize(rule, input);
 
     expect(results.length).toBe(1);
-    expect(results[0].isValid).toBe(true);
+    expect(results[0].outcome).toBe(VALIDATION_OUTCOME.PASSED);
   });
 
   test("should fail for files over the size limit", () => {
@@ -20,6 +21,6 @@ describe("filesize check", () => {
     const results = checkFileSize(rule, input);
 
     expect(results.length).toBe(1);
-    expect(results[0].isValid).toBe(false);
+    expect(results[0].outcome).toBe(VALIDATION_OUTCOME.FAILED);
   });
 });

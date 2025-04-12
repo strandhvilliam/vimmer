@@ -1,7 +1,6 @@
-import { RULE_KEYS } from "../constants";
+import { RULE_KEYS, VALIDATION_OUTCOME } from "../constants";
 import type {
   ExifData,
-  RuleParams,
   ValidationFunction,
   ValidationInput,
   ValidationResult,
@@ -25,7 +24,7 @@ function getDeviceIdentifier(exif: ExifData): string | null {
 function checkSameDevice(input: ValidationInput[]): ValidationResult {
   if (!input || input.length <= 1) {
     return createValidationResult(
-      true,
+      VALIDATION_OUTCOME.SKIPPED,
       RULE_KEYS.SAME_DEVICE,
       "Not enough images to compare devices"
     );
@@ -39,7 +38,7 @@ function checkSameDevice(input: ValidationInput[]): ValidationResult {
 
   if (validIdentifiers.length === 0) {
     return createValidationResult(
-      true,
+      VALIDATION_OUTCOME.SKIPPED,
       RULE_KEYS.SAME_DEVICE,
       "No device information found"
     );
@@ -52,12 +51,12 @@ function checkSameDevice(input: ValidationInput[]): ValidationResult {
 
   return allSameDevice
     ? createValidationResult(
-        true,
+        VALIDATION_OUTCOME.PASSED,
         RULE_KEYS.SAME_DEVICE,
         "All images were taken with the same device"
       )
     : createValidationResult(
-        false,
+        VALIDATION_OUTCOME.FAILED,
         RULE_KEYS.SAME_DEVICE,
         "Images were taken with different devices"
       );

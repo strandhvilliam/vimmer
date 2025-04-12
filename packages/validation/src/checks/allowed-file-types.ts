@@ -1,11 +1,15 @@
-import { RULE_KEYS, IMAGE_EXTENSION_TO_MIME_TYPE } from "../constants";
+import {
+  RULE_KEYS,
+  IMAGE_EXTENSION_TO_MIME_TYPE,
+  VALIDATION_OUTCOME,
+} from "../constants";
 import type {
   RuleParams,
   ValidationFunction,
   ValidationInput,
   ValidationResult,
 } from "../types";
-import { createValidationResult } from "../utils";
+import { attachFileName, createValidationResult } from "../utils";
 
 function getExtensionFromFilename(
   filename: string
@@ -23,7 +27,7 @@ function checkIfValidExtension(
 
   if (!extension) {
     return createValidationResult(
-      false,
+      VALIDATION_OUTCOME.SKIPPED,
       RULE_KEYS.ALLOWED_FILE_TYPES,
       "Unable to determine file extension"
     );
@@ -31,14 +35,14 @@ function checkIfValidExtension(
 
   if (!rule.allowedFileTypes.includes(extension)) {
     return createValidationResult(
-      false,
+      VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.ALLOWED_FILE_TYPES,
       "Invalid file extension"
     );
   }
 
   return createValidationResult(
-    true,
+    VALIDATION_OUTCOME.PASSED,
     RULE_KEYS.ALLOWED_FILE_TYPES,
     "Valid file extension"
   );
@@ -54,7 +58,7 @@ function checkIfValidMimeType(
 
   if (filteredMimeTypes.length === 0) {
     return createValidationResult(
-      false,
+      VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.ALLOWED_FILE_TYPES,
       "Invalid mime type"
     );
@@ -66,14 +70,14 @@ function checkIfValidMimeType(
 
   if (!isValidMimeType) {
     return createValidationResult(
-      false,
+      VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.ALLOWED_FILE_TYPES,
       "Invalid file mime type"
     );
   }
 
   return createValidationResult(
-    true,
+    VALIDATION_OUTCOME.PASSED,
     RULE_KEYS.ALLOWED_FILE_TYPES,
     "Valid mime type"
   );
@@ -81,9 +85,9 @@ function checkIfValidMimeType(
 
 export const validate: ValidationFunction<
   typeof RULE_KEYS.ALLOWED_FILE_TYPES
-> = (rule, input) => {
-  return input.flatMap((singleInput) => [
-    checkIfValidExtension(rule, singleInput),
-    checkIfValidMimeType(rule, singleInput),
+> = (rule, inputs) => {
+  return inputs.flatMap((input) => [
+    attachFileName(checkIfValidExtension(rule, input), input),
+    attachFileName(checkIfValidMimeType(rule, input), input),
   ]);
 };

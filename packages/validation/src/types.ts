@@ -1,5 +1,7 @@
-import type { RULE_KEYS } from "./constants";
+import type { RULE_KEYS, VALIDATION_OUTCOME } from "./constants";
 
+export type ValidationOutcome =
+  (typeof VALIDATION_OUTCOME)[keyof typeof VALIDATION_OUTCOME];
 export type RuleKey = (typeof RULE_KEYS)[keyof typeof RULE_KEYS];
 
 export interface ExifData {
@@ -7,10 +9,10 @@ export interface ExifData {
 }
 
 export interface ValidationResult {
-  isValid: boolean;
+  outcome: ValidationOutcome;
   ruleKey: RuleKey;
   message: string;
-  filename?: string;
+  fileName?: string;
   severity: SeverityLevel;
 }
 

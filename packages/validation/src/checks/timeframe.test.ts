@@ -1,6 +1,7 @@
 import { test, expect, describe } from "bun:test";
 import { validate as checkTimeframe } from "./timeframe";
 import { createMockInput } from "../utils";
+import { VALIDATION_OUTCOME } from "../constants";
 
 describe("timeframe check", () => {
   test("should validate images within timeframe", () => {
@@ -20,7 +21,7 @@ describe("timeframe check", () => {
     const results = checkTimeframe(rule, input);
 
     expect(results.length).toBe(1);
-    expect(results[0].isValid).toBe(true);
+    expect(results[0].outcome).toBe(VALIDATION_OUTCOME.PASSED);
   });
 
   test("should detect images outside timeframe", () => {
@@ -40,6 +41,6 @@ describe("timeframe check", () => {
     const results = checkTimeframe(rule, input);
 
     expect(results.length).toBe(1);
-    expect(results[0].isValid).toBe(false);
+    expect(results[0].outcome).toBe(VALIDATION_OUTCOME.FAILED);
   });
 });

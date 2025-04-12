@@ -1,6 +1,6 @@
 import { test, expect, describe } from "bun:test";
 import { runValidations } from "./validator";
-import { RULE_KEYS } from "./constants";
+import { RULE_KEYS, VALIDATION_OUTCOME } from "./constants";
 import type { RuleConfig } from "./types";
 import { createMockInput } from "./utils";
 
@@ -41,7 +41,9 @@ describe("Validator integration tests", () => {
     const results = runValidations(rules, inputs);
 
     // Check that all validation results are valid
-    expect(results.every((result) => result.isValid)).toBe(true);
+    expect(
+      results.every((result) => result.outcome === VALIDATION_OUTCOME.PASSED)
+    ).toBe(true);
   });
 
   test("should detect validation errors for invalid inputs", () => {
@@ -84,21 +86,29 @@ describe("Validator integration tests", () => {
     const results = runValidations(rules, inputs);
 
     // Should have at least one invalid result
-    expect(results.some((result) => !result.isValid)).toBe(true);
+    expect(
+      results.some((result) => result.outcome === VALIDATION_OUTCOME.FAILED)
+    ).toBe(true);
 
     // Check specific validation errors
     const fileTypeErrors = results.filter(
-      (r) => r.ruleKey === RULE_KEYS.ALLOWED_FILE_TYPES && !r.isValid
+      (r) =>
+        r.ruleKey === RULE_KEYS.ALLOWED_FILE_TYPES &&
+        r.outcome === VALIDATION_OUTCOME.FAILED
     );
     expect(fileTypeErrors.length).toBeGreaterThan(0);
 
     const fileSizeErrors = results.filter(
-      (r) => r.ruleKey === RULE_KEYS.MAX_FILE_SIZE && !r.isValid
+      (r) =>
+        r.ruleKey === RULE_KEYS.MAX_FILE_SIZE &&
+        r.outcome === VALIDATION_OUTCOME.FAILED
     );
     expect(fileSizeErrors.length).toBeGreaterThan(0);
 
     const deviceErrors = results.filter(
-      (r) => r.ruleKey === RULE_KEYS.SAME_DEVICE && !r.isValid
+      (r) =>
+        r.ruleKey === RULE_KEYS.SAME_DEVICE &&
+        r.outcome === VALIDATION_OUTCOME.FAILED
     );
     expect(deviceErrors.length).toBeGreaterThan(0);
   });
@@ -138,7 +148,9 @@ describe("Validator integration tests", () => {
 
     // Should have timestamp ordering errors
     const orderingErrors = results.filter(
-      (r) => r.ruleKey === RULE_KEYS.STRICT_TIMESTAMP_ORDERING && !r.isValid
+      (r) =>
+        r.ruleKey === RULE_KEYS.STRICT_TIMESTAMP_ORDERING &&
+        r.outcome === VALIDATION_OUTCOME.FAILED
     );
     expect(orderingErrors.length).toBeGreaterThan(0);
 
@@ -146,6 +158,8 @@ describe("Validator integration tests", () => {
     const fileTypeResults = results.filter(
       (r) => r.ruleKey === RULE_KEYS.ALLOWED_FILE_TYPES
     );
-    expect(fileTypeResults.every((r) => r.isValid)).toBe(true);
+    expect(
+      fileTypeResults.every((r) => r.outcome === VALIDATION_OUTCOME.PASSED)
+    ).toBe(true);
   });
 });

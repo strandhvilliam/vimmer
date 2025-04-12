@@ -3,6 +3,7 @@
   "module": "index.ts",
   "type": "module",
   "exports": {
+    ".": "./src/index.ts",
     "./client": "./src/client-validator.ts",
     "./server": "./src/server-validator.ts",
     "./errors": "./src/errors.ts"

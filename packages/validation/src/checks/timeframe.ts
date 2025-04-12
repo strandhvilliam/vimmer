@@ -1,11 +1,11 @@
-import { RULE_KEYS } from "../constants";
+import { RULE_KEYS, VALIDATION_OUTCOME } from "../constants";
 import type {
   RuleParams,
   ValidationFunction,
   ValidationInput,
   ValidationResult,
 } from "../types";
-import { createValidationResult } from "../utils";
+import { attachFileName, createValidationResult } from "../utils";
 
 function checkTimeframe(
   rule: RuleParams["within_timerange"],
@@ -17,7 +17,7 @@ function checkTimeframe(
 
   if (!timestamp || typeof timestamp !== "string") {
     return createValidationResult(
-      false,
+      VALIDATION_OUTCOME.SKIPPED,
       RULE_KEYS.WITHIN_TIMERANGE,
       "Unable to determine timestamp"
     );
@@ -27,14 +27,14 @@ function checkTimeframe(
 
   if (timestampDate < start || timestampDate > end) {
     return createValidationResult(
-      false,
+      VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.WITHIN_TIMERANGE,
       "Timestamp is out of range of the specified timeframe"
     );
   }
 
   return createValidationResult(
-    true,
+    VALIDATION_OUTCOME.PASSED,
     RULE_KEYS.WITHIN_TIMERANGE,
     "Timestamp is within range of the specified timeframe"
   );
@@ -42,7 +42,9 @@ function checkTimeframe(
 
 export const validate: ValidationFunction<typeof RULE_KEYS.WITHIN_TIMERANGE> = (
   rule,
-  input
+  inputs
 ) => {
-  return input.map((singleInput) => checkTimeframe(rule, singleInput));
+  return inputs.map((input) =>
+    attachFileName(checkTimeframe(rule, input), input)
+  );
 };

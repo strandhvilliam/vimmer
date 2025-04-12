@@ -1,4 +1,4 @@
-import { RULE_KEYS } from "../constants";
+import { RULE_KEYS, VALIDATION_OUTCOME } from "../constants";
 import type {
   ExifData,
   RuleParams,
@@ -25,7 +25,7 @@ function checkStrictTimestampOrdering(
 ): ValidationResult {
   if (!input || input.length <= 1) {
     return createValidationResult(
-      true,
+      VALIDATION_OUTCOME.SKIPPED,
       RULE_KEYS.STRICT_TIMESTAMP_ORDERING,
       "Not enough images to validate timestamp ordering"
     );
@@ -43,7 +43,7 @@ function checkStrictTimestampOrdering(
 
   if (timestampEntries.length < 2) {
     return createValidationResult(
-      true,
+      VALIDATION_OUTCOME.SKIPPED,
       RULE_KEYS.STRICT_TIMESTAMP_ORDERING,
       "Not enough images with valid timestamps to validate ordering"
     );
@@ -62,12 +62,12 @@ function checkStrictTimestampOrdering(
 
   return isOrderCorrect
     ? createValidationResult(
-        true,
+        VALIDATION_OUTCOME.PASSED,
         RULE_KEYS.STRICT_TIMESTAMP_ORDERING,
         "Image order matches chronological timestamp order"
       )
     : createValidationResult(
-        false,
+        VALIDATION_OUTCOME.FAILED,
         RULE_KEYS.STRICT_TIMESTAMP_ORDERING,
         "Image order does not match chronological timestamp order"
       );

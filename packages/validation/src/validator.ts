@@ -45,6 +45,12 @@ function applySeverity<K extends RuleKey>(
   };
 }
 
+export function createRule<K extends RuleKey>(
+  config: RuleConfig<K>
+): RuleConfig<K> {
+  return config;
+}
+
 export function runValidations(
   rules: RuleConfig<RuleKey>[],
   input: ValidationInput[]

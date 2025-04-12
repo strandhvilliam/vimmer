@@ -1,6 +1,7 @@
 import { test, expect, describe } from "bun:test";
 import { validate as checkAllowedFileTypes } from "./allowed-file-types";
 import { createMockInput } from "../utils";
+import { VALIDATION_OUTCOME } from "../constants";
 
 describe("allowed-file-types check", () => {
   test("should validate allowed file extensions", () => {
@@ -10,7 +11,9 @@ describe("allowed-file-types check", () => {
     const results = checkAllowedFileTypes(rule, input);
 
     expect(results.length).toBe(2); // Extension check and MIME type check
-    expect(results.every((result) => result.isValid)).toBe(true);
+    expect(
+      results.every((result) => result.outcome === VALIDATION_OUTCOME.PASSED)
+    ).toBe(true);
   });
 
   test("should fail on disallowed file extensions", () => {
@@ -19,7 +22,9 @@ describe("allowed-file-types check", () => {
 
     const results = checkAllowedFileTypes(rule, input);
 
-    expect(results.some((result) => !result.isValid)).toBe(true);
+    expect(
+      results.some((result) => result.outcome === VALIDATION_OUTCOME.FAILED)
+    ).toBe(true);
   });
 
   test("should fail on disallowed mime types", () => {
@@ -28,6 +33,8 @@ describe("allowed-file-types check", () => {
 
     const results = checkAllowedFileTypes(rule, input);
 
-    expect(results.some((result) => !result.isValid)).toBe(true);
+    expect(
+      results.some((result) => result.outcome === VALIDATION_OUTCOME.FAILED)
+    ).toBe(true);
   });
 });

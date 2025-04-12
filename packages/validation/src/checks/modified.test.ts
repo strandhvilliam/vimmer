@@ -1,6 +1,6 @@
 import { test, expect, describe } from "bun:test";
 import { validate as checkModified } from "./modified";
-import { RULE_KEYS } from "../constants";
+import { RULE_KEYS, VALIDATION_OUTCOME } from "../constants";
 import { createMockInput } from "../utils";
 
 describe("modified check", () => {
@@ -10,7 +10,9 @@ describe("modified check", () => {
 
     const results = checkModified(rule, input);
 
-    expect(results.every((result) => result.isValid)).toBe(true);
+    expect(
+      results.every((result) => result.outcome === VALIDATION_OUTCOME.PASSED)
+    ).toBe(true);
   });
 
   test("should detect image editing software", () => {
@@ -26,7 +28,9 @@ describe("modified check", () => {
 
     const results = checkModified(rule, input);
 
-    expect(results.some((result) => !result.isValid)).toBe(true);
+    expect(
+      results.some((result) => result.outcome === VALIDATION_OUTCOME.FAILED)
+    ).toBe(true);
   });
 
   test("should detect timestamp inconsistencies", () => {
@@ -43,6 +47,8 @@ describe("modified check", () => {
 
     const results = checkModified(rule, input);
 
-    expect(results.some((result) => !result.isValid)).toBe(true);
+    expect(
+      results.some((result) => result.outcome === VALIDATION_OUTCOME.FAILED)
+    ).toBe(true);
   });
 });

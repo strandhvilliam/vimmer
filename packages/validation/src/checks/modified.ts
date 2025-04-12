@@ -1,17 +1,21 @@
-import { EDITING_SOFTWARE_KEYWORDS, RULE_KEYS } from "../constants";
+import {
+  EDITING_SOFTWARE_KEYWORDS,
+  RULE_KEYS,
+  VALIDATION_OUTCOME,
+} from "../constants";
 import type {
   ValidationInput,
   ValidationResult,
   ValidationFunction,
 } from "../types";
-import { createValidationResult } from "../utils";
+import { attachFileName, createValidationResult } from "../utils";
 
 function checkSoftware(input: ValidationInput): ValidationResult {
   const software = input.exif[RULE_KEYS.MODIFIED] as string | undefined;
 
   if (!software || software === "") {
     return createValidationResult(
-      true,
+      VALIDATION_OUTCOME.SKIPPED,
       RULE_KEYS.MODIFIED,
       "No software used to edit the image"
     );
@@ -23,12 +27,12 @@ function checkSoftware(input: ValidationInput): ValidationResult {
 
   return hasEditingSoftwareKeyword
     ? createValidationResult(
-        false,
+        VALIDATION_OUTCOME.FAILED,
         RULE_KEYS.MODIFIED,
         `Image was edited using photo editing software: ${software}`
       )
     : createValidationResult(
-        true,
+        VALIDATION_OUTCOME.PASSED,
         RULE_KEYS.MODIFIED,
         "No software used to edit the image"
       );
@@ -45,7 +49,7 @@ function checkDateInconsistencies(input: ValidationInput): ValidationResult {
     typeof modifyDate !== "string"
   ) {
     return createValidationResult(
-      true,
+      VALIDATION_OUTCOME.SKIPPED,
       RULE_KEYS.MODIFIED,
       "No timestamps found"
     );
@@ -60,12 +64,12 @@ function checkDateInconsistencies(input: ValidationInput): ValidationResult {
 
   return isEdited
     ? createValidationResult(
-        false,
+        VALIDATION_OUTCOME.FAILED,
         RULE_KEYS.MODIFIED,
         "Image was likely edited"
       )
     : createValidationResult(
-        true,
+        VALIDATION_OUTCOME.PASSED,
         RULE_KEYS.MODIFIED,
         "No timestamp inconsistencies for editing found"
       );
@@ -73,10 +77,10 @@ function checkDateInconsistencies(input: ValidationInput): ValidationResult {
 
 export const validate: ValidationFunction<typeof RULE_KEYS.MODIFIED> = (
   _,
-  input
+  inputs
 ) => {
-  return input.flatMap((singleInput) => [
-    checkSoftware(singleInput),
-    checkDateInconsistencies(singleInput),
+  return inputs.flatMap((input) => [
+    attachFileName(checkSoftware(input), input),
+    attachFileName(checkDateInconsistencies(input), input),
   ]);
 };
