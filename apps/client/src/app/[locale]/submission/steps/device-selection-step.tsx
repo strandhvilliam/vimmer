@@ -1,6 +1,6 @@
 "use client";
 
-import { readyParticipant } from "@/lib/actions/ready-participant";
+import { readyParticipant } from "@/actions/ready-participant";
 import { StepNavigationHandlers } from "@/lib/types";
 import { DeviceGroup } from "@vimmer/supabase/types";
 import { Button } from "@vimmer/ui/components/button";

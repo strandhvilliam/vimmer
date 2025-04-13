@@ -1,5 +1,5 @@
 "use server";
-import { initializeParticipantSchema } from "@/lib/schemas/initialize-participant-schema";
+import { initializeParticipantSchema } from "@/schemas/initialize-participant-schema";
 import { createParticipant } from "@vimmer/supabase/mutations";
 import { getParticipantByReference } from "@vimmer/supabase/cached-queries";
 import { createClient } from "@vimmer/supabase/server";

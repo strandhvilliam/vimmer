@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { SelectedPhotoV2 } from "../types";
+import { SelectedPhotoV2 } from "../lib/types";
 import {
   RuleConfig,
   RuleKey,

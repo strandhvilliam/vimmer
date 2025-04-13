@@ -1,5 +1,5 @@
 "use client";
-import { updateParticipantDetails } from "@/lib/actions/update-participant-details";
+import { updateParticipantDetails } from "@/actions/update-participant-details";
 import { useSubmissionQueryState } from "@/lib/hooks/use-submission-query-state";
 import { StepNavigationHandlers } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";

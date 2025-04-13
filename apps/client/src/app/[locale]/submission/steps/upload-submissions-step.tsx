@@ -25,7 +25,7 @@ import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { motion } from "framer-motion";
 import { SelectedPhotoV2, StepNavigationHandlers } from "@/lib/types";
 import { GroupValidationStatus } from "@/components/group-validation-status";
-import { usePhotoStore } from "@/lib/stores/photo-store";
+import { usePhotoStore } from "@/stores/photo-store";
 import {
   runValidations,
   SEVERITY_LEVELS,

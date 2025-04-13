@@ -3,7 +3,7 @@ import { type SearchParams } from "nuqs/server";
 import {
   loadSubmissionQueryServerParams,
   submissionQueryServerParamSerializer,
-} from "@/lib/schemas/submission-query-server-schema";
+} from "@/schemas/submission-query-server-schema";
 import { ClientVerificationPage } from "./client-page";
 import { getParticipantByReference } from "@vimmer/supabase/cached-queries";
 import { notFound, redirect } from "next/navigation";

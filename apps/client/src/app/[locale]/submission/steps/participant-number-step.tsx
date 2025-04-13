@@ -26,13 +26,13 @@ import { ArrowRight, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRef } from "react";
-import { initializeParticipant } from "@/lib/actions/initialize-participant";
+import { initializeParticipant } from "@/actions/initialize-participant";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
 import {
   InitializeParticipantSchema,
   initializeParticipantSchema,
-} from "@/lib/schemas/initialize-participant-schema";
+} from "@/schemas/initialize-participant-schema";
 import { Button } from "@vimmer/ui/components/button";
 
 interface Props extends StepNavigationHandlers {
