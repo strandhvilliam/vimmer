@@ -17,13 +17,9 @@ import {
 } from "@vimmer/supabase/cached-queries";
 import { getManySubmissionsByKeysQuery } from "@vimmer/supabase/queries";
 
-export interface PresignedObject {
-  presignedUrl: string;
-  key: string;
-  orderIndex: number;
-  topicId: number;
-  submissionId?: number;
-}
+/**
+ * @deprecated Use the /api/submissions endpoint with SWR instead
+ */
 
 export const initializeSubmission = actionClient
   .schema(initializeSubmissionsSchema)

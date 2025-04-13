@@ -35,7 +35,6 @@ export const usePhotoManagement = ({ topics }: { topics: Topic[] }) => {
       }));
     });
 
-    // Re-validate when a photo is removed
     if (photos.length > 1) {
       validateExistingPhotos(photos.filter((p) => p.topicId !== topicId));
     } else {
@@ -71,7 +70,6 @@ export const usePhotoManagement = ({ topics }: { topics: Topic[] }) => {
 
     const validationResults = runValidations(ruleConfigs, validationInputs);
 
-    // Split validations into individual file validations and group validations
     const individualValidations = validationResults.filter(
       (result) => !!result.fileName
     );
@@ -88,9 +86,7 @@ export const usePhotoManagement = ({ topics }: { topics: Topic[] }) => {
 
       if (results.length === 0) return photo;
 
-      // Sort validation results by priority: FAILED > SKIPPED > PASSED and ERROR > WARNING
       results.sort((a, b) => {
-        // First prioritize by outcome
         if (a.outcome !== b.outcome) {
           if (a.outcome === VALIDATION_OUTCOME.FAILED) return -1;
           if (b.outcome === VALIDATION_OUTCOME.FAILED) return 1;
@@ -98,7 +94,6 @@ export const usePhotoManagement = ({ topics }: { topics: Topic[] }) => {
           if (b.outcome === VALIDATION_OUTCOME.SKIPPED) return 1;
         }
 
-        // Then by severity
         if (a.severity !== b.severity) {
           if (a.severity === "error") return -1;
           if (b.severity === "error") return 1;
@@ -107,12 +102,10 @@ export const usePhotoManagement = ({ topics }: { topics: Topic[] }) => {
         return 0;
       });
 
-      // Use the highest priority validation result
       const highestPriorityResult = results[0]!;
 
       return {
         ...photo,
-        isValid: highestPriorityResult.outcome === VALIDATION_OUTCOME.PASSED,
         validationMessage: highestPriorityResult.message,
         validationOutcome: highestPriorityResult.outcome,
         validationSeverity: highestPriorityResult.severity,

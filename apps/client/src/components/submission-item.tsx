@@ -1,19 +1,27 @@
-import { SelectedPhoto } from "@/lib/types";
+import { SelectedPhotoV2 } from "@/lib/types";
 import { ChevronDown, ChevronUp, ImageIcon, Info, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { ValidationStatusBadge } from "./validation-status-badge";
-import { VALIDATION_OUTCOME } from "@vimmer/validation";
+import { VALIDATION_OUTCOME, ValidationResult } from "@vimmer/validation";
 import { useState } from "react";
 import { Button } from "@vimmer/ui/components/button";
+import { Topic } from "@vimmer/supabase/types";
 
 interface Props {
-  photo?: SelectedPhoto;
-  topic?: { id: number; name: string };
+  photo?: SelectedPhotoV2;
+  validationResults?: ValidationResult[];
+  topic?: Topic;
   index: number;
   onRemove?: () => void;
 }
 
-export function SubmissionItem({ photo, topic, index, onRemove }: Props) {
+export function SubmissionItem({
+  photo,
+  validationResults,
+  topic,
+  index,
+  onRemove,
+}: Props) {
   const [expanded, setExpanded] = useState(false);
 
   if (!photo) {
@@ -44,10 +52,10 @@ export function SubmissionItem({ photo, topic, index, onRemove }: Props) {
         <div className="flex-1 space-y-2">
           <div className="space-y-1">
             <p className="text-base text-muted-foreground"># {index + 1}</p>
-            <p className="font-medium">{photo.topicName}</p>
+            <p className="font-medium">{topic?.name}</p>
           </div>
 
-          {photo.validationOutcome && (
+          {validationResults && (
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
                 <ValidationStatusBadge

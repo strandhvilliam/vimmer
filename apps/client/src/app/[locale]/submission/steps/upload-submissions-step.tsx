@@ -1,13 +1,11 @@
 "use client";
 
-import {
-  initializeSubmission,
-  PresignedObject,
-} from "@/lib/actions/initialize-submission";
 import { usePhotoManagement } from "@/lib/hooks/use-photo-management";
 import { useSubmissionQueryState } from "@/lib/hooks/use-submission-query-state";
 import { useUploadManagement } from "@/lib/hooks/use-upload-management";
+import { usePresignedSubmissions } from "@/lib/hooks/use-presigned-submissions";
 import { CompetitionClass, Topic } from "@vimmer/supabase/types";
+import exifr from "exifr";
 import { Button } from "@vimmer/ui/components/button";
 import {
   Card,
@@ -18,22 +16,45 @@ import {
   CardDescription,
 } from "@vimmer/ui/components/card";
 import { toast } from "sonner";
-import { useAction } from "next-safe-action/hooks";
-import { useEffect, useState } from "react";
-import { AlertOctagon, ArrowRight, CloudUpload, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { AlertOctagon, CloudUpload, Loader2 } from "lucide-react";
 import { SubmissionItem } from "@/components/submission-item";
 import { UploadZone } from "@/components/upload-zone";
 import { UploadProgress } from "@/components/upload-progress";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { motion } from "framer-motion";
-import { StepNavigationHandlers } from "@/lib/types";
+import { SelectedPhotoV2, StepNavigationHandlers } from "@/lib/types";
 import { GroupValidationStatus } from "@/components/group-validation-status";
+import { usePhotoStore } from "@/lib/stores/photo-store";
+import {
+  runValidations,
+  SEVERITY_LEVELS,
+  ValidationInput,
+} from "@vimmer/validation";
+import { RuleKey } from "@vimmer/validation";
+import { createRule } from "@vimmer/validation";
+import { RULE_KEYS } from "@vimmer/validation";
+import { RuleConfig } from "@vimmer/validation";
+import { SubmissionsList } from "@/components/submission-list";
 
 interface Props extends StepNavigationHandlers {
   domain: string;
   competitionClasses: CompetitionClass[];
   topics: Topic[];
 }
+
+const ruleConfigs: RuleConfig<RuleKey>[] = [
+  createRule(RULE_KEYS.ALLOWED_FILE_TYPES, SEVERITY_LEVELS.ERROR, {
+    allowedFileTypes: ["jpg", "jpeg"],
+  }),
+  createRule(RULE_KEYS.SAME_DEVICE, SEVERITY_LEVELS.ERROR),
+  createRule(RULE_KEYS.MODIFIED, SEVERITY_LEVELS.WARNING),
+  createRule(RULE_KEYS.WITHIN_TIMERANGE, SEVERITY_LEVELS.ERROR, {
+    start: new Date("2023-01-01"),
+    end: new Date("2026-01-01"),
+  }),
+  createRule(RULE_KEYS.SAME_DEVICE, SEVERITY_LEVELS.ERROR),
+];
 
 export function UploadSubmissionsStep({
   domain,
@@ -43,64 +64,81 @@ export function UploadSubmissionsStep({
   competitionClasses,
 }: Props) {
   const {
-    submissionState: { competitionClassId, participantRef, participantId },
+    submissionState: { competitionClassId },
   } = useSubmissionQueryState();
 
-  const { photos, groupValidations, removePhoto, validateAndAddPhotos } =
-    usePhotoManagement({
-      topics,
-    });
+  const {
+    validationResults,
+    photos,
+    removePhoto,
+    addValidationResults,
+    addPhotos,
+  } = usePhotoStore();
 
-  const [presignedObjects, setPresignedObjects] = useState<PresignedObject[]>(
-    []
-  );
+  // const { groupValidations, validateAndAddPhotos } = usePhotoManagement({
+  //   topics,
+  // });
+
   const [error, setError] = useState<string | null>(null);
-  const { isUploading, setIsUploading, handleUpload, combinedPhotos } =
-    useUploadManagement({
-      photos,
-      presignedObjects,
-    });
 
-  const { execute: initializeSubmissionAction, isPending: isInitializing } =
-    useAction(initializeSubmission, {
-      onSuccess: (response) => {
-        if (!response.data) {
-          setError("An unexpected error occurred");
-          return;
-        }
-        setError(null);
-        setPresignedObjects(response.data);
-      },
-      onError: ({ error }) => {
-        setError(error.serverError ?? "An unexpected error occurred");
-      },
-    });
-
-  useEffect(() => {
-    if (!competitionClassId || !participantRef || !participantId) return;
-
-    initializeSubmissionAction({
-      domain,
-      competitionClassId,
-      participantRef,
-      participantId,
-    });
-  }, [
-    competitionClassId,
-    participantRef,
-    participantId,
-    initializeSubmissionAction,
-    domain,
-  ]);
+  const {
+    presignedObjects,
+    isUploading,
+    setIsUploading,
+    handleUpload,
+    combinedPhotos,
+  } = useUploadManagement({
+    photos,
+  });
 
   const competitionClass = competitionClasses.find(
     (cc) => cc.id === competitionClassId
   );
 
+  const validateAndAddPhotos = async (files: File[]) => {
+    const currentLength = photos.length;
+    const maxPhotos = competitionClass?.numberOfPhotos;
+    if (!currentLength || !maxPhotos) return;
+
+    const remainingSlots = maxPhotos - currentLength;
+    const sortedTopics = topics.sort((a, b) => a.orderIndex - b.orderIndex);
+
+    const newPhotos = await Promise.all(
+      files.slice(0, remainingSlots).map(async (file, index) => {
+        const topic = sortedTopics[currentLength + index];
+        if (!topic) return null;
+
+        const exif = await exifr.parse(file);
+        return {
+          file,
+          exif: exif as { [key: string]: unknown },
+          preview: URL.createObjectURL(file),
+          orderIndex: topic.orderIndex,
+        };
+      })
+    );
+
+    const validPhotos = newPhotos.filter((photo) => photo !== null);
+
+    const validationInputs = [...photos, ...validPhotos].map((photo) => ({
+      exif: photo.exif,
+      fileName: photo.file.name,
+      fileSize: photo.file.size,
+      orderIndex: photo.orderIndex,
+      mimeType: photo.file.type,
+    }));
+
+    const validationResults = runValidations(ruleConfigs, validationInputs);
+
+    addPhotos(validPhotos);
+    addValidationResults(validationResults);
+  };
+
   const allPhotosSelected =
     photos.length === competitionClass?.numberOfPhotos &&
     photos.length > 0 &&
-    !isInitializing;
+    presignedObjects &&
+    presignedObjects.length > 0;
 
   const handleCompleteUpload = () => {
     setIsUploading(false);
@@ -125,7 +163,7 @@ export function UploadSubmissionsStep({
               <AlertOctagon className="h-24 w-24 text-destructive" />
             </motion.div>
             <p className="text-lg text-center text-muted-foreground max-w-md">
-              {error ?? "An unexpected error occurred"}
+              {error || "An unexpected error occurred"}
             </p>
             <p className="text-sm text-center text-muted-foreground">
               Please contact a crew member for assistance
@@ -179,7 +217,7 @@ export function UploadSubmissionsStep({
                   </p>
                   <PrimaryButton
                     onClick={handleUpload}
-                    disabled={isInitializing}
+                    disabled={!presignedObjects}
                     className="w-full py-3 text-base rounded-full"
                   >
                     Upload Now
@@ -194,14 +232,10 @@ export function UploadSubmissionsStep({
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
             >
-              {presignedObjects.length > 0 ? (
+              {presignedObjects && presignedObjects.length > 0 ? (
                 <UploadZone
                   onDrop={(acceptedFiles) =>
-                    validateAndAddPhotos(
-                      acceptedFiles,
-                      photos.length,
-                      competitionClass.numberOfPhotos
-                    )
+                    validateAndAddPhotos(acceptedFiles)
                   }
                   isDisabled={photos.length >= competitionClass.numberOfPhotos}
                   currentCount={photos.length}
@@ -221,46 +255,10 @@ export function UploadSubmissionsStep({
               )}
             </motion.div>
           )}
-
-          <div className="flex flex-col space-y-2">
-            {photos.map((photo, index) => (
-              <motion.div
-                key={photo.topicId}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: index * 0.1 }}
-              >
-                <SubmissionItem
-                  photo={photo}
-                  index={index}
-                  onRemove={() => removePhoto(photo.topicId)}
-                />
-              </motion.div>
-            ))}
-            {[...Array(competitionClass.numberOfPhotos - photos.length)].map(
-              (_, index) => (
-                <motion.div
-                  key={`empty-${index}`}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.2,
-                    delay: (photos.length + index) * 0.1,
-                  }}
-                >
-                  <SubmissionItem
-                    topic={topics[photos.length + index]}
-                    index={photos.length + index}
-                  />
-                </motion.div>
-              )
-            )}
-
-            {/* Display group validation results */}
-            {groupValidations.length > 0 && photos.length > 1 && (
-              <GroupValidationStatus results={groupValidations} />
-            )}
-          </div>
+          <SubmissionsList
+            topics={topics}
+            competitionClass={competitionClass}
+          />
         </CardContent>
 
         <CardFooter className="flex flex-col gap-3 items-center justify-center">

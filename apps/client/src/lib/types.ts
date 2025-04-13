@@ -1,5 +1,20 @@
 import { ValidationOutcome, RuleKey, SeverityLevel } from "@vimmer/validation";
 
+export interface PresignedSubmission {
+  presignedUrl: string;
+  key: string;
+  orderIndex: number;
+  topicId: number;
+  submissionId: number;
+}
+
+export interface SelectedPhotoV2 {
+  file: File;
+  exif: { [key: string]: unknown };
+  preview: string;
+  orderIndex: number;
+}
+
 export interface SelectedPhoto {
   file: File;
   exif: { [key: string]: unknown };
@@ -7,7 +22,6 @@ export interface SelectedPhoto {
   topicId: number;
   topicName: string;
   orderIndex: number;
-  isValid?: boolean;
   validationMessage?: string;
   validationOutcome?: ValidationOutcome;
   validationSeverity?: SeverityLevel;

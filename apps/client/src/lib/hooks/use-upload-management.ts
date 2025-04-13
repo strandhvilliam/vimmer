@@ -1,20 +1,19 @@
 import { useState } from "react";
-import { PresignedObject } from "../actions/initialize-submission";
+import { PresignedSubmission } from "../types";
 import { PhotoWithPresignedUrl, SelectedPhoto } from "../types";
 import { toast } from "sonner";
+import { usePresignedSubmissions } from "./use-presigned-submissions";
 
 export const useUploadManagement = ({
   photos,
-  presignedObjects,
 }: {
   photos: SelectedPhoto[];
-  presignedObjects: PresignedObject[];
 }) => {
   const [isUploading, setIsUploading] = useState(false);
-  console.log({ photos, presignedObjects });
+  const { data: presignedObjects } = usePresignedSubmissions();
 
   const combinedPhotos = photos.reduce((acc, photo) => {
-    const matchingPresigned = presignedObjects.find(
+    const matchingPresigned = presignedObjects?.find(
       (obj) => obj.topicId === photo.topicId
     );
 
@@ -63,5 +62,6 @@ export const useUploadManagement = ({
     setIsUploading,
     handleUpload,
     combinedPhotos,
+    presignedObjects,
   };
 };
