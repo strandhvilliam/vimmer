@@ -6,10 +6,10 @@ import type {
   ValidationFunction,
   ValidationInput,
   ValidationOutcome,
-} from "./types";
-import type { ValidationResult } from "./types";
+} from "./types.js";
+import type { ValidationResult } from "./types.js";
 import { isValid, z } from "zod";
-import { RULE_KEYS, VALIDATION_OUTCOME } from "./constants";
+import { RULE_KEYS, VALIDATION_OUTCOME } from "./constants.js";
 
 export const createValidationResult = (
   outcome: ValidationOutcome,
@@ -63,6 +63,7 @@ function validateRuleParams<K extends RuleKey>(
 ): [boolean, string?] {
   try {
     const schema = ruleSchemas[ruleKey];
+    if (!schema) return [false, "Invalid rule key"];
     schema.parse(params);
     return [true];
   } catch (error) {
@@ -125,7 +126,7 @@ export function withInputValidation<K extends RuleKey>(
   validationFunction: ValidationFunction<K>
 ): ValidationFunction<K> {
   return (rule, input) => {
-    const validationResults = input.reduce<ValidationResult[]>((acc, inp) => {
+    const validationResults = input.reduce((acc, inp) => {
       const [isValid, errorMessage] = validateInput(inp);
       if (!isValid) {
         acc.push(
@@ -140,7 +141,7 @@ export function withInputValidation<K extends RuleKey>(
         );
       }
       return acc;
-    }, []);
+    }, [] as ValidationResult[]);
 
     if (validationResults.length > 0) {
       return validationResults;

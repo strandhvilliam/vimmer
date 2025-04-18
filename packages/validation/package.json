@@ -6,7 +6,8 @@
     ".": "./src/index.ts",
     "./client": "./src/client-validator.ts",
     "./server": "./src/server-validator.ts",
-    "./errors": "./src/errors.ts"
+    "./errors": "./src/errors.ts",
+    "./constants": "./src/constants.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"

@@ -1,11 +1,11 @@
-import { RULE_KEYS, VALIDATION_OUTCOME } from "../constants";
+import { RULE_KEYS, VALIDATION_OUTCOME } from "../constants.js";
 import type {
   ExifData,
   ValidationFunction,
   ValidationInput,
   ValidationResult,
-} from "../types";
-import { createValidationResult } from "../utils";
+} from "../types.js";
+import { createValidationResult } from "../utils.js";
 
 function getDeviceIdentifier(exif: ExifData): string | null {
   const { Make, Model, SerialNumber } = exif;

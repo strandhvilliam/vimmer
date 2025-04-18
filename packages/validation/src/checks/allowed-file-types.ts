@@ -2,20 +2,20 @@ import {
   RULE_KEYS,
   IMAGE_EXTENSION_TO_MIME_TYPE,
   VALIDATION_OUTCOME,
-} from "../constants";
+} from "../constants.js";
 import type {
   RuleParams,
   ValidationFunction,
   ValidationInput,
   ValidationResult,
-} from "../types";
-import { attachFileName, createValidationResult } from "../utils";
+} from "../types.js";
+import { attachFileName, createValidationResult } from "../utils.js";
 
 function getExtensionFromFilename(
   filename: string
 ): keyof typeof IMAGE_EXTENSION_TO_MIME_TYPE | null {
   const match = filename.match(/\.([^.]+)$/);
-  const extension = match ? match[1].toLowerCase().replace(/^\./, "") : null;
+  const extension = match ? match[1]?.toLowerCase().replace(/^\./, "") : null;
   return extension as keyof typeof IMAGE_EXTENSION_TO_MIME_TYPE | null;
 }
 

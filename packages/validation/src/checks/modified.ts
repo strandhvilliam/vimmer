@@ -2,13 +2,13 @@ import {
   EDITING_SOFTWARE_KEYWORDS,
   RULE_KEYS,
   VALIDATION_OUTCOME,
-} from "../constants";
+} from "../constants.js";
 import type {
   ValidationInput,
   ValidationResult,
   ValidationFunction,
-} from "../types";
-import { attachFileName, createValidationResult } from "../utils";
+} from "../types.js";
+import { attachFileName, createValidationResult } from "../utils.js";
 
 function checkSoftware(input: ValidationInput): ValidationResult {
   const software = input.exif[RULE_KEYS.MODIFIED] as string | undefined;

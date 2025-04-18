@@ -1,12 +1,12 @@
-import { RULE_KEYS, VALIDATION_OUTCOME } from "../constants";
+import { RULE_KEYS, VALIDATION_OUTCOME } from "../constants.js";
 import type {
   ExifData,
   RuleParams,
   ValidationFunction,
   ValidationInput,
   ValidationResult,
-} from "../types";
-import { createValidationResult } from "../utils";
+} from "../types.js";
+import { createValidationResult } from "../utils.js";
 
 function getTimestamp(exif: ExifData): Date | null {
   const { DateTimeOriginal, DateTimeDigitized, CreateDate } = exif;
@@ -57,7 +57,7 @@ function checkStrictTimestampOrdering(
     if (index === 0) return true;
 
     const prevEntry = sortedByTime[index - 1];
-    return entry.orderIndex > prevEntry.orderIndex;
+    return entry.orderIndex > (prevEntry?.orderIndex ?? -1);
   });
 
   return isOrderCorrect

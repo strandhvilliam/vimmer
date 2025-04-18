@@ -2,7 +2,7 @@ import type {
   RULE_KEYS,
   SEVERITY_LEVELS,
   VALIDATION_OUTCOME,
-} from "./constants";
+} from "./constants.js";
 
 export type ValidationOutcome =
   (typeof VALIDATION_OUTCOME)[keyof typeof VALIDATION_OUTCOME];

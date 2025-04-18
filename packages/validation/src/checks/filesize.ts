@@ -1,11 +1,11 @@
-import { RULE_KEYS, VALIDATION_OUTCOME } from "../constants";
+import { RULE_KEYS, VALIDATION_OUTCOME } from "../constants.js";
 import {
   type RuleParams,
   type ValidationInput,
   type ValidationResult,
   type ValidationFunction,
-} from "../types";
-import { attachFileName, createValidationResult } from "../utils";
+} from "../types.js";
+import { attachFileName, createValidationResult } from "../utils.js";
 
 function checkFileSize(
   rule: RuleParams["max_file_size"],

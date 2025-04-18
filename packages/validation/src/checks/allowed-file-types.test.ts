@@ -1,7 +1,7 @@
 import { test, expect, describe } from "bun:test";
-import { validate as checkAllowedFileTypes } from "./allowed-file-types";
-import { createMockInput } from "../utils";
-import { VALIDATION_OUTCOME } from "../constants";
+import { validate as checkAllowedFileTypes } from "./allowed-file-types.js";
+import { createMockInput } from "../utils.js";
+import { VALIDATION_OUTCOME } from "../constants.js";
 
 describe("allowed-file-types check", () => {
   test("should validate allowed file extensions", () => {
