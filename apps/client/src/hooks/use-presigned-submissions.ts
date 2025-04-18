@@ -1,4 +1,3 @@
-"use client";
 import { PresignedSubmission } from "@/lib/types";
 import useSWR from "swr";
 import { useSubmissionQueryState } from "./use-submission-query-state";
@@ -41,7 +40,11 @@ export function usePresignedSubmissions({
     competitionClassId
   );
   return useSWR<PresignedSubmission[]>(url, fetcher, {
-    onError,
+    fallbackData: [],
+    onError: (err) => {
+      onError?.(err);
+      console.error(err);
+    },
     revalidateOnFocus: false,
     revalidateIfStale: true,
     dedupingInterval: 5000,

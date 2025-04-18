@@ -4,7 +4,6 @@ export const STEPS = {
   ClassSelectionStep: 3,
   DeviceSelectionStep: 4,
   UploadSubmissionStep: 5,
-  VerificationStep: 6,
 } as const;
 
 export const PARTICIPANT_REF_LENGTH = 4;

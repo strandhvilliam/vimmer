@@ -19,7 +19,7 @@ import { useAction } from "next-safe-action/hooks";
 import { cn } from "@vimmer/ui/lib/utils";
 import { Icon } from "@iconify/react";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
-import { useSubmissionQueryState } from "@/lib/hooks/use-submission-query-state";
+import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 
 interface Props extends StepNavigationHandlers {
   deviceGroups: DeviceGroup[];

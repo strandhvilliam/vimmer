@@ -8,10 +8,10 @@ import {
   CardHeader,
 } from "@vimmer/ui/components/card";
 import { useState, useEffect } from "react";
-import { useVerificationListener } from "@/lib/hooks/use-verification-listener";
+import { useVerificationListener } from "@/hooks/use-verification-listener";
 import { useRouter } from "next/navigation";
 import { submissionQueryClientParamSerializer } from "@/schemas/submission-query-client-schema";
-import { useSubmissionQueryState } from "@/lib/hooks/use-submission-query-state";
+import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { Resource } from "sst";
 
 interface ClientVerificationPageProps {

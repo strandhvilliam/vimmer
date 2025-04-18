@@ -1,93 +1,47 @@
 import { create } from "zustand";
 import { SelectedPhotoV2 } from "../lib/types";
-import {
-  RuleConfig,
-  RuleKey,
-  runValidations,
-  ValidationResult,
-} from "@vimmer/validation";
-import { CompetitionClass, Topic } from "@vimmer/supabase/types";
-import exifr from "exifr";
-
-interface PhotoStore {
-  photos: SelectedPhotoV2[];
-  validationResults: ValidationResult[];
-  addPhotos: (photos: SelectedPhotoV2[]) => void;
-  addValidationResults: (results: ValidationResult[]) => void;
-  removePhoto: (orderIndex: number) => void;
-}
+import { RuleConfig, RuleKey, ValidationResult } from "@vimmer/validation";
+import { parseAndValidateFiles } from "@/lib/parse-and-validate-files";
 
 interface AddPhotoDto {
   files: File[];
   ruleConfigs: RuleConfig<RuleKey>[];
-  topics: Topic[];
-  competitionClass: CompetitionClass;
+  orderIndexes: number[];
+  maxPhotos: number;
+}
+interface PhotoStore {
+  photos: SelectedPhotoV2[];
+  validationResults: ValidationResult[];
+  validateAndAddPhotos: (dto: AddPhotoDto) => Promise<void>;
+  removePhoto: (orderIndex: number) => void;
 }
 
 export const usePhotoStore = create<PhotoStore>((set, get) => ({
   photos: [],
   validationResults: [],
-  validateAndAddPhotos: async ({
-    files,
-    ruleConfigs,
-    topics,
-    competitionClass,
-  }: AddPhotoDto) => {
+  validateAndAddPhotos: async (dto: AddPhotoDto) => {
     const { photos } = get();
-
-    const currentLength = photos.length;
-    const maxPhotos = competitionClass?.numberOfPhotos;
-
-    if (!currentLength || !maxPhotos) return;
-
-    const remainingSlots = maxPhotos - currentLength;
-    const sortedTopics = topics.sort((a, b) => a.orderIndex - b.orderIndex);
-
-    const newPhotos = await Promise.all(
-      files.slice(0, remainingSlots).map(async (file, index) => {
-        const topic = sortedTopics[currentLength + index];
-        if (!topic) return null;
-
-        const exif = await exifr.parse(file);
-        return {
-          file,
-          exif: exif as { [key: string]: unknown },
-          preview: URL.createObjectURL(file),
-          orderIndex: topic.orderIndex,
-        };
-      })
-    );
-
-    const validPhotos = newPhotos.filter((photo) => photo !== null);
-
-    const validationInputs = [...photos, ...validPhotos].map((photo) => ({
-      exif: photo.exif,
-      fileName: photo.file.name,
-      fileSize: photo.file.size,
-      orderIndex: photo.orderIndex,
-      mimeType: photo.file.type,
-    }));
-
-    const updatedValidationResults = runValidations(
-      ruleConfigs,
-      validationInputs
+    const { updatedPhotos, validationResults } = await parseAndValidateFiles(
+      photos,
+      dto.files,
+      dto.ruleConfigs,
+      dto.orderIndexes,
+      dto.maxPhotos
     );
 
     set({
-      photos: validPhotos,
-      validationResults: updatedValidationResults,
+      photos: updatedPhotos,
+      validationResults,
     });
   },
-  addPhotos: (photos) =>
-    set((state) => ({ photos: [...state.photos, ...photos] })),
   removePhoto: (orderIndex) =>
-    set((state) => {
-      const photoToRemove = state.photos.find(
+    set(({ photos, validationResults }) => {
+      const photoToRemove = photos.find(
         (photo) => photo.orderIndex === orderIndex
       );
-      if (!photoToRemove) return { photos: state.photos };
+      if (!photoToRemove) return { photos, validationResults };
 
-      const updatedPhotos = state.photos.filter(
+      const updatedPhotos = photos.filter(
         (photo) => photo.orderIndex !== orderIndex
       );
 
@@ -98,7 +52,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
         return photo;
       });
 
-      const updatedValidationResults = state.validationResults.filter(
+      const updatedValidationResults = validationResults.filter(
         (result) => result.fileName !== photoToRemove.file.name
       );
 
@@ -107,8 +61,4 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
         validationResults: updatedValidationResults,
       };
     }),
-  addValidationResults: (results) =>
-    set((state) => ({
-      validationResults: [...state.validationResults, ...results],
-    })),
 }));

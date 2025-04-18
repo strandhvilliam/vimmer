@@ -28,7 +28,7 @@ export interface SelectedPhoto {
   validationRuleKey?: RuleKey;
 }
 
-export interface PhotoWithPresignedUrl extends SelectedPhoto {
+export interface PhotoWithPresignedUrl extends SelectedPhotoV2 {
   presignedUrl: string;
   key: string;
   submissionId: number;

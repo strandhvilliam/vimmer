@@ -1,6 +1,6 @@
 "use client";
 import { PARTICIPANT_REF_LENGTH } from "@/lib/constants";
-import { useSubmissionQueryState } from "@/lib/hooks/use-submission-query-state";
+import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { StepNavigationHandlers } from "@/lib/types";
 import {
   CardContent,

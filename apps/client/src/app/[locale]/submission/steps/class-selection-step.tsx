@@ -1,6 +1,6 @@
 "use client";
 
-import { useSubmissionQueryState } from "@/lib/hooks/use-submission-query-state";
+import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { StepNavigationHandlers } from "@/lib/types";
 import { CompetitionClass } from "@vimmer/supabase/types";
 import { Button } from "@vimmer/ui/components/button";

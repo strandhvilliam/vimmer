@@ -2,7 +2,11 @@ import { SelectedPhotoV2 } from "@/lib/types";
 import { ChevronDown, ChevronUp, ImageIcon, Info, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { ValidationStatusBadge } from "./validation-status-badge";
-import { VALIDATION_OUTCOME, ValidationResult } from "@vimmer/validation";
+import {
+  SEVERITY_LEVELS,
+  VALIDATION_OUTCOME,
+  ValidationResult,
+} from "@vimmer/validation";
 import { useState } from "react";
 import { Button } from "@vimmer/ui/components/button";
 import { Topic } from "@vimmer/supabase/types";
@@ -24,6 +28,31 @@ export function SubmissionItem({
 }: Props) {
   const [expanded, setExpanded] = useState(false);
 
+  const r = validationResults?.sort((a, b) => {
+    if (a.outcome !== b.outcome) {
+      if (a.outcome === VALIDATION_OUTCOME.FAILED) return -1;
+      if (b.outcome === VALIDATION_OUTCOME.FAILED) return 1;
+      if (a.outcome === VALIDATION_OUTCOME.SKIPPED) return -1;
+      if (b.outcome === VALIDATION_OUTCOME.SKIPPED) return 1;
+    }
+
+    if (a.severity !== b.severity) {
+      if (a.severity === SEVERITY_LEVELS.ERROR) return -1;
+      if (b.severity === SEVERITY_LEVELS.ERROR) return 1;
+    }
+
+    return 0;
+  });
+
+  const highestPriorityResult = r?.[0];
+
+  const displayValidation = {
+    message: highestPriorityResult?.message,
+    outcome: highestPriorityResult?.outcome,
+    severity: highestPriorityResult?.severity,
+    ruleKey: highestPriorityResult?.ruleKey,
+  };
+
   if (!photo) {
     return (
       <div className="flex flex-row gap-4 p-4 border rounded-lg bg-background">
@@ -41,7 +70,6 @@ export function SubmissionItem({
     );
   }
 
-  // Make sure exif exists and has a valid structure
   const exifData = photo.exif || {};
   const relevantExifData = getRelevantExifData(exifData);
   const hasExifData = Object.keys(relevantExifData).length > 0;
@@ -51,7 +79,9 @@ export function SubmissionItem({
       <div className="flex flex-row gap-4 p-4">
         <div className="flex-1 space-y-2">
           <div className="space-y-1">
-            <p className="text-base text-muted-foreground"># {index + 1}</p>
+            <p className="text-base text-muted-foreground">
+              # {photo.orderIndex} {index + 1}
+            </p>
             <p className="font-medium">{topic?.name}</p>
           </div>
 
@@ -59,8 +89,8 @@ export function SubmissionItem({
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
                 <ValidationStatusBadge
-                  outcome={photo.validationOutcome}
-                  severity={photo.validationSeverity}
+                  outcome={displayValidation.outcome}
+                  severity={displayValidation.severity}
                 />
 
                 {/* {photo.validationRuleKey &&
@@ -71,19 +101,19 @@ export function SubmissionItem({
                   )} */}
               </div>
 
-              {photo.validationMessage &&
-                photo.validationOutcome !== VALIDATION_OUTCOME.PASSED && (
+              {displayValidation.message &&
+                displayValidation.outcome !== VALIDATION_OUTCOME.PASSED && (
                   <p
                     className={`text-xs ${
-                      photo.validationOutcome === VALIDATION_OUTCOME.FAILED &&
-                      photo.validationSeverity === "error"
+                      displayValidation.severity === SEVERITY_LEVELS.ERROR
                         ? "text-destructive"
-                        : photo.validationOutcome === VALIDATION_OUTCOME.FAILED
+                        : displayValidation.outcome ===
+                            VALIDATION_OUTCOME.FAILED
                           ? "text-amber-700 dark:text-amber-400"
                           : "text-muted-foreground"
                     }`}
                   >
-                    {photo.validationMessage}
+                    {displayValidation.message}
                   </p>
                 )}
             </div>

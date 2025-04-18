@@ -1,5 +1,6 @@
-import { useSubmissionsListener } from "@/lib/hooks/use-submissions-listener";
+import { useSubmissionsListener } from "@/hooks/use-submissions-listener";
 import { FileState, FileStatus, PhotoWithPresignedUrl } from "@/lib/types";
+import { Topic } from "@vimmer/supabase/types";
 import { Button } from "@vimmer/ui/components/button";
 import {
   Card,
@@ -20,6 +21,7 @@ import { AnimatePresence, motion } from "motion/react";
 
 interface Props {
   files: PhotoWithPresignedUrl[];
+  topics: Topic[];
   expectedCount: number;
   onComplete: () => void;
   open?: boolean;
@@ -27,6 +29,7 @@ interface Props {
 
 export function UploadProgress({
   files,
+  topics,
   expectedCount: expectedFilesCount,
   onComplete,
   open = true,
@@ -71,7 +74,15 @@ export function UploadProgress({
             <div className="space-y-2 max-h-64 overflow-y-auto">
               <AnimatePresence mode="popLayout">
                 {fileStates.map((file) => (
-                  <FileProgressItem key={file.key} file={file} />
+                  <FileProgressItem
+                    key={file.key}
+                    file={file}
+                    topic={
+                      topics.find(
+                        (topic) => topic.orderIndex === file.orderIndex
+                      )!
+                    }
+                  />
                 ))}
               </AnimatePresence>
             </div>
@@ -99,7 +110,7 @@ export function UploadProgress({
   );
 }
 
-function FileProgressItem({ file }: { file: FileState }) {
+function FileProgressItem({ file, topic }: { file: FileState; topic: Topic }) {
   const statusIcon = {
     pending: <div className="w-5 h-5" />,
     uploading: <Loader2 className="w-5 h-5 animate-spin text-primary" />,
@@ -119,7 +130,7 @@ function FileProgressItem({ file }: { file: FileState }) {
       exit={{ opacity: 0, y: -20 }}
       className="flex items-center justify-between p-3 bg-muted rounded-lg"
     >
-      <span className="truncate flex-1 mr-3">{file.topicName}</span>
+      <span className="truncate flex-1 mr-3">{topic.name}</span>
       <div className="flex-shrink-0">{statusIcon[file.status]}</div>
     </motion.div>
   );

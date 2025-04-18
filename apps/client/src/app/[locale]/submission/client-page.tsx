@@ -21,9 +21,9 @@ import {
   submissionQueryClientParams,
   submissionQueryClientParamSerializer,
 } from "@/schemas/submission-query-client-schema";
-import { useSubmissionQueryState } from "@/lib/hooks/use-submission-query-state";
+import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 
-interface Props {
+interface ClientPageProps {
   marathon: Marathon;
   topics: Topic[];
   competitionClasses: CompetitionClass[];
@@ -35,14 +35,13 @@ export function SubmissionClientPage({
   topics,
   competitionClasses,
   deviceGroups,
-}: Props) {
+}: ClientPageProps) {
   const [step, setStep] = useQueryState(
     "s",
     parseAsInteger.withDefault(1).withOptions({ history: "push" })
   );
   const { submissionState } = useSubmissionQueryState();
   const [direction, setDirection] = useState(0);
-  const pathname = usePathname();
   const router = useRouter();
   const handleNextStep = () => {
     const nextStep = Math.min(step + 1, Object.keys(STEPS).length);
@@ -68,13 +67,15 @@ export function SubmissionClientPage({
 
   return (
     <div className="max-w-2xl mx-auto p-4">
-      {/* <StepNavigator
-        handleSetStep={(s) => handleSetStep(s)}
-        currentStep={step}
-      /> */}
+      <div className="mb-12 px-4 sm:px-0">
+        <StepNavigator currentStep={step} handleSetStep={handleSetStep} />
+      </div>
       <AnimatePresence initial={false} custom={direction} mode="wait">
         {step === STEPS.ParticipantNumberStep && (
-          <AnimatedStepWrapper direction={direction}>
+          <AnimatedStepWrapper
+            key={STEPS.ParticipantNumberStep}
+            direction={direction}
+          >
             <ParticipantNumberStep
               marathonId={marathon.id}
               domain={marathon.domain}
@@ -83,7 +84,10 @@ export function SubmissionClientPage({
           </AnimatedStepWrapper>
         )}
         {step === STEPS.ParticipantDetailsStep && (
-          <AnimatedStepWrapper direction={direction}>
+          <AnimatedStepWrapper
+            key={STEPS.ParticipantDetailsStep}
+            direction={direction}
+          >
             <ParticipantDetailsStep
               marathonId={marathon.id}
               domain={marathon.domain}
@@ -93,7 +97,10 @@ export function SubmissionClientPage({
           </AnimatedStepWrapper>
         )}
         {step === STEPS.ClassSelectionStep && (
-          <AnimatedStepWrapper direction={direction}>
+          <AnimatedStepWrapper
+            key={STEPS.ClassSelectionStep}
+            direction={direction}
+          >
             <ClassSelectionStep
               competitionClasses={competitionClasses}
               onNextStep={handleNextStep}
@@ -102,7 +109,10 @@ export function SubmissionClientPage({
           </AnimatedStepWrapper>
         )}
         {step === STEPS.DeviceSelectionStep && (
-          <AnimatedStepWrapper direction={direction}>
+          <AnimatedStepWrapper
+            key={STEPS.DeviceSelectionStep}
+            direction={direction}
+          >
             <DeviceSelectionStep
               onNextStep={handleNextStep}
               onPrevStep={handlePrevStep}
@@ -111,9 +121,11 @@ export function SubmissionClientPage({
           </AnimatedStepWrapper>
         )}
         {step === STEPS.UploadSubmissionStep && (
-          <AnimatedStepWrapper direction={direction}>
+          <AnimatedStepWrapper
+            key={STEPS.UploadSubmissionStep}
+            direction={direction}
+          >
             <UploadSubmissionsStep
-              domain={marathon.domain}
               competitionClasses={competitionClasses}
               topics={topics}
               onPrevStep={handlePrevStep}
@@ -121,16 +133,6 @@ export function SubmissionClientPage({
             />
           </AnimatedStepWrapper>
         )}
-        {/* {step === STEPS.VerificationStep && (
-          <AnimatedStepWrapper direction={direction}>
-            <UploadSubmissionsStep
-              marathonDomain={marathon.domain}
-              competitionClasses={competitionClasses}
-              topics={topics}
-              onPrevStep={handlePrevStep}
-            />
-          </AnimatedStepWrapper>
-        )} */}
       </AnimatePresence>
     </div>
   );
