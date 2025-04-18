@@ -14,6 +14,7 @@ import {
   UpdateSubmission,
   UpdateTopic,
   UpdateMarathon,
+  InsertValidationResult,
 } from "./types";
 import { toCamelCase, toSnakeCase } from "./utils/format-helpers";
 
@@ -272,4 +273,16 @@ export async function updateMarathonByDomain(
     .single()
     .throwOnError();
   return toCamelCase(data);
+}
+
+export async function insertValidationResults(
+  supabase: SupabaseClient,
+  dto: InsertValidationResult[]
+) {
+  const { data } = await supabase
+    .from("validation_results")
+    .insert(dto.map(toSnakeCase))
+    .select()
+    .throwOnError();
+  return data ? toCamelCase(data) : [];
 }

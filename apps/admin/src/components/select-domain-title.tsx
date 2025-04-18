@@ -17,7 +17,7 @@ export function SelectDomainTitle() {
         duration: 0.5,
         ease: [0.4, 0.0, 0.2, 1],
       }}
-      className="text-2xl px-4 md:text-4xl lg:text-5xl font-bold text-neutral-700 dark:text-white max-w-4xl leading-relaxed lg:leading-snug text-center mx-auto z-10 "
+      className="text-2xl px-4 md:text-4xl lg:text-5xl font-bold text-neutral-700 dark:text-white max-w-4xl leading-relaxed lg:leading-snug text-center mx-auto z-10 font-rocgrotesk"
     >
       Select a{" "}
       <Highlight className="text-black dark:text-white">marathon</Highlight>

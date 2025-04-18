@@ -50,6 +50,14 @@ export type InsertSubmissionError = ToCamelCaseObject<
   TablesInsert<"submission_errors">
 >;
 
+export type ValidationResult = ToCamelCaseObject<Tables<"validation_results">>;
+export type InsertValidationResult = ToCamelCaseObject<
+  TablesInsert<"validation_results">
+>;
+export type UpdateValidationResult = ToCamelCaseObject<
+  TablesUpdate<"validation_results">
+>;
+
 export type UserData = ToCamelCaseObject<Tables<"user">>;
 export type InsertUserData = ToCamelCaseObject<TablesInsert<"user">>;
 export type UpdateUserData = ToCamelCaseObject<TablesUpdate<"user">>;
@@ -64,4 +72,3 @@ export type UpdateValidationError = ToCamelCaseObject<
 
 export * from "./db";
 export * from "./helpers";
-export * from "./marathon-config";

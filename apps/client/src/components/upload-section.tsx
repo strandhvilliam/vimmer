@@ -9,8 +9,7 @@ import { UploadZone } from "./upload-zone";
 import { usePhotoStore } from "@/stores/photo-store";
 import { usePresignedSubmissions } from "@/hooks/use-presigned-submissions";
 import { Topic } from "@vimmer/supabase/types";
-import { RuleConfig } from "@vimmer/validation";
-import { RuleKey } from "@vimmer/validation";
+import { RuleConfig, RuleKey } from "@vimmer/validation";
 
 interface UploadSectionProps {
   maxPhotos: number;

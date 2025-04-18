@@ -6,7 +6,8 @@
     "@aws-sdk/client-lambda": "^3.749.0",
     "@aws-sdk/client-s3": "^3.731.0",
     "@vimmer/supabase": "workspace:*",
-    "@vimmer/validation": "workspace:*"
+    "@vimmer/validation": "workspace:*",
+    "zod": "^3.24.3"
   },
   "devDependencies": {
     "@types/bun": "latest",

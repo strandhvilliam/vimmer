@@ -579,6 +579,50 @@ export type Database = {
           },
         ]
       }
+      validation_results: {
+        Row: {
+          created_at: string
+          file_name: string | null
+          id: number
+          message: string
+          outcome: string
+          participant_id: number
+          rule_key: string
+          severity: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name?: string | null
+          id?: number
+          message: string
+          outcome: string
+          participant_id: number
+          rule_key: string
+          severity: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string | null
+          id?: number
+          message?: string
+          outcome?: string
+          participant_id?: number
+          rule_key?: string
+          severity?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "validation_results_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       verification: {
         Row: {
           createdAt: string | null

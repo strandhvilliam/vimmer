@@ -17,7 +17,7 @@ export function LoginTitle() {
           duration: 0.5,
           ease: [0.4, 0.0, 0.2, 1],
         }}
-        className="text-2xl md:text-3xl font-bold text-neutral-800 dark:text-white mb-2"
+        className="text-2xl md:text-3xl font-bold text-neutral-800 dark:text-white mb-2 font-rocgrotesk"
       >
         Login to your account
       </motion.h1>

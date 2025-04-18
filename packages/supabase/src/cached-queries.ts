@@ -15,6 +15,7 @@ import {
   getParticipantByReferenceQuery,
   getParticipantsByDomainQuery,
   getTopicsByDomainQuery,
+  getValidationResultsByParticipantIdQuery,
 } from "./queries";
 import { Participant } from "./types";
 
@@ -84,5 +85,19 @@ export async function getParticipantByReference(
     domain,
     reference,
   });
+  return data;
+}
+
+export async function getValidationResultsByParticipantId(
+  participantId: number
+) {
+  "use cache";
+  cacheTag(`validation-results-${participantId}`);
+  cacheLife("minutes");
+  const supabase = await createClient();
+  const data = await getValidationResultsByParticipantIdQuery(
+    supabase,
+    participantId
+  );
   return data;
 }

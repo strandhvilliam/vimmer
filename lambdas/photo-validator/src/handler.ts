@@ -1,11 +1,38 @@
-import { createClient } from "@vimmer/supabase/lambda";
-import { getParticipantByIdQuery } from "@vimmer/supabase/queries";
+import type { Handler } from "aws-lambda";
 import {
   createRule,
-  ServerValidator,
-  type ServerFile,
-} from "@vimmer/validation/server";
-import type { Handler } from "aws-lambda";
+  RuleConfig,
+  RuleKey,
+  SEVERITY_LEVELS,
+  RULE_KEYS,
+  ValidationInput,
+  ExifData,
+  runValidations,
+} from "@vimmer/validation";
+import { createClient } from "@vimmer/supabase/lambda";
+import { getParticipantByIdQuery } from "@vimmer/supabase/queries";
+import { z } from "zod";
+import { insertValidationResults } from "@vimmer/supabase/mutations";
+
+const ruleConfigs: RuleConfig<RuleKey>[] = [
+  createRule(RULE_KEYS.ALLOWED_FILE_TYPES, SEVERITY_LEVELS.ERROR, {
+    allowedFileTypes: ["jpg", "jpeg"],
+  }),
+  createRule(RULE_KEYS.SAME_DEVICE, SEVERITY_LEVELS.ERROR),
+  createRule(RULE_KEYS.WITHIN_TIMERANGE, SEVERITY_LEVELS.ERROR, {
+    start: new Date("2023-01-01"),
+    end: new Date("2026-01-01"),
+  }),
+  createRule(RULE_KEYS.SAME_DEVICE, SEVERITY_LEVELS.ERROR),
+];
+
+const validationInputSchema = z.object({
+  exif: z.record(z.unknown(), { message: "No exif data found" }),
+  fileName: z.string().min(1, { message: "File name is required" }),
+  fileSize: z.number().nonnegative({ message: "File size is required" }),
+  mimeType: z.string().min(1, { message: "Mime type is required" }),
+  orderIndex: z.number().int().nonnegative(),
+});
 
 export const handler: Handler = async (event): Promise<void> => {
   const participantId = event.participantId;
@@ -22,34 +49,32 @@ export const handler: Handler = async (event): Promise<void> => {
   );
 
   if (!participantWithSubmissions) {
+    //TODO: Add error NOT ABLE TO VALIDATE
     throw new Error(`Participant with id ${participantId} not found`);
   }
-  // Get marathon config and rules
-  // Check that the submission amount is the same as uploadcount. Yes == do nothing, No == add warning to submissionerror table
 
-  const validator = new ServerValidator([
-    createRule({
-      key: "allowed_file_types",
-      level: "error",
-      params: { extensions: ["jpg"], mimeTypes: ["image/jpeg"] },
-    }),
-    createRule({
-      key: "same_device",
-      level: "error",
-      params: {},
-    }),
-  ]);
-
-  const filesToValidate: ServerFile[] =
+  const parsedSubmissions = z.array(validationInputSchema).safeParse(
     participantWithSubmissions.submissions.map((s) => ({
       exif: s.exif,
-      originalname: s.key.split("/").pop() as string,
-      mimetype: s.mimeType as string,
-      size: s.size as number,
-    }));
+      fileName: s.key,
+      fileSize: s.size,
+      mimeType: s.mimeType,
+      orderIndex: s.topic.orderIndex,
+    }))
+  );
 
-  const invalidFiles = await validator.validate(filesToValidate);
+  if (!parsedSubmissions.success) {
+    //TODO: Add error MISSING REQUIRED FIELDS
+    throw new Error(`Invalid submissions: ${parsedSubmissions.error}`);
+  }
 
-  // save invalidFiles to submissionerror table
-  console.log(invalidFiles);
+  const validationResults = runValidations(
+    ruleConfigs,
+    parsedSubmissions.data
+  ).map((r) => ({
+    ...r,
+    participantId,
+  }));
+
+  await insertValidationResults(supabase, validationResults);
 };

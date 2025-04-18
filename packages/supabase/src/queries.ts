@@ -228,3 +228,22 @@ export async function getParticipantsByDomainQuery(
     .throwOnError();
   return data?.map(toCamelCase) ?? [];
 }
+
+export async function getValidationResultsByParticipantIdQuery(
+  supabase: SupabaseClient,
+  participantId: number
+) {
+  const { data } = await supabase
+    .from("validation_results")
+    .select(
+      `
+      *,
+      participant:participants(*),
+      submission:submissions(*)
+      `
+    )
+    .eq("participant_id", participantId)
+    .throwOnError();
+
+  return data?.map(toCamelCase) ?? [];
+}
