@@ -57,6 +57,15 @@ import { Participant, ValidationError } from "@vimmer/supabase/types";
 import { useState } from "react";
 import { format } from "date-fns";
 import { refreshParticipantsData } from "../_actions/refresh-participants-data";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@vimmer/ui/components/pagination";
 
 type ParticipantWithValidationErrors = Participant & {
   validationErrors: ValidationError[];
@@ -438,6 +447,109 @@ export function SubmissionsParticipantsTable({
             )}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="flex items-center justify-between mt-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>
+            Showing{" "}
+            {table.getState().pagination.pageIndex *
+              table.getState().pagination.pageSize +
+              1}{" "}
+            to{" "}
+            {Math.min(
+              (table.getState().pagination.pageIndex + 1) *
+                table.getState().pagination.pageSize,
+              table.getFilteredRowModel().rows.length
+            )}{" "}
+            of {table.getFilteredRowModel().rows.length} entries
+          </span>
+        </div>
+
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() =>
+                  table.getCanPreviousPage() ? table.previousPage() : undefined
+                }
+                className={
+                  !table.getCanPreviousPage()
+                    ? "pointer-events-none opacity-50"
+                    : ""
+                }
+              />
+            </PaginationItem>
+
+            {Array.from({ length: table.getPageCount() }, (_, i) => i).map(
+              (pageIndex) => {
+                if (
+                  pageIndex === 0 ||
+                  pageIndex === table.getPageCount() - 1 ||
+                  Math.abs(pageIndex - table.getState().pagination.pageIndex) <=
+                    1
+                ) {
+                  return (
+                    <PaginationItem key={pageIndex}>
+                      <PaginationLink
+                        isActive={
+                          pageIndex === table.getState().pagination.pageIndex
+                        }
+                        onClick={() => table.setPageIndex(pageIndex)}
+                      >
+                        {pageIndex + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                }
+
+                if (
+                  (pageIndex === 1 &&
+                    table.getState().pagination.pageIndex >= 3) ||
+                  (pageIndex === table.getPageCount() - 2 &&
+                    table.getState().pagination.pageIndex <=
+                      table.getPageCount() - 4)
+                ) {
+                  return (
+                    <PaginationItem key={pageIndex}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  );
+                }
+
+                return null;
+              }
+            )}
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={() =>
+                  table.getCanNextPage() ? table.nextPage() : undefined
+                }
+                className={
+                  !table.getCanNextPage()
+                    ? "pointer-events-none opacity-50"
+                    : ""
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Items per page:</span>
+          <select
+            value={table.getState().pagination.pageSize}
+            onChange={(e) => table.setPageSize(Number(e.target.value))}
+            className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm"
+          >
+            {[10, 25, 50, 100].map((pageSize) => (
+              <option key={pageSize} value={pageSize}>
+                {pageSize}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
     </div>
   );

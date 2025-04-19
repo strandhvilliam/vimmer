@@ -9,8 +9,6 @@ import { Tables } from "@vimmer/supabase/types";
 import SubmissionsParticipantsTab from "./_components/submissions-participants-tab";
 import SubmissionsParticipantsTabSkeleton from "./_components/submissions-participants-skeleton";
 import SubmissionsTopicsTab from "./_components/submissions-topics-tab";
-import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
 
 export default async function SubmissionsPage() {
   return (
