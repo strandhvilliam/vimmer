@@ -4,10 +4,10 @@ import React from "react";
 import { Switch } from "@vimmer/ui/components/switch";
 import { Card } from "@vimmer/ui/components/card";
 import { motion } from "motion/react";
-import { SeverityLevel } from "@vimmer/validation";
+import { SeverityLevel } from "@vimmer/validation/types";
 import { SeverityToggle } from "./severity-toggle";
 import { Control, Controller, UseControllerProps } from "react-hook-form";
-import { RulesFormValues } from "../_types/update-rules-schema";
+import { RulesFormValues } from "../_lib/schemas";
 
 interface RuleToggleProps {
   title: string;

@@ -41,15 +41,6 @@ export type Topic = ToCamelCaseObject<Tables<"topics">>;
 export type InsertTopic = ToCamelCaseObject<TablesInsert<"topics">>;
 export type UpdateTopic = ToCamelCaseObject<TablesUpdate<"topics">>;
 
-export type InsertLog = ToCamelCaseObject<TablesInsert<"demologs">>;
-
-export type SelectSubmissionError = ToCamelCaseObject<
-  Tables<"submission_errors">
->;
-export type InsertSubmissionError = ToCamelCaseObject<
-  TablesInsert<"submission_errors">
->;
-
 export type ValidationResult = ToCamelCaseObject<Tables<"validation_results">>;
 export type InsertValidationResult = ToCamelCaseObject<
   TablesInsert<"validation_results">
@@ -62,13 +53,9 @@ export type UserData = ToCamelCaseObject<Tables<"user">>;
 export type InsertUserData = ToCamelCaseObject<TablesInsert<"user">>;
 export type UpdateUserData = ToCamelCaseObject<TablesUpdate<"user">>;
 
-export type ValidationError = ToCamelCaseObject<Tables<"validation_errors">>;
-export type InsertValidationError = ToCamelCaseObject<
-  TablesInsert<"validation_errors">
->;
-export type UpdateValidationError = ToCamelCaseObject<
-  TablesUpdate<"validation_errors">
->;
+export type RuleConfig = ToCamelCaseObject<Tables<"rule_configs">>;
+export type InsertRuleConfig = ToCamelCaseObject<TablesInsert<"rule_configs">>;
+export type UpdateRuleConfig = ToCamelCaseObject<TablesUpdate<"rule_configs">>;
 
 export * from "./db";
 export * from "./helpers";

@@ -1,10 +1,7 @@
 "use server";
 
 import { actionClient } from "@/lib/safe-action";
-import {
-  rulesFormSchema,
-  RulesFormValues,
-} from "../_types/update-rules-schema";
+import { rulesFormSchema, RulesFormValues } from "../_lib/schemas";
 
 export const saveRules = actionClient
   .schema(rulesFormSchema)

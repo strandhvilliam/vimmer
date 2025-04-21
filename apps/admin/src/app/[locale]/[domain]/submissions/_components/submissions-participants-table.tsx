@@ -53,10 +53,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@vimmer/ui/components/dropdown-menu";
-import {
-  Participant,
-  ValidationError as BaseValidationError,
-} from "@vimmer/supabase/types";
+import { Participant } from "@vimmer/supabase/types";
 import { useState } from "react";
 import { format } from "date-fns";
 import { refreshParticipantsData } from "../_actions/refresh-participants-data";
@@ -70,12 +67,6 @@ import {
   PaginationPrevious,
 } from "@vimmer/ui/components/pagination";
 
-// Extend the ValidationError interface to include fileName
-interface ValidationError extends BaseValidationError {
-  fileName?: string | null;
-}
-
-// Define the ValidationResult interface
 interface ValidationResult {
   id: number;
   participantId: number;

@@ -106,27 +106,6 @@ export type Database = {
           },
         ]
       }
-      demologs: {
-        Row: {
-          created_at: string
-          id: number
-          message: string
-          type: string
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-          message: string
-          type?: string
-        }
-        Update: {
-          created_at?: string
-          id?: number
-          message?: string
-          type?: string
-        }
-        Relationships: []
-      }
       device_groups: {
         Row: {
           created_at: string
@@ -274,6 +253,44 @@ export type Database = {
           },
         ]
       }
+      rule_configs: {
+        Row: {
+          created_at: string
+          id: number
+          marathon_id: number
+          params: Json | null
+          rule_key: string
+          severity: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          marathon_id: number
+          params?: Json | null
+          rule_key: string
+          severity?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          marathon_id?: number
+          params?: Json | null
+          rule_key?: string
+          severity?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rule_configs_marathon_id_fkey"
+            columns: ["marathon_id"]
+            isOneToOne: false
+            referencedRelation: "marathons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session: {
         Row: {
           createdAt: string
@@ -314,42 +331,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      submission_errors: {
-        Row: {
-          context: Json | null
-          created_at: string
-          description: string | null
-          error_code: string
-          id: number
-          message: string
-          severity: string
-          submission_id: number | null
-          submission_key: string | null
-        }
-        Insert: {
-          context?: Json | null
-          created_at?: string
-          description?: string | null
-          error_code: string
-          id?: number
-          message: string
-          severity?: string
-          submission_id?: number | null
-          submission_key?: string | null
-        }
-        Update: {
-          context?: Json | null
-          created_at?: string
-          description?: string | null
-          error_code?: string
-          id?: number
-          message?: string
-          severity?: string
-          submission_id?: number | null
-          submission_key?: string | null
-        }
-        Relationships: []
       }
       submissions: {
         Row: {
@@ -530,51 +511,6 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "user"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      validation_errors: {
-        Row: {
-          created_at: string
-          dismissed: boolean
-          id: number
-          message: string | null
-          participant_id: number
-          severity: string
-          submission_id: number | null
-        }
-        Insert: {
-          created_at?: string
-          dismissed?: boolean
-          id?: number
-          message?: string | null
-          participant_id: number
-          severity?: string
-          submission_id?: number | null
-        }
-        Update: {
-          created_at?: string
-          dismissed?: boolean
-          id?: number
-          message?: string | null
-          participant_id?: number
-          severity?: string
-          submission_id?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "validation_errors_participant_id_fkey"
-            columns: ["participant_id"]
-            isOneToOne: false
-            referencedRelation: "participants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "validation_errors_submission_id_fkey"
-            columns: ["submission_id"]
-            isOneToOne: false
-            referencedRelation: "submissions"
             referencedColumns: ["id"]
           },
         ]

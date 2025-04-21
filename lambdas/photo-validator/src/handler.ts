@@ -1,18 +1,14 @@
 import type { Handler } from "aws-lambda";
-import {
-  createRule,
-  RuleConfig,
-  RuleKey,
-  SEVERITY_LEVELS,
-  RULE_KEYS,
-  ValidationInput,
-  ExifData,
-  runValidations,
-} from "@vimmer/validation";
+import { createRule, runValidations } from "@vimmer/validation/validator";
+
 import { createClient } from "@vimmer/supabase/lambda";
 import { getParticipantByIdQuery } from "@vimmer/supabase/queries";
 import { z } from "zod";
 import { insertValidationResults } from "@vimmer/supabase/mutations";
+import { RuleKey } from "@vimmer/validation/types";
+import { RULE_KEYS } from "@vimmer/validation/constants";
+import { SEVERITY_LEVELS } from "@vimmer/validation/constants";
+import { RuleConfig } from "@vimmer/validation/types";
 
 const ruleConfigs: RuleConfig<RuleKey>[] = [
   createRule(RULE_KEYS.ALLOWED_FILE_TYPES, SEVERITY_LEVELS.ERROR, {

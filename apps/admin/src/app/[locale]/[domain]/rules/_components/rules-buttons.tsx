@@ -5,7 +5,7 @@ import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { RefreshCcw, Save } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 import { toast } from "sonner";
-import { RulesFormValues } from "../_types/update-rules-schema";
+import { RulesFormValues } from "../_lib/schemas";
 import { saveRules } from "../_actions/save-rules";
 import { useAction } from "next-safe-action/hooks";
 import { parseAsBoolean, useQueryState } from "nuqs";
@@ -18,7 +18,6 @@ export function RulesButtons() {
   const { execute, isExecuting } = useAction(saveRules, {
     onSuccess: (data) => {
       toast.success("Rules saved successfully");
-      // Reset form with current values to clear dirty state
       const currentValues = getValues();
       reset(currentValues);
       setIsDirty(false);

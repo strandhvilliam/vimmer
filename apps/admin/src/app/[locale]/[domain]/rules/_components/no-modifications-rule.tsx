@@ -3,7 +3,7 @@
 import React from "react";
 import RuleToggle from "./rule-toggle";
 import { useFormContext } from "react-hook-form";
-import { RulesFormValues } from "../_types/update-rules-schema";
+import { RulesFormValues } from "../_lib/schemas";
 
 export default function NoModificationsRule() {
   const { control } = useFormContext<RulesFormValues>();

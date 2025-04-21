@@ -6,7 +6,7 @@ import { Input } from "@vimmer/ui/components/input";
 import RuleToggle from "./rule-toggle";
 import Link from "next/link";
 import { useFormContext } from "react-hook-form";
-import { RulesFormValues } from "../_types/update-rules-schema";
+import { RulesFormValues } from "../_lib/schemas";
 
 export default function WithinTimerangeRule() {
   const { control, watch } = useFormContext<RulesFormValues>();

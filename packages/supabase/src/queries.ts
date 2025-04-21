@@ -1,13 +1,6 @@
-import type {
-  DeviceGroup,
-  CompetitionClass,
-  Participant,
-  Submission,
-  ValidationError,
-  Topic,
-  SupabaseClient,
-} from "./types/";
+import type { SupabaseClient } from "./types/";
 import { toCamelCase } from "./utils/format-helpers";
+
 export async function getParticipantByIdQuery(
   supabase: SupabaseClient,
   id: number
@@ -17,7 +10,7 @@ export async function getParticipantByIdQuery(
     .select(
       `
         *, 
-        submissions(*, topic:topics(*), validation_errors:validation_errors(*)),
+        submissions(*, topic:topics(*)),
         competition_class:competition_classes(*),
         device_group:device_groups(*)
     `
@@ -233,5 +226,17 @@ export async function getValidationResultsByParticipantIdQuery(
     .eq("participant_id", participantId)
     .throwOnError();
 
+  return data?.map(toCamelCase) ?? [];
+}
+
+export async function getRulesByMarathonIdQuery(
+  supabase: SupabaseClient,
+  marathonId: number
+) {
+  const { data } = await supabase
+    .from("rule_configs")
+    .select("*")
+    .eq("marathon_id", marathonId)
+    .throwOnError();
   return data?.map(toCamelCase) ?? [];
 }

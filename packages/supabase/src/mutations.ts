@@ -1,11 +1,8 @@
-import { getTopicsByDomain } from "./cached-queries";
 import {
   InsertCompetitionClass,
   InsertDeviceGroup,
-  InsertLog,
   InsertParticipant,
   InsertSubmission,
-  InsertSubmissionError,
   InsertTopic,
   SupabaseClient,
   UpdateCompetitionClass,
@@ -15,6 +12,8 @@ import {
   UpdateTopic,
   UpdateMarathon,
   InsertValidationResult,
+  InsertRuleConfig,
+  UpdateRuleConfig,
 } from "./types";
 import { toCamelCase, toSnakeCase } from "./utils/format-helpers";
 
@@ -71,15 +70,6 @@ export async function createMultipleSubmissions(
   return data ? toCamelCase(data) : [];
 }
 
-export async function insertLog(supabase: SupabaseClient, data: InsertLog) {
-  const { data: log } = await supabase
-    .from("demologs")
-    .insert(toSnakeCase(data))
-    .select()
-    .throwOnError();
-  return toCamelCase(log);
-}
-
 export async function updateSubmissionByKey(
   supabase: SupabaseClient,
   key: string,
@@ -108,20 +98,6 @@ export async function updateSubmissionById(
     .single()
     .throwOnError();
   return toCamelCase(data);
-}
-
-export async function addSubmissionError(
-  supabase: SupabaseClient,
-  dto: InsertSubmissionError
-) {
-  await supabase.from("submission_errors").insert(toSnakeCase(dto));
-}
-
-export async function addMultipleSubmissionErrors(
-  supabase: SupabaseClient,
-  dtos: InsertSubmissionError[]
-) {
-  await supabase.from("submission_errors").insert(dtos.map(toSnakeCase));
 }
 
 export async function incrementUploadCounter(
@@ -285,4 +261,36 @@ export async function insertValidationResults(
     .select()
     .throwOnError();
   return data ? toCamelCase(data) : [];
+}
+
+export async function addRuleConfig(
+  supabase: SupabaseClient,
+  dto: InsertRuleConfig
+) {
+  const { data } = await supabase
+    .from("rule_configs")
+    .insert(toSnakeCase(dto))
+    .select()
+    .single()
+    .throwOnError();
+  return toCamelCase(data);
+}
+
+export async function updateRuleConfig(
+  supabase: SupabaseClient,
+  id: number,
+  dto: UpdateRuleConfig
+) {
+  const { data } = await supabase
+    .from("rule_configs")
+    .update(toSnakeCase(dto))
+    .eq("id", id)
+    .select()
+    .single()
+    .throwOnError();
+  return toCamelCase(data);
+}
+
+export async function deleteRuleConfig(supabase: SupabaseClient, id: number) {
+  await supabase.from("rule_configs").delete().eq("id", id);
 }

@@ -6,7 +6,7 @@ import { cn } from "@vimmer/ui/lib/utils";
 import { CheckCircle, AlertCircle } from "lucide-react";
 import RuleToggle from "./rule-toggle";
 import { Controller, useFormContext } from "react-hook-form";
-import { RulesFormValues } from "../_types/update-rules-schema";
+import { RulesFormValues } from "../_lib/schemas";
 
 const fileTypeOptions = [
   { value: "jpg", label: "JPG" },

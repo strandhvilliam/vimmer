@@ -11,7 +11,7 @@
   "devDependencies": {
     "@types/aws-lambda": "8.10.146",
     "prettier": "^3.2.5",
-    "turbo": "^2.3.3",
+    "turbo": "^2.5.0",
     "typescript": "5.5.4"
   },
   "engines": {

@@ -41,3 +41,33 @@ export const rulesFormSchema = z.object({
 });
 
 export type RulesFormValues = z.infer<typeof rulesFormSchema>;
+
+export const maxFileSizeParamsSchema = z.object({
+  maxBytes: z.number(),
+});
+export type MaxFileSizeParams = z.infer<typeof maxFileSizeParamsSchema>;
+
+export const allowedFileTypesParamsSchema = z.object({
+  allowedFileTypes: z.array(z.string()),
+});
+export type AllowedFileTypesParams = z.infer<
+  typeof allowedFileTypesParamsSchema
+>;
+
+export const withinTimerangeParamsSchema = z.object({
+  start: z.string(),
+  end: z.string(),
+});
+export type WithinTimerangeParams = z.infer<typeof withinTimerangeParamsSchema>;
+
+export const sameDeviceParamsSchema = z.null();
+export type SameDeviceParams = z.infer<typeof sameDeviceParamsSchema>;
+
+export const noModificationsParamsSchema = z.null();
+export type NoModificationsParams = z.infer<typeof noModificationsParamsSchema>;
+
+export const strictTimestampOrderingParamsSchema = z.null();
+
+export type StrictTimestampOrderingParams = z.infer<
+  typeof strictTimestampOrderingParamsSchema
+>;
