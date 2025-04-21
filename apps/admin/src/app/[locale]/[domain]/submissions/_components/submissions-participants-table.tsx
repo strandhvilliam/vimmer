@@ -53,7 +53,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@vimmer/ui/components/dropdown-menu";
-import { Participant, ValidationError } from "@vimmer/supabase/types";
+import {
+  Participant,
+  ValidationError as BaseValidationError,
+} from "@vimmer/supabase/types";
 import { useState } from "react";
 import { format } from "date-fns";
 import { refreshParticipantsData } from "../_actions/refresh-participants-data";
@@ -67,8 +70,25 @@ import {
   PaginationPrevious,
 } from "@vimmer/ui/components/pagination";
 
-type ParticipantWithValidationErrors = Participant & {
-  validationErrors: ValidationError[];
+// Extend the ValidationError interface to include fileName
+interface ValidationError extends BaseValidationError {
+  fileName?: string | null;
+}
+
+// Define the ValidationResult interface
+interface ValidationResult {
+  id: number;
+  participantId: number;
+  ruleKey: string;
+  severity: string;
+  message: string;
+  outcome: string;
+  fileName?: string | null;
+  createdAt: string;
+}
+
+type ParticipantWithValidationResults = Participant & {
+  validationResults: ValidationResult[];
   competitionClass?: {
     id: number;
     name: string;
@@ -79,7 +99,7 @@ type ParticipantWithValidationErrors = Participant & {
   } | null;
 };
 
-const columnHelper = createColumnHelper<ParticipantWithValidationErrors>();
+const columnHelper = createColumnHelper<ParticipantWithValidationResults>();
 
 const columnInfoMap: Record<string, { label: string; icon: LucideIcon }> = {
   reference: { label: "Participant", icon: Hash },
@@ -159,41 +179,51 @@ const columns = [
     },
     sortingFn: "alphanumeric",
   }),
-  columnHelper.accessor((row) => row.validationErrors || [], {
+  columnHelper.accessor((row) => row.validationResults || [], {
     id: "issues",
     header: "Issues",
     cell: (info) => {
-      const validationErrors = info.getValue();
-      if (!validationErrors.length) return null;
+      const validationResults = info.getValue();
+      if (!validationResults.length) return null;
 
-      const errorCount = validationErrors.filter(
-        (err) => err.severity === "error"
-      ).length;
-      const warningCount = validationErrors.filter(
-        (err) => err.severity === "warning"
-      ).length;
-      const aiSuspicionCount = validationErrors.filter(
-        (err) => err.severity === "ai_suspicion"
-      ).length;
+      // Filter only failed validation results
+      const failedResults = validationResults.filter(
+        (result) => result.outcome === "failed"
+      );
 
-      let iconColor = "text-yellow-500";
-      let IconComponent = AlertTriangle;
-
-      if (errorCount > 0) {
-        iconColor = "text-destructive";
-        IconComponent = AlertOctagon;
-      } else if (aiSuspicionCount > 0) {
-        iconColor = "text-purple-500";
-        IconComponent = AlertCircle;
+      // If no failed results, don't display anything
+      if (failedResults.length === 0) {
+        return null;
       }
+
+      const errorCount = failedResults.filter(
+        (result) => result.severity === "error"
+      ).length;
+      const warningCount = failedResults.filter(
+        (result) => result.severity === "warning"
+      ).length;
 
       return (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger>
-              <div className="flex items-center gap-1">
-                <IconComponent className={`h-4 w-4 ${iconColor}`} />
-                <span className="text-sm">{validationErrors.length}</span>
+              <div className="flex items-center gap-2">
+                {errorCount > 0 && (
+                  <div className="flex items-center gap-1">
+                    <AlertOctagon className="h-4 w-4 text-destructive" />
+                    <span className="text-sm text-destructive">
+                      {errorCount}
+                    </span>
+                  </div>
+                )}
+                {warningCount > 0 && (
+                  <div className="flex items-center gap-1">
+                    <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                    <span className="text-sm text-yellow-500">
+                      {warningCount}
+                    </span>
+                  </div>
+                )}
               </div>
             </TooltipTrigger>
             <TooltipContent>
@@ -202,11 +232,16 @@ const columns = [
                   <div>
                     <p className="font-semibold text-destructive">Errors:</p>
                     <ul className="list-disc pl-4 space-y-1">
-                      {validationErrors
-                        .filter((err) => err.severity === "error")
+                      {failedResults
+                        .filter((result) => result.severity === "error")
                         .map((error, i) => (
                           <li key={i} className="text-sm">
                             {error.message || "Unknown error"}
+                            {error.fileName && (
+                              <span className="block text-xs text-muted-foreground mt-0.5">
+                                File: {error.fileName}
+                              </span>
+                            )}
                           </li>
                         ))}
                     </ul>
@@ -216,28 +251,16 @@ const columns = [
                   <div>
                     <p className="font-semibold text-yellow-500">Warnings:</p>
                     <ul className="list-disc pl-4 space-y-1">
-                      {validationErrors
-                        .filter((err) => err.severity === "warning")
+                      {failedResults
+                        .filter((result) => result.severity === "warning")
                         .map((warning, i) => (
                           <li key={i} className="text-sm">
                             {warning.message || "Unknown warning"}
-                          </li>
-                        ))}
-                    </ul>
-                  </div>
-                )}
-                {aiSuspicionCount > 0 && (
-                  <div>
-                    <p className="font-semibold text-purple-500">
-                      AI Suspicions:
-                    </p>
-                    <ul className="list-disc pl-4 space-y-1">
-                      {validationErrors
-                        .filter((err) => err.severity === "ai_suspicion")
-                        .map((suspicion, i) => (
-                          <li key={i} className="text-sm">
-                            {suspicion.message ||
-                              "AI-generated content suspected"}
+                            {warning.fileName && (
+                              <span className="block text-xs text-muted-foreground mt-0.5">
+                                File: {warning.fileName}
+                              </span>
+                            )}
                           </li>
                         ))}
                     </ul>
@@ -250,15 +273,49 @@ const columns = [
       );
     },
     sortingFn: (rowA, rowB) => {
-      const errorsA = rowA.original.validationErrors?.length || 0;
-      const errorsB = rowB.original.validationErrors?.length || 0;
-      return errorsA - errorsB;
+      // Sort by failed validation count
+      const failedA =
+        rowA.original.validationResults?.filter(
+          (result) => result.outcome === "failed"
+        ).length || 0;
+      const failedB =
+        rowB.original.validationResults?.filter(
+          (result) => result.outcome === "failed"
+        ).length || 0;
+
+      if (failedA !== failedB) return failedA - failedB;
+
+      // If same number of failed validations, sort by error count
+      const errorsA =
+        rowA.original.validationResults?.filter(
+          (result) => result.outcome === "failed" && result.severity === "error"
+        ).length || 0;
+      const errorsB =
+        rowB.original.validationResults?.filter(
+          (result) => result.outcome === "failed" && result.severity === "error"
+        ).length || 0;
+
+      if (errorsA !== errorsB) return errorsA - errorsB;
+
+      // If same number of errors, sort by warning count
+      const warningsA =
+        rowA.original.validationResults?.filter(
+          (result) =>
+            result.outcome === "failed" && result.severity === "warning"
+        ).length || 0;
+      const warningsB =
+        rowB.original.validationResults?.filter(
+          (result) =>
+            result.outcome === "failed" && result.severity === "warning"
+        ).length || 0;
+
+      return warningsA - warningsB;
     },
   }),
 ];
 
 interface SubmissionsParticipantsTableProps {
-  participants: ParticipantWithValidationErrors[];
+  participants: ParticipantWithValidationResults[];
   domain: string;
 }
 
@@ -268,7 +325,7 @@ export function SubmissionsParticipantsTable({
 }: SubmissionsParticipantsTableProps) {
   const router = useRouter();
   const [sorting, setSorting] = useState<SortingState>([
-    { id: "reference", desc: false },
+    { id: "createdAt", desc: true },
   ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -321,8 +378,8 @@ export function SubmissionsParticipantsTable({
     return columnInfo ? <columnInfo.icon className="h-3.5 w-3.5" /> : null;
   };
 
-  const handleRowClick = (row: ParticipantWithValidationErrors) => {
-    router.push(`/${row.domain}/submissions/${row.reference}`);
+  const handleRowClick = (row: ParticipantWithValidationResults) => {
+    router.push(`/${domain}/submissions/${row.reference}`);
   };
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { Badge } from "@vimmer/ui/components/badge";
@@ -13,15 +13,15 @@ import {
 } from "@vimmer/ui/components/tooltip";
 import { Blurhash } from "react-blurhash";
 import { useState } from "react";
-import { Submission, ValidationError, Topic } from "@vimmer/supabase/types";
+import { Submission, ValidationResult, Topic } from "@vimmer/supabase/types";
 import { cn } from "@vimmer/ui/lib/utils";
 import { useParams } from "next/navigation";
 
 interface PhotoSubmissionCardProps {
   submission: Submission & {
-    validationErrors: ValidationError[];
     topic: Topic;
   };
+  validationResults?: ValidationResult[];
 }
 
 const PLACEHOLDER_HASH = "LLI5Y-%M?bxuWBxu-;of~q%MWBt7";
@@ -33,8 +33,33 @@ function getThumbnailImageUrl(submission: Submission) {
   return `${THUMBNAIL_BASE_URL}/${submission.thumbnailKey}`;
 }
 
-export function PhotoSubmissionCard({ submission }: PhotoSubmissionCardProps) {
+export function PhotoSubmissionCard({
+  submission,
+  validationResults = [],
+}: PhotoSubmissionCardProps) {
   const { domain, participantRef } = useParams();
+
+  // Filter validation results for this submission
+  const submissionValidations = validationResults.filter(
+    (result) => result.fileName === submission.key
+  );
+
+  // Check validation status
+  const hasFailedValidations = submissionValidations.some(
+    (result) => result.outcome === "failed"
+  );
+
+  // Determine highest severity level (error takes precedence over warning)
+  const hasErrors = submissionValidations.some(
+    (result) => result.severity === "error" && result.outcome === "failed"
+  );
+
+  const hasWarnings = submissionValidations.some(
+    (result) => result.severity === "warning" && result.outcome === "failed"
+  );
+
+  // All validations passed
+  const allPassed = submissionValidations.length > 0 && !hasFailedValidations;
 
   return (
     <Link href={`/${domain}/submissions/${participantRef}/${submission.id}`}>
@@ -47,12 +72,9 @@ export function PhotoSubmissionCard({ submission }: PhotoSubmissionCardProps) {
         }}
       >
         <Card className="group cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all overflow-hidden">
-          <CardContent className="relative p-0 flex items-center justify-center aspect-[4/3] bg-black/40 overflow-hidden">
+          <CardContent className="relative p-0 flex items-center justify-center aspect-[4/3] bg-neutral-200/40 overflow-hidden">
             <div className="absolute top-2 left-2 z-10">
-              <Badge
-                variant="outline"
-                className="bg-background/80 backdrop-blur-sm"
-              >
+              <Badge variant="outline" className="bg-white/80 backdrop-blur-sm">
                 #{submission.topic.orderIndex + 1}
               </Badge>
             </div>
@@ -80,35 +102,61 @@ export function PhotoSubmissionCard({ submission }: PhotoSubmissionCardProps) {
           <CardFooter className="p-4 flex flex-col items-start gap-2 ">
             <div className="flex items-center justify-between w-full">
               <h3 className="font-medium">{submission.topic.name}</h3>
-              {submission.validationErrors.length > 0 && (
+              {submissionValidations.length > 0 && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger>
-                      <div className="flex items-center gap-1">
-                        <AlertTriangle
-                          className={`h-4 w-4 ${
-                            submission.validationErrors.length > 0
-                              ? "text-destructive"
-                              : "text-yellow-500"
-                          }`}
-                        />
-                      </div>
+                      {allPassed ? (
+                        <Badge className="bg-green-500/15 text-green-600 hover:bg-green-500/20 transition-colors">
+                          <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                          Valid
+                        </Badge>
+                      ) : hasErrors ? (
+                        <Badge
+                          variant="destructive"
+                          className="bg-destructive/15 text-destructive hover:bg-destructive/20 transition-colors"
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5 mr-1" />
+                          Error
+                        </Badge>
+                      ) : hasWarnings ? (
+                        <Badge
+                          variant="outline"
+                          className="bg-yellow-500/15 text-yellow-600 border-yellow-200 hover:bg-yellow-500/20 transition-colors"
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5 mr-1" />
+                          Warning
+                        </Badge>
+                      ) : null}
                     </TooltipTrigger>
                     <TooltipContent>
                       <div className="space-y-2">
-                        {submission.validationErrors.length > 0 ? (
+                        {hasErrors || hasWarnings ? (
                           <div>
-                            <p className="font-semibold text-destructive">
-                              Errors:
+                            <p
+                              className={cn(
+                                "font-semibold",
+                                hasErrors
+                                  ? "text-destructive"
+                                  : "text-yellow-500"
+                              )}
+                            >
+                              {hasErrors ? "Errors:" : "Warnings:"}
                             </p>
                             <ul className="list-disc pl-4 space-y-1">
-                              {submission.validationErrors.map((error, i) => (
-                                <li key={i} className="text-sm">
-                                  {error.message}
-                                </li>
-                              ))}
+                              {submissionValidations
+                                .filter((result) => result.outcome === "failed")
+                                .map((result, i) => (
+                                  <li key={i} className="text-sm">
+                                    {result.message}
+                                  </li>
+                                ))}
                             </ul>
                           </div>
+                        ) : allPassed ? (
+                          <p className="text-green-500">
+                            All validations passed
+                          </p>
                         ) : null}
                       </div>
                     </TooltipContent>

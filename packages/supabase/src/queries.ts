@@ -32,27 +32,16 @@ export async function getParticipantByIdQuery(
 export async function getParticipantByReferenceQuery(
   supabase: SupabaseClient,
   { reference, domain }: { reference: string; domain: string }
-): Promise<
-  | (Participant & {
-      submissions: (Submission & {
-        topic: Topic;
-        validationErrors: ValidationError[];
-      })[];
-      competitionClass: CompetitionClass | null;
-      deviceGroup: DeviceGroup | null;
-      validationErrors: ValidationError[];
-    })
-  | null
-> {
+) {
   const { data } = await supabase
     .from("participants")
     .select(
       `
         *, 
-        submissions(*, topic:topics(*), validation_errors:validation_errors(*)),
+        submissions(*, topic:topics(*)),
         competition_class:competition_classes(*),
         device_group:device_groups(*),
-        validation_errors(*)
+        validation_results(*)
     `
     )
     .eq("reference", reference)
@@ -221,7 +210,7 @@ export async function getParticipantsByDomainQuery(
       *,
       competition_class:competition_classes(*),
       device_group:device_groups(*),
-      validation_errors(*)
+      validation_results(*)
       `
     )
     .eq("domain", domain)
@@ -238,8 +227,7 @@ export async function getValidationResultsByParticipantIdQuery(
     .select(
       `
       *,
-      participant:participants(*),
-      submission:submissions(*)
+      participant:participants(*)
       `
     )
     .eq("participant_id", participantId)
