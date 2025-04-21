@@ -1,8 +1,8 @@
 "use server";
 
-import { RulesState } from "../_store/use-rules-store";
+import { RulesFormValues } from "../_store/use-rules-form";
 
-export async function saveRules(rules: Omit<RulesState, "isDirty">) {
+export async function saveRules(rules: RulesFormValues) {
   try {
     // Simulate a delay for saving to the database
     await new Promise((resolve) => setTimeout(resolve, 1000));

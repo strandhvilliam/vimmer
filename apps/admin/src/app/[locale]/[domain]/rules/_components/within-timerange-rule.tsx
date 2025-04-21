@@ -5,54 +5,37 @@ import { Label } from "@vimmer/ui/components/label";
 import { Input } from "@vimmer/ui/components/input";
 import RuleToggle from "./rule-toggle";
 import Link from "next/link";
-import useRulesStore from "../_store/use-rules-store";
+import { useFormContext } from "react-hook-form";
+import { RulesFormValues } from "../_store/use-rules-form";
 
 export default function WithinTimerangeRule() {
-  const withinTimerange = useRulesStore((state) => state.within_timerange);
-  const updateRule = useRulesStore((state) => state.updateRule);
+  const { control, watch } = useFormContext<RulesFormValues>();
+  const withinTimerange = watch("within_timerange");
 
   return (
     <RuleToggle
       title="Within Time Range"
       description="Verify photos were taken during the specified competition timeframe using EXIF data."
-      enabled={withinTimerange.enabled}
-      onEnabledChange={(enabled) =>
-        updateRule("within_timerange", "enabled", enabled)
-      }
-      severity={withinTimerange.severity}
-      onSeverityChange={(severity) =>
-        updateRule("within_timerange", "severity", severity)
-      }
+      name="within_timerange"
+      control={control}
       recommendedSeverity="error"
     >
       <div className="flex flex-col">
         <div className="grid sm:grid-cols-2 gap-4 max-w-lg pointer-events-none">
           <div className="space-y-1.5">
-            <Label htmlFor="startTime" className="text-xs font-medium">
-              Competition Start Time
-            </Label>
-            <Input
-              id="startTime"
-              type="datetime-local"
-              value={withinTimerange.params.start?.slice(0, 16) || ""}
-              disabled
-              className="text-sm text-foreground !opacity-100"
-            />
+            <div className="text-xs font-medium">Competition Start Time</div>
+            <div className="text-sm text-foreground">
+              {withinTimerange.params.start?.slice(0, 16) || ""}
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="endTime" className="text-xs font-medium">
-              Competition End Time
-            </Label>
-            <Input
-              id="endTime"
-              type="datetime-local"
-              value={withinTimerange.params.end?.slice(0, 16) || ""}
-              disabled
-              className="text-sm text-foreground !opacity-100"
-            />
+          <div className="space-y-1.5 border-l border-border pl-4">
+            <div className="text-xs font-medium">Competition End Time</div>
+            <div className="text-sm text-foreground">
+              {withinTimerange.params.end?.slice(0, 16) || ""}
+            </div>
           </div>
         </div>
-        <div className="mt-1 flex justify-end">
+        <div className="mt-4 flex justify-end">
           <span className="text-xs text-muted-foreground">
             You can configure the start and end time on the
           </span>

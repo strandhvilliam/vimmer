@@ -2,24 +2,18 @@
 
 import React from "react";
 import RuleToggle from "./rule-toggle";
-import useRulesStore from "../_store/use-rules-store";
+import { useFormContext } from "react-hook-form";
+import { RulesFormValues } from "../_store/use-rules-form";
 
 export default function SameDeviceRule() {
-  const sameDevice = useRulesStore((state) => state.same_device);
-  const updateRule = useRulesStore((state) => state.updateRule);
+  const { control } = useFormContext<RulesFormValues>();
 
   return (
     <RuleToggle
       title="Same Device"
       description="Require all photos in a single submission to originate from the same camera/device."
-      enabled={sameDevice.enabled}
-      onEnabledChange={(enabled) =>
-        updateRule("same_device", "enabled", enabled)
-      }
-      severity={sameDevice.severity}
-      onSeverityChange={(severity) =>
-        updateRule("same_device", "severity", severity)
-      }
+      name="same_device"
+      control={control}
       recommendedSeverity="warning"
     />
   );

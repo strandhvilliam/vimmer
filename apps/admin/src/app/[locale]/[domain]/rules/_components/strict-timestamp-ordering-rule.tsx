@@ -2,26 +2,18 @@
 
 import React from "react";
 import RuleToggle from "./rule-toggle";
-import useRulesStore from "../_store/use-rules-store";
+import { useFormContext } from "react-hook-form";
+import { RulesFormValues } from "../_store/use-rules-form";
 
 export default function StrictTimestampOrderingRule() {
-  const strictTimestampOrdering = useRulesStore(
-    (state) => state.strict_timestamp_ordering
-  );
-  const updateRule = useRulesStore((state) => state.updateRule);
+  const { control } = useFormContext<RulesFormValues>();
 
   return (
     <RuleToggle
       title="Strict Timestamp Ordering"
       description="Ensure photo timestamps align chronologically with the theme submission order."
-      enabled={strictTimestampOrdering.enabled}
-      onEnabledChange={(enabled) =>
-        updateRule("strict_timestamp_ordering", "enabled", enabled)
-      }
-      severity={strictTimestampOrdering.severity}
-      onSeverityChange={(severity) =>
-        updateRule("strict_timestamp_ordering", "severity", severity)
-      }
+      name="strict_timestamp_ordering"
+      control={control}
       recommendedSeverity="warning"
     />
   );

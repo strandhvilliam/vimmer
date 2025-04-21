@@ -1,20 +1,16 @@
 "use client";
 
-import React, { useEffect } from "react";
-import useRulesStore from "../_store/use-rules-store";
-import { RulesState } from "../_store/use-rules-store";
+import React from "react";
+import { FormProvider } from "react-hook-form";
+import { useRulesForm, RulesFormValues } from "../_store/use-rules-form";
 
 interface RulesProviderProps {
-  initialRules: Omit<RulesState, "isDirty">;
+  initialRules: RulesFormValues;
   children: React.ReactNode;
 }
 
 export function RulesProvider({ initialRules, children }: RulesProviderProps) {
-  const initializeRules = useRulesStore((state) => state.initializeRules);
+  const methods = useRulesForm(initialRules);
 
-  useEffect(() => {
-    initializeRules(initialRules);
-  }, [initialRules, initializeRules]);
-
-  return <>{children}</>;
+  return <FormProvider {...methods}>{children}</FormProvider>;
 }

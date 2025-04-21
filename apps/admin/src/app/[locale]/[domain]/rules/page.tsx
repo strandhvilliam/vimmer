@@ -7,9 +7,9 @@ import NoModificationsRule from "./_components/no-modifications-rule";
 import SaveRulesButton from "./_components/save-rules-button";
 import StrictTimestampOrderingRule from "./_components/strict-timestamp-ordering-rule";
 import { RulesProvider } from "./_components/rules-provider";
-import { RulesState } from "./_store/use-rules-store";
+import { RulesFormValues } from "./_store/use-rules-form";
 
-async function fetchRules(): Promise<Omit<RulesState, "isDirty">> {
+async function fetchRules(): Promise<RulesFormValues> {
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   return {

@@ -4,34 +4,26 @@ import React, { useState } from "react";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { Save } from "lucide-react";
 import { motion } from "motion/react";
-import useRulesStore from "../_store/use-rules-store";
+import { useFormContext } from "react-hook-form";
 import { saveRules } from "../_actions/save-rules";
 import { toast } from "sonner";
+import { RulesFormValues } from "../_store/use-rules-form";
 
 export default function SaveRulesButton() {
   const [isSaving, setIsSaving] = useState(false);
-  const rules = useRulesStore();
-  const resetDirty = useRulesStore((state) => state.resetDirty);
-  const isDirty = useRulesStore((state) => state.isDirty);
+  const { formState, getValues } = useFormContext<RulesFormValues>();
+  const { isDirty } = formState;
 
   const handleSaveChanges = async () => {
     if (!isDirty) return;
 
     setIsSaving(true);
     try {
-      const {
-        isDirty,
-        initializeRules,
-        updateRule,
-        resetDirty: _,
-        ...rulesData
-      } = rules;
-
-      const result = await saveRules(rulesData);
+      const formValues = getValues();
+      const result = await saveRules(formValues);
 
       if (result.success) {
         toast.success("Rules saved successfully");
-        resetDirty();
       } else {
         toast.error(result.message || "Failed to save rules");
       }
