@@ -10,7 +10,7 @@ export async function getParticipantByIdQuery(
     .select(
       `
         *, 
-        submissions(*, topic:topics(*)),
+        submissions(*),
         competition_class:competition_classes(*),
         device_group:device_groups(*)
     `
@@ -31,7 +31,7 @@ export async function getParticipantByReferenceQuery(
     .select(
       `
         *, 
-        submissions(*, topic:topics(*)),
+        submissions(*),
         competition_class:competition_classes(*),
         device_group:device_groups(*),
         validation_results(*)
@@ -129,6 +129,18 @@ export async function getMarathonsByUserIdQuery(
   return data?.flatMap(({ marathons }) => marathons).map(toCamelCase) ?? [];
 }
 
+export async function getTopicsByMarathonIdQuery(
+  supabase: SupabaseClient,
+  marathonId: number
+) {
+  const { data } = await supabase
+    .from("topics")
+    .select("*")
+    .eq("marathon_id", marathonId)
+    .throwOnError();
+  return data?.map(toCamelCase) ?? [];
+}
+
 export async function getTopicsByDomainQuery(
   supabase: SupabaseClient,
   domain: string
@@ -140,6 +152,34 @@ export async function getTopicsByDomainQuery(
     .throwOnError();
 
   return data?.flatMap(({ topics }) => toCamelCase(topics)) ?? [];
+}
+
+export async function getTopicsWithSubmissionCountQuery(
+  supabase: SupabaseClient,
+  marathonId: number
+) {
+  const { data } = await supabase
+    .from("topics")
+    .select("id, submissions:submissions(count)", {
+      count: "exact",
+    })
+    .eq("marathon_id", marathonId)
+    .throwOnError();
+
+  console.log(data);
+  return data?.map(toCamelCase) ?? [];
+}
+
+export async function getTotalSubmissionCountQuery(
+  supabase: SupabaseClient,
+  marathonId: number
+) {
+  const { data } = await supabase
+    .from("submissions")
+    .select("*", { count: "exact", head: true })
+    .eq("marathon_id", marathonId)
+    .throwOnError();
+  return data?.map(toCamelCase) ?? [];
 }
 
 export async function getMarathonByDomainQuery(

@@ -16,6 +16,7 @@ import {
   getParticipantsByDomainQuery,
   getRulesByMarathonIdQuery,
   getTopicsByDomainQuery,
+  getTopicsWithSubmissionCountQuery,
   getValidationResultsByParticipantIdQuery,
 } from "./queries";
 import { Participant } from "./types";
@@ -109,5 +110,14 @@ export async function getRulesByMarathonId(marathonId: number) {
   cacheLife("hours");
   const supabase = await createClient();
   const data = await getRulesByMarathonIdQuery(supabase, marathonId);
+  return data;
+}
+
+export async function getTopicsWithSubmissionCount(marathonId: number) {
+  "use cache";
+  cacheTag(`topics-with-submission-count-${marathonId}`);
+  cacheLife("seconds");
+  const supabase = await createClient();
+  const data = await getTopicsWithSubmissionCountQuery(supabase, marathonId);
   return data;
 }
