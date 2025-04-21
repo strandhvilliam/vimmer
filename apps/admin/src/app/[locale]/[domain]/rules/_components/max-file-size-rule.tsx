@@ -4,40 +4,27 @@ import React from "react";
 import { Label } from "@vimmer/ui/components/label";
 import { Slider } from "@vimmer/ui/components/slider";
 import RuleToggle from "./rule-toggle";
-import { Rule, MaxFileSizeParams } from "../page";
+import useRulesStore from "../_store/use-rules-store";
 
-interface MaxFileSizeRuleProps {
-  maxFileSize: Rule<MaxFileSizeParams>;
-}
-
-export default function MaxFileSizeRule({ maxFileSize }: MaxFileSizeRuleProps) {
-  const [rule, setRule] = React.useState(maxFileSize);
+export default function MaxFileSizeRule() {
+  const maxFileSize = useRulesStore((state) => state.max_file_size);
+  const updateRule = useRulesStore((state) => state.updateRule);
 
   // Helper functions
   const getMbValue = (bytes: number) => Math.round(bytes / (1024 * 1024));
-
-  // Update rule handlers
-  const updateRule = (field: "enabled" | "severity" | "params", value: any) => {
-    setRule((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  // Update parent state when client state changes
-  React.useEffect(() => {
-    // You could add API calls or dispatch actions here to save the changes
-    console.log("Max File Size Rule updated:", rule);
-  }, [rule]);
 
   return (
     <RuleToggle
       title="Maximum File Size"
       description="Set the largest allowed file size for individual photos."
-      enabled={rule.enabled}
-      onEnabledChange={(enabled) => updateRule("enabled", enabled)}
-      severity={rule.severity}
-      onSeverityChange={(severity) => updateRule("severity", severity)}
+      enabled={maxFileSize.enabled}
+      onEnabledChange={(enabled) =>
+        updateRule("max_file_size", "enabled", enabled)
+      }
+      severity={maxFileSize.severity}
+      onSeverityChange={(severity) =>
+        updateRule("max_file_size", "severity", severity)
+      }
       recommendedSeverity="error"
     >
       <div className="space-y-4 max-w-md w-full">
@@ -46,7 +33,7 @@ export default function MaxFileSizeRule({ maxFileSize }: MaxFileSizeRuleProps) {
             <Label htmlFor="maxFileSize" className="text-sm font-medium">
               Limit:{" "}
               <span className="text-primary font-semibold tabular-nums bg-muted px-2 py-1 rounded-md">
-                {getMbValue(rule.params.maxBytes)} MB
+                {getMbValue(maxFileSize.params.maxBytes)} MB
               </span>
             </Label>
           </div>
@@ -55,11 +42,11 @@ export default function MaxFileSizeRule({ maxFileSize }: MaxFileSizeRuleProps) {
             min={1}
             max={100}
             step={1}
-            value={[getMbValue(rule.params.maxBytes)]}
+            value={[getMbValue(maxFileSize.params.maxBytes)]}
             onValueChange={(values) => {
               const value = values[0];
               if (typeof value === "number") {
-                updateRule("params", {
+                updateRule("max_file_size", "params", {
                   maxBytes: value * 1024 * 1024,
                 });
               }

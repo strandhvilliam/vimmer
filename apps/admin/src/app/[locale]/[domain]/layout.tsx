@@ -3,6 +3,7 @@ import { AppHeader } from "@/components/app-header";
 import { SidebarInset, SidebarProvider } from "@vimmer/ui/components/sidebar";
 import { auth, getSession } from "@/lib/auth";
 import { SessionProvider } from "@/lib/hooks/use-session";
+import { Toaster } from "@vimmer/ui/components/sonner";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -29,6 +30,7 @@ export default async function DashboardLayout({
             {children}
           </div>
         </SidebarInset>
+        <Toaster />
       </SidebarProvider>
     </SessionProvider>
   );

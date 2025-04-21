@@ -2,37 +2,24 @@
 
 import React from "react";
 import RuleToggle from "./rule-toggle";
-import { Rule, EmptyParams } from "../page";
+import useRulesStore from "../_store/use-rules-store";
 
-interface SameDeviceRuleProps {
-  sameDevice: Rule<EmptyParams>;
-}
-
-export default function SameDeviceRule({ sameDevice }: SameDeviceRuleProps) {
-  const [rule, setRule] = React.useState(sameDevice);
-
-  // Update rule handler
-  const updateRule = (field: "enabled" | "severity", value: any) => {
-    setRule((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  // Update parent state when client state changes
-  React.useEffect(() => {
-    // You could add API calls or dispatch actions here to save the changes
-    console.log("Same Device Rule updated:", rule);
-  }, [rule]);
+export default function SameDeviceRule() {
+  const sameDevice = useRulesStore((state) => state.same_device);
+  const updateRule = useRulesStore((state) => state.updateRule);
 
   return (
     <RuleToggle
       title="Same Device"
       description="Require all photos in a single submission to originate from the same camera/device."
-      enabled={rule.enabled}
-      onEnabledChange={(enabled) => updateRule("enabled", enabled)}
-      severity={rule.severity}
-      onSeverityChange={(severity) => updateRule("severity", severity)}
+      enabled={sameDevice.enabled}
+      onEnabledChange={(enabled) =>
+        updateRule("same_device", "enabled", enabled)
+      }
+      severity={sameDevice.severity}
+      onSeverityChange={(severity) =>
+        updateRule("same_device", "severity", severity)
+      }
       recommendedSeverity="warning"
     />
   );
