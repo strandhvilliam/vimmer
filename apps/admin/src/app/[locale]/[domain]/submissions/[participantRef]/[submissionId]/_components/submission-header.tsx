@@ -19,8 +19,9 @@ import {
 } from "@vimmer/supabase/types";
 
 interface SubmissionHeaderProps {
-  submission: Submission & { topic: Topic };
+  submission: Submission;
   participant: Participant;
+  topic: Topic;
   validationResults: ValidationResult[];
   domain: string;
 }
@@ -28,6 +29,7 @@ interface SubmissionHeaderProps {
 export function SubmissionHeader({
   submission,
   participant,
+  topic,
   validationResults,
   domain,
 }: SubmissionHeaderProps) {
@@ -70,7 +72,7 @@ export function SubmissionHeader({
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-semibold tracking-tight font-rocgrotesk">
-              #{submission.topic.orderIndex + 1}
+              #{topic.orderIndex + 1}
             </h1>
             {hasValidationResults && (
               <Badge className={cn("ml-2", getValidationBadgeStyle())}>

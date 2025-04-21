@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 import { ParticipantHeader } from "./_components/participant-header";
-import { getParticipantByReference } from "@vimmer/supabase/cached-queries";
+import {
+  getParticipantByReference,
+  getTopicsByDomain,
+} from "@vimmer/supabase/cached-queries";
 import { PhotoSubmissionCard } from "./_components/submission-card";
 import { ValidationResultsTable } from "./_components/validation-results-table";
 import {
@@ -19,15 +22,21 @@ interface PageProps {
 
 export default async function ParticipantSubmissionPage({ params }: PageProps) {
   const { domain, participantRef } = await params;
-  const participant = await getParticipantByReference(domain, participantRef);
+  const [participant, topics] = await Promise.all([
+    getParticipantByReference(domain, participantRef),
+    getTopicsByDomain(domain),
+  ]);
 
   if (!participant) {
     notFound();
   }
 
-  const submissions = participant.submissions.sort(
-    (a, b) => a.topic.orderIndex - b.topic.orderIndex
-  );
+  const data = participant.submissions
+    .map((s) => ({
+      submission: s,
+      topic: topics.find((t) => t.id === s.topicId),
+    }))
+    .sort((a, b) => (a.topic?.orderIndex ?? 0) - (b.topic?.orderIndex ?? 0));
 
   const validationResults = participant.validationResults || [];
 
@@ -56,14 +65,15 @@ export default async function ParticipantSubmissionPage({ params }: PageProps) {
 
         <TabsContent value="submissions" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {submissions.map((submission) => (
+            {data.map(({ submission, topic }) => (
               <PhotoSubmissionCard
                 key={submission.id}
                 submission={submission}
+                topic={topic}
                 validationResults={validationResults}
               />
             ))}
-            {submissions.length === 0 && (
+            {data.length === 0 && (
               <div className="col-span-full text-center text-muted-foreground py-12">
                 No photos submitted yet
               </div>

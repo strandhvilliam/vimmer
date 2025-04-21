@@ -43,7 +43,7 @@ import { TopicsSubmissionsCell } from "./topics-submissions-cell";
 import { TopicsActionCell } from "./topics-action-cell";
 
 interface TopicsTableProps {
-  topics: Topic[];
+  topics: (Topic & { submissionCount: number })[];
   onUpdateTopicsOrder: (newOrdering: number[]) => void;
   onUpdateTopic: (topic: EditTopicInput) => void;
   onDeleteTopic: (topicId: number) => void;

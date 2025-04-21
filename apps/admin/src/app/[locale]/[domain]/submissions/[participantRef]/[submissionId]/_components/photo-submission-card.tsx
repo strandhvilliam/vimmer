@@ -10,9 +10,11 @@ function getPreviewImageUrl(submission: Submission) {
 export function PhotoSubmissionCard({
   submission,
   participant,
+  topic,
 }: {
-  submission: Submission & { topic: Topic };
+  submission: Submission;
   participant: any;
+  topic: Topic;
 }) {
   return (
     <div className="space-y-4">
@@ -21,7 +23,7 @@ export function PhotoSubmissionCard({
           <div className="relative w-full overflow-hidden">
             <img
               src={getPreviewImageUrl(submission)}
-              alt={submission.topic.name}
+              alt={topic.name}
               className="object-contain w-full h-full max-h-[70vh]"
             />
           </div>
@@ -29,9 +31,9 @@ export function PhotoSubmissionCard({
 
         <div className="bg-black p-4 flex flex-col justify-end ">
           <div className="text-white">
-            <h3 className="text-xl font-bold">{submission.topic.name}</h3>
+            <h3 className="text-xl font-bold">{topic.name}</h3>
             <p className="text-sm opacity-90">
-              Topic {submission.topic.orderIndex + 1} of{" "}
+              Topic {topic.orderIndex + 1} of{" "}
               {participant.competitionClass?.numberOfPhotos || "?"}
             </p>
           </div>

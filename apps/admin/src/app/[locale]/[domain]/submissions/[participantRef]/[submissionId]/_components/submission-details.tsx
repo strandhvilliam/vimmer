@@ -5,7 +5,8 @@ import { ReviewTimeline } from "./review-timeline";
 import { Submission, Topic } from "@vimmer/supabase/types";
 
 interface SubmissionDetailsProps {
-  submission: Submission & { topic: Topic };
+  submission: Submission;
+  topic: Topic;
   participant: any;
   hasIssues: boolean;
 }
@@ -13,6 +14,7 @@ interface SubmissionDetailsProps {
 export function SubmissionDetails({
   submission,
   participant,
+  topic,
   hasIssues,
 }: SubmissionDetailsProps) {
   return (
@@ -35,7 +37,7 @@ export function SubmissionDetails({
               <h3 className="text-sm font-medium text-muted-foreground">
                 Topic
               </h3>
-              <p>{submission.topic.name}</p>
+              <p>{topic.name}</p>
             </div>
           </div>
 

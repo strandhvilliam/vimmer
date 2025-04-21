@@ -24,7 +24,7 @@ interface ReviewStep {
 }
 
 interface ReviewTimelineProps {
-  submission: Submission & { topic: Topic };
+  submission: Submission;
   participant: any;
   hasIssues: boolean;
 }
@@ -34,7 +34,6 @@ export function ReviewTimeline({
   participant,
   hasIssues,
 }: ReviewTimelineProps) {
-  // Generate the review steps based on the submission data
   const reviewSteps: ReviewStep[] = [
     {
       status: "completed",

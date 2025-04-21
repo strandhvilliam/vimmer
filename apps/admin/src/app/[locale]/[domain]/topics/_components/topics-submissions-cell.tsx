@@ -12,11 +12,11 @@ import { Images } from "lucide-react";
 import { ExternalLink } from "lucide-react";
 
 interface TopicsSubmissionsCellProps {
-  row: Row<Topic>;
+  row: Row<Topic & { submissionCount?: number }>;
 }
 
 export function TopicsSubmissionsCell({ row }: TopicsSubmissionsCellProps) {
-  const count = row.original.orderIndex + 1 * 10;
+  const count = row.original.submissionCount ?? 0;
   return (
     <TooltipProvider>
       <Tooltip>

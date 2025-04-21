@@ -18,9 +18,8 @@ import { cn } from "@vimmer/ui/lib/utils";
 import { useParams } from "next/navigation";
 
 interface PhotoSubmissionCardProps {
-  submission: Submission & {
-    topic: Topic;
-  };
+  submission: Submission;
+  topic?: Topic;
   validationResults?: ValidationResult[];
 }
 
@@ -28,7 +27,6 @@ const PLACEHOLDER_HASH = "LLI5Y-%M?bxuWBxu-;of~q%MWBt7";
 
 const THUMBNAIL_BASE_URL = "https://d2xu2hgpxoda9b.cloudfront.net";
 
-const PREVIEW_BASE_URL = "https://d2w93ix7jvihnu.cloudfront.net";
 function getThumbnailImageUrl(submission: Submission) {
   return `${THUMBNAIL_BASE_URL}/${submission.thumbnailKey}`;
 }
@@ -36,20 +34,18 @@ function getThumbnailImageUrl(submission: Submission) {
 export function PhotoSubmissionCard({
   submission,
   validationResults = [],
+  topic,
 }: PhotoSubmissionCardProps) {
   const { domain, participantRef } = useParams();
 
-  // Filter validation results for this submission
   const submissionValidations = validationResults.filter(
     (result) => result.fileName === submission.key
   );
 
-  // Check validation status
   const hasFailedValidations = submissionValidations.some(
     (result) => result.outcome === "failed"
   );
 
-  // Determine highest severity level (error takes precedence over warning)
   const hasErrors = submissionValidations.some(
     (result) => result.severity === "error" && result.outcome === "failed"
   );
@@ -58,7 +54,6 @@ export function PhotoSubmissionCard({
     (result) => result.severity === "warning" && result.outcome === "failed"
   );
 
-  // All validations passed
   const allPassed = submissionValidations.length > 0 && !hasFailedValidations;
 
   return (
@@ -75,19 +70,9 @@ export function PhotoSubmissionCard({
           <CardContent className="relative p-0 flex items-center justify-center aspect-[4/3] bg-neutral-200/40 overflow-hidden">
             <div className="absolute top-2 left-2 z-10">
               <Badge variant="outline" className="bg-white/80 backdrop-blur-sm">
-                #{submission.topic.orderIndex + 1}
+                #{!!topic?.orderIndex ? topic.orderIndex + 1 : "?"}
               </Badge>
             </div>
-
-            {/* <Blurhash
-            hash={PLACEHOLDER_HASH}
-            width={300}
-            height={200}
-            punch={1}
-            resolutionX={32}
-            resolutionY={32}
-            className="w-full object-cover !absolute inset-0 bg-transparent "
-          /> */}
 
             <motion.img
               initial={{ opacity: 0 }}
@@ -96,12 +81,12 @@ export function PhotoSubmissionCard({
               loading="lazy"
               className={cn("w-full h-full object-contain rounded-t-lg")}
               src={getThumbnailImageUrl(submission)}
-              alt={submission.topic.name}
+              alt={topic?.name ?? ""}
             />
           </CardContent>
           <CardFooter className="p-4 flex flex-col items-start gap-2 ">
             <div className="flex items-center justify-between w-full">
-              <h3 className="font-medium">{submission.topic.name}</h3>
+              <h3 className="font-medium">{topic?.name ?? "Untitled Topic"}</h3>
               {submissionValidations.length > 0 && (
                 <TooltipProvider>
                   <Tooltip>

@@ -2,7 +2,11 @@ import type { Handler } from "aws-lambda";
 import { createRule, runValidations } from "@vimmer/validation/validator";
 
 import { createClient } from "@vimmer/supabase/lambda";
-import { getParticipantByIdQuery } from "@vimmer/supabase/queries";
+import {
+  getParticipantByIdQuery,
+  getTopicsByDomainQuery,
+  getTopicsByMarathonIdQuery,
+} from "@vimmer/supabase/queries";
 import { z } from "zod";
 import { insertValidationResults } from "@vimmer/supabase/mutations";
 import { RuleKey } from "@vimmer/validation/types";
@@ -49,13 +53,18 @@ export const handler: Handler = async (event): Promise<void> => {
     throw new Error(`Participant with id ${participantId} not found`);
   }
 
+  const topics = await getTopicsByMarathonIdQuery(
+    supabase,
+    participantWithSubmissions?.marathonId
+  );
+
   const parsedSubmissions = z.array(validationInputSchema).safeParse(
     participantWithSubmissions.submissions.map((s) => ({
       exif: s.exif,
       fileName: s.key,
       fileSize: s.size,
       mimeType: s.mimeType,
-      orderIndex: s.topic.orderIndex,
+      orderIndex: topics.find((t) => t.id === s.topicId)?.orderIndex,
     }))
   );
 

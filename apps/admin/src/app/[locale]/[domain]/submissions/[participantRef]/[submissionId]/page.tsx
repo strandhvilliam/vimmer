@@ -1,24 +1,14 @@
 import { notFound } from "next/navigation";
-import { Button } from "@vimmer/ui/components/button";
-import {
-  ArrowLeft,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  MessageCircle,
-  Trash2,
-} from "lucide-react";
-import Link from "next/link";
-import { Badge } from "@vimmer/ui/components/badge";
-import { format } from "date-fns";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@vimmer/ui/components/tabs";
-import { cn } from "@vimmer/ui/lib/utils";
-import { getParticipantByReference } from "@vimmer/supabase/cached-queries";
+import {
+  getParticipantByReference,
+  getTopicsByDomain,
+} from "@vimmer/supabase/cached-queries";
 import { PhotoSubmissionCard } from "./_components/photo-submission-card";
 import { ValidationStepsTable } from "./_components/validation-steps";
 import { ExifDataDisplay } from "./_components/exif-data-display";
@@ -35,22 +25,22 @@ export default async function SubmissionDetailPage({
   }>;
 }) {
   const { domain, participantRef, submissionId } = await params;
-  const participant = await getParticipantByReference(domain, participantRef);
+  const [participant, topics] = await Promise.all([
+    getParticipantByReference(domain, participantRef),
+    getTopicsByDomain(domain),
+  ]);
 
-  if (!participant) {
-    notFound();
-  }
-
-  const submission = participant.submissions.find(
+  const submission = participant?.submissions.find(
     (s) => s.id === parseInt(submissionId)
   );
+  const topic = topics.find((t) => t.id === submission?.topicId);
 
-  if (!submission) {
+  if (!submission || !topic || !participant) {
     notFound();
   }
 
   const submissionValidationResults =
-    participant.validationResults?.filter(
+    participant?.validationResults?.filter(
       (result) => result.fileName && result.fileName.includes(submission.key)
     ) || [];
 
@@ -63,6 +53,7 @@ export default async function SubmissionDetailPage({
       <SubmissionHeader
         submission={submission}
         participant={participant}
+        topic={topic}
         validationResults={submissionValidationResults}
         domain={domain}
       />
@@ -94,6 +85,7 @@ export default async function SubmissionDetailPage({
             <TabsContent value="details">
               <SubmissionDetails
                 submission={submission}
+                topic={topic}
                 participant={participant}
                 hasIssues={hasIssues}
               />
@@ -113,6 +105,7 @@ export default async function SubmissionDetailPage({
         <PhotoSubmissionCard
           submission={submission}
           participant={participant}
+          topic={topic}
         />
       </div>
     </div>

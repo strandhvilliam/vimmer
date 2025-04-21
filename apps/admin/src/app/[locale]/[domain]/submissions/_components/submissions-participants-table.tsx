@@ -38,6 +38,7 @@ import {
   Tag,
   Hash,
   RefreshCw,
+  Clock,
 } from "lucide-react";
 import {
   Tooltip,
@@ -96,16 +97,23 @@ const columnInfoMap: Record<string, { label: string; icon: LucideIcon }> = {
   reference: { label: "Participant", icon: Hash },
   email: { label: "Email", icon: Mail },
   status: { label: "Status", icon: Tag },
+  name: { label: "Name", icon: User },
   competitionClass: { label: "Class", icon: Book },
   deviceGroup: { label: "Device", icon: Smartphone },
   issues: { label: "Issues", icon: AlertTriangle },
-  createdAt: { label: "Registered", icon: Calendar },
+  createdAt: { label: "Submitted At", icon: Clock },
 };
 
 const columns = [
   columnHelper.accessor("reference", {
     id: "reference",
     header: "Participant",
+    cell: (info) => info.getValue(),
+    sortingFn: "alphanumeric",
+  }),
+  columnHelper.accessor((row) => `${row.firstname} ${row.lastname}`, {
+    id: "name",
+    header: "Name",
     cell: (info) => info.getValue(),
     sortingFn: "alphanumeric",
   }),

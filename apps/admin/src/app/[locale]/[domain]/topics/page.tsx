@@ -1,6 +1,7 @@
 import {
   getMarathonByDomain,
   getTopicsByDomain,
+  getTopicsWithSubmissionCount,
 } from "@vimmer/supabase/cached-queries";
 import { Metadata } from "next";
 import { Suspense } from "react";
@@ -33,7 +34,20 @@ export default async function TopicsPage({ params }: TopicsPageProps) {
     notFound();
   }
 
-  const sortedTopics = [...topics].sort((a, b) => a.orderIndex - b.orderIndex);
+  const topicsWithSubmissionCount = await getTopicsWithSubmissionCount(
+    marathon.id
+  );
+
+  console.log(topicsWithSubmissionCount);
+
+  const sortedTopics = [...topics]
+    .map((topic) => ({
+      ...topic,
+      submissionCount:
+        topicsWithSubmissionCount.find((t) => t.id === topic.id)?.submissions[0]
+          ?.count ?? 0,
+    }))
+    .sort((a, b) => a.orderIndex - b.orderIndex);
 
   return (
     <div className="flex flex-col h-full">
