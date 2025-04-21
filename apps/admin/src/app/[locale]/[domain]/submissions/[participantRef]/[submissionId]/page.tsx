@@ -23,6 +23,7 @@ import { PhotoSubmissionCard } from "./_components/photo-submission-card";
 import { ValidationStepsTable } from "./_components/validation-steps";
 import { ExifDataDisplay } from "./_components/exif-data-display";
 import { SubmissionDetails } from "./_components/submission-details";
+import { SubmissionHeader } from "./_components/submission-header";
 
 export default async function SubmissionDetailPage({
   params,
@@ -59,74 +60,12 @@ export default async function SubmissionDetailPage({
 
   return (
     <div className="container mx-auto py-8 space-y-8">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href={`/${domain}/submissions/${participantRef}`}>
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-semibold font-rocgrotesk">
-                #{submission.topic.orderIndex + 1}
-              </h1>
-              {submissionValidationResults.length > 0 && (
-                <Badge
-                  className={cn(
-                    "ml-2",
-                    submissionValidationResults.every(
-                      (result) => result.outcome === "passed"
-                    )
-                      ? "bg-green-500/15 text-green-600 hover:bg-green-500/20"
-                      : submissionValidationResults.some(
-                            (result) => result.outcome === "failed"
-                          )
-                        ? "bg-destructive/15 text-destructive hover:bg-destructive/20"
-                        : "bg-yellow-500/15 text-yellow-600 border-yellow-200 hover:bg-yellow-500/20"
-                  )}
-                >
-                  {submissionValidationResults.every(
-                    (result) => result.outcome === "passed"
-                  ) ? (
-                    <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                  ) : submissionValidationResults.some(
-                      (result) => result.outcome === "failed"
-                    ) ? (
-                    <XCircle className="h-3.5 w-3.5 mr-1" />
-                  ) : (
-                    <AlertTriangle className="h-3.5 w-3.5 mr-1" />
-                  )}
-                  {submissionValidationResults.every(
-                    (result) => result.outcome === "passed"
-                  )
-                    ? "Valid"
-                    : submissionValidationResults.some(
-                          (result) => result.outcome === "failed"
-                        )
-                      ? "Error"
-                      : "Warning"}
-                </Badge>
-              )}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Submission date{" "}
-              {format(new Date(submission.createdAt), "MMM d, yyyy")} • Photo #
-              {submission.topic.orderIndex + 1}
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <MessageCircle className="h-4 w-4" />
-            Notify Participant
-          </Button>
-          <Button variant="outline" size="sm">
-            <Trash2 className="h-4 w-4" />
-            Cancel Submission
-          </Button>
-        </div>
-      </div>
+      <SubmissionHeader
+        submission={submission}
+        participant={participant}
+        validationResults={submissionValidationResults}
+        domain={domain}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6">
         <div>

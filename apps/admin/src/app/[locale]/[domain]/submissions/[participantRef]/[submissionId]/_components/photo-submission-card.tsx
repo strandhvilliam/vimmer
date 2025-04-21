@@ -29,9 +29,7 @@ export function PhotoSubmissionCard({
 
         <div className="bg-black p-4 flex flex-col justify-end ">
           <div className="text-white">
-            <h3 className="text-xl font-bold">
-              #{submission.topic.orderIndex + 1} {submission.topic.name}
-            </h3>
+            <h3 className="text-xl font-bold">{submission.topic.name}</h3>
             <p className="text-sm opacity-90">
               Topic {submission.topic.orderIndex + 1} of{" "}
               {participant.competitionClass?.numberOfPhotos || "?"}

@@ -88,7 +88,7 @@ export function ParticipantHeader({
           </Button>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold tracking-tight font-rocgrotesk">
+              <h1 className="text-2xl font-semibold tracking-tight font-rocgrotesk">
                 {`${participant.firstname} ${participant.lastname}`}
               </h1>
               {globalValidations.length > 0 && (
