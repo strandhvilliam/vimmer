@@ -5,7 +5,7 @@ import { Label } from "@vimmer/ui/components/label";
 import { Slider } from "@vimmer/ui/components/slider";
 import RuleToggle from "./rule-toggle";
 import { useFormContext, Controller } from "react-hook-form";
-import { RulesFormValues } from "../_store/use-rules-form";
+import { RulesFormValues } from "../_types/update-rules-schema";
 
 export default function MaxFileSizeRule() {
   const { control } = useFormContext<RulesFormValues>();
@@ -44,6 +44,7 @@ export default function MaxFileSizeRule() {
                       const value = values[0];
                       if (typeof value === "number") {
                         field.onChange(value * 1024 * 1024);
+                        field.onBlur();
                       }
                     }}
                     className="cursor-pointer"

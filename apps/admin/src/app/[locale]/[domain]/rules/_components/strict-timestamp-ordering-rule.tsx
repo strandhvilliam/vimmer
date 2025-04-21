@@ -3,7 +3,7 @@
 import React from "react";
 import RuleToggle from "./rule-toggle";
 import { useFormContext } from "react-hook-form";
-import { RulesFormValues } from "../_store/use-rules-form";
+import { RulesFormValues } from "../_types/update-rules-schema";
 
 export default function StrictTimestampOrderingRule() {
   const { control } = useFormContext<RulesFormValues>();

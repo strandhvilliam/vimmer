@@ -15,6 +15,7 @@
     "@dnd-kit/react": "0.0.10-beta-20250219015925",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@hookform/resolvers": "^5.0.1",
     "@number-flow/react": "^0.5.7",
     "@react-email/render": "^1.0.5",
     "@react-email/tailwind": "^1.0.4",
@@ -35,6 +36,7 @@
     "react-blurhash": "^0.3.0",
     "react-dom": "^19.1.0-canary-2980f277-20250301",
     "react-email": "^3.0.7",
+    "react-hook-form": "^7.56.0",
     "resend": "^4.1.2"
   },
   "devDependencies": {

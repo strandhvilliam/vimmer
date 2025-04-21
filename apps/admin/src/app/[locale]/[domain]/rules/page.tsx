@@ -4,10 +4,10 @@ import AllowedFileTypesRule from "./_components/allowed-file-types-rule";
 import WithinTimerangeRule from "./_components/within-timerange-rule";
 import SameDeviceRule from "./_components/same-device-rule";
 import NoModificationsRule from "./_components/no-modifications-rule";
-import SaveRulesButton from "./_components/save-rules-button";
+import { RulesButtons } from "./_components/rules-buttons";
 import StrictTimestampOrderingRule from "./_components/strict-timestamp-ordering-rule";
 import { RulesProvider } from "./_components/rules-provider";
-import { RulesFormValues } from "./_store/use-rules-form";
+import { RulesFormValues } from "./_types/update-rules-schema";
 
 async function fetchRules(): Promise<RulesFormValues> {
   await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -30,12 +30,12 @@ async function fetchRules(): Promise<RulesFormValues> {
     strict_timestamp_ordering: {
       enabled: false,
       severity: "warning",
-      params: {},
+      params: null,
     },
     same_device: {
       enabled: false,
       severity: "warning",
-      params: {},
+      params: null,
     },
     within_timerange: {
       enabled: true,
@@ -48,7 +48,7 @@ async function fetchRules(): Promise<RulesFormValues> {
     modified: {
       enabled: false,
       severity: "warning",
-      params: {},
+      params: null,
     },
   };
 }
@@ -68,7 +68,7 @@ export default async function RulesPage() {
               Configure validation rules for photo submissions.
             </p>
           </div>
-          <SaveRulesButton />
+          <RulesButtons />
         </div>
         <div className="space-y-4">
           <MaxFileSizeRule />

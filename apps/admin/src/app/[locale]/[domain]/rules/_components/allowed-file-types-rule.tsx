@@ -6,7 +6,7 @@ import { cn } from "@vimmer/ui/lib/utils";
 import { CheckCircle, AlertCircle } from "lucide-react";
 import RuleToggle from "./rule-toggle";
 import { Controller, useFormContext } from "react-hook-form";
-import { RulesFormValues } from "../_store/use-rules-form";
+import { RulesFormValues } from "../_types/update-rules-schema";
 
 const fileTypeOptions = [
   { value: "jpg", label: "JPG" },
@@ -48,6 +48,7 @@ export default function AllowedFileTypesRule() {
                         currentTypes.push(option.value);
                       }
                       field.onChange(currentTypes);
+                      field.onBlur();
                     }}
                     className={cn(
                       "rounded-full px-3 py-1 text-sm font-medium",

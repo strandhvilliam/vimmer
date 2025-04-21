@@ -7,7 +7,7 @@ import { motion } from "motion/react";
 import { SeverityLevel } from "@vimmer/validation";
 import { SeverityToggle } from "./severity-toggle";
 import { Control, Controller, UseControllerProps } from "react-hook-form";
-import { RulesFormValues } from "../_store/use-rules-form";
+import { RulesFormValues } from "../_types/update-rules-schema";
 
 interface RuleToggleProps {
   title: string;
@@ -43,7 +43,10 @@ export default function RuleToggle({
               <Switch
                 id={title}
                 checked={field.value}
-                onCheckedChange={field.onChange}
+                onCheckedChange={(checked) => {
+                  field.onChange(checked);
+                  field.onBlur(); // Explicitly mark as touched
+                }}
                 className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                 aria-labelledby={`${title}-heading`}
               />
@@ -71,7 +74,10 @@ export default function RuleToggle({
                 render={({ field: severityField }) => (
                   <SeverityToggle
                     severity={severityField.value}
-                    onSeverityChange={severityField.onChange}
+                    onSeverityChange={(severity) => {
+                      severityField.onChange(severity);
+                      severityField.onBlur(); // Explicitly mark as touched
+                    }}
                     recommendedSeverity={recommendedSeverity}
                   />
                 )}
