@@ -1,169 +1,109 @@
 import React from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@vimmer/ui/components/card";
-import { Switch } from "@vimmer/ui/components/switch";
-import { Label } from "@vimmer/ui/components/label";
-import { Separator } from "@vimmer/ui/components/separator";
-import { Input } from "@vimmer/ui/components/input";
-import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import MaxFileSizeRule from "./_components/max-file-size-rule";
+import AllowedFileTypesRule from "./_components/allowed-file-types-rule";
+import WithinTimerangeRule from "./_components/within-timerange-rule";
+import SameDeviceRule from "./_components/same-device-rule";
+import NoModificationsRule from "./_components/no-modifications-rule";
+import SaveRulesButton from "./_components/save-rules-button";
+import { SeverityLevel } from "@vimmer/validation";
 
-interface RuleToggleProps {
-  title: string;
-  description: string;
-  checked?: boolean;
-  onCheckedChange?: (checked: boolean) => void;
+export interface MaxFileSizeParams {
+  maxBytes: number;
 }
 
-function RuleToggle({
-  title,
-  description,
-  checked,
-  onCheckedChange,
-}: RuleToggleProps) {
-  return (
-    <div className="flex items-center justify-between space-x-4 pt-4 pb-2">
-      <div className="flex-1 space-y-1">
-        <Label htmlFor={title} className="text-sm">
-          {title}
-        </Label>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </div>
-      <Switch id={title} checked={checked} onCheckedChange={onCheckedChange} />
-    </div>
-  );
+export interface AllowedFileTypesParams {
+  allowedFileTypes: string[];
 }
 
-export default function RulesPage() {
+export interface WithinTimerangeParams {
+  start: string;
+  end: string;
+}
+
+export interface EmptyParams {}
+
+export interface Rule<T> {
+  enabled: boolean;
+  severity: SeverityLevel;
+  params: T;
+}
+
+export interface RulesState {
+  max_file_size: Rule<MaxFileSizeParams>;
+  allowed_file_types: Rule<AllowedFileTypesParams>;
+  strict_timestamp_ordering: Rule<EmptyParams>;
+  same_device: Rule<EmptyParams>;
+  within_timerange: Rule<WithinTimerangeParams>;
+  modified: Rule<EmptyParams>;
+}
+
+async function fetchRules(): Promise<RulesState> {
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  return {
+    max_file_size: {
+      enabled: true,
+      severity: "error",
+      params: {
+        maxBytes: 25 * 1024 * 1024, // 25MB
+      },
+    },
+    allowed_file_types: {
+      enabled: true,
+      severity: "error",
+      params: {
+        allowedFileTypes: ["image/jpeg", "image/png"],
+      },
+    },
+    strict_timestamp_ordering: {
+      enabled: false,
+      severity: "warning",
+      params: {},
+    },
+    same_device: {
+      enabled: false,
+      severity: "warning",
+      params: {},
+    },
+    within_timerange: {
+      enabled: true,
+      severity: "error",
+      params: {
+        start: new Date().toISOString(),
+        end: new Date(Date.now() + 86400000).toISOString(), // 24 hours from now
+      },
+    },
+    modified: {
+      enabled: false,
+      severity: "warning",
+      params: {},
+    },
+  };
+}
+
+export default async function RulesPage() {
+  const rules = await fetchRules();
+
   return (
-    <div className="container mx-auto py-8 space-y-8">
-      <div className="flex justify-between items-center">
+    <div className="container max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight font-rocgrotesk">
-            Photo Submission Rules
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight font-rocgrotesk">
+            Rules
           </h1>
-          <p className="text-muted-foreground mt-2">
-            Configure validation rules for photo submissions
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+            Configure validation rules for photo submissions.
           </p>
         </div>
-        <PrimaryButton>Save Changes</PrimaryButton>
+        <SaveRulesButton />
       </div>
 
-      <div className="grid gap-6">
-        {/* Camera Equipment Rules */}
-        <Card>
-          <CardHeader className="space-y-0 border-b border-border">
-            <CardTitle className="font-rocgrotesk text-lg">
-              Camera Equipment
-            </CardTitle>
-            <CardDescription>
-              Define which types of cameras and equipment are allowed
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <RuleToggle
-              title="Allow Smartphone Cameras"
-              description="Permit participants to use smartphone cameras for photo submissions"
-            />
-            <Separator />
-            <RuleToggle
-              title="Allow DSLR/Mirrorless Cameras"
-              description="Permit participants to use professional cameras for submissions"
-            />
-            <Separator />
-            <RuleToggle
-              title="Allow Film Cameras"
-              description="Permit participants to use analog film cameras (will require scanning)"
-            />
-          </CardContent>
-        </Card>
-
-        {/* File Format Rules */}
-        <Card>
-          <CardHeader className="space-y-0 border-b border-border">
-            <CardTitle className="font-rocgrotesk text-lg">
-              File Format Requirements
-            </CardTitle>
-            <CardDescription>
-              Set acceptable file formats and specifications
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <RuleToggle
-              title="Allow RAW Files"
-              description="Accept RAW format files (CR2, NEF, ARW, etc.)"
-            />
-            <Separator />
-            <RuleToggle
-              title="Allow JPEG Files"
-              description="Accept JPEG/JPG format files"
-            />
-            <div className="space-y-4 pt-4">
-              <Label>Maximum File Size (MB)</Label>
-              <Input type="number" placeholder="25" className="max-w-[200px]" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Image Editing Rules */}
-        <Card>
-          <CardHeader className="space-y-0 border-b border-border">
-            <CardTitle className="font-rocgrotesk text-lg">
-              Image Editing
-            </CardTitle>
-            <CardDescription>
-              Configure allowed post-processing and editing rules
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <RuleToggle
-              title="Allow Basic Adjustments"
-              description="Permit exposure, contrast, and color balance adjustments"
-            />
-            <Separator />
-            <RuleToggle
-              title="Allow Cropping"
-              description="Permit image cropping and straightening"
-            />
-            <Separator />
-            <RuleToggle
-              title="Allow Advanced Editing"
-              description="Permit advanced editing like local adjustments and filters"
-            />
-          </CardContent>
-        </Card>
-
-        {/* Metadata Requirements */}
-        <Card>
-          <CardHeader className="space-y-0 border-b border-border">
-            <CardTitle className="font-rocgrotesk text-lg">
-              Metadata Requirements
-            </CardTitle>
-            <CardDescription>
-              Set requirements for image metadata validation
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <RuleToggle
-              title="Require Original Metadata"
-              description="Images must contain original camera metadata (EXIF)"
-            />
-            <Separator />
-            <RuleToggle
-              title="Validate Capture Time"
-              description="Verify that photos were taken during the competition timeframe"
-            />
-            <Separator />
-            <RuleToggle
-              title="Require GPS Data"
-              description="Images must contain location information"
-            />
-          </CardContent>
-        </Card>
+      <div className="space-y-4">
+        <MaxFileSizeRule maxFileSize={rules.max_file_size} />
+        <AllowedFileTypesRule allowedFileTypes={rules.allowed_file_types} />
+        <WithinTimerangeRule withinTimerange={rules.within_timerange} />
+        <SameDeviceRule sameDevice={rules.same_device} />
+        <NoModificationsRule modified={rules.modified} />
       </div>
     </div>
   );
