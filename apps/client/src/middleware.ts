@@ -8,6 +8,7 @@ const I18nMiddleware = createI18nMiddleware({
 });
 
 export function middleware(request: NextRequest) {
+  // @ts-expect-error
   return I18nMiddleware(request);
 }
 

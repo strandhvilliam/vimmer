@@ -1,4 +1,8 @@
-import { ValidationOutcome, RuleKey, SeverityLevel } from "@vimmer/validation";
+import {
+  ValidationOutcome,
+  RuleKey,
+  SeverityLevel,
+} from "@vimmer/validation/types";
 
 export interface PresignedSubmission {
   presignedUrl: string;

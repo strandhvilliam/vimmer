@@ -1,5 +1,6 @@
-import { AlertCircle, AlertTriangle, CheckCircle } from "lucide-react";
-import { ValidationResult, VALIDATION_OUTCOME } from "@vimmer/validation";
+import { AlertCircle, AlertTriangle } from "lucide-react";
+import { VALIDATION_OUTCOME } from "@vimmer/validation/constants";
+import { ValidationResult } from "@vimmer/validation/types";
 import { motion } from "framer-motion";
 
 interface GroupValidationStatusProps {

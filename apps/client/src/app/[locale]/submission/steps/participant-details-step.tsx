@@ -1,5 +1,4 @@
 "use client";
-import { updateParticipantDetails } from "@/actions/update-participant-details";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { StepNavigationHandlers } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,20 +11,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@vimmer/ui/components/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@vimmer/ui/components/form";
 import { Input } from "@vimmer/ui/components/input";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
-import { useAction } from "next-safe-action/hooks";
-import { useForm } from "react-hook-form";
-import { useRef } from "react";
+import { useForm, FieldValues } from "react-hook-form";
 import { z } from "zod";
 
 interface Props extends StepNavigationHandlers {
@@ -47,10 +36,6 @@ export function ParticipantDetailsStep({
   marathonId,
   domain,
 }: Props) {
-  const firstNameRef = useRef<HTMLInputElement>(null);
-  const lastNameRef = useRef<HTMLInputElement>(null);
-  const emailRef = useRef<HTMLInputElement>(null);
-
   const {
     submissionState: {
       participantEmail,
@@ -60,7 +45,11 @@ export function ParticipantDetailsStep({
     setSubmissionState,
   } = useSubmissionQueryState();
 
-  const form = useForm<ParticipantDetailsSchema>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm<ParticipantDetailsSchema>({
     resolver: zodResolver(participantDetailsSchema),
     defaultValues: {
       firstname: participantFirstName ?? "",
@@ -71,7 +60,7 @@ export function ParticipantDetailsStep({
     reValidateMode: "onBlur",
   });
 
-  const handleSubmit = async (data: ParticipantDetailsSchema) => {
+  const onSubmit = async (data: FieldValues) => {
     await setSubmissionState((prev) => ({
       ...prev,
       participantFirstName: data.firstname,
@@ -81,8 +70,7 @@ export function ParticipantDetailsStep({
     onNextStep?.();
   };
 
-  const disabledButton =
-    !form.watch("firstname") || !form.watch("lastname") || !form.watch("email");
+  const disabledButton = !isValid;
 
   return (
     <div className="max-w-md mx-auto">
@@ -94,105 +82,76 @@ export function ParticipantDetailsStep({
           Please enter your personal information
         </CardDescription>
       </CardHeader>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-          <CardContent className="space-y-6">
-            <FormField
-              control={form.control}
-              name="firstname"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    First Name
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      ref={firstNameRef}
-                      className="rounded-xl text-lg py-6"
-                      placeholder="James"
-                    />
-                  </FormControl>
-                  {form.formState.errors.firstname && (
-                    <span className="flex flex-1 w-full justify-center text-center text-base text-destructive font-medium">
-                      {form.formState.errors.firstname.message}
-                    </span>
-                  )}
-                </FormItem>
-              )}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none">
+              First Name
+            </label>
+            <Input
+              {...register("firstname")}
+              className="rounded-xl text-lg py-6"
+              placeholder="James"
             />
+            {errors.firstname && (
+              <span className="flex flex-1 w-full justify-center text-center text-base text-destructive font-medium">
+                {errors.firstname.message}
+              </span>
+            )}
+          </div>
 
-            <FormField
-              control={form.control}
-              name="lastname"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    Last Name
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      ref={lastNameRef}
-                      className="rounded-xl text-lg py-6"
-                      placeholder="Bond"
-                    />
-                  </FormControl>
-                  {form.formState.errors.lastname && (
-                    <span className="flex flex-1 w-full justify-center text-center text-base text-destructive font-medium">
-                      {form.formState.errors.lastname.message}
-                    </span>
-                  )}
-                </FormItem>
-              )}
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none">
+              Last Name
+            </label>
+            <Input
+              {...register("lastname")}
+              className="rounded-xl text-lg py-6"
+              placeholder="Bond"
             />
+            {errors.lastname && (
+              <span className="flex flex-1 w-full justify-center text-center text-base text-destructive font-medium">
+                {errors.lastname.message}
+              </span>
+            )}
+          </div>
 
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    Email Address
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      ref={emailRef}
-                      className="rounded-xl text-lg py-6"
-                      placeholder="your@email.com"
-                    />
-                  </FormControl>
-                  {form.formState.errors.email && (
-                    <span className="flex flex-1 w-full justify-center text-center text-base text-destructive font-medium">
-                      {form.formState.errors.email.message}
-                    </span>
-                  )}
-                </FormItem>
-              )}
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none">
+              Email Address
+            </label>
+            <Input
+              {...register("email")}
+              className="rounded-xl text-lg py-6"
+              placeholder="your@email.com"
             />
-          </CardContent>
+            {errors.email && (
+              <span className="flex flex-1 w-full justify-center text-center text-base text-destructive font-medium">
+                {errors.email.message}
+              </span>
+            )}
+          </div>
+        </CardContent>
 
-          <CardFooter className="flex flex-col gap-4">
-            <PrimaryButton
-              type="submit"
-              className="w-full py-3 text-lg rounded-full"
-              disabled={disabledButton}
-            >
-              <span>Continue</span>
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </PrimaryButton>
-            <Button
-              variant="ghost"
-              size="lg"
-              onClick={onPrevStep}
-              className="w-full"
-            >
-              Back
-            </Button>
-          </CardFooter>
-        </form>
-      </Form>
+        <CardFooter className="flex flex-col gap-4">
+          <PrimaryButton
+            type="submit"
+            className="w-full py-3 text-lg rounded-full"
+            disabled={disabledButton}
+          >
+            <span>Continue</span>
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </PrimaryButton>
+          <Button
+            variant="ghost"
+            size="lg"
+            onClick={onPrevStep}
+            className="w-full"
+          >
+            Back
+          </Button>
+        </CardFooter>
+      </form>
     </div>
   );
 }

@@ -2,11 +2,11 @@ import { SelectedPhotoV2 } from "@/lib/types";
 import { ChevronDown, ChevronUp, ImageIcon, Info, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { ValidationStatusBadge } from "./validation-status-badge";
+import { ValidationResult } from "@vimmer/validation/types";
 import {
-  SEVERITY_LEVELS,
   VALIDATION_OUTCOME,
-  ValidationResult,
-} from "@vimmer/validation";
+  SEVERITY_LEVELS,
+} from "@vimmer/validation/constants";
 import { useState } from "react";
 import { Button } from "@vimmer/ui/components/button";
 import { Topic } from "@vimmer/supabase/types";

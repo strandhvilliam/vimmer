@@ -1,5 +1,5 @@
 import { AlertCircle, AlertTriangle, CheckCircle } from "lucide-react";
-import { VALIDATION_OUTCOME } from "@vimmer/validation";
+import { VALIDATION_OUTCOME } from "@vimmer/validation/constants";
 
 interface ValidationStatusBadgeProps {
   outcome?: (typeof VALIDATION_OUTCOME)[keyof typeof VALIDATION_OUTCOME];

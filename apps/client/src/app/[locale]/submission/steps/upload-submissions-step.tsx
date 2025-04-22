@@ -12,11 +12,9 @@ import {
 import { UploadProgress } from "@/components/upload-progress";
 import { StepNavigationHandlers } from "@/lib/types";
 import { usePhotoStore } from "@/stores/photo-store";
-import { SEVERITY_LEVELS } from "@vimmer/validation";
-import { RuleKey } from "@vimmer/validation";
-import { createRule } from "@vimmer/validation";
-import { RULE_KEYS } from "@vimmer/validation";
-import { RuleConfig } from "@vimmer/validation";
+import { SEVERITY_LEVELS, RULE_KEYS } from "@vimmer/validation/constants";
+import { RuleKey, RuleConfig } from "@vimmer/validation/types";
+import { createRule } from "@vimmer/validation/validator";
 import { SubmissionsList } from "@/components/submission-list";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { usePresignedSubmissions } from "@/hooks/use-presigned-submissions";

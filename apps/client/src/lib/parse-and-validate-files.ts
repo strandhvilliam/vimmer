@@ -1,4 +1,5 @@
-import { RuleConfig, RuleKey, runValidations } from "@vimmer/validation";
+import { runValidations } from "@vimmer/validation/validator";
+import { RuleConfig, RuleKey } from "@vimmer/validation/types";
 import { SelectedPhotoV2 } from "./types";
 import exifr from "exifr";
 

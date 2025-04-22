@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import { SelectedPhotoV2 } from "../lib/types";
-import { RuleConfig, RuleKey, ValidationResult } from "@vimmer/validation";
+import {
+  RuleConfig,
+  RuleKey,
+  ValidationResult,
+} from "@vimmer/validation/types";
 import { parseAndValidateFiles } from "@/lib/parse-and-validate-files";
 
 interface AddPhotoDto {
