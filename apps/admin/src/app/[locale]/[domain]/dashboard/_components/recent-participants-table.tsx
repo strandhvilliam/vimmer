@@ -25,27 +25,14 @@ import {
   UserRound,
   Users,
 } from "lucide-react";
-import {
-  CompetitionClass,
-  DeviceGroup,
-  Participant,
-  ValidationResult,
-} from "@vimmer/supabase/types";
-interface RecentParticipantsTableProps {
-  participants: (Participant & {
-    validationResults: ValidationResult[];
-    deviceGroup: DeviceGroup | null;
-    competitionClass: CompetitionClass | null;
-  })[];
-  locale: string;
-  domain: string;
-}
+import { use } from "react";
+import { useDashboardData } from "../dashboard-context";
+import { useParams } from "next/navigation";
 
-export function RecentParticipantsTable({
-  participants,
-  locale,
-  domain,
-}: RecentParticipantsTableProps) {
+export function RecentParticipantsTable() {
+  const { locale, domain } = useParams();
+  const { participantsPromise } = useDashboardData();
+  const participants = use(participantsPromise);
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

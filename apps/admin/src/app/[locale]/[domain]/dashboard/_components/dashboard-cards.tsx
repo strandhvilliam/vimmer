@@ -13,31 +13,57 @@ import {
   Hourglass,
   CheckCircle,
 } from "lucide-react";
-import { ParticipantStatus } from "@vimmer/supabase/types";
+import {
+  Participant,
+  PARTICIPANT_STATUS,
+  ParticipantStatus,
+} from "@vimmer/supabase/types";
+import { useDashboardData } from "../dashboard-context";
+import { use } from "react";
+import {
+  SEVERITY_LEVELS,
+  VALIDATION_OUTCOME,
+} from "@vimmer/validation/constants";
 
-interface DashboardCardsProps {
-  totalParticipants: number;
-  totalUploads: number;
-  statusCounts: Record<ParticipantStatus, number>;
-  errorCount: number;
-  warningCount: number;
-}
+export function DashboardCards() {
+  const { participantsPromise } = useDashboardData();
 
-export function DashboardCards({
-  totalParticipants,
-  totalUploads,
-  statusCounts,
-  errorCount,
-  warningCount,
-}: DashboardCardsProps) {
-  const verifiedCount = statusCounts.verified;
+  const participants = use(participantsPromise);
+  const totalParticipants = participants.length;
+  const totalUploads = participants.reduce(
+    (acc: number, p: Participant) => acc + p.uploadCount,
+    0
+  );
 
-  const inProgressCount =
-    totalParticipants +
-    statusCounts.ready_to_upload +
-    statusCounts.processing +
-    statusCounts.initialized +
-    statusCounts.completed;
+  const { inProgressCount, verifiedCount } = participants.reduce(
+    (acc, p) => {
+      if (p.status === PARTICIPANT_STATUS.VERIFIED) {
+        acc.verifiedCount++;
+      } else {
+        acc.inProgressCount++;
+      }
+      return acc;
+    },
+    { inProgressCount: 0, verifiedCount: 0 } as {
+      verifiedCount: number;
+      inProgressCount: number;
+    }
+  );
+
+  const validationIssues = participants.flatMap(
+    (p) => p.validationResults || []
+  );
+
+  const errorCount = validationIssues.filter(
+    (v) =>
+      v.severity === SEVERITY_LEVELS.ERROR &&
+      v.outcome === VALIDATION_OUTCOME.FAILED
+  ).length;
+  const warningCount = validationIssues.filter(
+    (v) =>
+      v.severity === SEVERITY_LEVELS.WARNING &&
+      v.outcome === VALIDATION_OUTCOME.FAILED
+  ).length;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
