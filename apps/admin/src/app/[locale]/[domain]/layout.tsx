@@ -4,6 +4,7 @@ import { SidebarInset, SidebarProvider } from "@vimmer/ui/components/sidebar";
 import { auth, getSession } from "@/lib/auth";
 import { SessionProvider } from "@/lib/hooks/use-session";
 import { Toaster } from "@vimmer/ui/components/sonner";
+import { DotPattern } from "@vimmer/ui/components/dot-pattern";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -24,9 +25,9 @@ export default async function DashboardLayout({
     <SessionProvider sessionPromise={sessionPromise}>
       <SidebarProvider>
         <AppSidebar />
-        <SidebarInset className=" bg-sidebar flex flex-1 flex-col max-h-screen overflow-hidden">
+        <SidebarInset className=" flex flex-1 flex-col max-h-screen overflow-hidden relative">
           <AppHeader domain={domain} />
-          <div className="border rounded-tl-2xl bg-background overflow-y-auto h-full">
+          <div className="border rounded-tl-2xl overflow-y-auto h-full overflow-hidden relative z-0">
             {children}
           </div>
         </SidebarInset>

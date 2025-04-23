@@ -87,6 +87,7 @@ export async function getParticipantByReference(
     domain,
     reference,
   });
+
   return data;
 }
 
