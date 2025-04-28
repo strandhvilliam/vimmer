@@ -21,11 +21,6 @@ export const NAV_LINKS = {
       icon: LayoutDashboard as LucideIcon,
     },
     {
-      name: "Live View",
-      url: "/live",
-      icon: RadioTower as LucideIcon,
-    },
-    {
       name: "Submissions",
       url: "/submissions",
       icon: Images as LucideIcon,
