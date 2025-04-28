@@ -70,7 +70,7 @@ export default $config({
     const photoValidatorFunction = new sst.aws.Function(
       "PhotoValidatorFunction",
       {
-        handler: "lambdas/photo-validator/index.handler",
+        handler: "services/photo-validator/index.handler",
         environment: env,
         link: [submissionBucket],
         url: true,
@@ -109,7 +109,7 @@ export default $config({
 
     new sst.aws.Cron("ScheduledTopicsCron", {
       function: {
-        handler: "lambdas/scheduled-topics-cron/index.handler",
+        handler: "services/scheduled-topics-cron/index.handler",
         environment: env,
         // link: [adminApp],
       },
@@ -117,7 +117,7 @@ export default $config({
     });
 
     processSubmissionQueue.subscribe({
-      handler: "./lambdas/photo-processor/index.handler",
+      handler: "./services/photo-processor/index.handler",
       environment: env,
       link: [
         submissionBucket,

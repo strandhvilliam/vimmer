@@ -1,5 +1,5 @@
 {
-  "name": "scheduled-topics-cron",
+  "name": "@vimmer/scheduled-topics-cron",
   "module": "index.ts",
   "type": "module",
   "devDependencies": {

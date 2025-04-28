@@ -21,7 +21,7 @@
   "workspaces": [
     "apps/*",
     "packages/*",
-    "lambdas/*"
+    "services/*"
   ],
   "dependencies": {
     "sst": "^3.11.21"

@@ -9,16 +9,11 @@ import { S3Event, SQSEvent } from "aws-lambda";
 import sharp from "sharp";
 
 import {
-  addMultipleSubmissionErrors,
   incrementUploadCounter,
   updateSubmissionByKey,
 } from "@vimmer/supabase/mutations";
 import { getParticipantByIdQuery } from "@vimmer/supabase/queries";
 import { SupabaseClient } from "@vimmer/supabase/types";
-import {
-  ErrorCode,
-  SubmissionProcessingError,
-} from "@vimmer/validation/errors";
 import exifr from "exifr";
 import { Resource } from "sst";
 
@@ -82,9 +77,7 @@ async function processSubmission(
 async function parseExifData(file: Uint8Array<ArrayBufferLike>) {
   const exif = await exifr.parse(file);
   if (!exif) {
-    throw new SubmissionProcessingError([ErrorCode.NO_EXIF_DATA], {
-      exif,
-    });
+    throw new Error("No EXIF data");
   }
 
   const dateFields = [
@@ -115,14 +108,14 @@ async function prepareSubmission(supabase: SupabaseClient, key: string) {
     status: "processing",
   });
   if (!submission) {
-    throw new SubmissionProcessingError([ErrorCode.SUBMISSION_MUTATION_FAILED]);
+    throw new Error("Submission mutation failed");
   }
   const participant = await getParticipantByIdQuery(
     supabase,
     submission.participantId
   );
   if (!participant) {
-    throw new SubmissionProcessingError([ErrorCode.UNKNOWN_ERROR]);
+    throw new Error("Unknown error");
   }
   return { submission, participant };
 }
@@ -145,31 +138,30 @@ async function handleProcessingError(
   key: string,
   error: unknown
 ) {
-  const submissionError =
-    error instanceof SubmissionProcessingError
-      ? error
-      : new SubmissionProcessingError([ErrorCode.UNKNOWN_ERROR], {
-          originalError: error,
-        });
+  // const submissionError =
+  //   error instanceof SubmissionProcessingError
+  //     ? error
+  //     : new SubmissionProcessingError([ErrorCode.UNKNOWN_ERROR], {
+  //         originalError: error,
+  //       });
 
-  if (!submissionError.catalog) {
-    console.error("Non saveable error:", submissionError);
-    throw submissionError;
-  }
+  // if (!submissionError.catalog) {
+  //   console.error("Non saveable error:", submissionError);
+  //   throw submissionError;
+  // }
 
-  const insertErrors = submissionError.catalog.map((c) => ({
-    submissionKey: key,
-    errorCode: c.code,
-    message: c.message,
-    description: c.description,
-    severity: c.severity,
-    context: submissionError.context
-      ? JSON.stringify(submissionError.context)
-      : null,
-  }));
+  // const insertErrors = submissionError.catalog.map((c) => ({
+  //   submissionKey: key,
+  //   errorCode: c.code,
+  //   message: c.message,
+  //   description: c.description,
+  //   severity: c.severity,
+  //   context: submissionError.context
+  //     ? JSON.stringify(submissionError.context)
+  //     : null,
+  // }));
 
   await Promise.all([
-    addMultipleSubmissionErrors(supabase, insertErrors),
     updateSubmissionByKey(supabase, key, {
       status: "error",
     }),
@@ -191,7 +183,7 @@ async function getFileFromS3(s3: S3Client, key: string) {
 
   const file = await body?.transformToByteArray();
   if (!file) {
-    throw new SubmissionProcessingError([ErrorCode.FAILED_TO_FETCH_PHOTO]);
+    throw new Error("Failed to fetch photo");
   }
   return {
     file,
@@ -204,9 +196,7 @@ async function getFileFromS3(s3: S3Client, key: string) {
 function parseKey(key: string) {
   const [domain, participantRef, orderIndex, fileName] = key.split("/");
   if (!domain || !participantRef || !orderIndex || !fileName) {
-    throw new SubmissionProcessingError([ErrorCode.INVALID_KEY_FORMAT], {
-      key,
-    });
+    throw new Error("Invalid key format");
   }
   return { domain, participantRef, orderIndex, fileName };
 }
@@ -223,9 +213,7 @@ async function generateImageVariants(
   ]);
 
   if (!thumbnailKey || !previewKey) {
-    throw new SubmissionProcessingError([
-      ErrorCode.IMAGE_VARIANT_CREATION_FAILED,
-    ]);
+    throw new Error("Image variant creation failed");
   }
   return { thumbnailKey, previewKey };
 }
