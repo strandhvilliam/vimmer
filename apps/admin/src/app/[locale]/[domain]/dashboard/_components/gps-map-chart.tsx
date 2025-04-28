@@ -53,7 +53,7 @@ function generateRandomStockholmLocations(count: number): PhotoLocation[] {
       id: i + 1,
       latitude: stockholmLat + latOffset,
       longitude: stockholmLng + lngOffset,
-      name: locationNames[i % locationNames.length],
+      name: locationNames[i % locationNames.length] ?? "",
     });
   }
 

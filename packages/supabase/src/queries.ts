@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "./types/";
 import { toCamelCase } from "./utils/format-helpers";
+import { JuryInvitation, mockJuryInvitations } from "./mutations";
 
 export async function getParticipantByIdQuery(
   supabase: SupabaseClient,
@@ -279,4 +280,55 @@ export async function getRulesByMarathonIdQuery(
     .eq("marathon_id", marathonId)
     .throwOnError();
   return data?.map(toCamelCase) ?? [];
+}
+
+/**
+ * Jury Invitations
+ */
+
+export async function getJuryInvitationsByMarathon(
+  marathonId: number
+): Promise<JuryInvitation[]> {
+  // In real implementation:
+  // const supabase = createClient();
+  // const { data, error } = await supabase
+  //   .from('jury_invitations')
+  //   .select('*')
+  //   .eq('marathon_id', marathonId)
+  //   .order('created_at', { ascending: false });
+
+  // if (error) throw error;
+  // return data;
+
+  return mockJuryInvitations.filter(
+    (invitation) => invitation.marathon_id === marathonId
+  );
+}
+
+export async function validateJuryToken(token: string): Promise<{
+  valid: boolean;
+  marathonId?: number;
+  filters?: {
+    competitionClassId: number | null;
+    deviceGroupId: number | null;
+    topicId: number | null;
+  };
+}> {
+  try {
+    // In production, this would verify the signature
+    const payload = JSON.parse(Buffer.from(token, "base64").toString());
+
+    // Check if token has expired
+    if (payload.exp < Math.floor(Date.now() / 1000)) {
+      return { valid: false };
+    }
+
+    return {
+      valid: true,
+      marathonId: payload.marathonId,
+      filters: payload.filters,
+    };
+  } catch (error) {
+    return { valid: false };
+  }
 }

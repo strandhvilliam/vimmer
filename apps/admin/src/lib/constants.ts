@@ -11,6 +11,7 @@ import {
   LucideIcon,
   Tag,
   File,
+  Trophy,
 } from "lucide-react";
 
 export const NAV_LINKS = {
@@ -34,6 +35,11 @@ export const NAV_LINKS = {
       name: "Export",
       url: "/export",
       icon: File as LucideIcon,
+    },
+    {
+      name: "Jury",
+      url: "/jury",
+      icon: Trophy as LucideIcon,
     },
   ],
   configuration: [
