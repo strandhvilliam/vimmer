@@ -5,6 +5,24 @@
 
 declare module "sst" {
   export interface Resource {
+    "ExportCaller": {
+      "name": string
+      "type": "sst.aws.Function"
+      "url": string
+    }
+    "ExportSubmissionsTask": {
+      "assignPublicIp": boolean
+      "cluster": string
+      "containers": any
+      "securityGroups": any
+      "subnets": any
+      "taskDefinition": string
+      "type": "sst.aws.Task"
+    }
+    "ExportsBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
     "MarathonSettingsBucket": {
       "name": string
       "type": "sst.aws.Bucket"
@@ -45,6 +63,9 @@ declare module "sst" {
     "ThumbnailsRouter": {
       "type": "sst.aws.Router"
       "url": string
+    }
+    "VimmerVPC": {
+      "type": "sst.aws.Vpc"
     }
   }
 }

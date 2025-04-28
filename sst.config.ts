@@ -31,6 +31,10 @@ export default $config({
       }
     );
 
+    const exportsBucket = new sst.aws.Bucket("ExportsBucket", {
+      access: "public",
+    });
+
     const submissionsRouter = new sst.aws.Router("SubmissionsRouter", {
       routes: {
         "/*": {
@@ -107,6 +111,35 @@ export default $config({
     //   ],
     // });
 
+    const vpc = new sst.aws.Vpc("VimmerVPC");
+    const cluster = new sst.aws.Cluster("VimmerCluster", { vpc });
+
+    const exportSubmissionsTask = new sst.aws.Task("ExportSubmissionsTask", {
+      cluster,
+      image: {
+        context: "./services/export-submission-zip",
+        dockerfile: "Dockerfile",
+      },
+      environment: env,
+      link: [previewBucket, exportsBucket],
+      permissions: [
+        {
+          actions: ["s3:GetObject", "s3:PutObject"],
+          resources: [previewBucket.arn, exportsBucket.arn],
+        },
+      ],
+      dev: {
+        command: "bun start",
+      },
+    });
+
+    const exportCaller = new sst.aws.Function("ExportCaller", {
+      handler: "services/export-caller/index.handler",
+      environment: env,
+      link: [exportSubmissionsTask],
+      url: true,
+    });
+
     new sst.aws.Cron("ScheduledTopicsCron", {
       function: {
         handler: "services/scheduled-topics-cron/index.handler",
@@ -155,12 +188,15 @@ export default $config({
       },
       buckets: {
         submissionBucket: submissionBucket.name,
+        exportsBucket: exportsBucket.name,
       },
       queues: {
         processSubmissionQueue: processSubmissionQueue.url,
       },
-      lambdas: {
+      services: {
         photoValidatorFunction: photoValidatorFunction.url,
+        exportSubmissionsTask: exportSubmissionsTask.urn,
+        exportCaller: exportCaller.url,
       },
       routers: {
         submissionsRouter: submissionsRouter.url,
