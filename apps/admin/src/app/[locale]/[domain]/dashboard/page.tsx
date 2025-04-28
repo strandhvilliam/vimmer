@@ -1,18 +1,10 @@
-import { format } from "date-fns";
 import { DashboardCards } from "./_components/dashboard-cards";
 import { RecentParticipantsTable } from "./_components/recent-participants-table";
-import { connection } from "next/server";
 import {
   getCompetitionClassesByDomain,
   getDeviceGroupsByDomain,
   getParticipantsByDomain,
-  getValidationResultsByParticipantId,
 } from "@vimmer/supabase/cached-queries";
-import { Participant, ParticipantStatus } from "@vimmer/supabase/types";
-import {
-  SEVERITY_LEVELS,
-  VALIDATION_OUTCOME,
-} from "@vimmer/validation/constants";
 import { TimeSeriesChart } from "./_components/time-series-chart";
 import { GpsMapChart } from "./_components/gps-map-chart";
 import { DeviceGroupChart } from "./_components/device-group-chart";
@@ -35,7 +27,6 @@ interface PageProps {
 }
 
 export default async function DashboardPage({ params }: PageProps) {
-  await connection();
   const { domain } = await params;
 
   const deviceGroupsPromise = getDeviceGroupsByDomain(domain);

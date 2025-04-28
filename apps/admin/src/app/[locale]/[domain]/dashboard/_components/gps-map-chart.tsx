@@ -1,6 +1,8 @@
 "use client";
 
-import { MapPin } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import {
   Card,
   CardContent,
@@ -9,32 +11,115 @@ import {
   CardTitle,
 } from "@vimmer/ui/components/card";
 
-interface GpsLocation {
+interface PhotoLocation {
   id: number;
-  x: number;
-  y: number;
-  z: number;
+  longitude: number;
+  latitude: number;
   name: string;
 }
 
-interface GpsMapChartProps {
-  gpsData: GpsLocation[];
+// Generate random locations around Stockholm city center
+function generateRandomStockholmLocations(count: number): PhotoLocation[] {
+  // Stockholm center coordinates
+  const stockholmLat = 59.3293;
+  const stockholmLng = 18.0686;
+
+  const locations: PhotoLocation[] = [];
+  const locationNames = [
+    "Gamla Stan",
+    "Djurgården",
+    "Södermalm",
+    "Norrmalm",
+    "Östermalm",
+    "Vasastan",
+    "Kungsholmen",
+    "City Hall",
+    "Royal Palace",
+    "Skansen",
+    "NK",
+    "The Globe",
+    "Nobel Museum",
+    "Fotografiska",
+    "Central Station",
+    "Vasa Museum",
+  ];
+
+  for (let i = 0; i < count; i++) {
+    // Random offset within ~2km
+    const latOffset = (Math.random() - 0.5) * 0.04;
+    const lngOffset = (Math.random() - 0.5) * 0.06;
+
+    locations.push({
+      id: i + 1,
+      latitude: stockholmLat + latOffset,
+      longitude: stockholmLng + lngOffset,
+      name: locationNames[i % locationNames.length],
+    });
+  }
+
+  return locations;
 }
 
-const MOCK_GPS_DATA: GpsLocation[] = [
-  { id: 1, x: 55, y: 40, z: 12, name: "City Center" },
-  { id: 2, x: 60, y: 35, z: 8, name: "Park" },
-  { id: 3, x: 45, y: 60, z: 5, name: "Beach" },
-  { id: 4, x: 40, y: 35, z: 10, name: "Mountain" },
-  { id: 5, x: 25, y: 65, z: 6, name: "Lake" },
-  { id: 6, x: 70, y: 50, z: 9, name: "Museum" },
-  { id: 7, x: 30, y: 30, z: 4, name: "Bridge" },
-  { id: 8, x: 65, y: 70, z: 7, name: "Cathedral" },
-  { id: 9, x: 50, y: 50, z: 15, name: "Main Square" },
-];
-
 export function GpsMapChart() {
-  const gpsData = MOCK_GPS_DATA;
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<maplibregl.Map | null>(null);
+  const [photoLocations] = useState<PhotoLocation[]>(
+    generateRandomStockholmLocations(10)
+  );
+
+  const mapStyle =
+    "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json";
+
+  useEffect(() => {
+    if (!mapContainer.current) return;
+
+    // Initialize map
+    map.current = new maplibregl.Map({
+      container: mapContainer.current as HTMLElement,
+      style: mapStyle, // Use the constant
+      center: [18.0686, 59.3293], // Stockholm center
+      zoom: 12,
+    });
+
+    // Add navigation controls
+    map.current.addControl(new maplibregl.NavigationControl());
+
+    // Add markers when map loads
+    map.current.on("load", () => {
+      photoLocations.forEach((location) => {
+        // Create marker element
+        const markerEl = document.createElement("div");
+        markerEl.className = "custom-marker";
+        markerEl.style.backgroundColor = "#ff4b4b";
+        markerEl.style.width = "20px";
+        markerEl.style.height = "20px";
+        markerEl.style.borderRadius = "50%";
+        markerEl.style.border = "2px solid white";
+        markerEl.style.boxShadow = "0 0 10px rgba(0,0,0,0.3)";
+
+        // Add marker to map
+        if (map.current) {
+          new maplibregl.Marker(markerEl)
+            .setLngLat([location.longitude, location.latitude])
+            .setPopup(
+              new maplibregl.Popup().setHTML(
+                `<h3>${location.name}</h3>` as string
+              )
+            )
+            .addTo(map.current);
+        }
+      });
+    });
+
+    // Cleanup
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
+  }, [photoLocations]);
+
   return (
     <Card>
       <CardHeader className="space-y-0 p-4 pb-0">
@@ -42,42 +127,14 @@ export function GpsMapChart() {
           Photo Locations
         </CardTitle>
         <CardDescription className="text-xs">
-          Geographic distribution of photos
+          Geographic distribution of photos in Stockholm
         </CardDescription>
       </CardHeader>
       <CardContent className="p-4">
-        <div className="h-[240px] relative">
-          <div className="absolute inset-0 bg-gray-100 rounded-md overflow-hidden">
-            <div className="w-full h-full grid grid-cols-10 grid-rows-10">
-              {Array.from({ length: 100 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="border border-gray-200 border-opacity-30"
-                />
-              ))}
-            </div>
-
-            {gpsData.map((location) => (
-              <div
-                key={location.id}
-                className="absolute flex flex-col items-center"
-                style={{
-                  left: `${location.x}%`,
-                  top: `${location.y}%`,
-                  transform: "translate(-50%, -50%)",
-                }}
-              >
-                <MapPin
-                  size={location.z + 14}
-                  className="text-red-500 fill-current"
-                />
-                <span className="text-xs font-medium mt-1 bg-white px-1 rounded shadow-sm">
-                  {location.name}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <div
+          ref={mapContainer}
+          className="h-[200px] w-full rounded-md overflow-hidden"
+        />
       </CardContent>
     </Card>
   );

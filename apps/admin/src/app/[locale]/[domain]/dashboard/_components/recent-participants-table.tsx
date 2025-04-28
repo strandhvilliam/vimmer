@@ -33,6 +33,14 @@ export function RecentParticipantsTable() {
   const { locale, domain } = useParams();
   const { participantsPromise } = useDashboardData();
   const participants = use(participantsPromise);
+
+  const recentParticipants = participants
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+    .slice(0, 10);
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -58,7 +66,7 @@ export function RecentParticipantsTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {participants.map((participant) => (
+              {recentParticipants.map((participant) => (
                 <TableRow key={participant.id} className="hover:bg-muted/30">
                   <TableCell className="font-medium">
                     <Link
