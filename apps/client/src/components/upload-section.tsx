@@ -6,7 +6,7 @@ import { CloudUpload, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import React from "react";
 import { UploadZone } from "./upload-zone";
-import { usePhotoStore } from "@/stores/photo-store";
+import { usePhotoStore } from "@/lib/stores/photo-store";
 import { usePresignedSubmissions } from "@/hooks/use-presigned-submissions";
 import { Topic } from "@vimmer/supabase/types";
 import { RuleConfig, RuleKey } from "@vimmer/validation/types";

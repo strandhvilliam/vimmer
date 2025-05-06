@@ -1,4 +1,4 @@
-import { usePhotoStore } from "@/stores/photo-store";
+import { usePhotoStore } from "@/lib/stores/photo-store";
 import React from "react";
 import { SubmissionItem } from "./submission-item";
 import { motion } from "framer-motion";

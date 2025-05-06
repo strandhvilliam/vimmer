@@ -11,7 +11,7 @@ import {
 } from "@vimmer/ui/components/card";
 import { UploadProgress } from "@/components/upload-progress";
 import { StepNavigationHandlers } from "@/lib/types";
-import { usePhotoStore } from "@/stores/photo-store";
+import { usePhotoStore } from "@/lib/stores/photo-store";
 import { SEVERITY_LEVELS, RULE_KEYS } from "@vimmer/validation/constants";
 import { RuleKey, RuleConfig } from "@vimmer/validation/types";
 import { createRule } from "@vimmer/validation/validator";

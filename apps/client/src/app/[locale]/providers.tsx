@@ -1,6 +1,6 @@
 "use client";
 
-import { I18nProviderClient } from "@/locales/client";
+import { I18nProviderClient } from "@/lib/locales/client";
 import { Toaster } from "@vimmer/ui/components/toaster";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";

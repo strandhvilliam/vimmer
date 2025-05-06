@@ -20,7 +20,7 @@ import { useEffect, useState } from "react";
 import {
   submissionQueryClientParams,
   submissionQueryClientParamSerializer,
-} from "@/schemas/submission-query-client-schema";
+} from "@/lib/schemas/submission-query-client-schema";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 
 interface ClientPageProps {

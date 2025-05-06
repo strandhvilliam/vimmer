@@ -145,17 +145,13 @@ export async function exportSubmissionsToZip({
         }
 
         try {
-          // Format the order index with padding (01, 02, etc.)
           const paddedTopicIndex = String(topicOrderIndex + 1).padStart(2, "0");
 
-          // Get file extension from the key
           const extension =
             path.extname(submission.preview_key).slice(1) || "jpg";
 
-          // Define the destination path within the zip
           const zipPath = `${domain}/${participant.reference}/${paddedTopicIndex}.${extension}`;
 
-          // Download the submission file from S3
           const { Body, ContentType } = await s3Client.send(
             new GetObjectCommand({
               Bucket: sourceBucket,

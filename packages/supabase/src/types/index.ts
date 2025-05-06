@@ -4,7 +4,6 @@ import {
 } from "@supabase/supabase-js";
 import { Database, Tables, TablesInsert, TablesUpdate } from "./db";
 import { ToCamelCaseObject } from "./helpers";
-
 export type SupabaseClient = DBClient<Database>;
 export type SupabaseRealtimeChannel = RealtimeChannel;
 
@@ -56,6 +55,13 @@ export type UpdateUserData = ToCamelCaseObject<TablesUpdate<"user">>;
 export type RuleConfig = ToCamelCaseObject<Tables<"rule_configs">>;
 export type InsertRuleConfig = ToCamelCaseObject<TablesInsert<"rule_configs">>;
 export type UpdateRuleConfig = ToCamelCaseObject<TablesUpdate<"rule_configs">>;
+
+export type ParticipantVerification = ToCamelCaseObject<
+  Tables<"participant_verifications">
+>;
+export type InsertParticipantVerification = ToCamelCaseObject<
+  TablesInsert<"participant_verifications">
+>;
 
 export * from "./db";
 export * from "./helpers";

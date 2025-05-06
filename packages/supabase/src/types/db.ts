@@ -183,6 +183,48 @@ export type Database = {
         }
         Relationships: []
       }
+      participant_verifications: {
+        Row: {
+          created_at: string
+          id: number
+          notes: string | null
+          participant_id: number
+          staff_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          notes?: string | null
+          participant_id: number
+          staff_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          notes?: string | null
+          participant_id?: number
+          staff_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participant_verification_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "participant_verification_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       participants: {
         Row: {
           competition_class_id: number | null
@@ -522,6 +564,7 @@ export type Database = {
           id: number
           message: string
           outcome: string
+          overruled: boolean
           participant_id: number
           rule_key: string
           severity: string
@@ -533,6 +576,7 @@ export type Database = {
           id?: number
           message: string
           outcome: string
+          overruled?: boolean
           participant_id: number
           rule_key: string
           severity: string
@@ -544,6 +588,7 @@ export type Database = {
           id?: number
           message?: string
           outcome?: string
+          overruled?: boolean
           participant_id?: number
           rule_key?: string
           severity?: string

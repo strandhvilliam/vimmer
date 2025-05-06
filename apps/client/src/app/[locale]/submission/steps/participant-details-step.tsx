@@ -2,7 +2,6 @@
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { StepNavigationHandlers } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Alert, AlertDescription } from "@vimmer/ui/components/alert";
 import { Button } from "@vimmer/ui/components/button";
 import {
   CardContent,

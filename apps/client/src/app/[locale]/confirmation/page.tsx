@@ -4,7 +4,7 @@ import { getParticipantByReference } from "@vimmer/supabase/cached-queries";
 import {
   loadSubmissionQueryServerParams,
   submissionQueryServerParamSerializer,
-} from "@/schemas/submission-query-server-schema";
+} from "@/lib/schemas/submission-query-server-schema";
 import { notFound, redirect } from "next/navigation";
 import { Resource } from "sst";
 import { ConfirmationData } from "@/lib/types";

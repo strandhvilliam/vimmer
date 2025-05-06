@@ -19,13 +19,13 @@ import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRef } from "react";
-import { initializeParticipant } from "@/actions/initialize-participant";
+import { initializeParticipant } from "@/lib/actions/initialize-participant";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
 import {
   InitializeParticipantSchema,
   initializeParticipantSchema,
-} from "@/schemas/initialize-participant-schema";
+} from "@/lib/schemas/initialize-participant-schema";
 import { Button } from "@vimmer/ui/components/button";
 import { useForm } from "react-hook-form";
 import { z } from "zod";

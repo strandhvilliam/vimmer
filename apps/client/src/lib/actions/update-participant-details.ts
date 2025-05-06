@@ -3,7 +3,7 @@ import { updateParticipant } from "@vimmer/supabase/mutations";
 import { createClient } from "@vimmer/supabase/server";
 import { returnValidationErrors } from "next-safe-action";
 import { actionClient, ActionError } from "./safe-action";
-import { updateParticipantDetailsSchema } from "../schemas/update-participant-details-schema";
+import { updateParticipantDetailsSchema } from "../lib/schemas/update-participant-details-schema";
 import { revalidateTag } from "next/cache";
 import { getParticipantByReference } from "@vimmer/supabase/cached-queries";
 

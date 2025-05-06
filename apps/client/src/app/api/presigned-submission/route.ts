@@ -6,7 +6,6 @@ import { presignedSubmissionQuerySchema } from "./types";
 
 export async function GET(request: Request) {
   try {
-    console.log("GET request received");
     const { searchParams } = new URL(request.url);
     const queryParams = {
       participantRef: searchParams.get("participantRef"),

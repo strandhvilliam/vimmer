@@ -140,14 +140,14 @@ export default $config({
       url: true,
     });
 
-    new sst.aws.Cron("ScheduledTopicsCron", {
-      function: {
-        handler: "services/scheduled-topics-cron/index.handler",
-        environment: env,
-        // link: [adminApp],
-      },
-      schedule: "rate(1 minute)",
-    });
+    // new sst.aws.Cron("ScheduledTopicsCron", {
+    //   function: {
+    //     handler: "services/scheduled-topics-cron/index.handler",
+    //     environment: env,
+    //     // link: [adminApp],
+    //   },
+    //   schedule: "rate(1 minute)",
+    // });
 
     processSubmissionQueue.subscribe({
       handler: "./services/photo-processor/index.handler",

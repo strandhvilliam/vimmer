@@ -10,7 +10,7 @@ import {
 import { useState, useEffect } from "react";
 import { useVerificationListener } from "@/hooks/use-verification-listener";
 import { useRouter } from "next/navigation";
-import { submissionQueryClientParamSerializer } from "@/schemas/submission-query-client-schema";
+import { submissionQueryClientParamSerializer } from "@/lib/schemas/submission-query-client-schema";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { Resource } from "sst";
 
