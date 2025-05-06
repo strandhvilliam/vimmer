@@ -8,7 +8,7 @@ import {
 } from "@vimmer/supabase/mutations";
 import { createClient } from "@vimmer/supabase/server";
 // import { Resource } from "sst";
-import { initializeSubmissionsSchema } from "../lib/schemas/initialize-submissions-schema";
+import { initializeSubmissionsSchema } from "@/lib/schemas/initialize-submissions-schema";
 import { actionClient, ActionError } from "./safe-action";
 import {
   getMarathonByDomain,

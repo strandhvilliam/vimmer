@@ -1,6 +1,5 @@
 "use server";
 import { getParticipantByReference } from "@vimmer/supabase/cached-queries";
-import { createClient } from "@vimmer/supabase/server";
 import { returnValidationErrors } from "next-safe-action";
 import { verificationDataSchema } from "@/lib/schemas/verification-data-schema";
 import { actionClient } from "@/lib/actions/safe-action";

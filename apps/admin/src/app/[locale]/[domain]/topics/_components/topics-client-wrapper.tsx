@@ -7,7 +7,7 @@ import { deleteTopicAction } from "../_actions/topics-delete-action";
 import { toast } from "sonner";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useState } from "react";
-import { EditTopicInput } from "@/app/[locale]/[domain]/topics/_actions/topics-edit-action";
+import { EditTopicInput } from "../_actions/topics-edit-action";
 import dynamic from "next/dynamic";
 import { TopicsTableSkeleton } from "./topics-table-skeleton";
 

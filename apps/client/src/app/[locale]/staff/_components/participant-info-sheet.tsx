@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { CheckCircle, XCircle } from "lucide-react";
 import {
   Sheet,
@@ -10,33 +10,46 @@ import {
 } from "@vimmer/ui/components/sheet";
 import { Button } from "@vimmer/ui/components/button";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
-import { Participant, ValidationResult } from "@vimmer/supabase/types";
+import { Participant, Topic, ValidationResult } from "@vimmer/supabase/types";
 import { useAction } from "next-safe-action/hooks";
 import { verifyParticipant } from "@/lib/actions/verify-participant";
 import { toast } from "sonner";
-import { createClient } from "@vimmer/supabase/browser";
 
 interface ParticipantInfoSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   participant: (Participant & { validationResults: ValidationResult[] }) | null;
   onParticipantVerified?: () => void;
+  topics: Topic[];
 }
+
+const getTopicIndexFromFileName = (fileName: string) => {
+  const parts = fileName.split("/");
+  if (parts.length < 3) return null;
+  const topicOrderStr = parts[2];
+  if (!topicOrderStr) return null;
+  return parseInt(topicOrderStr, 10);
+};
+
+const getTopicNameFromFileName = (fileName: string, topics: Topic[]) => {
+  const topicIndex = getTopicIndexFromFileName(fileName);
+  if (!topicIndex) return null;
+  return topics.find((t) => t.orderIndex === topicIndex - 1)?.name;
+};
 
 export function ParticipantInfoSheet({
   open,
   onOpenChange,
   participant,
   onParticipantVerified,
+  topics,
 }: ParticipantInfoSheetProps) {
   const { execute: executeVerifyParticipant } = useAction(verifyParticipant, {
     onSuccess: ({ data }) => {
       if (data) {
         toast.success("Participant verified successfully");
         onOpenChange(false);
-        if (onParticipantVerified) {
-          onParticipantVerified();
-        }
+        onParticipantVerified?.();
       } else {
         toast.error("Failed to verify participant");
       }
@@ -103,7 +116,7 @@ export function ParticipantInfoSheet({
                     key={validation.id}
                     className="flex items-start gap-2 pb-3 border-b border-muted last:border-0"
                   >
-                    {validation.outcome === "success" ? (
+                    {validation.outcome === "passed" ? (
                       <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
                     ) : (
                       <XCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
@@ -111,7 +124,7 @@ export function ParticipantInfoSheet({
                     <div className="flex-1">
                       <p
                         className={
-                          validation.outcome === "success"
+                          validation.outcome === "passed"
                             ? "text-green-700 text-sm font-medium"
                             : "text-red-700 text-sm font-medium"
                         }
@@ -122,9 +135,20 @@ export function ParticipantInfoSheet({
                         {validation.message}
                       </p>
                       {validation.fileName && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          File: {validation.fileName}
-                        </p>
+                        <>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            File: {validation.fileName}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Topic:{" "}
+                            {getTopicIndexFromFileName(validation.fileName)}
+                            {". "}
+                            {getTopicNameFromFileName(
+                              validation.fileName,
+                              topics
+                            )}
+                          </p>
+                        </>
                       )}
                     </div>
                   </div>

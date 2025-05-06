@@ -1,4 +1,4 @@
-import { betterAuth } from "better-auth";
+import { betterAuth, Session, User } from "better-auth";
 import { emailOTP } from "better-auth/plugins";
 import { Pool } from "pg";
 import { headers } from "next/headers";
@@ -44,7 +44,10 @@ export const auth = betterAuth({
   ],
 });
 
-export async function getSession() {
+export async function getSession(): Promise<{
+  session: Session;
+  user: User;
+} | null> {
   return headers().then((headers) =>
     auth.api.getSession({
       headers: headers,

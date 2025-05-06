@@ -332,3 +332,27 @@ export async function validateJuryToken(token: string): Promise<{
     return { valid: false };
   }
 }
+
+export async function getParticipantVerificationsByStaffIdQuery(
+  supabase: SupabaseClient,
+  staffId: string
+) {
+  const { data } = await supabase
+    .from("participant_verifications")
+    .select(
+      `
+      *,
+      participant:participants(
+        *,
+        competition_class:competition_classes(*),
+        device_group:device_groups(*),
+        validation_results(*)
+      )
+      `
+    )
+    .eq("staff_id", staffId)
+    .order("created_at", { ascending: false })
+    .throwOnError();
+
+  return data?.map(toCamelCase) ?? [];
+}

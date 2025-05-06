@@ -20,9 +20,8 @@ import { FormLabel } from "@vimmer/ui/components/form";
 import { FormDescription } from "@vimmer/ui/components/form";
 import { cn } from "@vimmer/ui/lib/utils";
 import { DateTimePicker } from "@vimmer/ui/components/date-time-picker";
-import { CreateTopicInput } from "@/app/[locale]/[domain]/topics/_actions/topics-create-action";
-import { Topic } from "@vimmer/supabase/types";
-import { useEffect, useState } from "react";
+import { CreateTopicInput } from "../_actions/topics-create-action";
+import { useEffect } from "react";
 import { RadioGroup, RadioGroupItem } from "@vimmer/ui/components/radio-group";
 
 const CreateTopicFormSchema = z.object({

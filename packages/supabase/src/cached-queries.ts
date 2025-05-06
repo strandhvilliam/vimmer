@@ -14,6 +14,7 @@ import {
   getParticipantByIdQuery,
   getParticipantByReferenceQuery,
   getParticipantsByDomainQuery,
+  getParticipantVerificationsByStaffIdQuery,
   getRulesByMarathonIdQuery,
   getTopicsByDomainQuery,
   getTopicsWithSubmissionCountQuery,
@@ -120,5 +121,17 @@ export async function getTopicsWithSubmissionCount(marathonId: number) {
   cacheLife("seconds");
   const supabase = await createClient();
   const data = await getTopicsWithSubmissionCountQuery(supabase, marathonId);
+  return data;
+}
+
+export async function getParticipantVerificationsByStaffId(staffId: string) {
+  "use cache";
+  cacheTag(`participant-verifications-${staffId}`);
+  cacheLife("minutes");
+  const supabase = await createClient();
+  const data = await getParticipantVerificationsByStaffIdQuery(
+    supabase,
+    staffId
+  );
   return data;
 }

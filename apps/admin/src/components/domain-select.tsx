@@ -11,9 +11,9 @@ import {
   CardFooter,
 } from "@vimmer/ui/components/card";
 import { toast } from "@vimmer/ui/hooks/use-toast";
-import { selectDomain } from "../app/[locale]/domains/actions";
 import { Marathon } from "@vimmer/supabase/types";
 import { useAction } from "next-safe-action/hooks";
+import { selectDomain } from "@/lib/actions/select-domain";
 
 interface DomainSelectProps {
   marathonsPromise: Promise<Marathon[]>;
