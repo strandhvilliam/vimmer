@@ -1,5 +1,6 @@
 import { createI18nMiddleware } from "next-international/middleware";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getSessionCookie } from "better-auth/cookies";
 
 const I18nMiddleware = createI18nMiddleware({
   urlMappingStrategy: "rewriteDefault",
@@ -7,9 +8,25 @@ const I18nMiddleware = createI18nMiddleware({
   defaultLocale: "en",
 });
 
+const authRoutes = ["/staff/login", "/staff/verify"];
+
 export function middleware(request: NextRequest) {
   // @ts-expect-error
-  return I18nMiddleware(request);
+  const response = I18nMiddleware(request);
+
+  if (request.nextUrl.pathname.includes("/staff")) {
+    const session = getSessionCookie(request);
+
+    if (
+      !session &&
+      !authRoutes.some((route) => request.nextUrl.pathname.endsWith(route))
+    ) {
+      const url = new URL("/staff/login", request.url);
+      return NextResponse.redirect(url);
+    }
+  }
+
+  return response;
 }
 
 export const config = {

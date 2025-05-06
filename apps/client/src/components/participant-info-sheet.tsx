@@ -31,7 +31,7 @@ export function ParticipantInfoSheet({
 }: ParticipantInfoSheetProps) {
   const { execute: executeVerifyParticipant } = useAction(verifyParticipant, {
     onSuccess: ({ data }) => {
-      if (data && data.success) {
+      if (data) {
         toast.success("Participant verified successfully");
         onOpenChange(false);
         if (onParticipantVerified) {

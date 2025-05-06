@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { QrCodeIcon, PenIcon, UsersIcon } from "lucide-react";
+import { QrCodeIcon, PenIcon, UsersIcon, LogOutIcon } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import { DotPattern } from "@vimmer/ui/components/dot-pattern";
 import QrScanDrawer from "@/components/qr-scan-drawer";
@@ -12,6 +12,8 @@ import { handleVerificationCode } from "@/lib/handle-verification-code";
 import { ParticipantInfoSheet } from "@/components/participant-info-sheet";
 import { Participant, ValidationResult } from "@vimmer/supabase/types";
 import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 export default function StaffPage() {
   const [participantDataIsOpen, setParticipantDataIsOpen] = useState(false);
@@ -21,6 +23,8 @@ export default function StaffPage() {
   const [qrScanOpen, setQrScanOpen] = useState(false);
   const [manualEntryOpen, setManualEntryOpen] = useState(false);
   const [verifiedListOpen, setVerifiedListOpen] = useState(false);
+  const [isLogoutLoading, setIsLogoutLoading] = useState(false);
+  const router = useRouter();
 
   const { execute: executeVerificationCode } = useAction(
     handleVerificationCode,
@@ -40,11 +44,33 @@ export default function StaffPage() {
     // setRefreshVerifiedList((prev) => prev + 1);
   };
 
+  const handleLogout = async () => {
+    try {
+      setIsLogoutLoading(true);
+      await authClient.signOut();
+      router.push("/staff/login");
+    } catch (error) {
+      toast.error("Failed to logout");
+    } finally {
+      setIsLogoutLoading(false);
+    }
+  };
+
   return (
     <>
-      <div className="flex flex-col items-center justify-between min-h-[100svh] pb-20">
+      <div className="flex flex-col items-center justify-between h-[100dvh] pb-20">
         <DotPattern />
-        <div className="w-full flex justify-center pt-20 pb-6 flex-col items-center gap-2">
+        <div className="w-full flex justify-center pt-20 pb-6 flex-col items-center gap-2 relative">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="text-muted-foreground absolute top-4 left-4 shadow rounded-full"
+            onClick={handleLogout}
+            disabled={isLogoutLoading}
+          >
+            {isLogoutLoading ? "Logging out..." : "Logout"}
+            {!isLogoutLoading && <LogOutIcon className="ml-1 h-4 w-4" />}
+          </Button>
           <h1 className="text-4xl font-bold font-rocgrotesk">Verification</h1>
           <p className="text-muted-foreground text-lg font-rocgrotesk">
             Staff: Villiam Strandh
