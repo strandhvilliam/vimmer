@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, HammerIcon, XCircle, XIcon } from "lucide-react";
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -14,6 +15,8 @@ import { Participant, Topic, ValidationResult } from "@vimmer/supabase/types";
 import { useAction } from "next-safe-action/hooks";
 import { verifyParticipant } from "@/lib/actions/verify-participant";
 import { toast } from "sonner";
+import { ValidationStatusBadge } from "@/components/validation-status-badge";
+import { overruleValidation } from "../_actions/overrule-validation";
 
 interface ParticipantInfoSheetProps {
   open: boolean;
@@ -44,6 +47,12 @@ export function ParticipantInfoSheet({
   onParticipantVerified,
   topics,
 }: ParticipantInfoSheetProps) {
+  const [localParticipant, setLocalParticipant] = React.useState(participant);
+
+  React.useEffect(() => {
+    setLocalParticipant(participant);
+  }, [participant]);
+
   const { execute: executeVerifyParticipant } = useAction(verifyParticipant, {
     onSuccess: ({ data }) => {
       if (data) {
@@ -60,39 +69,68 @@ export function ParticipantInfoSheet({
     },
   });
 
+  const {
+    execute: executeOverruleValidation,
+    isExecuting: isOverruleValidationExecuting,
+  } = useAction(overruleValidation, {
+    onSuccess: ({ data }) => {
+      if (data) {
+        setLocalParticipant((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            validationResults: prev.validationResults.map((v) =>
+              v.id === data.id ? { ...v, overruled: true } : v
+            ),
+          };
+        });
+      }
+    },
+    onError: (error) => {
+      console.error("Error overruling validation:", error);
+      toast.error("Failed to overrule validation");
+    },
+  });
+
   const handleVerifyParticipant = () => {
-    if (!participant) return;
-    executeVerifyParticipant({ participantId: participant.id });
+    if (!localParticipant) return;
+    executeVerifyParticipant({ participantId: localParticipant.id });
   };
 
-  if (!participant) return null;
+  if (!localParticipant) return null;
 
-  const sortedValidations = [...participant.validationResults].sort((a, b) => {
-    if (a.outcome === "failed" && b.outcome !== "failed") return -1;
-    if (a.outcome !== "failed" && b.outcome === "failed") return 1;
-    return 0;
-  });
+  const sortedValidations = [...localParticipant.validationResults].sort(
+    (a, b) => {
+      if (a.outcome === "failed" && b.outcome !== "failed") return -1;
+      if (a.outcome !== "failed" && b.outcome === "failed") return 1;
+      return 0;
+    }
+  );
+
+  // Check if there are any failed, non-overruled validations
+  const hasUnresolvedErrors = localParticipant.validationResults.some(
+    (v) => v.severity === "error" && v.outcome === "failed" && !v.overruled
+  );
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[85vh] px-0" hideClose>
-        <SheetHeader className="px-4 border-b pb-4">
-          <SheetTitle className="text-xl">Participant Information</SheetTitle>
-        </SheetHeader>
-
+      <SheetContent side="bottom" className="h-[90dvh] px-0 rounded-xl">
+        <SheetTitle className="sr-only">Participant Information</SheetTitle>
         <div className="overflow-y-auto h-full pb-16">
           <div className="px-4 py-4 border-b">
             <h3 className="text-lg font-medium">
-              {participant.firstname} {participant.lastname}
+              {localParticipant.firstname} {localParticipant.lastname}
             </h3>
             <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
-              <span className="font-mono">#{participant.reference}</span>
-              {participant.email && <span>• {participant.email}</span>}
+              <span className="font-mono">#{localParticipant.reference}</span>
+              {localParticipant.email && (
+                <span>• {localParticipant.email}</span>
+              )}
             </div>
             <div className="flex items-center mt-3">
               <div className="flex items-center space-x-2 text-sm">
                 <span className="text-muted-foreground">Status:</span>
-                {participant.status === "verified" ? (
+                {localParticipant.status === "verified" ? (
                   <div className="flex items-center space-x-1 text-green-600">
                     <CheckCircle className="h-4 w-4" />
                     <span>Verified</span>
@@ -114,23 +152,52 @@ export function ParticipantInfoSheet({
                 {sortedValidations.map((validation) => (
                   <div
                     key={validation.id}
-                    className="flex items-start gap-2 pb-3 border-b border-muted last:border-0"
+                    className="pb-3 border-b border-muted last:border-0"
                   >
-                    {validation.outcome === "passed" ? (
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    ) : (
-                      <XCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
-                    )}
-                    <div className="flex-1">
-                      <p
-                        className={
-                          validation.outcome === "passed"
-                            ? "text-green-700 text-sm font-medium"
-                            : "text-red-700 text-sm font-medium"
-                        }
-                      >
-                        {validation.ruleKey.replace(/_/g, " ")}
-                      </p>
+                    <div className="flex items-center gap-2 justify-between">
+                      <div className="flex items-center gap-2">
+                        <ValidationStatusBadge
+                          outcome={
+                            validation.outcome as
+                              | "failed"
+                              | "passed"
+                              | "skipped"
+                          }
+                          severity={validation.severity as "error" | "warning"}
+                        />
+                        <span
+                          className={
+                            validation.outcome === "passed"
+                              ? "text-green-700 text-sm font-medium"
+                              : validation.severity === "error"
+                                ? "text-red-700 text-sm font-medium"
+                                : "text-amber-700 text-sm font-medium"
+                          }
+                        >
+                          {validation.ruleKey.replace(/_/g, " ")}
+                        </span>
+                      </div>
+                      {validation.severity === "error" &&
+                        validation.outcome === "failed" &&
+                        !validation.overruled && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() =>
+                              executeOverruleValidation({
+                                validationResultId: validation.id,
+                                participantReference:
+                                  localParticipant.reference,
+                              })
+                            }
+                            disabled={isOverruleValidationExecuting}
+                          >
+                            <HammerIcon className="h-4 w-4" />
+                            Overrule
+                          </Button>
+                        )}
+                    </div>
+                    <div className="">
                       <p className="text-muted-foreground text-sm">
                         {validation.message}
                       </p>
@@ -141,8 +208,7 @@ export function ParticipantInfoSheet({
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
                             Topic:{" "}
-                            {getTopicIndexFromFileName(validation.fileName)}
-                            {". "}
+                            {getTopicIndexFromFileName(validation.fileName)}.{" "}
                             {getTopicNameFromFileName(
                               validation.fileName,
                               topics
@@ -170,14 +236,19 @@ export function ParticipantInfoSheet({
           >
             Close
           </Button>
-          {participant.status !== "verified" && (
-            <PrimaryButton
-              onClick={handleVerifyParticipant}
-              className="w-2/3 ml-2"
-            >
-              Verify Participant
-            </PrimaryButton>
-          )}
+          <PrimaryButton
+            onClick={handleVerifyParticipant}
+            className="w-2/3 ml-2"
+            disabled={
+              localParticipant.status === "verified" || hasUnresolvedErrors
+            }
+          >
+            {localParticipant.status === "verified"
+              ? "Already Verified"
+              : hasUnresolvedErrors
+                ? "Overrule all errors to verify"
+                : "Verify Participant"}
+          </PrimaryButton>
         </div>
       </SheetContent>
     </Sheet>

@@ -23,6 +23,7 @@
     "./lambda": "./src/clients/lambda.ts",
     "./queries": "./src/queries.ts",
     "./mutations": "./src/mutations.ts",
-    "./cached-queries": "./src/cached-queries.ts"
+    "./cached-queries": "./src/cached-queries.ts",
+    "./cache-tags": "./src/cache-tags.ts"
   }
 }

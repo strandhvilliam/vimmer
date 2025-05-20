@@ -15,6 +15,7 @@ import {
   InsertRuleConfig,
   UpdateRuleConfig,
   InsertParticipantVerification,
+  UpdateValidationResult,
 } from "./types";
 import { toCamelCase, toSnakeCase } from "./utils/format-helpers";
 
@@ -306,6 +307,22 @@ export async function createParticipantVerification(
     .select()
     .single()
     .throwOnError();
+  return toCamelCase(data);
+}
+
+export async function updateValidationResult(
+  supabase: SupabaseClient,
+  id: number,
+  dto: UpdateValidationResult
+) {
+  const { data } = await supabase
+    .from("validation_results")
+    .update(toSnakeCase(dto))
+    .eq("id", id)
+    .select()
+    .single()
+    .throwOnError();
+
   return toCamelCase(data);
 }
 

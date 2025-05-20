@@ -8,7 +8,7 @@ import QrScanDrawer from "@/components/qr-scan-drawer";
 import { ManualEntrySheet } from "@/components/manual-entry-overlay";
 import { VerifiedParticipantsSheet } from "./verified-participants-sheet";
 import { useAction } from "next-safe-action/hooks";
-import { handleVerificationCode } from "@/lib/handle-verification-code";
+import { handleVerificationCode } from "@/lib/actions/handle-verification-code";
 import { ParticipantInfoSheet } from "./participant-info-sheet";
 import {
   DeviceGroup,

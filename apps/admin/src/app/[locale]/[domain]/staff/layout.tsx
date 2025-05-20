@@ -1,11 +1,5 @@
 import React, { Suspense } from "react";
-import { Avatar, AvatarFallback } from "@vimmer/ui/components/avatar";
-import { Search, User2Icon } from "lucide-react";
-import { Input } from "@vimmer/ui/components/input";
-import { ScrollArea } from "@vimmer/ui/components/scroll-area";
-import Link from "next/link";
 import { AddStaffDialog } from "./_components/add-staff-dialog";
-import { useParams } from "next/navigation";
 import { StaffListMenu } from "./_components/staff-list-menu";
 import { StaffListSkeleton } from "./_components/staff-list-skeleton";
 

@@ -9,6 +9,10 @@ export const metadata: Metadata = {
   description: "Upload your submissions",
 };
 
+export const generateStaticParams = async () => {
+  return [{ locale: "en" }];
+};
+
 export default async function RootLayout({
   params,
   children,

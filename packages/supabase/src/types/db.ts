@@ -631,6 +631,42 @@ export type Database = {
         }
         Relationships: []
       }
+      zipped_submissions: {
+        Row: {
+          created_at: string
+          error: string | null
+          export_type: string
+          id: number
+          marathon_id: number
+          progress: number
+          status: string
+          updated_at: string | null
+          zip_key: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          export_type: string
+          id?: number
+          marathon_id: number
+          progress?: number
+          status?: string
+          updated_at?: string | null
+          zip_key?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          export_type?: string
+          id?: number
+          marathon_id?: number
+          progress?: number
+          status?: string
+          updated_at?: string | null
+          zip_key?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

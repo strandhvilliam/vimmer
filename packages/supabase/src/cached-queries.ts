@@ -3,6 +3,19 @@ import {
   unstable_cacheLife as cacheLife,
   unstable_cacheTag as cacheTag,
 } from "next/cache";
+import {
+  userMarathonsTag,
+  topicsByDomainTag,
+  marathonByDomainTag,
+  competitionClassesByDomainTag,
+  deviceGroupsByDomainTag,
+  participantsByDomainTag,
+  participantByReferenceTag,
+  validationResultsByParticipantIdTag,
+  rulesByMarathonIdTag,
+  topicsWithSubmissionCountTag,
+  participantVerificationsByStaffIdTag,
+} from "./cache-tags";
 
 import { createClient } from "./clients/lambda";
 import {
@@ -20,11 +33,10 @@ import {
   getTopicsWithSubmissionCountQuery,
   getValidationResultsByParticipantIdQuery,
 } from "./queries";
-import { Participant } from "./types";
 
 export async function getUserMarathons(userId: string) {
   "use cache";
-  cacheTag(`user-marathons-${userId}`);
+  cacheTag(userMarathonsTag({ userId }));
   cacheLife("hours");
   const supabase = await createClient();
   const data = await getMarathonsByUserIdQuery(supabase, userId);
@@ -33,7 +45,7 @@ export async function getUserMarathons(userId: string) {
 
 export async function getTopicsByDomain(domain: string) {
   "use cache";
-  cacheTag(`topics-${domain}`);
+  cacheTag(topicsByDomainTag({ domain }));
   cacheLife("hours");
   const supabase = await createClient();
   const data = await getTopicsByDomainQuery(supabase, domain);
@@ -42,7 +54,7 @@ export async function getTopicsByDomain(domain: string) {
 
 export async function getMarathonByDomain(domain: string) {
   "use cache";
-  cacheTag(`marathon-${domain}`);
+  cacheTag(marathonByDomainTag({ domain }));
   cacheLife("hours");
   const supabase = await createClient();
   const data = await getMarathonByDomainQuery(supabase, domain);
@@ -51,7 +63,7 @@ export async function getMarathonByDomain(domain: string) {
 
 export async function getCompetitionClassesByDomain(domain: string) {
   "use cache";
-  cacheTag(`competition-classes-${domain}`);
+  cacheTag(competitionClassesByDomainTag({ domain }));
   cacheLife("hours");
   const supabase = await createClient();
   const data = await getCompetitionClassesByDomainQuery(supabase, domain);
@@ -60,7 +72,7 @@ export async function getCompetitionClassesByDomain(domain: string) {
 
 export async function getDeviceGroupsByDomain(domain: string) {
   "use cache";
-  cacheTag(`device-groups-${domain}`);
+  cacheTag(deviceGroupsByDomainTag({ domain }));
   cacheLife("hours");
   const supabase = await createClient();
   const data = await getDeviceGroupsByDomainQuery(supabase, domain);
@@ -69,7 +81,7 @@ export async function getDeviceGroupsByDomain(domain: string) {
 
 export async function getParticipantsByDomain(domain: string) {
   "use cache";
-  cacheTag(`participants-${domain}`);
+  cacheTag(participantsByDomainTag({ domain }));
   cacheLife("minutes");
   const supabase = await createClient();
   const data = await getParticipantsByDomainQuery(supabase, domain);
@@ -81,7 +93,7 @@ export async function getParticipantByReference(
   reference: string
 ) {
   "use cache";
-  cacheTag(`participant-${domain}-${reference}`);
+  cacheTag(participantByReferenceTag({ domain, reference }));
   cacheLife("minutes");
   const supabase = await createClient();
   const data = await getParticipantByReferenceQuery(supabase, {
@@ -96,7 +108,7 @@ export async function getValidationResultsByParticipantId(
   participantId: number
 ) {
   "use cache";
-  cacheTag(`validation-results-${participantId}`);
+  cacheTag(validationResultsByParticipantIdTag({ participantId }));
   cacheLife("minutes");
   const supabase = await createClient();
   const data = await getValidationResultsByParticipantIdQuery(
@@ -108,7 +120,7 @@ export async function getValidationResultsByParticipantId(
 
 export async function getRulesByMarathonId(marathonId: number) {
   "use cache";
-  cacheTag(`rules-${marathonId}`);
+  cacheTag(rulesByMarathonIdTag({ marathonId }));
   cacheLife("hours");
   const supabase = await createClient();
   const data = await getRulesByMarathonIdQuery(supabase, marathonId);
@@ -117,7 +129,7 @@ export async function getRulesByMarathonId(marathonId: number) {
 
 export async function getTopicsWithSubmissionCount(marathonId: number) {
   "use cache";
-  cacheTag(`topics-with-submission-count-${marathonId}`);
+  cacheTag(topicsWithSubmissionCountTag({ marathonId }));
   cacheLife("seconds");
   const supabase = await createClient();
   const data = await getTopicsWithSubmissionCountQuery(supabase, marathonId);
@@ -126,7 +138,7 @@ export async function getTopicsWithSubmissionCount(marathonId: number) {
 
 export async function getParticipantVerificationsByStaffId(staffId: string) {
   "use cache";
-  cacheTag(`participant-verifications-${staffId}`);
+  cacheTag(participantVerificationsByStaffIdTag({ staffId }));
   cacheLife("minutes");
   const supabase = await createClient();
   const data = await getParticipantVerificationsByStaffIdQuery(

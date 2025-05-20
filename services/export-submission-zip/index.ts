@@ -7,24 +7,20 @@ import { createClient } from "@vimmer/supabase/lambda";
 import { Readable } from "stream";
 import JSZip from "jszip";
 import path from "path";
-import type { Tables } from "@vimmer/supabase/types";
-
-const MAX_FILES_PER_BATCH = 50;
-
-type MarathonId = number;
-type SubmissionWithMetadata = Tables<"submissions"> & {
-  participant: Pick<Tables<"participants">, "reference">;
-  topic: Pick<Tables<"topics">, "order_index">;
-};
+import { Resource } from "sst";
+import type { SupabaseClient } from "@vimmer/supabase/types";
 
 interface ExportConfig {
-  marathonId: MarathonId;
+  domain: string;
   sourceBucket: string;
   destinationBucket: string;
-  progressCallback?: (progress: ProgressInfo) => void;
+  exportType: "submissions" | "thumbnails" | "previews";
 }
 
 interface ProgressInfo {
+  marathonId: number;
+  id: number;
+  exportType: "submissions" | "thumbnails" | "previews";
   totalParticipants: number;
   processedParticipants: number;
   totalSubmissions: number;
@@ -33,16 +29,25 @@ interface ProgressInfo {
   error?: string;
 }
 
+const exportTypeToBucketMap = {
+  submissions: Resource.SubmissionBucket.name,
+  thumbnails: Resource.ThumbnailBucket.name,
+  previews: Resource.PreviewBucket.name,
+};
+
 export async function exportSubmissionsToZip({
-  marathonId,
+  domain,
+  exportType,
   sourceBucket,
   destinationBucket,
-  progressCallback,
 }: ExportConfig): Promise<string> {
   const s3Client = new S3Client();
   const supabase = await createClient();
 
   let progress: ProgressInfo = {
+    marathonId: 0,
+    id: 0,
+    exportType,
     totalParticipants: 0,
     processedParticipants: 0,
     totalSubmissions: 0,
@@ -51,20 +56,36 @@ export async function exportSubmissionsToZip({
   };
 
   try {
-    // Get the marathon details to know the domain
-    const { data: marathon } = await supabase
+    const { data: marathon, error: marathonError } = await supabase
       .from("marathons")
-      .select("domain")
-      .eq("id", marathonId)
+      .select()
+      .eq("domain", domain)
       .single();
 
-    if (!marathon) {
-      throw new Error(`Marathon with ID ${marathonId} not found`);
+    if (marathonError || !marathon) {
+      throw new Error(`Marathon with domain ${domain} not found`);
     }
 
-    const domain = marathon.domain;
+    progress.marathonId = marathon.id;
 
-    // Get all participants with submissions for this marathon
+    const { data: zippedSubmission, error: zippedSubmissionError } =
+      await supabase
+        .from("zipped_submissions")
+        .insert({
+          marathon_id: marathon.id,
+          export_type: exportType,
+        })
+        .select()
+        .single();
+
+    if (zippedSubmissionError) {
+      throw new Error(
+        `Failed to create zipped submission: ${zippedSubmissionError.message}`
+      );
+    }
+
+    progress.id = zippedSubmission.id;
+
     const { data: participants, error: participantsError } = await supabase
       .from("participants")
       .select(
@@ -80,7 +101,7 @@ export async function exportSubmissionsToZip({
         )
       `
       )
-      .eq("marathon_id", marathonId)
+      .eq("marathon_id", marathon.id)
       .eq("submissions.status", "uploaded");
 
     if (participantsError) {
@@ -99,38 +120,35 @@ export async function exportSubmissionsToZip({
       0
     );
     progress.status = "processing";
-    updateProgress(progress, progressCallback);
 
-    // Get all topics for this marathon
+    updateProgress(supabase, progress);
+
     const { data: topics } = await supabase
       .from("topics")
       .select("id, order_index")
-      .eq("marathon_id", marathonId);
+      .eq("marathon_id", marathon.id);
 
     if (!topics) {
       throw new Error("No topics found for this marathon");
     }
 
-    // Create a mapping of topic IDs to order indices
     const topicOrderMap = new Map(topics.map((t) => [t.id, t.order_index]));
 
-    // Generate a timestamp for the zip file name
     const timestamp = new Date()
       .toISOString()
       .replace(/[:T]/g, "-")
       .split(".")[0];
-    const zipFileName = `${domain}-submissions-${timestamp}.zip`;
+    const zipFileName = `${domain}-${timestamp}.zip`;
 
-    // Process participants in batches to handle large datasets
+    const masterZip = new JSZip();
+
     for (let i = 0; i < participants.length; i++) {
       const participant = participants[i];
-      const zip = new JSZip();
 
       if (!participant.submissions || participant.submissions.length === 0) {
         continue;
       }
 
-      // Process submissions for this participant
       for (const submission of participant.submissions) {
         if (submission.status !== "uploaded" || !submission.preview_key) {
           continue;
@@ -146,13 +164,12 @@ export async function exportSubmissionsToZip({
 
         try {
           const paddedTopicIndex = String(topicOrderIndex + 1).padStart(2, "0");
-
           const extension =
             path.extname(submission.preview_key).slice(1) || "jpg";
 
-          const zipPath = `${domain}/${participant.reference}/${paddedTopicIndex}.${extension}`;
+          const zipPath = `${domain}/${participant.reference}/${participant.reference}_${paddedTopicIndex}.${extension}`;
 
-          const { Body, ContentType } = await s3Client.send(
+          const { Body } = await s3Client.send(
             new GetObjectCommand({
               Bucket: sourceBucket,
               Key: submission.preview_key,
@@ -164,7 +181,6 @@ export async function exportSubmissionsToZip({
             continue;
           }
 
-          // Convert the readable stream to a buffer
           const chunks: Uint8Array[] = [];
           if (Body instanceof Readable) {
             for await (const chunk of Body) {
@@ -178,8 +194,7 @@ export async function exportSubmissionsToZip({
 
           const buffer = Buffer.concat(chunks);
 
-          // Add the file to the zip
-          zip.file(zipPath, buffer, {
+          masterZip.file(zipPath, buffer, {
             binary: true,
             compression: "DEFLATE",
             compressionOptions: {
@@ -188,40 +203,18 @@ export async function exportSubmissionsToZip({
           });
 
           progress.processedSubmissions++;
-          updateProgress(progress, progressCallback);
+          updateProgress(supabase, progress);
         } catch (error) {
           console.error(`Error processing submission ${submission.id}:`, error);
         }
       }
 
-      // Generate the zip file for this batch
-      const zipBuffer = await zip.generateAsync({
-        type: "nodebuffer",
-        streamFiles: true,
-        compression: "DEFLATE",
-      });
-
-      // Upload the zip to the destination bucket
-      const participantZipKey = `${domain}/${participant.reference}.zip`;
-      await s3Client.send(
-        new PutObjectCommand({
-          Bucket: destinationBucket,
-          Key: participantZipKey,
-          Body: zipBuffer,
-          ContentType: "application/zip",
-        })
-      );
-
       progress.processedParticipants++;
-      updateProgress(progress, progressCallback);
+      updateProgress(supabase, progress);
     }
 
-    // Now create a master zip containing all participant zips
-    const masterZip = new JSZip();
-
-    // Create a manifest file with information about the export
     const manifest = {
-      marathonId,
+      marathonId: marathon.id,
       domain,
       timestamp: new Date().toISOString(),
       participantCount: participants.length,
@@ -230,7 +223,6 @@ export async function exportSubmissionsToZip({
 
     masterZip.file("manifest.json", JSON.stringify(manifest, null, 2));
 
-    // Upload the master zip
     const masterZipBuffer = await masterZip.generateAsync({
       type: "nodebuffer",
       compression: "DEFLATE",
@@ -246,34 +238,61 @@ export async function exportSubmissionsToZip({
     );
 
     progress.status = "completed";
-    updateProgress(progress, progressCallback);
+    updateProgress(supabase, progress);
 
     return zipFileName;
   } catch (error) {
     progress.status = "error";
     progress.error = error instanceof Error ? error.message : String(error);
-    updateProgress(progress, progressCallback);
+    updateProgress(supabase, progress);
     throw error;
   }
 }
 
-function updateProgress(
-  progress: ProgressInfo,
-  callback?: (progress: ProgressInfo) => void
+async function updateProgress(
+  supabase: SupabaseClient,
+  progress: ProgressInfo
 ) {
-  if (callback) {
-    callback({ ...progress });
+  if (progress.id === 0 || progress.marathonId === 0) {
+    throw new Error("Progress ID and marathon ID are required");
   }
+
+  const percentProgress = Math.round(
+    (progress.processedParticipants / progress.totalParticipants) * 100
+  );
+
+  await supabase
+    .from("zipped_submissions")
+    .update({
+      progress: percentProgress,
+      status: progress.status,
+      error: progress.error,
+    })
+    .eq("id", progress.id);
 }
 
 export async function handler(): Promise<any> {
   try {
-    const marathonId = 2;
-    const sourceBucket = "vimmer-development-previewbucketbucket-thecfkbk";
-    const destinationBucket = "vimmer-development-exportsbucketbucket-wdhoedum";
+    const domain = process.env.DOMAIN;
+    const exportType = process.env.EXPORT_TYPE as
+      | "submissions"
+      | "thumbnails"
+      | "previews"
+      | undefined;
 
-    if (!marathonId) {
-      throw new Error("marathonId is required");
+    if (
+      !exportType ||
+      !["submissions", "thumbnails", "previews"].includes(exportType)
+    ) {
+      throw new Error("Invalid export type");
+    }
+
+    const sourceBucket = exportTypeToBucketMap[exportType];
+
+    const destinationBucket = Resource.ExportsBucket.name;
+
+    if (!domain) {
+      throw new Error("domain is required");
     }
 
     if (!sourceBucket) {
@@ -285,12 +304,10 @@ export async function handler(): Promise<any> {
     }
 
     const zipFileName = await exportSubmissionsToZip({
-      marathonId,
+      domain,
       sourceBucket,
       destinationBucket,
-      progressCallback: (progress) => {
-        console.log("Export progress:", JSON.stringify(progress, null, 2));
-      },
+      exportType,
     });
 
     return {

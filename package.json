@@ -2,7 +2,8 @@
   "name": "vimmer",
   "private": true,
   "scripts": {
-    "serve:dev": "sst dev --stage development",
+    "check-aws-account": "if [ \"$(aws sts get-caller-identity --query 'Account' --output text)\" = \"975050331958\" ]; then echo '✅ Correct AWS account'; else echo '❌ Wrong AWS account, aborting.' && exit 1; fi",
+    "serve:dev": "bun check-aws-account && sst dev --stage development",
     "build": "turbo build",
     "dev": "turbo dev",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
