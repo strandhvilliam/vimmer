@@ -16,6 +16,8 @@ import {
   UpdateRuleConfig,
   InsertParticipantVerification,
   UpdateValidationResult,
+  InsertZippedSubmission,
+  UpdateZippedSubmission,
 } from "./types";
 import { toCamelCase, toSnakeCase } from "./utils/format-helpers";
 
@@ -471,3 +473,31 @@ export async function generateJuryToken(
   // In production, this would be signed with a secret key
   return Buffer.from(JSON.stringify(payload)).toString("base64");
 }
+
+export const createZippedSubmission = async (
+  supabase: SupabaseClient,
+  dto: InsertZippedSubmission
+) => {
+  const { data } = await supabase
+    .from("zipped_submissions")
+    .insert(toSnakeCase(dto))
+    .select()
+    .maybeSingle()
+    .throwOnError();
+  return toCamelCase(data);
+};
+
+export const updateZippedSubmission = async (
+  supabase: SupabaseClient,
+  id: number,
+  dto: UpdateZippedSubmission
+) => {
+  const { data } = await supabase
+    .from("zipped_submissions")
+    .update(toSnakeCase(dto))
+    .eq("id", id)
+    .select()
+    .single()
+    .throwOnError();
+  return toCamelCase(data);
+};

@@ -17,8 +17,6 @@ function checkTimeframe(
   const { DateTimeOriginal, DateTimeDigitized, CreateDate } = input.exif;
   const timestamp = DateTimeOriginal || DateTimeDigitized || CreateDate;
 
-  console.log({ timestamp });
-
   if (!timestamp) {
     return createValidationResult(
       VALIDATION_OUTCOME.SKIPPED,

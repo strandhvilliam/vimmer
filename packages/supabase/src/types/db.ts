@@ -634,10 +634,11 @@ export type Database = {
       zipped_submissions: {
         Row: {
           created_at: string
-          error: string | null
+          errors: Json | null
           export_type: string
           id: number
           marathon_id: number
+          participant_id: number
           progress: number
           status: string
           updated_at: string | null
@@ -645,10 +646,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          error?: string | null
+          errors?: Json | null
           export_type: string
           id?: number
           marathon_id: number
+          participant_id: number
           progress?: number
           status?: string
           updated_at?: string | null
@@ -656,16 +658,32 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          error?: string | null
+          errors?: Json | null
           export_type?: string
           id?: number
           marathon_id?: number
+          participant_id?: number
           progress?: number
           status?: string
           updated_at?: string | null
           zip_key?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "zipped_submissions_marathon_id_fkey"
+            columns: ["marathon_id"]
+            isOneToOne: false
+            referencedRelation: "marathons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zipped_submissions_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

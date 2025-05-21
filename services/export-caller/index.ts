@@ -5,24 +5,30 @@ import { task } from "sst/aws/task";
 type ExportCallerQueryParams = {
   domain: string;
   exportType: "submissions" | "thumbnails" | "previews";
-  id: string;
+  reference: string;
 };
 
 export const handler = async (e: LambdaFunctionURLEvent) => {
   try {
     const queryParams = e.queryStringParameters as ExportCallerQueryParams;
 
-    if (!queryParams.domain || !queryParams.exportType || !queryParams.id) {
+    if (
+      !queryParams.domain ||
+      !queryParams.exportType ||
+      !queryParams.reference
+    ) {
       return {
         statusCode: 400,
         body: JSON.stringify({ error: "Missing required parameters" }),
       };
     }
 
-    await task.run(Resource.ExportSubmissionsTask, {
+    console.log("queryParams", queryParams);
+
+    await task.run(Resource.GenerateParticipantZipTask, {
       DOMAIN: queryParams.domain,
       EXPORT_TYPE: queryParams.exportType,
-      ZIPPED_SUBMISSIONS_ID: queryParams.id,
+      PARTICIPANT_REFERENCE: queryParams.reference,
     });
 
     return {

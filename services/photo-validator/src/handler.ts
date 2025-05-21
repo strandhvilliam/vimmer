@@ -1,4 +1,4 @@
-import type { Handler } from "aws-lambda";
+import type { Handler, SQSEvent } from "aws-lambda";
 import { createRule, runValidations } from "@vimmer/validation/validator";
 
 import { createClient } from "@vimmer/supabase/lambda";
@@ -34,52 +34,56 @@ const validationInputSchema = z.object({
   orderIndex: z.number().int().nonnegative(),
 });
 
-export const handler: Handler = async (event): Promise<void> => {
-  const participantId = event.participantId;
+export const handler = async (event: SQSEvent): Promise<void> => {
+  const records = event.Records;
+  for (const record of records) {
+    const parsedBody = JSON.parse(record.body) as { participantId: number };
+    const participantId = parsedBody.participantId;
 
-  if (!participantId) {
-    throw new Error("Participant id is required");
+    if (!participantId) {
+      throw new Error("Participant id is required");
+    }
+
+    const supabase = await createClient();
+
+    const participantWithSubmissions = await getParticipantByIdQuery(
+      supabase,
+      participantId
+    );
+
+    if (!participantWithSubmissions) {
+      //TODO: Add error NOT ABLE TO VALIDATE
+      throw new Error(`Participant with id ${participantId} not found`);
+    }
+
+    const topics = await getTopicsByMarathonIdQuery(
+      supabase,
+      participantWithSubmissions?.marathonId
+    );
+
+    const parsedSubmissions = z.array(validationInputSchema).safeParse(
+      participantWithSubmissions.submissions.map((s) => ({
+        exif: s.exif,
+        fileName: s.key,
+        fileSize: s.size,
+        mimeType: s.mimeType,
+        orderIndex: topics.find((t) => t.id === s.topicId)?.orderIndex,
+      }))
+    );
+
+    if (!parsedSubmissions.success) {
+      //TODO: Add error MISSING REQUIRED FIELDS
+      throw new Error(`Invalid submissions: ${parsedSubmissions.error}`);
+    }
+
+    const validationResults = runValidations(
+      ruleConfigs,
+      parsedSubmissions.data
+    ).map((r) => ({
+      ...r,
+      participantId,
+    }));
+
+    await insertValidationResults(supabase, validationResults);
   }
-
-  const supabase = await createClient();
-
-  const participantWithSubmissions = await getParticipantByIdQuery(
-    supabase,
-    participantId
-  );
-
-  if (!participantWithSubmissions) {
-    //TODO: Add error NOT ABLE TO VALIDATE
-    throw new Error(`Participant with id ${participantId} not found`);
-  }
-
-  const topics = await getTopicsByMarathonIdQuery(
-    supabase,
-    participantWithSubmissions?.marathonId
-  );
-
-  const parsedSubmissions = z.array(validationInputSchema).safeParse(
-    participantWithSubmissions.submissions.map((s) => ({
-      exif: s.exif,
-      fileName: s.key,
-      fileSize: s.size,
-      mimeType: s.mimeType,
-      orderIndex: topics.find((t) => t.id === s.topicId)?.orderIndex,
-    }))
-  );
-
-  if (!parsedSubmissions.success) {
-    //TODO: Add error MISSING REQUIRED FIELDS
-    throw new Error(`Invalid submissions: ${parsedSubmissions.error}`);
-  }
-
-  const validationResults = runValidations(
-    ruleConfigs,
-    parsedSubmissions.data
-  ).map((r) => ({
-    ...r,
-    participantId,
-  }));
-
-  await insertValidationResults(supabase, validationResults);
 };

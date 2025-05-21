@@ -28,9 +28,14 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
-    "GenerateParticipantZipQueue": {
-      "type": "sst.aws.Queue"
-      "url": string
+    "GenerateParticipantZipTask": {
+      "assignPublicIp": boolean
+      "cluster": string
+      "containers": any
+      "securityGroups": any
+      "subnets": any
+      "taskDefinition": string
+      "type": "sst.aws.Task"
     }
     "MarathonSettingsBucket": {
       "name": string
@@ -38,11 +43,6 @@ declare module "sst" {
     }
     "MarathonSettingsRouter": {
       "type": "sst.aws.Router"
-      "url": string
-    }
-    "PhotoValidatorFunction": {
-      "name": string
-      "type": "sst.aws.Function"
       "url": string
     }
     "PreviewBucket": {
@@ -71,6 +71,10 @@ declare module "sst" {
     }
     "ThumbnailsRouter": {
       "type": "sst.aws.Router"
+      "url": string
+    }
+    "ValidateSubmissionQueue": {
+      "type": "sst.aws.Queue"
       "url": string
     }
     "VimmerVPC": {

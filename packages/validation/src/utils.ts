@@ -8,7 +8,7 @@ import type {
   ValidationOutcome,
 } from "./types.js";
 import type { ValidationResult } from "./types.js";
-import { isValid, z } from "zod";
+import { z } from "zod";
 import { RULE_KEYS, VALIDATION_OUTCOME } from "./constants.js";
 
 export const createValidationResult = (
@@ -172,7 +172,6 @@ export function attachFileName(
   result: ValidationResult,
   input: ValidationInput
 ): ValidationResult {
-  console.log("attaching file name", result, input);
   return { ...result, fileName: input.fileName };
 }
 

@@ -17,6 +17,7 @@ import { getParticipantByIdQuery } from "@vimmer/supabase/queries";
 import { SupabaseClient } from "@vimmer/supabase/types";
 import exifr from "exifr";
 import { Resource } from "sst";
+import { task } from "sst/aws/task";
 
 const IMAGE_VARIANTS = {
   thumbnail: { width: 200, prefix: "thumbnail" },
@@ -65,8 +66,14 @@ async function processSubmission(
       participant.competitionClass?.numberOfPhotos!
     );
     if (isComplete) {
-      await invokePhotoValidator(submission.participantId);
-      await queueZipGeneration(submission.participantId);
+      await Promise.all([
+        triggerValidationQueue(submission.participantId),
+        triggerZipGenerationTask(
+          participant.domain,
+          participant.reference,
+          "zip_submissions"
+        ),
+      ]);
     }
   } catch (error) {
     await handleProcessingError(supabase, key, error);
@@ -120,24 +127,24 @@ async function prepareSubmission(supabase: SupabaseClient, key: string) {
   return { submission, participant };
 }
 
-async function queueZipGeneration(participantId: number) {
-  const sqs = new SQSClient({});
-  await sqs.send(
-    new SendMessageCommand({
-      QueueUrl: Resource.GenerateParticipantZipQueue.url,
-      MessageBody: JSON.stringify({
-        participantId,
-      }),
-    })
-  );
+async function triggerZipGenerationTask(
+  domain: string,
+  participantReference: string,
+  exportType: "zip_submissions" | "zip_thumbnails" | "zip_previews"
+) {
+  await task.run(Resource.GenerateParticipantZipTask, {
+    PARTICIPANT_REFERENCE: participantReference,
+    DOMAIN: domain,
+    EXPORT_TYPE: exportType,
+  });
 }
 
-async function invokePhotoValidator(participantId: number) {
-  const lambdaClient = new LambdaClient();
-  await lambdaClient.send(
-    new InvokeCommand({
-      FunctionName: Resource.PhotoValidatorFunction.name,
-      Payload: JSON.stringify({
+async function triggerValidationQueue(participantId: number) {
+  const sqs = new SQSClient();
+  await sqs.send(
+    new SendMessageCommand({
+      QueueUrl: Resource.ValidateSubmissionQueue.url,
+      MessageBody: JSON.stringify({
         participantId,
       }),
     })

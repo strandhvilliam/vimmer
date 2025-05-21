@@ -8,13 +8,23 @@ import { Readable } from "stream";
 import JSZip from "jszip";
 import path from "path";
 import { Resource } from "sst";
-import type { Submission, SupabaseClient } from "@vimmer/supabase/types";
+import type {
+  CompetitionClass,
+  Participant,
+  Submission,
+  SupabaseClient,
+  Topic,
+} from "@vimmer/supabase/types";
 import {
   getMarathonByDomainQuery,
   getParticipantByReferenceQuery,
   getTopicsByDomainQuery,
 } from "@vimmer/supabase/queries";
 import type { SQSEvent } from "aws-lambda";
+import {
+  createZippedSubmission,
+  updateZippedSubmission,
+} from "@vimmer/supabase/mutations";
 
 const ZIP_EXPORT_TYPES = {
   ZIP_SUBMISSIONS: "zip_submissions",
@@ -25,10 +35,9 @@ const ZIP_EXPORT_TYPES = {
 type ZipExportType = (typeof ZIP_EXPORT_TYPES)[keyof typeof ZIP_EXPORT_TYPES];
 
 interface EventPayload {
-  domain: string;
-  exportType: ZipExportType;
-  zippedSubmissionId: number;
-  participantReference: string;
+  domain: string | undefined;
+  exportType: ZipExportType | undefined;
+  participantReference: string | undefined;
 }
 
 interface ExportConfig {
@@ -36,17 +45,17 @@ interface ExportConfig {
   sourceBucket: string;
   destinationBucket: string;
   exportType: ZipExportType;
-  zippedSubmissionId: number;
 }
 
 interface ProgressInfo {
   marathonId: number;
-  id: number;
+  zippedSubmissionId: number;
   exportType: ZipExportType;
   totalSubmissions: number;
   processedSubmissions: number;
   status: "pending" | "processing" | "completed" | "error";
   submissionErrors: Record<number, string>;
+  zipKey: string;
 }
 
 interface ExportParticipantConfig extends ExportConfig {
@@ -54,9 +63,10 @@ interface ExportParticipantConfig extends ExportConfig {
 }
 
 interface ProcessSubmissionParams {
+  supabase: SupabaseClient;
   submission: Submission;
   exportType: ZipExportType;
-  topicOrderMap: Map<number, number>;
+  topics: Topic[];
   s3Client: S3Client;
   sourceBucket: string;
   participantZip: JSZip;
@@ -93,7 +103,10 @@ async function updateProgress(
   supabase: SupabaseClient,
   progress: ProgressInfo
 ): Promise<void> {
-  if (progress.id === 0 || progress.marathonId === 0) {
+  if (
+    progress.status !== "error" &&
+    (progress.zippedSubmissionId === 0 || progress.marathonId === 0)
+  ) {
     throw new Error("Progress ID and marathon ID are required");
   }
 
@@ -101,17 +114,25 @@ async function updateProgress(
     (progress.processedSubmissions / progress.totalSubmissions) * 100
   );
 
-  await supabase
-    .from("zipped_submissions")
-    .update({
-      progress: percentProgress,
-      status: progress.status,
-      submissionErrors: progress.submissionErrors,
-    })
-    .eq("id", progress.id);
+  await updateZippedSubmission(supabase, progress.zippedSubmissionId, {
+    marathonId: progress.marathonId,
+    progress: percentProgress,
+    updatedAt: new Date().toISOString(),
+    status: progress.status,
+    errors: progress.submissionErrors,
+    zipKey: progress.zipKey || undefined,
+  });
 }
 
-function validateParticipant(participant: any, participantReference: string) {
+function validateParticipant(
+  participant:
+    | (Participant & {
+        submissions: Submission[];
+        competitionClass: CompetitionClass | null;
+      })
+    | null,
+  participantReference: string
+) {
   if (!participant) {
     throw new Error(
       `Participant ${participantReference} with uploaded submissions not found`
@@ -165,9 +186,10 @@ async function fetchFileFromS3(
 }
 
 async function processSubmission({
+  supabase,
   submission,
   exportType,
-  topicOrderMap,
+  topics,
   s3Client,
   sourceBucket,
   participantZip,
@@ -179,9 +201,11 @@ async function processSubmission({
 
   try {
     const fileKey = getKeyFromSubmission(submission, exportType);
-    const topicOrderIndex = topicOrderMap.get(submission.topicId);
+    const topicOrderIndex = topics.find(
+      (topic) => topic.id === submission.topicId
+    )?.orderIndex;
 
-    if (!topicOrderIndex) {
+    if (!topicOrderIndex && topicOrderIndex !== 0) {
       const updatedErrors = {
         ...updatedProgress.submissionErrors,
         [submission.id]: `Topic ID ${submission.topicId} not found in topics map for participant ${participant.id}`,
@@ -198,7 +222,7 @@ async function processSubmission({
 
     const paddedTopicIndex = String(topicOrderIndex + 1).padStart(2, "0");
     const extension = path.extname(fileKey).slice(1) || "jpg";
-    const zipPath = `${paddedTopicIndex}.${extension}`;
+    const zipPath = `${participant.reference}_${paddedTopicIndex}.${extension}`;
 
     const buffer = await fetchFileFromS3(s3Client, sourceBucket, fileKey);
 
@@ -225,11 +249,13 @@ async function processSubmission({
       },
     });
 
+    updatedProgress.processedSubmissions =
+      updatedProgress.processedSubmissions + 1;
+
+    await updateProgress(supabase, updatedProgress);
+
     return {
-      progress: {
-        ...updatedProgress,
-        processedSubmissions: updatedProgress.processedSubmissions + 1,
-      },
+      progress: updatedProgress,
       participantZip,
     };
   } catch (error) {
@@ -274,7 +300,6 @@ async function exportParticipantSubmissionsToZip({
   exportType,
   sourceBucket,
   destinationBucket,
-  zippedSubmissionId,
   participantReference,
 }: ExportParticipantConfig): Promise<string | null> {
   const s3Client = new S3Client();
@@ -282,7 +307,8 @@ async function exportParticipantSubmissionsToZip({
 
   let progress: ProgressInfo = {
     marathonId: 0,
-    id: zippedSubmissionId,
+    zippedSubmissionId: 0,
+    zipKey: "",
     exportType,
     totalSubmissions: 0,
     processedSubmissions: 0,
@@ -296,7 +322,6 @@ async function exportParticipantSubmissionsToZip({
       throw new Error(`Marathon with domain ${domain} not found`);
     }
 
-    progress = { ...progress, marathonId: marathon.id };
     const participantData = await getParticipantByReferenceQuery(supabase, {
       reference: participantReference,
       domain,
@@ -307,25 +332,38 @@ async function exportParticipantSubmissionsToZip({
       participantReference
     );
 
-    progress = {
-      ...progress,
-      totalSubmissions: participant.submissions.length,
-      status: "processing",
-    };
+    const zippedSubmission = await createZippedSubmission(supabase, {
+      marathonId: marathon.id,
+      exportType,
+      participantId: participant.id,
+    });
+
+    if (!zippedSubmission) {
+      console.error("Failed to create zipped submission");
+      throw new Error("Failed to create zipped submission");
+    }
+
+    progress.zippedSubmissionId = zippedSubmission.id;
+    progress.marathonId = marathon.id;
+    progress.totalSubmissions = participant.submissions.length;
+    progress.status = "processing";
+
     await updateProgress(supabase, progress);
 
     const topics = await getTopicsByDomainQuery(supabase, domain);
     if (!topics) {
       throw new Error("No topics found for this marathon");
     }
-    const topicOrderMap = new Map(topics.map((t) => [t.id, t.orderIndex]));
 
     const participantZip = new JSZip();
-    const zipFileName = `${domain}/${participant.reference}.zip`;
+    const date = new Date().toISOString().split("T")[0];
+    const time = new Date().toISOString().split("T")[1].split(".")[0];
+    const zipFileName = `${domain}/${date}-${time}/${participant.reference}.zip`;
 
     const result = await processAllSubmissions(participant.submissions, {
+      supabase,
       exportType,
-      topicOrderMap,
+      topics,
       s3Client,
       sourceBucket,
       participantZip,
@@ -333,6 +371,10 @@ async function exportParticipantSubmissionsToZip({
       participant,
       domain,
     });
+
+    progress.submissionErrors = result.progress.submissionErrors;
+    progress.processedSubmissions = result.progress.processedSubmissions;
+    progress.status = "completed";
 
     result.participantZip.file(
       "manifest.json",
@@ -364,13 +406,9 @@ async function exportParticipantSubmissionsToZip({
       })
     );
 
-    // Update final progress
-    const finalProgress = {
-      ...result.progress,
-      processedSubmissions: result.progress.processedSubmissions + 1,
-      status: "completed" as const,
-    };
-    await updateProgress(supabase, finalProgress);
+    progress.zipKey = zipFileName;
+
+    await updateProgress(supabase, progress);
 
     return zipFileName;
   } catch (error) {
@@ -381,8 +419,8 @@ async function exportParticipantSubmissionsToZip({
 }
 
 function validateEventPayload(payload: EventPayload): ExportParticipantConfig {
-  const { domain, exportType, zippedSubmissionId, participantReference } =
-    payload;
+  const { domain, exportType, participantReference } = payload;
+  console.log({ payload });
 
   if (
     !exportType ||
@@ -400,7 +438,6 @@ function validateEventPayload(payload: EventPayload): ExportParticipantConfig {
   const sourceBucket = exportTypeToBucketMap[exportType];
   const destinationBucket = Resource.ExportsBucket.name;
 
-  if (!zippedSubmissionId) throw new Error("Zipped submission ID is required");
   if (!domain) throw new Error("domain is required");
   if (!sourceBucket) throw new Error("sourceBucket is required");
   if (!destinationBucket) throw new Error("destinationBucket is required");
@@ -408,7 +445,6 @@ function validateEventPayload(payload: EventPayload): ExportParticipantConfig {
     throw new Error("participantReference is required");
 
   return {
-    zippedSubmissionId: +zippedSubmissionId,
     domain,
     sourceBucket,
     destinationBucket,
@@ -417,25 +453,40 @@ function validateEventPayload(payload: EventPayload): ExportParticipantConfig {
   };
 }
 
-export const handler = async (event: SQSEvent): Promise<void> => {
-  const processPromises = event.Records.map(async (record) => {
-    try {
-      const parsedBody = JSON.parse(record.body) as EventPayload;
-      const config = validateEventPayload(parsedBody);
-      const zipFileName = await exportParticipantSubmissionsToZip(config);
+async function main() {
+  console.log("STARTING_TASK");
+  console.log("--------------------------");
+  try {
+    const domain = process.env.DOMAIN;
+    const exportType = process.env.EXPORT_TYPE as
+      | "zip_submissions"
+      | "zip_thumbnails"
+      | "zip_previews"
+      | undefined;
+    const participantReference = process.env.PARTICIPANT_REFERENCE;
 
-      return {
-        statusCode: 200,
-        body: JSON.stringify({
-          message: "Participant export completed successfully",
-          zipFile: zipFileName,
-        }),
-      };
-    } catch (error) {
-      console.error("Error processing record:", error);
-      throw error;
-    }
-  });
+    console.log("--------------------------");
+    console.log("domain", domain);
+    console.log("--------------------------");
+    console.log("exportType", exportType);
+    console.log("--------------------------");
+    console.log("participantReference", participantReference);
+    console.log("--------------------------");
 
-  await Promise.all(processPromises);
-};
+    const config = validateEventPayload({
+      domain,
+      exportType,
+      participantReference,
+    });
+
+    await exportParticipantSubmissionsToZip(config);
+  } catch (error) {
+    console.error("Error processing record:", error);
+    throw error;
+  } finally {
+    console.log("FINISHED_TASK");
+    console.log("--------------------------");
+  }
+}
+
+main();

@@ -63,5 +63,13 @@ export type InsertParticipantVerification = ToCamelCaseObject<
   TablesInsert<"participant_verifications">
 >;
 
+export type ZippedSubmission = ToCamelCaseObject<Tables<"zipped_submissions">>;
+export type InsertZippedSubmission = ToCamelCaseObject<
+  TablesInsert<"zipped_submissions">
+>;
+export type UpdateZippedSubmission = ToCamelCaseObject<
+  TablesUpdate<"zipped_submissions">
+>;
+
 export * from "./db";
 export * from "./helpers";

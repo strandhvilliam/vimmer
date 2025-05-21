@@ -70,27 +70,6 @@ export default $config({
       }
     );
 
-    const processSubmissionQueue = new sst.aws.Queue("ProcessPhotoQueue");
-    const photoValidatorFunction = new sst.aws.Function(
-      "PhotoValidatorFunction",
-      {
-        handler: "services/photo-validator/index.handler",
-        environment: env,
-        link: [submissionBucket],
-        url: true,
-      }
-    );
-
-    const downloadPresignedFunction = new sst.aws.Function(
-      "DownloadPresignedFunction",
-      {
-        handler: "services/download-presigned/index.handler",
-        environment: env,
-        url: true,
-        link: [exportsBucket],
-      }
-    );
-
     const vpc = new sst.aws.Vpc("VimmerVPC");
     const cluster = new sst.aws.Cluster("VimmerCluster", { vpc });
 
@@ -113,31 +92,73 @@ export default $config({
       },
     });
 
+    const generateParticipantZipTask = new sst.aws.Task(
+      "GenerateParticipantZipTask",
+      {
+        cluster,
+        image: {
+          context: "./services/generate-participant-zip",
+          dockerfile: "Dockerfile",
+        },
+        environment: env,
+        link: [submissionBucket, thumbnailBucket, previewBucket, exportsBucket],
+        permissions: [
+          {
+            actions: ["s3:GetObject", "s3:PutObject"],
+            resources: [previewBucket.arn, exportsBucket.arn],
+          },
+        ],
+        dev: {
+          command: "bun start",
+        },
+      }
+    );
+
+    // const photoValidatorFunction = new sst.aws.Function(
+    //   "PhotoValidatorFunction",
+    //   {
+    //     handler: "services/photo-validator/index.handler",
+    //     environment: env,
+    //     link: [submissionBucket],
+    //     url: true,
+    //   }
+    // );
+
     const exportCaller = new sst.aws.Function("ExportCaller", {
       handler: "services/export-caller/index.handler",
       environment: env,
-      link: [exportSubmissionsTask],
+      link: [exportSubmissionsTask, generateParticipantZipTask],
       url: true,
     });
 
-    const generateParticipantZipQueue = new sst.aws.Queue(
-      "GenerateParticipantZipQueue"
+    const downloadPresignedFunction = new sst.aws.Function(
+      "DownloadPresignedFunction",
+      {
+        handler: "services/download-presigned/index.handler",
+        environment: env,
+        url: true,
+        link: [exportsBucket],
+      }
     );
 
-    generateParticipantZipQueue.subscribe({
-      handler: "./services/generate-participant-zip/index.handler",
-      environment: env,
-      link: [submissionBucket, thumbnailBucket, previewBucket, exportsBucket],
-    });
+    // const generateParticipantZipQueue = new sst.aws.Queue(
+    //   "GenerateParticipantZipQueue"
+    // );
 
-    // new sst.aws.Cron("ScheduledTopicsCron", {
-    //   function: {
-    //     handler: "services/scheduled-topics-cron/index.handler",
-    //     environment: env,
-    //     // link: [adminApp],
-    //   },
-    //   schedule: "rate(1 minute)",
+    // generateParticipantZipQueue.subscribe({
+    //   handler: "./services/generate-participant-zip/index.handler",
+    //   environment: env,
+    //   link: [submissionBucket, thumbnailBucket, previewBucket, exportsBucket],
     // });
+    const processSubmissionQueue = new sst.aws.Queue("ProcessPhotoQueue");
+    const validateSubmissionQueue = new sst.aws.Queue(
+      "ValidateSubmissionQueue"
+    );
+
+    validateSubmissionQueue.subscribe({
+      handler: "./services/photo-validator/index.handler",
+      environment: env,
+    });
 
     processSubmissionQueue.subscribe({
       handler: "./services/photo-processor/index.handler",
@@ -146,7 +167,8 @@ export default $config({
         submissionBucket,
         thumbnailBucket,
         previewBucket,
-        photoValidatorFunction,
+        validateSubmissionQueue,
+        generateParticipantZipTask,
       ],
       permissions: [
         {
@@ -170,6 +192,15 @@ export default $config({
       ],
     });
 
+    // new sst.aws.Cron("ScheduledTopicsCron", {
+    //   function: {
+    //     handler: "services/scheduled-topics-cron/index.handler",
+    //     environment: env,
+    //     // link: [adminApp],
+    //   },
+    //   schedule: "rate(1 minute)",
+    // });
+
     return {
       apps: {
         // client: clientApp.url,
@@ -184,10 +215,11 @@ export default $config({
         processSubmissionQueue: processSubmissionQueue.url,
       },
       functions: {
-        photoValidatorFunction: photoValidatorFunction.url,
+        // photoValidatorFunction: photoValidatorFunction.url,
         exportSubmissionsTask: exportSubmissionsTask.urn,
         exportCaller: exportCaller.url,
         downloadPresignedFunction: downloadPresignedFunction.url,
+        generateParticipantZipTask: generateParticipantZipTask.urn,
       },
       routers: {
         submissionsRouter: submissionsRouter.url,
