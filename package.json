@@ -25,6 +25,9 @@
     "services/*"
   ],
   "dependencies": {
+    "@aws-sdk/lib-storage": "^3.812.0",
+    "@types/archiver": "^6.0.3",
+    "archiver": "^7.0.1",
     "sst": "^3.11.21"
   }
 }

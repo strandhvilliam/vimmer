@@ -11,10 +11,11 @@ import {
   SelectValue,
 } from "@vimmer/ui/components/select";
 import { toast } from "sonner";
+import { EXPORT_KEYS } from "@/lib/constants";
 
 interface ExportOptionsProps {
   domain: string;
-  type: "photos" | "participants" | "submissions" | "exif";
+  type: (typeof EXPORT_KEYS)[keyof typeof EXPORT_KEYS];
   label: string;
   description: string;
 }
@@ -43,7 +44,18 @@ export function ExportOptions({
       );
 
       if (!response.ok) {
+        console.error(response.statusText);
+        console.error(await response.text());
         throw new Error("Export failed");
+      }
+
+      if (
+        type === EXPORT_KEYS.ZIP_PREVIEWS ||
+        type === EXPORT_KEYS.ZIP_THUMBNAILS ||
+        type === EXPORT_KEYS.ZIP_SUBMISSIONS
+      ) {
+        console.log("Zip generation started");
+        return;
       }
 
       const blob = await response.blob();
@@ -52,8 +64,7 @@ export function ExportOptions({
       a.href = url;
 
       // Set the correct file extension based on export type
-      const extension =
-        type === "photos" ? "zip" : type === "exif" ? format : "xlsx";
+      const extension = type === "exif" ? format : "xlsx";
 
       a.download = `${type}-export-${new Date().toISOString().split("T")[0]}.${extension}`;
       document.body.appendChild(a);
@@ -65,6 +76,7 @@ export function ExportOptions({
         description: `Your ${type} data has been downloaded.`,
       });
     } catch (error) {
+      console.error(error);
       toast.error("Export failed", {
         description: "There was an error exporting the data. Please try again.",
       });

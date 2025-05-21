@@ -21,6 +21,7 @@
     "@react-email/render": "^1.0.5",
     "@react-email/tailwind": "^1.0.4",
     "@tanstack/react-table": "^8.21.2",
+    "@types/jszip": "^3.4.1",
     "@types/pg": "^8.11.11",
     "@vimmer/email": "workspace:*",
     "@vimmer/supabase": "workspace:*",

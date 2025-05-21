@@ -5,6 +5,11 @@
 
 declare module "sst" {
   export interface Resource {
+    "DownloadPresignedFunction": {
+      "name": string
+      "type": "sst.aws.Function"
+      "url": string
+    }
     "ExportCaller": {
       "name": string
       "type": "sst.aws.Function"
@@ -22,6 +27,10 @@ declare module "sst" {
     "ExportsBucket": {
       "name": string
       "type": "sst.aws.Bucket"
+    }
+    "GenerateParticipantZipQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
     }
     "MarathonSettingsBucket": {
       "name": string

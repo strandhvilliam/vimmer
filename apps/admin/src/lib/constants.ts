@@ -75,3 +75,12 @@ export const NAV_LINKS = {
     },
   ],
 } as const;
+
+export const EXPORT_KEYS = {
+  ZIP_PREVIEWS: "zip_previews",
+  ZIP_THUMBNAILS: "zip_thumbnails",
+  ZIP_SUBMISSIONS: "zip_submissions",
+  EXIF: "exif",
+  XLSX_PARTICIPANTS: "xlsx_participants",
+  XLSX_SUBMISSIONS: "xlsx_submissions",
+} as const;

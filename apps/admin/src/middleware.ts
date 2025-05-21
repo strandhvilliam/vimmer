@@ -1,4 +1,4 @@
-import { getSessionCookie } from "better-auth";
+import { getSessionCookie } from "better-auth/cookies";
 import { createI18nMiddleware } from "next-international/middleware";
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";

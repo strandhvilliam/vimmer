@@ -1,3 +1,4 @@
+import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
 import {
   GetObjectCommand,
@@ -24,21 +25,19 @@ const IMAGE_VARIANTS = {
 
 export const handler = async (event: SQSEvent): Promise<void> => {
   const s3Client = new S3Client();
-  const lambdaClient = new LambdaClient();
   const supabase = await createClient();
   const keys = event.Records.map((r) => JSON.parse(r.body) as S3Event)
     .flatMap((e) => e.Records?.map((r) => decodeURIComponent(r.s3.object.key)))
     .filter(Boolean);
 
   await Promise.all(
-    keys.map((key) => processSubmission(key, s3Client, lambdaClient, supabase))
+    keys.map((key) => processSubmission(key, s3Client, supabase))
   );
 };
 
 async function processSubmission(
   key: string,
   s3Client: S3Client,
-  lambdaClient: LambdaClient,
   supabase: SupabaseClient
 ) {
   try {
@@ -66,7 +65,8 @@ async function processSubmission(
       participant.competitionClass?.numberOfPhotos!
     );
     if (isComplete) {
-      await invokePhotoValidator(lambdaClient, submission.participantId);
+      await invokePhotoValidator(submission.participantId);
+      await queueZipGeneration(submission.participantId);
     }
   } catch (error) {
     await handleProcessingError(supabase, key, error);
@@ -120,17 +120,28 @@ async function prepareSubmission(supabase: SupabaseClient, key: string) {
   return { submission, participant };
 }
 
-async function invokePhotoValidator(
-  lambdaClient: LambdaClient,
-  participantId: number
-) {
-  const invokeCommand = new InvokeCommand({
-    FunctionName: Resource.PhotoValidatorFunction.name,
-    Payload: JSON.stringify({
-      participantId,
-    }),
-  });
-  return lambdaClient.send(invokeCommand);
+async function queueZipGeneration(participantId: number) {
+  const sqs = new SQSClient({});
+  await sqs.send(
+    new SendMessageCommand({
+      QueueUrl: Resource.GenerateParticipantZipQueue.url,
+      MessageBody: JSON.stringify({
+        participantId,
+      }),
+    })
+  );
+}
+
+async function invokePhotoValidator(participantId: number) {
+  const lambdaClient = new LambdaClient();
+  await lambdaClient.send(
+    new InvokeCommand({
+      FunctionName: Resource.PhotoValidatorFunction.name,
+      Payload: JSON.stringify({
+        participantId,
+      }),
+    })
+  );
 }
 
 async function handleProcessingError(
@@ -138,29 +149,6 @@ async function handleProcessingError(
   key: string,
   error: unknown
 ) {
-  // const submissionError =
-  //   error instanceof SubmissionProcessingError
-  //     ? error
-  //     : new SubmissionProcessingError([ErrorCode.UNKNOWN_ERROR], {
-  //         originalError: error,
-  //       });
-
-  // if (!submissionError.catalog) {
-  //   console.error("Non saveable error:", submissionError);
-  //   throw submissionError;
-  // }
-
-  // const insertErrors = submissionError.catalog.map((c) => ({
-  //   submissionKey: key,
-  //   errorCode: c.code,
-  //   message: c.message,
-  //   description: c.description,
-  //   severity: c.severity,
-  //   context: submissionError.context
-  //     ? JSON.stringify(submissionError.context)
-  //     : null,
-  // }));
-
   await Promise.all([
     updateSubmissionByKey(supabase, key, {
       status: "error",

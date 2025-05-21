@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@vimmer/supabase/server";
 import { getMarathonByDomain } from "@vimmer/supabase/cached-queries";
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
-import { Resource } from "sst";
 import JSZip from "jszip";
 import * as XLSX from "xlsx";
-import { Submission } from "@vimmer/supabase/types";
+import { EXPORT_KEYS } from "@/lib/constants";
 
-const s3Client = new S3Client();
+const exportCallerUrl = process.env.EXPORT_CALLER_URL;
 
 export async function GET(
   request: NextRequest,
@@ -16,10 +14,14 @@ export async function GET(
   }: {
     params: Promise<{
       domain: string;
-      type: "photos" | "participants" | "submissions" | "exif";
+      type: (typeof EXPORT_KEYS)[keyof typeof EXPORT_KEYS];
     }>;
   }
 ) {
+  if (!exportCallerUrl) {
+    return new NextResponse("Export caller URL not defined", { status: 500 });
+  }
+
   const { domain, type } = await params;
   const format = request.nextUrl.searchParams.get("format") || "json";
   const supabase = await createClient();
@@ -31,61 +33,63 @@ export async function GET(
 
   try {
     switch (type) {
-      case "photos": {
-        const { data } = await supabase
-          .from("submissions")
-          .select(
-            `
-            *,
-            participant:participants (
-              reference
-            ),
-            topic:topics (
-              order_index
-            )
-          `
-          )
-          .eq("marathon_id", marathon.id)
-          .eq("status", "uploaded");
+      case EXPORT_KEYS.ZIP_PREVIEWS:
+      case EXPORT_KEYS.ZIP_SUBMISSIONS:
+      case EXPORT_KEYS.ZIP_THUMBNAILS: {
+        const { data: currentExport, error: currentExportError } =
+          await supabase
+            .from("zipped_submissions")
+            .select("*")
+            .eq("marathon_id", marathon.id)
+            .eq("export_type", type.split("_")[1])
+            .maybeSingle();
 
-        if (!data) {
-          return new NextResponse("No submissions found", { status: 404 });
+        if (currentExportError) {
+          console.error("currentExportError", currentExportError);
+          return new NextResponse("Failed to get current export", {
+            status: 500,
+          });
         }
 
-        const submissions = data as (Submission & {
-          participant: { reference: string };
-          topic: { order_index: number };
-        })[];
-
-        console.log("Submissions", submissions);
-
-        const zip = new JSZip();
-
-        for (const submission of submissions) {
-          const path = `${domain}/${submission.participant.reference}/${String(
-            submission.topic.order_index + 1
-          ).padStart(2, "0")}/${submission.participant.reference}_${String(
-            submission.topic.order_index + 1
-          ).padStart(2, "0")}.jpg`;
-
-          const imageUrl = `https://d2w93ix7jvihnu.cloudfront.net/${submission.previewKey}`;
-          const response = await fetch(imageUrl);
-          const buffer = await response.arrayBuffer();
-          zip.file(path, buffer);
+        if (!!currentExport && currentExport.status !== "completed") {
+          return new NextResponse("Export already in progress", {
+            status: 400,
+          });
         }
 
-        const zipBlob = await zip.generateAsync({ type: "blob" });
-        return new NextResponse(zipBlob, {
+        const { data: zippedSubmission, error: zippedSubmissionError } =
+          await supabase
+            .from("zipped_submissions")
+            .insert({
+              marathon_id: marathon.id,
+              export_type: "previews",
+            })
+            .select()
+            .single();
+
+        if (zippedSubmissionError) {
+          return new NextResponse("Failed to get zipped submission", {
+            status: 500,
+          });
+        }
+
+        await fetch(
+          `${exportCallerUrl}?domain=${domain}&exportType=${type}&id=${zippedSubmission.id}`
+        );
+
+        const body = JSON.stringify({
+          zippedSubmissionId: zippedSubmission.id,
+        });
+
+        return new NextResponse(body, {
+          status: 200,
           headers: {
-            "Content-Type": "application/zip",
-            "Content-Disposition": `attachment; filename="photos-export-${
-              new Date().toISOString().split("T")[0]
-            }.zip"`,
+            "Content-Type": "application/json",
           },
         });
       }
 
-      case "participants": {
+      case EXPORT_KEYS.XLSX_PARTICIPANTS: {
         const { data: participants } = await supabase
           .from("participants")
           .select(
@@ -136,7 +140,7 @@ export async function GET(
         });
       }
 
-      case "submissions": {
+      case EXPORT_KEYS.XLSX_SUBMISSIONS: {
         const { data: submissions } = await supabase
           .from("submissions")
           .select(
@@ -191,7 +195,7 @@ export async function GET(
         });
       }
 
-      case "exif": {
+      case EXPORT_KEYS.EXIF: {
         const { data: submissions } = await supabase
           .from("submissions")
           .select(

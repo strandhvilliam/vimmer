@@ -1,0 +1,14 @@
+{
+  "name": "generate-participant-zip",
+  "module": "index.ts",
+  "type": "module",
+  "dependencies": {
+    "@vimmer/supabase": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

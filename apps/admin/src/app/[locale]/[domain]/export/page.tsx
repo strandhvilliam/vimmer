@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { getMarathonByDomain } from "@vimmer/supabase/cached-queries";
 import { ExportOptions } from "./_components/export-options";
+import { PresignedPhotoSaverButton } from "./_components/PresignedPhotoSaverButton";
 import {
   Alert,
   AlertDescription,
@@ -32,6 +33,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@vimmer/ui/components/alert-dialog";
+import { EXPORT_KEYS } from "@/lib/constants";
 
 export default async function ExportPage({
   params,
@@ -107,9 +109,14 @@ export default async function ExportPage({
                     <AlertDialogAction asChild>
                       <ExportOptions
                         domain={domain}
-                        type="photos"
-                        label="Export"
-                        description="Download all submission photos"
+                        type={EXPORT_KEYS.ZIP_SUBMISSIONS}
+                        label="Export & Lock Marathon"
+                        description="Download all submission photos (locks marathon)"
+                      />
+                    </AlertDialogAction>
+                    <AlertDialogAction asChild>
+                      <PresignedPhotoSaverButton
+                        marathonId={marathon.id.toString()}
                       />
                     </AlertDialogAction>
                   </AlertDialogFooter>
@@ -134,7 +141,7 @@ export default async function ExportPage({
               </div>
               <ExportOptions
                 domain={domain}
-                type="participants"
+                type={EXPORT_KEYS.XLSX_PARTICIPANTS}
                 label="Export"
                 description="Download participant data"
               />
@@ -157,7 +164,7 @@ export default async function ExportPage({
               </div>
               <ExportOptions
                 domain={domain}
-                type="submissions"
+                type={EXPORT_KEYS.XLSX_SUBMISSIONS}
                 label="Export"
                 description="Download submission data"
               />
@@ -180,7 +187,7 @@ export default async function ExportPage({
               </div>
               <ExportOptions
                 domain={domain}
-                type="exif"
+                type={EXPORT_KEYS.EXIF}
                 label="Export"
                 description="Download EXIF metadata"
               />

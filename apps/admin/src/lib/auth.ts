@@ -17,6 +17,7 @@ export const auth = betterAuth({
     enabled: true,
     maxAge: 5 * 60,
   },
+  trustedOrigins: ["http://localhost:3000", "http://localhost:3001"],
   plugins: [
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {

@@ -81,35 +81,15 @@ export default $config({
       }
     );
 
-    // const clientApp = new sst.aws.Nextjs("ClientApp", {
-    //   path: "apps/client",
-    //   link: [submissionBucket, thumbnailsRouter, previewsRouter],
-    //   permissions: [
-    //     {
-    //       actions: ["s3:PutObject"],
-    //       resources: [submissionBucket.arn],
-    //     },
-    //   ],
-    // });
-
-    // const staffApp = new sst.aws.Nextjs("StaffApp", {
-    //   path: "apps/staff",
-    // });
-
-    // const adminApp = new sst.aws.Nextjs("AdminApp", {
-    //   path: "apps/admin",
-    //   link: [submissionBucket, thumbnailBucket, previewBucket],
-    //   permissions: [
-    //     {
-    //       actions: ["s3:PutObject", "s3:GetObject"],
-    //       resources: [
-    //         submissionBucket.arn,
-    //         thumbnailBucket.arn,
-    //         previewBucket.arn,
-    //       ],
-    //     },
-    //   ],
-    // });
+    const downloadPresignedFunction = new sst.aws.Function(
+      "DownloadPresignedFunction",
+      {
+        handler: "services/download-presigned/index.handler",
+        environment: env,
+        url: true,
+        link: [exportsBucket],
+      }
+    );
 
     const vpc = new sst.aws.Vpc("VimmerVPC");
     const cluster = new sst.aws.Cluster("VimmerCluster", { vpc });
@@ -121,7 +101,7 @@ export default $config({
         dockerfile: "Dockerfile",
       },
       environment: env,
-      link: [previewBucket, exportsBucket],
+      link: [submissionBucket, thumbnailBucket, previewBucket, exportsBucket],
       permissions: [
         {
           actions: ["s3:GetObject", "s3:PutObject"],
@@ -138,6 +118,16 @@ export default $config({
       environment: env,
       link: [exportSubmissionsTask],
       url: true,
+    });
+
+    const generateParticipantZipQueue = new sst.aws.Queue(
+      "GenerateParticipantZipQueue"
+    );
+
+    generateParticipantZipQueue.subscribe({
+      handler: "./services/generate-participant-zip/index.handler",
+      environment: env,
+      link: [submissionBucket, thumbnailBucket, previewBucket, exportsBucket],
     });
 
     // new sst.aws.Cron("ScheduledTopicsCron", {
@@ -193,10 +183,11 @@ export default $config({
       queues: {
         processSubmissionQueue: processSubmissionQueue.url,
       },
-      services: {
+      functions: {
         photoValidatorFunction: photoValidatorFunction.url,
         exportSubmissionsTask: exportSubmissionsTask.urn,
         exportCaller: exportCaller.url,
+        downloadPresignedFunction: downloadPresignedFunction.url,
       },
       routers: {
         submissionsRouter: submissionsRouter.url,
