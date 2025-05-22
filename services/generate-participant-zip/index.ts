@@ -420,7 +420,6 @@ async function exportParticipantSubmissionsToZip({
 
 function validateEventPayload(payload: EventPayload): ExportParticipantConfig {
   const { domain, exportType, participantReference } = payload;
-  console.log({ payload });
 
   if (
     !exportType ||
@@ -454,8 +453,6 @@ function validateEventPayload(payload: EventPayload): ExportParticipantConfig {
 }
 
 async function main() {
-  console.log("STARTING_TASK");
-  console.log("--------------------------");
   try {
     const domain = process.env.DOMAIN;
     const exportType = process.env.EXPORT_TYPE as
@@ -464,14 +461,6 @@ async function main() {
       | "zip_previews"
       | undefined;
     const participantReference = process.env.PARTICIPANT_REFERENCE;
-
-    console.log("--------------------------");
-    console.log("domain", domain);
-    console.log("--------------------------");
-    console.log("exportType", exportType);
-    console.log("--------------------------");
-    console.log("participantReference", participantReference);
-    console.log("--------------------------");
 
     const config = validateEventPayload({
       domain,
@@ -483,9 +472,6 @@ async function main() {
   } catch (error) {
     console.error("Error processing record:", error);
     throw error;
-  } finally {
-    console.log("FINISHED_TASK");
-    console.log("--------------------------");
   }
 }
 

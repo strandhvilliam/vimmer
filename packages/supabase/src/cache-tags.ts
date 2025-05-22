@@ -59,3 +59,11 @@ export function participantVerificationsByStaffIdTag({
 }) {
   return `participant-verifications-${staffId}`;
 }
+
+export function zippedSubmissionsByMarathonIdTag({
+  marathonId,
+}: {
+  marathonId: number;
+}) {
+  return `zipped-submissions-${marathonId}`;
+}

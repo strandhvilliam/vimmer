@@ -15,6 +15,7 @@ import {
   rulesByMarathonIdTag,
   topicsWithSubmissionCountTag,
   participantVerificationsByStaffIdTag,
+  zippedSubmissionsByMarathonIdTag,
 } from "./cache-tags";
 
 import { createClient } from "./clients/lambda";
@@ -32,6 +33,7 @@ import {
   getTopicsByDomainQuery,
   getTopicsWithSubmissionCountQuery,
   getValidationResultsByParticipantIdQuery,
+  getZippedSubmissionsByDomainQuery,
 } from "./queries";
 
 export async function getUserMarathons(userId: string) {
@@ -145,5 +147,16 @@ export async function getParticipantVerificationsByStaffId(staffId: string) {
     supabase,
     staffId
   );
+  return data;
+}
+
+export async function getCachedZippedSubmissionsByMarathonId(
+  marathonId: number
+) {
+  "use cache";
+  cacheTag(zippedSubmissionsByMarathonIdTag({ marathonId }));
+  cacheLife("minutes"); // Assuming this data might change, but not too frequently
+  const supabase = await createClient();
+  const data = await getZippedSubmissionsByDomainQuery(supabase, marathonId); // Note: Original query is ByDomain, but it takes marathonId
   return data;
 }

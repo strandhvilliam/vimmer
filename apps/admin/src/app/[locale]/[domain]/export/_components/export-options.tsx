@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@vimmer/ui/components/button";
-import { Download } from "lucide-react";
+import { Download, FolderOpen, Loader2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -12,12 +12,17 @@ import {
 } from "@vimmer/ui/components/select";
 import { toast } from "sonner";
 import { EXPORT_KEYS } from "@/lib/constants";
+import { useZipSaver } from "@/lib/hooks/use-zip-saver";
+import { useAction } from "next-safe-action/hooks";
+import { getPresignedPhotoArchivesAction } from "../_actions/get-presigned-photo-archives-action";
 
 interface ExportOptionsProps {
   domain: string;
   type: (typeof EXPORT_KEYS)[keyof typeof EXPORT_KEYS];
   label: string;
   description: string;
+  marathonId: string;
+  isExternallyDisabled?: boolean;
 }
 
 export function ExportOptions({
@@ -25,17 +30,30 @@ export function ExportOptions({
   type,
   label,
   description,
+  marathonId,
+  isExternallyDisabled,
 }: ExportOptionsProps) {
+  // For EXIF export
   const [format, setFormat] = useState<string>("json");
   const [isLoading, setIsLoading] = useState(false);
+
+  // For ZIP export
+  const zipSaver = useZipSaver();
+  const { execute, isExecuting } = useAction(getPresignedPhotoArchivesAction, {
+    onSuccess: async ({ data }) => {
+      if (data && Array.isArray(data.presignedUrls)) {
+        await zipSaver.savePhotos(data.presignedUrls);
+      }
+    },
+    onError: (err) => {
+      // Optionally handle error
+      console.error("Failed to fetch presigned URLs", err);
+    },
+  });
 
   const handleExport = async () => {
     try {
       setIsLoading(true);
-      console.log(
-        "Exporting",
-        `/api/${domain}/export/${type}?format=${format}`
-      );
       const response = await fetch(
         `/api/${domain}/export/${type}?format=${format}`,
         {
@@ -44,8 +62,6 @@ export function ExportOptions({
       );
 
       if (!response.ok) {
-        console.error(response.statusText);
-        console.error(await response.text());
         throw new Error("Export failed");
       }
 
@@ -54,7 +70,7 @@ export function ExportOptions({
         type === EXPORT_KEYS.ZIP_THUMBNAILS ||
         type === EXPORT_KEYS.ZIP_SUBMISSIONS
       ) {
-        console.log("Zip generation started");
+        // This should never be called for ZIP types, but just in case
         return;
       }
 
@@ -62,10 +78,7 @@ export function ExportOptions({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-
-      // Set the correct file extension based on export type
-      const extension = type === "exif" ? format : "xlsx";
-
+      const extension = type === EXPORT_KEYS.EXIF ? format : "xlsx";
       a.download = `${type}-export-${new Date().toISOString().split("T")[0]}.${extension}`;
       document.body.appendChild(a);
       a.click();
@@ -76,7 +89,6 @@ export function ExportOptions({
         description: `Your ${type} data has been downloaded.`,
       });
     } catch (error) {
-      console.error(error);
       toast.error("Export failed", {
         description: "There was an error exporting the data. Please try again.",
       });
@@ -85,9 +97,59 @@ export function ExportOptions({
     }
   };
 
+  // ZIP export UI
+  if (
+    type === EXPORT_KEYS.ZIP_PREVIEWS ||
+    type === EXPORT_KEYS.ZIP_THUMBNAILS ||
+    type === EXPORT_KEYS.ZIP_SUBMISSIONS
+  ) {
+    return (
+      <div className="space-y-4 border p-4 rounded-md bg-muted flex flex-col">
+        <Button
+          onClick={() => execute({ marathonId, domain: domain ?? "" })}
+          disabled={zipSaver.isLoading || isExternallyDisabled || isExecuting}
+          className="w-full"
+        >
+          {zipSaver.isLoading || isExecuting ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <FolderOpen className="mr-2 h-4 w-4" />
+          )}
+          {zipSaver.isLoading || isExecuting
+            ? zipSaver.statusMessage || "Processing..."
+            : "Save to Local Folder"}
+        </Button>
+        {zipSaver.error && (
+          <p className="text-sm text-red-500">Error: {zipSaver.error}</p>
+        )}
+        {!zipSaver.error &&
+          zipSaver.statusMessage &&
+          !zipSaver.isLoading &&
+          !isExecuting && (
+            <p className="text-sm text-green-500">{zipSaver.statusMessage}</p>
+          )}
+        <div className="flex items-center justify-end gap-2 mt-2">
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Google_Chrome_icon_%28February_2022%29.svg"
+            alt="Google Chrome logo"
+            style={{ height: 20, width: 20 }}
+          />
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/9/98/Microsoft_Edge_logo_%282019%29.svg"
+            alt="Microsoft Edge logo"
+            style={{ height: 20, width: 20 }}
+          />
+          <span className="text-xs text-muted-foreground ml-2">
+            Chrome and Edge only
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-4">
-      {type === "exif" && (
+      {type === EXPORT_KEYS.EXIF && (
         <Select value={format} onValueChange={setFormat}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select format" />

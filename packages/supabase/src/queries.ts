@@ -356,3 +356,15 @@ export async function getParticipantVerificationsByStaffIdQuery(
 
   return data?.map(toCamelCase) ?? [];
 }
+
+export async function getZippedSubmissionsByDomainQuery(
+  supabase: SupabaseClient,
+  marathonId: number
+) {
+  const { data } = await supabase
+    .from("zipped_submissions")
+    .select("*")
+    .eq("marathon_id", marathonId)
+    .throwOnError();
+  return data?.map(toCamelCase) ?? [];
+}

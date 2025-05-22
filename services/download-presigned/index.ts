@@ -1,13 +1,13 @@
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { createClient } from "@vimmer/supabase/lambda";
-import { getParticipantsByDomainQuery } from "@vimmer/supabase/queries";
+import {
+  getMarathonByDomainQuery,
+  getParticipantsByDomainQuery,
+  getZippedSubmissionsByDomainQuery,
+} from "@vimmer/supabase/queries";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Resource } from "sst";
-import type { LambdaFunctionURLEvent, SQSEvent } from "aws-lambda";
-
-interface DownloadPresignedRequest {
-  domain: string;
-}
+import type { LambdaFunctionURLEvent } from "aws-lambda";
 
 export const handler = async (event: LambdaFunctionURLEvent) => {
   const s3Client = new S3Client();
@@ -23,14 +23,29 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
 
   let presignedUrlPromises: Promise<string>[] = [];
 
-  const participants = await getParticipantsByDomainQuery(supabase, domain);
+  const marathon = await getMarathonByDomainQuery(supabase, domain);
+  if (!marathon) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: "Marathon not found" }),
+    };
+  }
+
+  const zippedSubmissions = await getZippedSubmissionsByDomainQuery(
+    supabase,
+    marathon.id
+  );
 
   const exportsBucket = Resource.ExportsBucket.name;
 
-  for (const participant of participants) {
+  for (const zippedSubmission of zippedSubmissions) {
+    if (!zippedSubmission.zipKey) {
+      continue;
+    }
+
     const command = new GetObjectCommand({
       Bucket: exportsBucket,
-      Key: `${domain}/${participant.reference}.zip`,
+      Key: zippedSubmission.zipKey,
     });
 
     const presignedUrl = getSignedUrl(s3Client, command, {
