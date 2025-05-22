@@ -44,11 +44,6 @@ export const NAV_LINKS = {
   ],
   configuration: [
     {
-      name: "Participants",
-      url: "/participants",
-      icon: Users as LucideIcon,
-    },
-    {
       name: "Topics",
       url: "/topics",
       icon: Tag as LucideIcon,

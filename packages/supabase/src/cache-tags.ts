@@ -67,3 +67,19 @@ export function zippedSubmissionsByMarathonIdTag({
 }) {
   return `zipped-submissions-${marathonId}`;
 }
+
+export function juryInvitationsByMarathonIdTag({
+  marathonId,
+}: {
+  marathonId: number;
+}) {
+  return `jury-invitations-${marathonId}`;
+}
+
+export function juryInvitationByIdTag({
+  invitationId,
+}: {
+  invitationId: number;
+}) {
+  return `jury-invitation-${invitationId}`;
+}

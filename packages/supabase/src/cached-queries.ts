@@ -16,12 +16,16 @@ import {
   topicsWithSubmissionCountTag,
   participantVerificationsByStaffIdTag,
   zippedSubmissionsByMarathonIdTag,
+  juryInvitationsByMarathonIdTag,
+  juryInvitationByIdTag,
 } from "./cache-tags";
 
 import { createClient } from "./clients/lambda";
 import {
   getCompetitionClassesByDomainQuery,
   getDeviceGroupsByDomainQuery,
+  getJuryInvitationByIdQuery,
+  getJuryInvitationsByMarathonIdQuery,
   getMarathonByDomainQuery,
   getMarathonsByUserIdQuery,
   getMarathonWithConfigByDomainQuery,
@@ -158,5 +162,23 @@ export async function getCachedZippedSubmissionsByMarathonId(
   cacheLife("minutes"); // Assuming this data might change, but not too frequently
   const supabase = await createClient();
   const data = await getZippedSubmissionsByDomainQuery(supabase, marathonId); // Note: Original query is ByDomain, but it takes marathonId
+  return data;
+}
+
+export async function getJuryInvitationsByMarathonId(marathonId: number) {
+  "use cache";
+  cacheTag(juryInvitationsByMarathonIdTag({ marathonId }));
+  cacheLife("minutes");
+  const supabase = await createClient();
+  const data = await getJuryInvitationsByMarathonIdQuery(supabase, marathonId);
+  return data;
+}
+
+export async function getJuryInvitationById(invitationId: number) {
+  "use cache";
+  cacheTag(juryInvitationByIdTag({ invitationId }));
+  cacheLife("minutes");
+  const supabase = await createClient();
+  const data = await getJuryInvitationByIdQuery(supabase, invitationId);
   return data;
 }

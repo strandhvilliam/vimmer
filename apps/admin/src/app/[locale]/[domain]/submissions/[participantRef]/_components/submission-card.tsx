@@ -70,7 +70,7 @@ export function PhotoSubmissionCard({
           <CardContent className="relative p-0 flex items-center justify-center aspect-[4/3] bg-neutral-200/40 overflow-hidden">
             <div className="absolute top-2 left-2 z-10">
               <Badge variant="outline" className="bg-white/80 backdrop-blur-sm">
-                #{!!topic?.orderIndex ? topic.orderIndex + 1 : "?"}
+                #{!!topic?.orderIndex.toString() ? topic.orderIndex + 1 : "?"}
               </Badge>
             </div>
 

@@ -144,6 +144,54 @@ export type Database = {
           },
         ]
       }
+      jury_invitations: {
+        Row: {
+          competition_class_id: number | null
+          created_at: string
+          device_group_id: number | null
+          display_name: string
+          email: string
+          expires_at: string
+          id: number
+          marathon_id: number
+          notes: string | null
+          status: string | null
+          token: string
+          topic_id: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          competition_class_id?: number | null
+          created_at?: string
+          device_group_id?: number | null
+          display_name: string
+          email: string
+          expires_at: string
+          id?: number
+          marathon_id: number
+          notes?: string | null
+          status?: string | null
+          token: string
+          topic_id?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          competition_class_id?: number | null
+          created_at?: string
+          device_group_id?: number | null
+          display_name?: string
+          email?: string
+          expires_at?: string
+          id?: number
+          marathon_id?: number
+          notes?: string | null
+          status?: string | null
+          token?: string
+          topic_id?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       marathons: {
         Row: {
           created_at: string

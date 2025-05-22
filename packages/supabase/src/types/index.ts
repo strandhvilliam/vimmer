@@ -71,5 +71,13 @@ export type UpdateZippedSubmission = ToCamelCaseObject<
   TablesUpdate<"zipped_submissions">
 >;
 
+export type JuryInvitation = ToCamelCaseObject<Tables<"jury_invitations">>;
+export type InsertJuryInvitation = ToCamelCaseObject<
+  TablesInsert<"jury_invitations">
+>;
+export type UpdateJuryInvitation = ToCamelCaseObject<
+  TablesUpdate<"jury_invitations">
+>;
+
 export * from "./db";
 export * from "./helpers";

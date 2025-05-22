@@ -1,6 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { use, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import {
   Sheet,
   SheetContent,
@@ -22,115 +25,112 @@ import {
 } from "@vimmer/ui/components/select";
 import { Send } from "lucide-react";
 import { toast } from "@vimmer/ui/hooks/use-toast";
-
 import {
-  createJuryInvitation,
-  generateJuryToken,
-} from "@vimmer/supabase/mutations";
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@vimmer/ui/components/form";
+
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import {
+  CompetitionClass,
+  DeviceGroup,
+  Marathon,
+  Topic,
+} from "@vimmer/supabase/types";
+import { createJuryInvitationAction } from "../_actions/jury-invitation-actions";
 
-// Mock data for dropdowns
-const MOCK_CLASSES = [
-  { id: 1, name: "Open Class" },
-  { id: 2, name: "Junior Class" },
-  { id: 3, name: "Professional" },
-];
+const formSchema = z.object({
+  displayName: z.string(),
+  email: z.string().email({ message: "Invalid email address." }),
+  notes: z.string().optional(),
+  competitionClassId: z.string().optional(),
+  deviceGroupId: z.string().optional(),
+  topicId: z.string().optional(),
+  expiryDays: z.coerce
+    .number()
+    .min(1, { message: "Expiry must be at least 1 day." })
+    .max(90, { message: "Expiry cannot exceed 90 days." })
+    .optional(),
+});
 
-const MOCK_DEVICE_GROUPS = [
-  { id: 1, name: "DSLR" },
-  { id: 2, name: "Smartphone" },
-  { id: 3, name: "Mirrorless" },
-];
-
-const MOCK_TOPICS = [
-  { id: 1, name: "Nature" },
-  { id: 2, name: "Urban" },
-  { id: 3, name: "Portrait" },
-  { id: 4, name: "Abstract" },
-];
+type FormValues = z.infer<typeof formSchema>;
 
 interface CreateInvitationSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  competitionClassesPromise: Promise<CompetitionClass[]>;
+  topicsPromise: Promise<Topic[]>;
+  marathonPromise: Promise<Marathon | null>;
+  deviceGroupsPromise: Promise<DeviceGroup[]>;
 }
 
 export function CreateInvitationSheet({
   open,
   onOpenChange,
+  competitionClassesPromise,
+  topicsPromise,
+  marathonPromise,
+  deviceGroupsPromise,
 }: CreateInvitationSheetProps) {
-  const marathonId = 1; // This would come from your domain context in a real app
-
-  const [email, setEmail] = useState("");
-  const [notes, setNotes] = useState("");
-  const [competitionClassId, setCompetitionClassId] = useState<string>("");
-  const [deviceGroupId, setDeviceGroupId] = useState<string>("");
-  const [topicId, setTopicId] = useState<string>("");
-  const [expiryDays, setExpiryDays] = useState<string>("14");
+  const competitionClasses = use(competitionClassesPromise);
+  const topics = use(topicsPromise);
+  const marathon = use(marathonPromise);
+  const deviceGroups = use(deviceGroupsPromise);
   const [loading, setLoading] = useState(false);
 
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      displayName: "",
+      email: "",
+      notes: "",
+      competitionClassId: "",
+      deviceGroupId: "",
+      topicId: "",
+      expiryDays: 14,
+    },
+  });
+
   const resetForm = () => {
-    setEmail("");
-    setNotes("");
-    setCompetitionClassId("");
-    setDeviceGroupId("");
-    setTopicId("");
-    setExpiryDays("14");
+    form.reset();
   };
 
-  const handleSendInvitation = async () => {
-    if (!email) {
-      toast({
-        title: "Missing information",
-        description: "Please enter an email address for the jury member",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleSendInvitation = async (data: FormValues) => {
     setLoading(true);
 
     try {
-      // Generate an expiration date
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + parseInt(expiryDays));
+      if (!marathon) {
+        throw new Error("Marathon not found");
+      }
 
-      // Parse selected filter IDs
-      const parsedCompetitionClassId = competitionClassId
-        ? parseInt(competitionClassId)
+      const parsedCompetitionClassId = data.competitionClassId
+        ? parseInt(data.competitionClassId)
         : null;
-      const parsedDeviceGroupId = deviceGroupId
-        ? parseInt(deviceGroupId)
+      const parsedDeviceGroupId = data.deviceGroupId
+        ? parseInt(data.deviceGroupId)
         : null;
-      const parsedTopicId = topicId ? parseInt(topicId) : null;
+      const parsedTopicId = data.topicId ? parseInt(data.topicId) : null;
 
-      // Generate a token for the jury invitation
-      const token = await generateJuryToken(
-        marathonId,
-        parsedCompetitionClassId,
-        parsedDeviceGroupId,
-        parsedTopicId
-      );
-
-      // Create the invitation
-      await createJuryInvitation({
-        marathon_id: marathonId,
-        email,
-        notes: notes || null,
-        status: "pending",
-        token,
-        sent_at: new Date().toISOString(),
-        expires_at: expiresAt.toISOString(),
-        competition_class_id: parsedCompetitionClassId,
-        device_group_id: parsedDeviceGroupId,
-        topic_id: parsedTopicId,
+      // Call our server action instead of the direct mutation
+      await createJuryInvitationAction({
+        displayName: data.displayName,
+        email: data.email,
+        notes: data.notes,
+        competitionClassId: parsedCompetitionClassId,
+        deviceGroupId: parsedDeviceGroupId,
+        topicId: parsedTopicId,
+        expiryDays: data.expiryDays ?? 14,
       });
 
       toast({
         title: "Invitation sent",
-        description: `Jury invitation sent to ${email}`,
+        description: `Jury invitation sent to ${data.email}`,
       });
 
-      // Close the sheet and reset form
       resetForm();
       onOpenChange(false);
     } catch (error) {
@@ -146,7 +146,15 @@ export function CreateInvitationSheet({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet
+      open={open}
+      onOpenChange={(isOpen) => {
+        onOpenChange(isOpen);
+        if (!isOpen) {
+          resetForm();
+        }
+      }}
+    >
       <SheetContent className="sm:max-w-md md:max-w-lg overflow-y-auto">
         <SheetHeader className="pb-4">
           <SheetTitle>Create Jury Invitation</SheetTitle>
@@ -156,107 +164,201 @@ export function CreateInvitationSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="space-y-6 py-4">
-          <div>
-            <Label htmlFor="jury-email">Jury Member Email</Label>
-            <Input
-              id="jury-email"
-              type="email"
-              placeholder="email@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSendInvitation)}
+            className="space-y-6 py-4"
+          >
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="jury-email">Jury Member Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      id="jury-email"
+                      type="email"
+                      placeholder="email@example.com"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div>
-            <Label htmlFor="expiry">Expiry (days)</Label>
-            <Input
-              id="expiry"
-              type="number"
-              min="1"
-              max="90"
-              value={expiryDays}
-              onChange={(e) => setExpiryDays(e.target.value)}
+            <FormField
+              control={form.control}
+              name="expiryDays"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="expiry">Expiry (days)</FormLabel>
+                  <FormControl>
+                    <Input
+                      id="expiry"
+                      type="number"
+                      min="1"
+                      max="90"
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        field.onChange(
+                          value === "" ? undefined : parseInt(value, 10)
+                        );
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-
-          <div>
-            <Label htmlFor="notes">Notes (optional)</Label>
-            <Textarea
-              id="notes"
-              placeholder="Additional instructions for the jury member"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+            <FormField
+              control={form.control}
+              name="displayName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="displayName">Display Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      id="displayName"
+                      placeholder="Jury Member Name"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-3">
-            <h3 className="font-medium">Filter Submissions</h3>
-            <p className="text-sm text-muted-foreground">
-              Optionally restrict which submissions this jury member will rate
-            </p>
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="notes">Notes (optional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      id="notes"
+                      placeholder="Additional instructions for the jury member"
+                      rows={3}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="space-y-3">
-              <div>
-                <Label htmlFor="competition-class">Competition Class</Label>
-                <Select
-                  value={competitionClassId}
-                  onValueChange={setCompetitionClassId}
-                >
-                  <SelectTrigger id="competition-class">
-                    <SelectValue placeholder="All classes" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MOCK_CLASSES.map((cls) => (
-                      <SelectItem key={cls.id} value={cls.id.toString()}>
-                        {cls.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <h3 className="font-medium">Filter Submissions</h3>
+              <p className="text-sm text-muted-foreground">
+                Optionally restrict which submissions this jury member will rate
+              </p>
 
-              <div>
-                <Label htmlFor="device-group">Device Group</Label>
-                <Select value={deviceGroupId} onValueChange={setDeviceGroupId}>
-                  <SelectTrigger id="device-group">
-                    <SelectValue placeholder="All devices" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MOCK_DEVICE_GROUPS.map((group) => (
-                      <SelectItem key={group.id} value={group.id.toString()}>
-                        {group.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <div className="space-y-3">
+                <FormField
+                  control={form.control}
+                  name="competitionClassId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel htmlFor="competition-class">
+                        Competition Class
+                      </FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger id="competition-class">
+                            <SelectValue placeholder="All classes" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {competitionClasses.map((cls) => (
+                            <SelectItem key={cls.id} value={cls.id.toString()}>
+                              {cls.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <div>
-                <Label htmlFor="topic">Topic</Label>
-                <Select value={topicId} onValueChange={setTopicId}>
-                  <SelectTrigger id="topic">
-                    <SelectValue placeholder="All topics" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MOCK_TOPICS.map((topic) => (
-                      <SelectItem key={topic.id} value={topic.id.toString()}>
-                        {topic.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormField
+                  control={form.control}
+                  name="deviceGroupId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel htmlFor="device-group">Device Group</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger id="device-group">
+                            <SelectValue placeholder="All devices" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {deviceGroups.map((group) => (
+                            <SelectItem
+                              key={group.id}
+                              value={group.id.toString()}
+                            >
+                              {group.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="topicId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel htmlFor="topic">Topic</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger id="topic">
+                            <SelectValue placeholder="All topics" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {topics.map((topic) => (
+                            <SelectItem
+                              key={topic.id}
+                              value={topic.id.toString()}
+                            >
+                              {`${topic.orderIndex + 1}. ${topic.name}`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
-          </div>
-        </div>
-
-        <SheetFooter className="pt-4">
-          <PrimaryButton onClick={handleSendInvitation} disabled={loading}>
-            <Send className="w-4 h-4 mr-2" />
-            {loading ? "Sending..." : "Send Invitation"}
-          </PrimaryButton>
-        </SheetFooter>
+            <SheetFooter className="pt-4">
+              <PrimaryButton type="submit" disabled={loading}>
+                <Send className="w-4 h-4 mr-2" />
+                {loading ? "Sending..." : "Send Invitation"}
+              </PrimaryButton>
+            </SheetFooter>
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );

@@ -6,7 +6,7 @@ import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Input } from "@vimmer/ui/components/input";
-import { JuryInvitation } from "@vimmer/supabase/mutations";
+import { JuryInvitation } from "@vimmer/supabase/types";
 
 export function JuryInvitationsList({
   domain,
@@ -52,6 +52,11 @@ export function JuryInvitationsList({
       </div>
       <ScrollArea className="flex-1 bg-background">
         <div className="space-y-2 p-2">
+          {filteredInvitations.length === 0 && (
+            <div className="text-center text-muted-foreground">
+              No invitations found
+            </div>
+          )}
           {filteredInvitations.map((invitation) => (
             <Link
               key={invitation.id}
@@ -70,7 +75,7 @@ export function JuryInvitationsList({
                   <p className="font-medium truncate">{invitation.email}</p>
                   <div className="flex items-center justify-between">
                     <p className="text-xs text-muted-foreground">
-                      {new Date(invitation.sent_at).toLocaleDateString()}
+                      {new Date(invitation.createdAt).toLocaleDateString()}
                     </p>
                     {getStatusBadge(invitation.status)}
                   </div>
