@@ -14,6 +14,7 @@
     "typescript": "^5.0.0"
   },
   "exports": {
-    "./otp-email": "./src/otp-email.tsx"
+    "./otp-email": "./src/otp-email.tsx",
+    ".": "./src/index.ts"
   }
 }

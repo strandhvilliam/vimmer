@@ -12,9 +12,7 @@ import {
   SheetDescription,
   SheetFooter,
 } from "@vimmer/ui/components/sheet";
-import { Button } from "@vimmer/ui/components/button";
 import { Input } from "@vimmer/ui/components/input";
-import { Label } from "@vimmer/ui/components/label";
 import { Textarea } from "@vimmer/ui/components/textarea";
 import {
   Select,

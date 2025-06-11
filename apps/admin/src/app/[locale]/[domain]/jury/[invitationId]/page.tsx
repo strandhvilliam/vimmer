@@ -12,13 +12,13 @@ import { InvitationNotFound } from "../_components/invitation-not-found";
 export default async function JuryInvitationDetailsPage({
   params,
 }: {
-  params: Promise<{ domain: string; invitationId: number }>;
+  params: Promise<{ domain: string; invitationId: string }>;
 }) {
   const { domain, invitationId } = await params;
 
   const [invitation, competitionClasses, topics, deviceGroups] =
     await Promise.all([
-      getJuryInvitationById(invitationId),
+      getJuryInvitationById(Number(invitationId)),
       getCompetitionClassesByDomain(domain),
       getTopicsByDomain(domain),
       getDeviceGroupsByDomain(domain),
@@ -33,7 +33,7 @@ export default async function JuryInvitationDetailsPage({
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Jury Invitation</h1>
         <InvitationOptions
-          invitationId={invitationId}
+          invitationId={Number(invitationId)}
           email={invitation.email}
         />
       </div>

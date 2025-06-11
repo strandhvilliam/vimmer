@@ -6,104 +6,262 @@ import {
   AvatarImage,
 } from "@vimmer/ui/components/avatar";
 
-const submissions = [
-  {
-    id: "1",
-    title: "Serene Landscape",
-    artist: "Emma Johnson",
-    imageUrl:
-      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=2070&auto=format&fit=crop",
-    categories: ["Nature", "Landscape"],
-    description:
-      "A tranquil landscape capturing the essence of nature's beauty. The composition balances light and shadow to create a sense of depth and serenity.",
-    submissionDate: "May 15, 2024",
-  },
-  {
-    id: "2",
-    title: "Urban Reflections",
-    artist: "Michael Chen",
-    imageUrl:
-      "https://images.unsplash.com/photo-1514565131-fce0801e5785?q=80&w=2024&auto=format&fit=crop",
-    categories: ["Urban", "Architecture"],
-    description:
-      "This photograph explores the interplay between modern architecture and natural light, creating a dynamic visual narrative through reflections on glass surfaces.",
-    submissionDate: "May 16, 2024",
-  },
-  {
-    id: "3",
-    title: "Portrait of Resilience",
-    artist: "Sophia Rodriguez",
-    imageUrl:
-      "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=1964&auto=format&fit=crop",
-    categories: ["Portrait", "Documentary"],
-    description:
-      "A powerful portrait that captures human emotion and tells a story of perseverance through challenging circumstances. The subject's gaze conveys both vulnerability and strength.",
-    submissionDate: "May 17, 2024",
-  },
-  {
-    id: "4",
-    title: "Abstract Harmony",
-    artist: "David Williams",
-    imageUrl:
-      "https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=2070&auto=format&fit=crop",
-    categories: ["Abstract", "Experimental"],
-    description:
-      "An experimental piece that plays with color, form, and texture to create a harmonious abstract composition that invites multiple interpretations.",
-    submissionDate: "May 18, 2024",
-  },
-  {
-    id: "5",
-    title: "Wildlife Encounter",
-    artist: "Olivia Thompson",
-    imageUrl:
-      "https://images.unsplash.com/photo-1546182990-dffeafbe841d?q=80&w=2059&auto=format&fit=crop",
-    categories: ["Wildlife", "Nature"],
-    description:
-      "A rare moment captured in the wild, showcasing the beauty and behavior of animals in their natural habitat. The photographer demonstrated exceptional patience and timing.",
-    submissionDate: "May 19, 2024",
-  },
-  {
-    id: "6",
-    title: "Cultural Celebration",
-    artist: "Raj Patel",
-    imageUrl:
-      "https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=2070&auto=format&fit=crop",
-    categories: ["Cultural", "Event"],
-    description:
-      "This vibrant image documents a traditional cultural celebration, preserving a moment of joy and community. The composition balances movement and color to convey the energy of the event.",
-    submissionDate: "May 20, 2024",
-  },
-  {
-    id: "7",
-    title: "Minimalist Study",
-    artist: "Grace Lee",
-    imageUrl:
-      "https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?q=80&w=2067&auto=format&fit=crop",
-    categories: ["Minimalist", "Still Life"],
-    description:
-      "A study in minimalism that demonstrates how simplicity can create powerful visual impact. The careful arrangement of elements and negative space creates a sense of calm and focus.",
-    submissionDate: "May 21, 2024",
-  },
-];
+import { jwtVerify } from "jose";
+import { notFound, redirect } from "next/navigation";
+import { getSubmissionsForJury } from "@vimmer/supabase/cached-queries";
+import { createClient } from "@vimmer/supabase/server";
+import {
+  getJuryInvitationByIdQuery,
+  getMarathonByDomainQuery,
+  getCompetitionClassByIdQuery,
+  getTopicByIdQuery,
+  getDeviceGroupByIdQuery,
+} from "@vimmer/supabase/queries";
 
-export default function Jury() {
+const PREVIEW_BASE_URL = "https://d2w93ix7jvihnu.cloudfront.net";
+
+type TokenPayload = {
+  domain: string;
+  invitationId: number;
+  iat: number;
+  exp: number;
+};
+
+interface JuryPageProps {
+  searchParams: Promise<{ token?: string }>;
+}
+
+interface FilterDisplayProps {
+  competitionClass: string | null;
+  deviceGroup: string | null;
+  topic: string | null;
+}
+
+function FilterDisplay({
+  competitionClass,
+  deviceGroup,
+  topic,
+}: FilterDisplayProps) {
+  const hasFilters = competitionClass || deviceGroup || topic;
+
+  if (!hasFilters) {
+    return (
+      <span className="text-xs text-neutral-500">Viewing all submissions</span>
+    );
+  }
+
+  const filters = [
+    competitionClass && `Class: ${competitionClass}`,
+    deviceGroup && `Device: ${deviceGroup}`,
+    topic && `Topic: ${topic}`,
+  ].filter(Boolean);
+
+  return (
+    <span className="text-xs text-neutral-500">
+      Viewing: {filters.join(" • ")}
+    </span>
+  );
+}
+
+async function verifyJuryToken(token: string): Promise<TokenPayload | null> {
+  try {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error("JWT_SECRET is not set");
+    }
+    const { payload } = await jwtVerify(
+      token,
+      new TextEncoder().encode(secret)
+    );
+
+    // Validate payload structure
+    if (
+      typeof payload.domain === "string" &&
+      typeof payload.invitationId === "number" &&
+      typeof payload.iat === "number" &&
+      typeof payload.exp === "number"
+    ) {
+      return payload as TokenPayload;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function getPreviewImageUrl(submission: any) {
+  return submission.previewKey
+    ? `${PREVIEW_BASE_URL}/${submission.previewKey}`
+    : null;
+}
+
+function transformSubmissionsForViewer(submissions: any[]) {
+  return submissions
+    .map((submission) => ({
+      id: submission.id.toString(),
+      title: submission.topic?.name || `Photo ${submission.id}`,
+      artist:
+        `${submission.participant?.firstname || ""} ${submission.participant?.lastname || ""}`.trim() ||
+        "Anonymous",
+      imageUrl: getPreviewImageUrl(submission),
+      categories: [
+        submission.participant?.competitionClass?.name,
+        submission.participant?.deviceGroup?.name,
+        submission.topic?.name,
+      ].filter(Boolean),
+      description: `Submitted by participant ${submission.participant?.reference || "Unknown"} for topic "${submission.topic?.name || "Unknown"}"`,
+      submissionDate: new Date(submission.createdAt).toLocaleDateString(
+        "en-US",
+        {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }
+      ),
+    }))
+    .filter((submission) => submission.imageUrl); // Only include submissions with valid images
+}
+
+export default async function Jury({ searchParams }: JuryPageProps) {
+  const { token } = await searchParams;
+
+  if (!token) {
+    redirect("/");
+  }
+
+  const tokenPayload = await verifyJuryToken(token);
+
+  if (!tokenPayload) {
+    notFound();
+  }
+
+  // Check if token is expired
+  const now = Math.floor(Date.now() / 1000);
+  if (tokenPayload.exp < now) {
+    notFound();
+  }
+
+  // Get the jury invitation from the database
+  const supabase = await createClient();
+  const invitation = await getJuryInvitationByIdQuery(
+    supabase,
+    tokenPayload.invitationId
+  );
+
+  if (!invitation) {
+    notFound();
+  }
+
+  // Verify the invitation is for the correct domain
+  const marathon = await getMarathonByDomainQuery(
+    supabase,
+    tokenPayload.domain
+  );
+  if (!marathon || invitation.marathonId !== marathon.id) {
+    notFound();
+  }
+
+  // Check if invitation is expired
+  const invitationExpiry = new Date(invitation.expiresAt);
+  if (invitationExpiry < new Date()) {
+    notFound();
+  }
+
+  // Fetch filter details for display
+  const [competitionClass, deviceGroup, topic] = await Promise.all([
+    invitation.competitionClassId
+      ? getCompetitionClassByIdQuery(supabase, invitation.competitionClassId)
+      : null,
+    invitation.deviceGroupId
+      ? getDeviceGroupByIdQuery(supabase, invitation.deviceGroupId)
+      : null,
+    invitation.topicId ? getTopicByIdQuery(supabase, invitation.topicId) : null,
+  ]);
+
+  // Fetch submissions based on invitation filters
+  const rawSubmissions = await getSubmissionsForJury({
+    domain: tokenPayload.domain,
+    competitionClassId: invitation.competitionClassId,
+    deviceGroupId: invitation.deviceGroupId,
+    topicId: invitation.topicId,
+  });
+
+  const submissions = transformSubmissionsForViewer(rawSubmissions);
+
+  const filterDisplay = (
+    <FilterDisplay
+      competitionClass={competitionClass?.name || null}
+      deviceGroup={deviceGroup?.name || null}
+      topic={topic?.name || null}
+    />
+  );
+
+  if (submissions.length === 0) {
+    return (
+      <main className="min-h-screen bg-neutral-950">
+        <div className="flex w-full border-b items-center h-16 px-4 justify-between">
+          <div className="flex items-center gap-4">
+            <GitGraph className=" w-6 h-6 text-neutral-50" />
+            <div className="flex flex-col">
+              <h1 className="text-xl text-neutral-50 font-semibold font-rocgrotesk">
+                Competition Submissions
+              </h1>
+              {filterDisplay}
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 bg-neutral-900/50 px-3 py-1.5 rounded-lg">
+              <div className="flex flex-col">
+                <span className="text-sm text-end font-medium text-neutral-50">
+                  {invitation.displayName}
+                </span>
+                <span className="text-xs text-neutral-400">
+                  0 submissions to review
+                </span>
+              </div>
+              <Avatar className="h-8 w-8 backdrop-blur-md">
+                <AvatarFallback>
+                  <UserIcon className=" h-4 w-4 text-neutral-800" />
+                </AvatarFallback>
+              </Avatar>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] px-4">
+          <div className="text-center max-w-md">
+            <h1 className="text-2xl text-neutral-50 font-semibold mb-4">
+              No Submissions Found
+            </h1>
+            <p className="text-neutral-400">
+              There are no submissions matching the specified criteria.
+            </p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-neutral-950">
       <div className="flex w-full border-b items-center h-16 px-4 justify-between">
         <div className="flex items-center gap-4">
           <GitGraph className=" w-6 h-6 text-neutral-50" />
-          <h1 className="text-xl text-neutral-50 font-semibold text-center font-rocgrotesk">
-            Competition Submissions
-          </h1>
+          <div className="flex flex-col">
+            <h1 className="text-xl text-neutral-50 font-semibold font-rocgrotesk">
+              Competition Submissions
+            </h1>
+            {filterDisplay}
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-4 bg-neutral-900/50 px-3 py-1.5 rounded-lg">
             <div className="flex flex-col">
               <span className="text-sm text-end font-medium text-neutral-50">
-                John Doe
+                {invitation.displayName}
               </span>
               <span className="text-xs text-neutral-400">
-                john.doe@example.com
+                {submissions.length} submissions to review
               </span>
             </div>
             <Avatar className="h-8 w-8 backdrop-blur-md">

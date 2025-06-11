@@ -26,7 +26,6 @@ export function InvitationNotFound({ onClick }: InvitationNotFoundProps) {
           The jury invitation you're looking for doesn't exist or has been
           deleted.
         </p>
-        <Button onClick={handleClick}>Back to Jury List</Button>
       </div>
     </div>
   );

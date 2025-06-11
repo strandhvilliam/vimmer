@@ -344,6 +344,13 @@ export async function createJuryInvitation(
   return toCamelCase(data);
 }
 
+export async function deleteJuryInvitation(
+  supabase: SupabaseClient,
+  id: number
+) {
+  await supabase.from("jury_invitations").delete().eq("id", id).throwOnError();
+}
+
 export const createZippedSubmission = async (
   supabase: SupabaseClient,
   dto: InsertZippedSubmission

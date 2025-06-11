@@ -154,6 +154,16 @@ export async function getTopicsByDomainQuery(
   return data?.flatMap(({ topics }) => toCamelCase(topics)) ?? [];
 }
 
+export async function getTopicByIdQuery(supabase: SupabaseClient, id: number) {
+  const { data } = await supabase
+    .from("topics")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle()
+    .throwOnError();
+  return toCamelCase(data);
+}
+
 export async function getTopicsWithSubmissionCountQuery(
   supabase: SupabaseClient,
   marathonId: number
@@ -220,6 +230,19 @@ export async function getCompetitionClassesByDomainQuery(
   );
 }
 
+export async function getCompetitionClassByIdQuery(
+  supabase: SupabaseClient,
+  id: number
+) {
+  const { data } = await supabase
+    .from("competition_classes")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle()
+    .throwOnError();
+  return toCamelCase(data);
+}
+
 export async function getDeviceGroupsByDomainQuery(
   supabase: SupabaseClient,
   domain: string
@@ -230,6 +253,19 @@ export async function getDeviceGroupsByDomainQuery(
     .eq("domain", domain)
     .throwOnError();
   return data?.flatMap(({ device_groups }) => toCamelCase(device_groups)) ?? [];
+}
+
+export async function getDeviceGroupByIdQuery(
+  supabase: SupabaseClient,
+  id: number
+) {
+  const { data } = await supabase
+    .from("device_groups")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle()
+    .throwOnError();
+  return toCamelCase(data);
 }
 
 export async function getParticipantsByDomainQuery(
@@ -340,5 +376,65 @@ export async function getZippedSubmissionsByDomainQuery(
     .select("*")
     .eq("marathon_id", marathonId)
     .throwOnError();
+  return data?.map(toCamelCase) ?? [];
+}
+
+export async function getSubmissionsForJuryQuery(
+  supabase: SupabaseClient,
+  filters: {
+    domain: string;
+    competitionClassId?: number | null;
+    deviceGroupId?: number | null;
+    topicId?: number | null;
+  }
+) {
+  // First get the marathon ID for the domain
+  const { data: marathon } = await supabase
+    .from("marathons")
+    .select("id")
+    .eq("domain", filters.domain)
+    .maybeSingle()
+    .throwOnError();
+
+  if (!marathon) {
+    return [];
+  }
+
+  let query = supabase
+    .from("submissions")
+    .select(
+      `
+      *,
+      participant:participants!inner(
+        *,
+        competition_class:competition_classes(*),
+        device_group:device_groups(*)
+      ),
+      topic:topics(*)
+      `
+    )
+    .eq("marathon_id", marathon.id)
+    .eq("status", "uploaded");
+
+  // Apply optional filters - null means "any value is ok", so we only filter on non-null values
+  if (
+    filters.competitionClassId !== null &&
+    filters.competitionClassId !== undefined
+  ) {
+    query = query.eq(
+      "participant.competition_class_id",
+      filters.competitionClassId
+    );
+  }
+
+  if (filters.deviceGroupId !== null && filters.deviceGroupId !== undefined) {
+    query = query.eq("participant.device_group_id", filters.deviceGroupId);
+  }
+
+  if (filters.topicId !== null && filters.topicId !== undefined) {
+    query = query.eq("topic_id", filters.topicId);
+  }
+
+  const { data } = await query.throwOnError();
   return data?.map(toCamelCase) ?? [];
 }

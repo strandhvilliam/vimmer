@@ -3,7 +3,9 @@
 import { RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import { toast } from "@vimmer/ui/hooks/use-toast";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { useAction } from "next-safe-action/hooks";
+import { deleteJuryInvitationAction } from "../_actions/jury-invitation-actions";
 
 interface InvitationOptionsProps {
   invitationId: number;
@@ -15,6 +17,31 @@ export function InvitationOptions({
   email,
 }: InvitationOptionsProps) {
   const router = useRouter();
+  const params = useParams();
+  const domain = params.domain as string;
+
+  console.log({ invitationId });
+
+  const { execute: deleteInvitation, isExecuting: isDeleting } = useAction(
+    deleteJuryInvitationAction,
+    {
+      onSuccess: () => {
+        toast({
+          title: "Invitation deleted",
+          description: "Jury invitation has been deleted successfully",
+        });
+        router.push(`/${domain}/jury`);
+      },
+      onError: (error) => {
+        console.log("error", error);
+        toast({
+          title: "Error",
+          description: error.error.serverError || "Failed to delete invitation",
+          variant: "destructive",
+        });
+      },
+    }
+  );
 
   const handleResendInvitation = () => {
     toast({
@@ -24,11 +51,7 @@ export function InvitationOptions({
   };
 
   const handleDeleteInvitation = () => {
-    toast({
-      title: "Invitation deleted",
-      description: "Jury invitation has been deleted",
-    });
-    router.push("/jury");
+    deleteInvitation({ invitationId });
   };
 
   return (
@@ -37,9 +60,14 @@ export function InvitationOptions({
         <RefreshCw className="h-4 w-4 mr-2" />
         Resend
       </Button>
-      <Button variant="destructive" size="sm" onClick={handleDeleteInvitation}>
+      <Button
+        variant="destructive"
+        size="sm"
+        onClick={handleDeleteInvitation}
+        disabled={isDeleting}
+      >
         <Trash2 className="h-4 w-4 mr-2" />
-        Delete
+        {isDeleting ? "Deleting..." : "Delete"}
       </Button>
     </div>
   );

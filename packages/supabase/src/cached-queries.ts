@@ -16,8 +16,8 @@ import {
   topicsWithSubmissionCountTag,
   participantVerificationsByStaffIdTag,
   zippedSubmissionsByMarathonIdTag,
-  juryInvitationsByMarathonIdTag,
   juryInvitationByIdTag,
+  juryInvitationsByDomainTag,
 } from "./cache-tags";
 
 import { createClient } from "./clients/lambda";
@@ -25,11 +25,8 @@ import {
   getCompetitionClassesByDomainQuery,
   getDeviceGroupsByDomainQuery,
   getJuryInvitationByIdQuery,
-  getJuryInvitationsByMarathonIdQuery,
   getMarathonByDomainQuery,
   getMarathonsByUserIdQuery,
-  getMarathonWithConfigByDomainQuery,
-  getParticipantByIdQuery,
   getParticipantByReferenceQuery,
   getParticipantsByDomainQuery,
   getParticipantVerificationsByStaffIdQuery,
@@ -38,6 +35,8 @@ import {
   getTopicsWithSubmissionCountQuery,
   getValidationResultsByParticipantIdQuery,
   getZippedSubmissionsByDomainQuery,
+  getSubmissionsForJuryQuery,
+  getJuryInvitationsByMarathonIdQuery,
 } from "./queries";
 
 export async function getUserMarathons(userId: string) {
@@ -165,12 +164,16 @@ export async function getCachedZippedSubmissionsByMarathonId(
   return data;
 }
 
-export async function getJuryInvitationsByMarathonId(marathonId: number) {
+export async function getJuryInvitationsByDomain(domain: string) {
   "use cache";
-  cacheTag(juryInvitationsByMarathonIdTag({ marathonId }));
+  cacheTag(juryInvitationsByDomainTag({ domain }));
   cacheLife("minutes");
   const supabase = await createClient();
-  const data = await getJuryInvitationsByMarathonIdQuery(supabase, marathonId);
+  const marathon = await getMarathonByDomainQuery(supabase, domain);
+  if (!marathon) {
+    throw new Error("Marathon not found");
+  }
+  const data = await getJuryInvitationsByMarathonIdQuery(supabase, marathon.id);
   return data;
 }
 
@@ -180,5 +183,18 @@ export async function getJuryInvitationById(invitationId: number) {
   cacheLife("minutes");
   const supabase = await createClient();
   const data = await getJuryInvitationByIdQuery(supabase, invitationId);
+  return data;
+}
+
+export async function getSubmissionsForJury(filters: {
+  domain: string;
+  competitionClassId?: number | null;
+  deviceGroupId?: number | null;
+  topicId?: number | null;
+}) {
+  "use cache";
+  cacheLife("minutes");
+  const supabase = await createClient();
+  const data = await getSubmissionsForJuryQuery(supabase, filters);
   return data;
 }

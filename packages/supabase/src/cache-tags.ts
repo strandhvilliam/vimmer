@@ -68,12 +68,8 @@ export function zippedSubmissionsByMarathonIdTag({
   return `zipped-submissions-${marathonId}`;
 }
 
-export function juryInvitationsByMarathonIdTag({
-  marathonId,
-}: {
-  marathonId: number;
-}) {
-  return `jury-invitations-${marathonId}`;
+export function juryInvitationsByDomainTag({ domain }: { domain: string }) {
+  return `jury-invitations-${domain}`;
 }
 
 export function juryInvitationByIdTag({
