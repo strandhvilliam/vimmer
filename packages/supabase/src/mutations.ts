@@ -20,6 +20,7 @@ import {
   UpdateZippedSubmission,
   InsertJuryInvitation,
   JuryInvitation,
+  UpdateJuryInvitation,
 } from "./types";
 import { toCamelCase, toSnakeCase } from "./utils/format-helpers";
 
@@ -349,6 +350,25 @@ export async function deleteJuryInvitation(
   id: number
 ) {
   await supabase.from("jury_invitations").delete().eq("id", id).throwOnError();
+}
+
+export async function updateJuryInvitation(
+  supabase: SupabaseClient,
+  id: number,
+  dto: UpdateJuryInvitation
+) {
+  if (!dto.updatedAt) {
+    dto.updatedAt = new Date().toISOString();
+  }
+
+  const { data } = await supabase
+    .from("jury_invitations")
+    .update(toSnakeCase(dto))
+    .eq("id", id)
+    .select()
+    .single()
+    .throwOnError();
+  return toCamelCase(data);
 }
 
 export const createZippedSubmission = async (

@@ -10,7 +10,6 @@ import {
   X,
   Check,
   Globe,
-  Search,
   Calendar as CalendarIcon,
   Clock,
 } from "lucide-react";
@@ -823,9 +822,16 @@ export default function SettingsForm({
 
               <TabsContent value="languages" className="space-y-6">
                 <div className="grid grid-cols-1 gap-6 max-w-2xl">
-                  <div className="space-y-4">
+                  <div className="space-y-4 relative">
                     <div className="flex gap-1 flex-col">
-                      <h3 className="font-medium">Available Languages</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium text-muted-foreground">
+                          Available Languages
+                        </h3>
+                        <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
+                          Coming soon...
+                        </span>
+                      </div>
                       <p className="text-xs text-muted-foreground">
                         Select the languages your marathon should support
                       </p>
@@ -837,39 +843,41 @@ export default function SettingsForm({
                       render={() => (
                         <FormItem>
                           <FormControl>
-                            <Command className="rounded-lg border ">
-                              <CommandInput
-                                placeholder="Search languages..."
-                                className="flex w-full flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
-                              />
-                              <CommandList>
-                                <CommandEmpty>No languages found.</CommandEmpty>
-                                {AVAILABLE_LANGUAGES.map((language) => (
-                                  <CommandItem
-                                    key={language.code}
-                                    onSelect={() =>
-                                      handleLanguageToggle(language.code)
-                                    }
-                                    className="flex items-center gap-2 px-4 py-2"
-                                  >
-                                    <div className="flex items-center justify-center rounded-sm size-5 border mr-2">
-                                      {formValues.languages?.includes(
-                                        language.code
-                                      ) && (
-                                        <Check className="h-4 w-4 text-primary" />
-                                      )}
-                                    </div>
-                                    <Globe className="h-3 w-3 opacity-50" />
-                                    <span className="font-medium text-sm">
-                                      {language.name}
-                                    </span>
-                                    <span className="ml-auto text-xs text-muted-foreground">
-                                      {language.code}
-                                    </span>
-                                  </CommandItem>
-                                ))}
-                              </CommandList>
-                            </Command>
+                            <div className="relative">
+                              <Command className="rounded-lg border opacity-50 pointer-events-none">
+                                <CommandInput
+                                  placeholder="Search languages..."
+                                  className="flex w-full flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+                                  disabled
+                                />
+                                <CommandList>
+                                  <CommandEmpty>
+                                    No languages found.
+                                  </CommandEmpty>
+                                  {AVAILABLE_LANGUAGES.map((language) => (
+                                    <CommandItem
+                                      key={language.code}
+                                      className="flex items-center gap-2 px-4 py-2"
+                                    >
+                                      <div className="flex items-center justify-center rounded-sm size-5 border mr-2">
+                                        {formValues.languages?.includes(
+                                          language.code
+                                        ) && (
+                                          <Check className="h-4 w-4 text-primary" />
+                                        )}
+                                      </div>
+                                      <Globe className="h-3 w-3 opacity-50" />
+                                      <span className="font-medium text-sm">
+                                        {language.name}
+                                      </span>
+                                      <span className="ml-auto text-xs text-muted-foreground">
+                                        {language.code}
+                                      </span>
+                                    </CommandItem>
+                                  ))}
+                                </CommandList>
+                              </Command>
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>

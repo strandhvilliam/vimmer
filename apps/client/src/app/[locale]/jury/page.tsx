@@ -1,5 +1,8 @@
 import { GitGraph, UserIcon } from "lucide-react";
+import { z } from "zod";
 import ImageViewer from "./_components/image-viewer";
+import InitialView from "./_components/initial-view";
+import CompleteReviewButton from "./_components/complete-review-button";
 import {
   Avatar,
   AvatarFallback,
@@ -17,6 +20,13 @@ import {
   getTopicByIdQuery,
   getDeviceGroupByIdQuery,
 } from "@vimmer/supabase/queries";
+import {
+  CompetitionClass,
+  DeviceGroup,
+  Participant,
+  Submission,
+  Topic,
+} from "@vimmer/supabase/types";
 
 const PREVIEW_BASE_URL = "https://d2w93ix7jvihnu.cloudfront.net";
 
@@ -63,6 +73,13 @@ function FilterDisplay({
   );
 }
 
+const TokenPayloadSchema = z.object({
+  domain: z.string(),
+  invitationId: z.number(),
+  iat: z.number(),
+  exp: z.number(),
+});
+
 async function verifyJuryToken(token: string): Promise<TokenPayload | null> {
   try {
     const secret = process.env.JWT_SECRET;
@@ -74,29 +91,31 @@ async function verifyJuryToken(token: string): Promise<TokenPayload | null> {
       new TextEncoder().encode(secret)
     );
 
-    // Validate payload structure
-    if (
-      typeof payload.domain === "string" &&
-      typeof payload.invitationId === "number" &&
-      typeof payload.iat === "number" &&
-      typeof payload.exp === "number"
-    ) {
-      return payload as TokenPayload;
+    const parsed = TokenPayloadSchema.safeParse(payload);
+    if (parsed.success) {
+      return parsed.data;
     }
-
     return null;
   } catch {
     return null;
   }
 }
 
-function getPreviewImageUrl(submission: any) {
+function getPreviewImageUrl(submission: JurySubmission) {
   return submission.previewKey
     ? `${PREVIEW_BASE_URL}/${submission.previewKey}`
     : null;
 }
 
-function transformSubmissionsForViewer(submissions: any[]) {
+type JurySubmission = Submission & {
+  topic: Topic;
+  participant: Participant & {
+    competitionClass: CompetitionClass | null;
+    deviceGroup: DeviceGroup | null;
+  };
+};
+
+function transformSubmissionsForViewer(submissions: JurySubmission[]) {
   return submissions
     .map((submission) => ({
       id: submission.id.toString(),
@@ -136,13 +155,11 @@ export default async function Jury({ searchParams }: JuryPageProps) {
     notFound();
   }
 
-  // Check if token is expired
   const now = Math.floor(Date.now() / 1000);
   if (tokenPayload.exp < now) {
     notFound();
   }
 
-  // Get the jury invitation from the database
   const supabase = await createClient();
   const invitation = await getJuryInvitationByIdQuery(
     supabase,
@@ -153,7 +170,6 @@ export default async function Jury({ searchParams }: JuryPageProps) {
     notFound();
   }
 
-  // Verify the invitation is for the correct domain
   const marathon = await getMarathonByDomainQuery(
     supabase,
     tokenPayload.domain
@@ -162,13 +178,11 @@ export default async function Jury({ searchParams }: JuryPageProps) {
     notFound();
   }
 
-  // Check if invitation is expired
   const invitationExpiry = new Date(invitation.expiresAt);
   if (invitationExpiry < new Date()) {
     notFound();
   }
 
-  // Fetch filter details for display
   const [competitionClass, deviceGroup, topic] = await Promise.all([
     invitation.competitionClassId
       ? getCompetitionClassByIdQuery(supabase, invitation.competitionClassId)
@@ -179,7 +193,6 @@ export default async function Jury({ searchParams }: JuryPageProps) {
     invitation.topicId ? getTopicByIdQuery(supabase, invitation.topicId) : null,
   ]);
 
-  // Fetch submissions based on invitation filters
   const rawSubmissions = await getSubmissionsForJury({
     domain: tokenPayload.domain,
     competitionClassId: invitation.competitionClassId,
@@ -189,15 +202,57 @@ export default async function Jury({ searchParams }: JuryPageProps) {
 
   const submissions = transformSubmissionsForViewer(rawSubmissions);
 
-  const filterDisplay = (
-    <FilterDisplay
-      competitionClass={competitionClass?.name || null}
-      deviceGroup={deviceGroup?.name || null}
-      topic={topic?.name || null}
-    />
-  );
+  const juryContent = () => {
+    if (submissions.length === 0) {
+      return (
+        <main className="min-h-screen bg-neutral-950">
+          <div className="flex w-full border-b items-center h-16 px-4 justify-between">
+            <div className="flex items-center gap-4">
+              <GitGraph className=" w-6 h-6 text-neutral-50" />
+              <div className="flex flex-col">
+                <h1 className="text-xl text-neutral-50 font-semibold font-rocgrotesk">
+                  Competition Submissions
+                </h1>
+                <FilterDisplay
+                  competitionClass={competitionClass?.name || null}
+                  deviceGroup={deviceGroup?.name || null}
+                  topic={topic?.name || null}
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <CompleteReviewButton invitationId={invitation.id} />
+              <div className="flex items-center gap-4 bg-neutral-900/50 px-3 py-1.5 rounded-lg">
+                <div className="flex flex-col">
+                  <span className="text-sm text-end font-medium text-neutral-50">
+                    {invitation.displayName}
+                  </span>
+                  <span className="text-xs text-neutral-400">
+                    0 submissions to review
+                  </span>
+                </div>
+                <Avatar className="h-8 w-8 backdrop-blur-md">
+                  <AvatarFallback>
+                    <UserIcon className=" h-4 w-4 text-neutral-800" />
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] px-4">
+            <div className="text-center max-w-md">
+              <h1 className="text-2xl text-neutral-50 font-semibold mb-4">
+                No Submissions Found
+              </h1>
+              <p className="text-neutral-400">
+                There are no submissions matching the specified criteria.
+              </p>
+            </div>
+          </div>
+        </main>
+      );
+    }
 
-  if (submissions.length === 0) {
     return (
       <main className="min-h-screen bg-neutral-950">
         <div className="flex w-full border-b items-center h-16 px-4 justify-between">
@@ -207,17 +262,22 @@ export default async function Jury({ searchParams }: JuryPageProps) {
               <h1 className="text-xl text-neutral-50 font-semibold font-rocgrotesk">
                 Competition Submissions
               </h1>
-              {filterDisplay}
+              <FilterDisplay
+                competitionClass={competitionClass?.name || null}
+                deviceGroup={deviceGroup?.name || null}
+                topic={topic?.name || null}
+              />
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <CompleteReviewButton invitationId={invitation.id} />
             <div className="flex items-center gap-4 bg-neutral-900/50 px-3 py-1.5 rounded-lg">
               <div className="flex flex-col">
                 <span className="text-sm text-end font-medium text-neutral-50">
                   {invitation.displayName}
                 </span>
                 <span className="text-xs text-neutral-400">
-                  0 submissions to review
+                  {submissions.length} submissions to review
                 </span>
               </div>
               <Avatar className="h-8 w-8 backdrop-blur-md">
@@ -228,51 +288,10 @@ export default async function Jury({ searchParams }: JuryPageProps) {
             </div>
           </div>
         </div>
-        <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] px-4">
-          <div className="text-center max-w-md">
-            <h1 className="text-2xl text-neutral-50 font-semibold mb-4">
-              No Submissions Found
-            </h1>
-            <p className="text-neutral-400">
-              There are no submissions matching the specified criteria.
-            </p>
-          </div>
-        </div>
+        <ImageViewer submissions={submissions} />
       </main>
     );
-  }
+  };
 
-  return (
-    <main className="min-h-screen bg-neutral-950">
-      <div className="flex w-full border-b items-center h-16 px-4 justify-between">
-        <div className="flex items-center gap-4">
-          <GitGraph className=" w-6 h-6 text-neutral-50" />
-          <div className="flex flex-col">
-            <h1 className="text-xl text-neutral-50 font-semibold font-rocgrotesk">
-              Competition Submissions
-            </h1>
-            {filterDisplay}
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-4 bg-neutral-900/50 px-3 py-1.5 rounded-lg">
-            <div className="flex flex-col">
-              <span className="text-sm text-end font-medium text-neutral-50">
-                {invitation.displayName}
-              </span>
-              <span className="text-xs text-neutral-400">
-                {submissions.length} submissions to review
-              </span>
-            </div>
-            <Avatar className="h-8 w-8 backdrop-blur-md">
-              <AvatarFallback>
-                <UserIcon className=" h-4 w-4 text-neutral-800" />
-              </AvatarFallback>
-            </Avatar>
-          </div>
-        </div>
-      </div>
-      <ImageViewer submissions={submissions} />
-    </main>
-  );
+  return <InitialView invitation={invitation}>{juryContent()}</InitialView>;
 }

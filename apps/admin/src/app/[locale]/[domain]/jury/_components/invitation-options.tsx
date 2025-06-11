@@ -2,6 +2,17 @@
 
 import { RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@vimmer/ui/components/alert-dialog";
 import { toast } from "@vimmer/ui/hooks/use-toast";
 import { useParams, useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
@@ -19,8 +30,6 @@ export function InvitationOptions({
   const router = useRouter();
   const params = useParams();
   const domain = params.domain as string;
-
-  console.log({ invitationId });
 
   const { execute: deleteInvitation, isExecuting: isDeleting } = useAction(
     deleteJuryInvitationAction,
@@ -60,15 +69,32 @@ export function InvitationOptions({
         <RefreshCw className="h-4 w-4 mr-2" />
         Resend
       </Button>
-      <Button
-        variant="destructive"
-        size="sm"
-        onClick={handleDeleteInvitation}
-        disabled={isDeleting}
-      >
-        <Trash2 className="h-4 w-4 mr-2" />
-        {isDeleting ? "Deleting..." : "Delete"}
-      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="destructive" size="sm" disabled={isDeleting}>
+            <Trash2 className="h-4 w-4 mr-2" />
+            {isDeleting ? "Deleting..." : "Delete"}
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Jury Invitation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the jury invitation for {email}?
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteInvitation}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
