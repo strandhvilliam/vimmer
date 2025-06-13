@@ -37,7 +37,6 @@ import {
   CompetitionClass,
   DeviceGroup,
 } from "@vimmer/supabase/types";
-// import { useAction } from "next-safe-action/hooks";
 
 type VerificationWithParticipant = ParticipantVerification & {
   participant: Participant & {

@@ -23,6 +23,7 @@ import {
   UpdateJuryInvitation,
   InsertUser,
   InsertUserMarathonRelation,
+  UpdateUserMarathonRelation,
 } from "./types";
 import { toCamelCase, toSnakeCase } from "./utils/format-helpers";
 import crypto from "crypto";
@@ -432,4 +433,34 @@ export const createUserMarathonRelation = async (
     .single()
     .throwOnError();
   return toCamelCase(data);
+};
+
+export const updateUserMarathonRelation = async (
+  supabase: SupabaseClient,
+  userId: string,
+  marathonId: number,
+  dto: Partial<Pick<UpdateUserMarathonRelation, "role">>
+) => {
+  const { data } = await supabase
+    .from("user_marathons")
+    .update(toSnakeCase(dto))
+    .eq("user_id", userId)
+    .eq("marathon_id", marathonId)
+    .select()
+    .single()
+    .throwOnError();
+  return toCamelCase(data);
+};
+
+export const deleteUserMarathonRelation = async (
+  supabase: SupabaseClient,
+  userId: string,
+  marathonId: number
+) => {
+  await supabase
+    .from("user_marathons")
+    .delete()
+    .eq("user_id", userId)
+    .eq("marathon_id", marathonId)
+    .throwOnError();
 };

@@ -3,7 +3,7 @@
 import { Button } from "@vimmer/ui/components/button";
 import { RefreshCw } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
-import { refreshStaffData } from "./_actions/refresh-staff-data";
+import { refreshStaffData } from "../_actions/refresh-staff-data";
 import { toast } from "sonner";
 
 interface RefreshButtonProps {
