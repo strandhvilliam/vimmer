@@ -79,5 +79,17 @@ export type UpdateJuryInvitation = ToCamelCaseObject<
   TablesUpdate<"jury_invitations">
 >;
 
+export type User = ToCamelCaseObject<Tables<"user">>;
+export type InsertUser = ToCamelCaseObject<TablesInsert<"user">>;
+export type UpdateUser = ToCamelCaseObject<TablesUpdate<"user">>;
+
+export type UserMarathonRelation = ToCamelCaseObject<Tables<"user_marathons">>;
+export type InsertUserMarathonRelation = ToCamelCaseObject<
+  TablesInsert<"user_marathons">
+>;
+export type UpdateUserMarathonRelation = ToCamelCaseObject<
+  TablesUpdate<"user_marathons">
+>;
+
 export * from "./db";
 export * from "./helpers";

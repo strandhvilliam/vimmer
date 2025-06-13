@@ -19,7 +19,10 @@ export default function StaffDetailsLoading() {
           <div className="flex items-center gap-4">
             <Skeleton className="h-16 w-16 rounded-full" />
             <div className="space-y-2">
-              <Skeleton className="h-6 w-48" />
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-5 w-12 rounded-full" />
+              </div>
               <div className="flex items-center text-muted-foreground gap-2">
                 <Mail className="h-4 w-4" />
                 <Skeleton className="h-4 w-32" />

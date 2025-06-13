@@ -1,4 +1,5 @@
 "use client";
+
 import { Search, User2Icon } from "lucide-react";
 import { Avatar, AvatarFallback } from "@vimmer/ui/components/avatar";
 import { ScrollArea } from "@vimmer/ui/components/scroll-area";
@@ -6,32 +7,29 @@ import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Input } from "@vimmer/ui/components/input";
+import { Badge } from "@vimmer/ui/components/badge";
+import { User, UserMarathonRelation } from "@vimmer/supabase/types";
+
 export function StaffListMenu({
   domain,
   staffMembersPromise,
 }: {
   domain: string;
-  staffMembersPromise: Promise<
-    {
-      id: number;
-      name: string;
-      email: string;
-      lastLogin: string;
-    }[]
-  >;
+  staffMembersPromise: Promise<(UserMarathonRelation & { user: User })[]>;
 }) {
   const { staffId } = useParams();
   const staffMembers = use(staffMembersPromise);
 
   const [search, setSearch] = useState("");
-  const [filteredStaff, setFilteredStaff] = useState(staffMembers);
+  const [filteredStaff, setFilteredStaff] =
+    useState<(UserMarathonRelation & { user: User })[]>(staffMembers);
 
   useEffect(() => {
     const filteredStaff = staffMembers.filter((staff) =>
-      staff.name.toLowerCase().includes(search.toLowerCase())
+      staff.user.name.toLowerCase().includes(search.toLowerCase())
     );
     setFilteredStaff(filteredStaff);
-  }, [search]);
+  }, [search, staffMembers]);
 
   return (
     <>
@@ -40,11 +38,13 @@ export function StaffListMenu({
         <Input
           placeholder="Search staff..."
           className="pl-10 rounded-full focus-visible:ring-0 focus-visible:ring-offset-0"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
       </div>
       <ScrollArea className="flex-1 bg-background">
         <div className="space-y-2 p-2">
-          {staffMembers.map((staff) => (
+          {filteredStaff.map((staff) => (
             <Link
               key={staff.id}
               href={`/${domain}/staff/${staff.id}`}
@@ -58,10 +58,18 @@ export function StaffListMenu({
                     <User2Icon className="h-5 w-5" />
                   </AvatarFallback>
                 </Avatar>
-                <div className="space-y-0.5">
-                  <p className="font-medium">{staff.name}</p>
+                <div className="flex-1 space-y-0.5">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium">{staff.user.name}</p>
+                    <Badge
+                      variant={staff.role === "admin" ? "default" : "secondary"}
+                      className="text-xs"
+                    >
+                      {staff.role.charAt(0).toUpperCase() + staff.role.slice(1)}
+                    </Badge>
+                  </div>
                   <p className="text-sm text-muted-foreground truncate">
-                    {staff.email}
+                    {staff.user.email}
                   </p>
                 </div>
               </div>

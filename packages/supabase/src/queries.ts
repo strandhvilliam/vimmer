@@ -1,10 +1,25 @@
-import type { SupabaseClient } from "./types/";
+import type {
+  CompetitionClass,
+  DeviceGroup,
+  JuryInvitation,
+  Marathon,
+  Participant,
+  ParticipantVerification,
+  RuleConfig,
+  Submission,
+  SupabaseClient,
+  Topic,
+  User,
+  UserMarathonRelation,
+  ValidationResult,
+  ZippedSubmission,
+} from "./types/";
 import { toCamelCase } from "./utils/format-helpers";
 
 export async function getParticipantByIdQuery(
   supabase: SupabaseClient,
   id: number
-) {
+): Promise<Participant | null> {
   const { data } = await supabase
     .from("participants")
     .select(
@@ -25,7 +40,7 @@ export async function getParticipantByIdQuery(
 export async function getParticipantByReferenceQuery(
   supabase: SupabaseClient,
   { reference, domain }: { reference: string; domain: string }
-) {
+): Promise<Participant | null> {
   const { data } = await supabase
     .from("participants")
     .select(
@@ -48,7 +63,14 @@ export async function getParticipantByReferenceQuery(
 export async function getMarathonWithConfigByIdQuery(
   supabase: SupabaseClient,
   id: number
-) {
+): Promise<
+  | (Marathon & {
+      competitionClasses: CompetitionClass[];
+      deviceGroups: DeviceGroup[];
+      topics: Topic[];
+    })
+  | null
+> {
   const { data } = await supabase
     .from("marathons")
     .select(
@@ -69,7 +91,14 @@ export async function getMarathonWithConfigByIdQuery(
 export async function getMarathonWithConfigByDomainQuery(
   supabase: SupabaseClient,
   domain: string
-) {
+): Promise<
+  | (Marathon & {
+      competitionClasses: CompetitionClass[];
+      deviceGroups: DeviceGroup[];
+      topics: Topic[];
+    })
+  | null
+> {
   const { data } = await supabase
     .from("marathons")
     .select(
@@ -90,7 +119,7 @@ export async function getMarathonWithConfigByDomainQuery(
 export async function getManySubmissionsByKeysQuery(
   supabase: SupabaseClient,
   keys: string[]
-) {
+): Promise<Submission[]> {
   const { data } = await supabase
     .from("submissions")
     .select()
@@ -102,7 +131,7 @@ export async function getManySubmissionsByKeysQuery(
 export async function getUserWithMarathonsQuery(
   supabase: SupabaseClient,
   userId: string
-) {
+): Promise<(User & { userMarathons: UserMarathonRelation[] }) | null> {
   const { data } = await supabase
     .from("user")
     .select(
@@ -120,7 +149,7 @@ export async function getUserWithMarathonsQuery(
 export async function getMarathonsByUserIdQuery(
   supabase: SupabaseClient,
   userId: string
-) {
+): Promise<Marathon[]> {
   const { data } = await supabase
     .from("user_marathons")
     .select("marathons(*)")
@@ -132,7 +161,7 @@ export async function getMarathonsByUserIdQuery(
 export async function getTopicsByMarathonIdQuery(
   supabase: SupabaseClient,
   marathonId: number
-) {
+): Promise<Topic[]> {
   const { data } = await supabase
     .from("topics")
     .select("*")
@@ -144,7 +173,7 @@ export async function getTopicsByMarathonIdQuery(
 export async function getTopicsByDomainQuery(
   supabase: SupabaseClient,
   domain: string
-) {
+): Promise<Topic[]> {
   const { data } = await supabase
     .from("marathons")
     .select("topics(*)")
@@ -217,7 +246,7 @@ export async function getScheduledTopicsQuery(supabase: SupabaseClient) {
 export async function getCompetitionClassesByDomainQuery(
   supabase: SupabaseClient,
   domain: string
-) {
+): Promise<CompetitionClass[]> {
   const { data } = await supabase
     .from("marathons")
     .select("competition_classes(*)")
@@ -233,7 +262,7 @@ export async function getCompetitionClassesByDomainQuery(
 export async function getCompetitionClassByIdQuery(
   supabase: SupabaseClient,
   id: number
-) {
+): Promise<CompetitionClass | null> {
   const { data } = await supabase
     .from("competition_classes")
     .select("*")
@@ -246,7 +275,7 @@ export async function getCompetitionClassByIdQuery(
 export async function getDeviceGroupsByDomainQuery(
   supabase: SupabaseClient,
   domain: string
-) {
+): Promise<DeviceGroup[]> {
   const { data } = await supabase
     .from("marathons")
     .select("device_groups(*)")
@@ -258,7 +287,7 @@ export async function getDeviceGroupsByDomainQuery(
 export async function getDeviceGroupByIdQuery(
   supabase: SupabaseClient,
   id: number
-) {
+): Promise<DeviceGroup | null> {
   const { data } = await supabase
     .from("device_groups")
     .select("*")
@@ -271,7 +300,7 @@ export async function getDeviceGroupByIdQuery(
 export async function getParticipantsByDomainQuery(
   supabase: SupabaseClient,
   domain: string
-) {
+): Promise<Participant[]> {
   const { data } = await supabase
     .from("participants")
     .select(
@@ -290,7 +319,7 @@ export async function getParticipantsByDomainQuery(
 export async function getValidationResultsByParticipantIdQuery(
   supabase: SupabaseClient,
   participantId: number
-) {
+): Promise<ValidationResult[]> {
   const { data } = await supabase
     .from("validation_results")
     .select(
@@ -308,7 +337,7 @@ export async function getValidationResultsByParticipantIdQuery(
 export async function getRulesByMarathonIdQuery(
   supabase: SupabaseClient,
   marathonId: number
-) {
+): Promise<RuleConfig[]> {
   const { data } = await supabase
     .from("rule_configs")
     .select("*")
@@ -320,7 +349,7 @@ export async function getRulesByMarathonIdQuery(
 export async function getJuryInvitationsByMarathonIdQuery(
   supabase: SupabaseClient,
   marathonId: number
-) {
+): Promise<JuryInvitation[]> {
   const { data } = await supabase
     .from("jury_invitations")
     .select("*")
@@ -333,7 +362,7 @@ export async function getJuryInvitationsByMarathonIdQuery(
 export async function getJuryInvitationByIdQuery(
   supabase: SupabaseClient,
   invitationId: number
-) {
+): Promise<JuryInvitation | null> {
   const { data } = await supabase
     .from("jury_invitations")
     .select("*")
@@ -346,7 +375,7 @@ export async function getJuryInvitationByIdQuery(
 export async function getParticipantVerificationsByStaffIdQuery(
   supabase: SupabaseClient,
   staffId: string
-) {
+): Promise<ParticipantVerification[]> {
   const { data } = await supabase
     .from("participant_verifications")
     .select(
@@ -370,7 +399,7 @@ export async function getParticipantVerificationsByStaffIdQuery(
 export async function getZippedSubmissionsByDomainQuery(
   supabase: SupabaseClient,
   marathonId: number
-) {
+): Promise<ZippedSubmission[]> {
   const { data } = await supabase
     .from("zipped_submissions")
     .select("*")
@@ -387,8 +416,7 @@ export async function getSubmissionsForJuryQuery(
     deviceGroupId?: number | null;
     topicId?: number | null;
   }
-) {
-  // First get the marathon ID for the domain
+): Promise<Submission[]> {
   const { data: marathon } = await supabase
     .from("marathons")
     .select("id")
@@ -416,7 +444,6 @@ export async function getSubmissionsForJuryQuery(
     .eq("marathon_id", marathon.id)
     .eq("status", "uploaded");
 
-  // Apply optional filters - null means "any value is ok", so we only filter on non-null values
   if (
     filters.competitionClassId !== null &&
     filters.competitionClassId !== undefined
@@ -437,4 +464,54 @@ export async function getSubmissionsForJuryQuery(
 
   const { data } = await query.throwOnError();
   return data?.map(toCamelCase) ?? [];
+}
+
+export async function getUserByEmailWithMarathonsQuery(
+  supabase: SupabaseClient,
+  email: string
+): Promise<(User & { userMarathons: UserMarathonRelation[] }) | null> {
+  const { data } = await supabase
+    .from("user")
+    .select("*, user_marathons(*)")
+    .eq("email", email)
+    .maybeSingle()
+    .throwOnError();
+
+  return toCamelCase(data);
+}
+
+export async function getStaffMembersByDomainQuery(
+  supabase: SupabaseClient,
+  domain: string
+): Promise<(UserMarathonRelation & { user: User })[]> {
+  const { data } = await supabase
+    .from("user_marathons")
+    .select("*, user(*), marathons(*)")
+    .eq("marathons.domain", domain)
+    .throwOnError();
+
+  return (
+    data?.map(({ marathons: _, ...rest }) => ({
+      ...toCamelCase(rest),
+    })) ?? []
+  );
+}
+
+export async function getStaffMemberByIdQuery(
+  supabase: SupabaseClient,
+  staffId: number
+): Promise<
+  | (UserMarathonRelation & {
+      user: User & { participantVerifications: ParticipantVerification[] };
+    })
+  | null
+> {
+  const { data } = await supabase
+    .from("user_marathons")
+    .select("*, user(*, participant_verifications(*))")
+    .eq("id", staffId)
+    .maybeSingle()
+    .throwOnError();
+
+  return toCamelCase(data);
 }

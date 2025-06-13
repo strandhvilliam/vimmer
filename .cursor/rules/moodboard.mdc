@@ -1,0 +1,9 @@
+---
+description: 
+globs: *.tsx
+alwaysApply: false
+---
+- Use the [primary-button.tsx](mdc:packages/ui/src/components/primary-button.tsx) for primary action buttons
+- Use font-rocgrotesk for headers and titles.
+- For inputs use placeholders like 'name@email.com' or a more concrete example instead of just writing Enter Email Here. For all input types.
+

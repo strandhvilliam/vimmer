@@ -3,22 +3,21 @@ import {
   SidebarContent,
   SidebarMenuItem,
   SidebarMenu,
-  SidebarHeader,
   SidebarFooter,
 } from "@vimmer/ui/components/sidebar";
 import SidebarLinks from "./sidebar-links";
 import { Suspense } from "react";
-import { getSession } from "@/lib/auth";
-import { getUserMarathons } from "@vimmer/supabase/cached-queries";
 import { NavUser } from "./nav-user";
-import { DomainSwitchDropdown } from "./domain-switch-dropdown";
-import { Skeleton } from "@vimmer/ui/components/skeleton";
+import {
+  AppSidebarHeader,
+  AppSidebarHeaderSkeleton,
+} from "./app-sidebar-header";
 
 export async function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-none bg-sidebar z-20">
-      <Suspense fallback={<SidebarTopSkeleton />}>
-        <SidebarTop />
+      <Suspense fallback={<AppSidebarHeaderSkeleton />}>
+        <AppSidebarHeader />
       </Suspense>
       <SidebarContent>
         <SidebarLinks />
@@ -31,31 +30,5 @@ export async function AppSidebar() {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  );
-}
-
-async function SidebarTop() {
-  const session = await getSession();
-  if (!session) {
-    return null;
-  }
-  const marathons = await getUserMarathons(session.user.id);
-  return (
-    <SidebarHeader>
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <DomainSwitchDropdown marathons={marathons} />
-        </SidebarMenuItem>
-      </SidebarMenu>
-    </SidebarHeader>
-  );
-}
-
-//TODO: Make better skeleton
-async function SidebarTopSkeleton() {
-  return (
-    <SidebarHeader>
-      <Skeleton className="h-12 w-full" />
-    </SidebarHeader>
   );
 }

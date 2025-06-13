@@ -13,8 +13,4 @@ export const actionClient = createSafeActionClient({
   },
 });
 
-export class ActionError extends Error {
-  constructor(message: string) {
-    super(message);
-  }
-}
+export class ActionError extends Error {}

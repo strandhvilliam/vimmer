@@ -1,5 +1,5 @@
 import { betterAuth, Session, User } from "better-auth";
-import { emailOTP } from "better-auth/plugins";
+import { admin, emailOTP } from "better-auth/plugins";
 import { OTPEmail } from "@vimmer/email/otp-email";
 import { Pool } from "pg";
 import { resend } from "./resend";
@@ -13,12 +13,21 @@ const pool = new Pool({
 export const auth = betterAuth({
   database: pool,
   secret: process.env.BETTER_AUTH_SECRET,
+  additionalFields: {
+    role: {
+      type: "string",
+      required: false,
+      defaultValue: "user",
+      input: false,
+    },
+  },
   cookieCache: {
     enabled: true,
     maxAge: 5 * 60,
   },
   trustedOrigins: ["http://localhost:3000", "http://localhost:3001"],
   plugins: [
+    admin(),
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
         switch (type) {

@@ -13,6 +13,12 @@ import { Mail, Trash2, User2Icon, Pencil } from "lucide-react";
 import { ScrollArea } from "@vimmer/ui/components/scroll-area";
 import { notFound } from "next/navigation";
 import { AcceptedParticipantsTable } from "./accepted-participants-table";
+import { Badge } from "@vimmer/ui/components/badge";
+import {
+  getParticipantsByDomain,
+  getParticipantVerificationsByStaffId,
+  getStaffMemberById,
+} from "@vimmer/supabase/cached-queries";
 
 const staffMembers = [
   {
@@ -20,6 +26,7 @@ const staffMembers = [
     name: "John Doe",
     email: "john.doe@example.com",
     lastLogin: new Date(),
+    role: "admin" as const,
     submissions: [
       {
         id: 1,
@@ -42,6 +49,7 @@ const staffMembers = [
     name: "Jane Smith",
     email: "jane.smith@example.com",
     lastLogin: new Date(2024, 2, 15),
+    role: "user" as const,
     submissions: [],
   },
   {
@@ -49,6 +57,7 @@ const staffMembers = [
     name: "Mike Johnson",
     email: "mike.johnson@example.com",
     lastLogin: new Date(2024, 2, 14),
+    role: "user" as const,
     submissions: [],
   },
 ];
@@ -60,17 +69,29 @@ async function demoGetStaffMember(staffId: string) {
 
 interface PageProps {
   params: Promise<{
+    domain: string;
     staffId: string;
   }>;
 }
 
 export default async function StaffDetailsPage({ params }: PageProps) {
-  const { staffId } = await params;
-  const staff = await demoGetStaffMember(staffId);
+  const { staffId, domain } = await params;
+  const staff = await getStaffMemberById(Number(staffId));
 
   if (!staff) {
     notFound();
   }
+  const participants = await getParticipantsByDomain(domain);
+
+  const verifications = await getParticipantVerificationsByStaffId(
+    staff.user.id
+  );
+
+  const submissions = participants.filter((participant) =>
+    verifications.some(
+      (verification) => verification.participantId === participant.id
+    )
+  );
 
   return (
     <>
@@ -83,14 +104,18 @@ export default async function StaffDetailsPage({ params }: PageProps) {
               </AvatarFallback>
             </Avatar>
             <div className="space-y-1">
-              <h2 className="text-xl font-semibold">{staff.name}</h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-semibold">{staff.user.name}</h2>
+                <Badge
+                  variant={staff.role === "admin" ? "default" : "secondary"}
+                >
+                  {staff.role.charAt(0).toUpperCase() + staff.role.slice(1)}
+                </Badge>
+              </div>
               <div className="flex items-center text-muted-foreground">
                 <Mail className="mr-2 h-4 w-4" />
-                {staff.email}
+                {staff.user.email}
               </div>
-              <p className="text-sm text-muted-foreground">
-                Last login: {format(staff.lastLogin, "PPp")}
-              </p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -107,7 +132,7 @@ export default async function StaffDetailsPage({ params }: PageProps) {
       </div>
 
       <ScrollArea className="flex-1 p-8">
-        <AcceptedParticipantsTable submissions={staff.submissions} />
+        <AcceptedParticipantsTable submissions={[]} />
       </ScrollArea>
     </>
   );

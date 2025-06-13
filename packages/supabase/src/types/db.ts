@@ -386,6 +386,7 @@ export type Database = {
           createdAt: string
           expiresAt: string
           id: string
+          impersonatedBy: string | null
           ipAddress: string | null
           token: string
           updatedAt: string
@@ -396,6 +397,7 @@ export type Database = {
           createdAt: string
           expiresAt: string
           id: string
+          impersonatedBy?: string | null
           ipAddress?: string | null
           token: string
           updatedAt: string
@@ -406,6 +408,7 @@ export type Database = {
           createdAt?: string
           expiresAt?: string
           id?: string
+          impersonatedBy?: string | null
           ipAddress?: string | null
           token?: string
           updatedAt?: string
@@ -538,6 +541,9 @@ export type Database = {
       }
       user: {
         Row: {
+          banExpires: string | null
+          banned: boolean | null
+          banReason: string | null
           createdAt: string
           email: string
           emailVerified: boolean
@@ -547,6 +553,9 @@ export type Database = {
           updatedAt: string
         }
         Insert: {
+          banExpires?: string | null
+          banned?: boolean | null
+          banReason?: string | null
           createdAt: string
           email: string
           emailVerified: boolean
@@ -556,6 +565,9 @@ export type Database = {
           updatedAt: string
         }
         Update: {
+          banExpires?: string | null
+          banned?: boolean | null
+          banReason?: string | null
           createdAt?: string
           email?: string
           emailVerified?: boolean

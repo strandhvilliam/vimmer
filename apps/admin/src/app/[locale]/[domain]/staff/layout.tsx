@@ -2,6 +2,11 @@ import React, { Suspense } from "react";
 import { AddStaffDialog } from "./_components/add-staff-dialog";
 import { StaffListMenu } from "./_components/staff-list-menu";
 import { StaffListSkeleton } from "./_components/staff-list-skeleton";
+import {
+  getMarathonByDomain,
+  getStaffMembersByDomain,
+} from "@vimmer/supabase/cached-queries";
+import { notFound } from "next/navigation";
 
 const staffMembers = [
   {
@@ -9,18 +14,21 @@ const staffMembers = [
     name: "John Doe",
     email: "john.doe@example.com",
     lastLogin: "2024-03-17",
+    role: "admin" as const,
   },
   {
     id: 2,
     name: "Jane Smith",
     email: "jane.smith@example.com",
     lastLogin: "2024-03-15",
+    role: "user" as const,
   },
   {
     id: 3,
     name: "Mike Johnson",
     email: "mike.johnson@example.com",
     lastLogin: "2024-03-14",
+    role: "user" as const,
   },
 ];
 
@@ -40,7 +48,11 @@ export default async function StaffLayout({
   }>;
 }) {
   const { domain } = await params;
-  const staffMembersPromise = demoGetStaffMembers(domain);
+  const marathon = await getMarathonByDomain(domain);
+  if (!marathon) {
+    notFound();
+  }
+  const staffMembersPromise = getStaffMembersByDomain(domain);
 
   return (
     <div className="flex overflow-hidden h-full  mx-auto">

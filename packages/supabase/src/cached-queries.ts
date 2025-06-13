@@ -18,6 +18,8 @@ import {
   zippedSubmissionsByMarathonIdTag,
   juryInvitationByIdTag,
   juryInvitationsByDomainTag,
+  staffMembersByDomainTag,
+  staffMemberByIdTag,
 } from "./cache-tags";
 
 import { createClient } from "./clients/lambda";
@@ -37,7 +39,15 @@ import {
   getZippedSubmissionsByDomainQuery,
   getSubmissionsForJuryQuery,
   getJuryInvitationsByMarathonIdQuery,
+  getStaffMembersByDomainQuery,
+  getStaffMemberByIdQuery,
 } from "./queries";
+import {
+  JuryInvitation,
+  Submission,
+  User,
+  UserMarathonRelation,
+} from "./types";
 
 export async function getUserMarathons(userId: string) {
   "use cache";
@@ -164,7 +174,9 @@ export async function getCachedZippedSubmissionsByMarathonId(
   return data;
 }
 
-export async function getJuryInvitationsByDomain(domain: string) {
+export async function getJuryInvitationsByDomain(
+  domain: string
+): Promise<JuryInvitation[]> {
   "use cache";
   cacheTag(juryInvitationsByDomainTag({ domain }));
   cacheLife("minutes");
@@ -177,7 +189,9 @@ export async function getJuryInvitationsByDomain(domain: string) {
   return data;
 }
 
-export async function getJuryInvitationById(invitationId: number) {
+export async function getJuryInvitationById(
+  invitationId: number
+): Promise<JuryInvitation | null> {
   "use cache";
   cacheTag(juryInvitationByIdTag({ invitationId }));
   cacheLife("minutes");
@@ -191,10 +205,32 @@ export async function getSubmissionsForJury(filters: {
   competitionClassId?: number | null;
   deviceGroupId?: number | null;
   topicId?: number | null;
-}) {
+}): Promise<Submission[]> {
   "use cache";
   cacheLife("minutes");
   const supabase = await createClient();
   const data = await getSubmissionsForJuryQuery(supabase, filters);
+  return data;
+}
+
+export async function getStaffMembersByDomain(
+  domain: string
+): Promise<(UserMarathonRelation & { user: User })[]> {
+  "use cache";
+  cacheTag(staffMembersByDomainTag({ domain }));
+  cacheLife("minutes");
+  const supabase = await createClient();
+  const data = await getStaffMembersByDomainQuery(supabase, domain);
+  return data;
+}
+
+export async function getStaffMemberById(
+  staffId: number
+): Promise<(UserMarathonRelation & { user: User }) | null> {
+  "use cache";
+  cacheTag(staffMemberByIdTag({ staffId }));
+  cacheLife("minutes");
+  const supabase = await createClient();
+  const data = await getStaffMemberByIdQuery(supabase, staffId);
   return data;
 }

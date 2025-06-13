@@ -21,8 +21,11 @@ import {
   InsertJuryInvitation,
   JuryInvitation,
   UpdateJuryInvitation,
+  InsertUser,
+  InsertUserMarathonRelation,
 } from "./types";
 import { toCamelCase, toSnakeCase } from "./utils/format-helpers";
+import crypto from "crypto";
 
 export async function createParticipant(
   supabase: SupabaseClient,
@@ -393,6 +396,38 @@ export const updateZippedSubmission = async (
     .from("zipped_submissions")
     .update(toSnakeCase(dto))
     .eq("id", id)
+    .select()
+    .single()
+    .throwOnError();
+  return toCamelCase(data);
+};
+
+export const createUser = async (
+  supabase: SupabaseClient,
+  dto: Pick<InsertUser, "email" | "name">
+) => {
+  const { data } = await supabase
+    .from("user")
+    .insert({
+      id: crypto.randomUUID(),
+      ...dto,
+      emailVerified: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    })
+    .select()
+    .single()
+    .throwOnError();
+  return toCamelCase(data);
+};
+
+export const createUserMarathonRelation = async (
+  supabase: SupabaseClient,
+  dto: InsertUserMarathonRelation
+) => {
+  const { data } = await supabase
+    .from("user_marathons")
+    .insert(toSnakeCase(dto))
     .select()
     .single()
     .throwOnError();

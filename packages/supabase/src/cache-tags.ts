@@ -79,3 +79,11 @@ export function juryInvitationByIdTag({
 }) {
   return `jury-invitation-${invitationId}`;
 }
+
+export function staffMembersByDomainTag({ domain }: { domain: string }) {
+  return `staff-members-${domain}`;
+}
+
+export function staffMemberByIdTag({ staffId }: { staffId: number }) {
+  return `staff-member-${staffId}`;
+}

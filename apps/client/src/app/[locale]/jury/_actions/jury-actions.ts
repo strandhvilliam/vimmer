@@ -24,7 +24,6 @@ export const updateInvitationStatusAction = actionClient
       }
     );
 
-    // Revalidate the current path to refresh the UI
     revalidatePath("/jury");
 
     return updatedInvitation;
