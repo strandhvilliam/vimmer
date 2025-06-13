@@ -1,10 +1,11 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import { AppHeader } from "@/components/app-header";
 import { SidebarInset, SidebarProvider } from "@vimmer/ui/components/sidebar";
-import { auth, getSession } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { SessionProvider } from "@/lib/hooks/use-session";
 import { Toaster } from "@vimmer/ui/components/sonner";
-import { DotPattern } from "@vimmer/ui/components/dot-pattern";
+import { getMarathonByDomain } from "@vimmer/supabase/cached-queries";
+import { notFound, redirect } from "next/navigation";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -20,6 +21,14 @@ export default async function DashboardLayout({
   const { domain } = await params;
 
   const sessionPromise = getSession();
+  const marathon = await getMarathonByDomain(domain);
+
+  if (!marathon) {
+    return notFound();
+  }
+  if (!marathon.setupCompleted) {
+    return redirect(`/onboarding`);
+  }
 
   return (
     <SessionProvider sessionPromise={sessionPromise}>

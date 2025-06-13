@@ -68,6 +68,10 @@ export async function middleware(request: NextRequest) {
       return response;
     }
 
+    if (url.pathname === "/onboarding") {
+      return response;
+    }
+
     if (urlDomain && urlDomain !== activeDomainCookie) {
       const redirectUrl = new URL(`/${activeDomainCookie}`, request.url);
       return NextResponse.redirect(redirectUrl);
