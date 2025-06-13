@@ -84,6 +84,6 @@ export function staffMembersByDomainTag({ domain }: { domain: string }) {
   return `staff-members-${domain}`;
 }
 
-export function staffMemberByIdTag({ staffId }: { staffId: number }) {
+export function staffMemberByIdTag({ staffId }: { staffId: string }) {
   return `staff-member-${staffId}`;
 }

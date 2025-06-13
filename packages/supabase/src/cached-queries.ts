@@ -43,10 +43,14 @@ import {
   getStaffMemberByIdQuery,
 } from "./queries";
 import {
+  CompetitionClass,
+  DeviceGroup,
   JuryInvitation,
+  Participant,
   Submission,
   User,
   UserMarathonRelation,
+  ValidationResult,
 } from "./types";
 
 export async function getUserMarathons(userId: string) {
@@ -106,7 +110,15 @@ export async function getParticipantsByDomain(domain: string) {
 export async function getParticipantByReference(
   domain: string,
   reference: string
-) {
+): Promise<
+  | (Participant & {
+      submissions: Submission[];
+      competitionClass: CompetitionClass | null;
+      deviceGroup: DeviceGroup | null;
+      validationResults: ValidationResult[];
+    })
+  | null
+> {
   "use cache";
   cacheTag(participantByReferenceTag({ domain, reference }));
   cacheLife("minutes");
@@ -225,7 +237,7 @@ export async function getStaffMembersByDomain(
 }
 
 export async function getStaffMemberById(
-  staffId: number
+  staffId: string
 ): Promise<(UserMarathonRelation & { user: User }) | null> {
   "use cache";
   cacheTag(staffMemberByIdTag({ staffId }));

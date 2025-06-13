@@ -1,4 +1,5 @@
 "use client";
+"use no memo";
 
 import {
   Table,
@@ -11,12 +12,16 @@ import {
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@vimmer/ui/components/pagination";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@vimmer/ui/components/popover";
 import { format } from "date-fns";
 import {
   createColumnHelper,
@@ -25,45 +30,95 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import {
+  ParticipantVerification,
+  Participant,
+  ValidationResult,
+  CompetitionClass,
+  DeviceGroup,
+} from "@vimmer/supabase/types";
+// import { useAction } from "next-safe-action/hooks";
 
-interface Submission {
-  id: number;
-  participantName: string;
-  participantNumber: string;
-  topic: string;
-  acceptedAt: Date;
-}
+type VerificationWithParticipant = ParticipantVerification & {
+  participant: Participant & {
+    validationResults: ValidationResult[];
+    competitionClass: CompetitionClass | null;
+    deviceGroup: DeviceGroup | null;
+  };
+};
 
-const columnHelper = createColumnHelper<Submission>();
+const columnHelper = createColumnHelper<VerificationWithParticipant>();
 
 const columns = [
-  columnHelper.accessor("participantName", {
-    header: "Participant",
-    cell: (info) => info.getValue(),
-  }),
-  columnHelper.accessor("participantNumber", {
+  columnHelper.accessor(
+    (row) => `${row.participant.firstname} ${row.participant.lastname}`,
+    {
+      id: "participantName",
+      header: "Participant",
+      cell: (info) => info.getValue(),
+    }
+  ),
+  columnHelper.accessor("participant.reference", {
     header: "Number",
     cell: (info) => info.getValue(),
   }),
-  columnHelper.accessor("topic", {
-    header: "Topic",
-    cell: (info) => info.getValue(),
+  columnHelper.accessor("participant.competitionClass.name", {
+    header: "Competition Class",
+    cell: (info) => info.getValue() || "N/A",
   }),
-  columnHelper.accessor("acceptedAt", {
+  columnHelper.accessor("notes", {
+    header: "Notes",
+    cell: (info) => {
+      const notes = info.getValue();
+      if (!notes) return "—";
+
+      const truncatedNotes =
+        notes.length > 50 ? `${notes.substring(0, 50)}...` : notes;
+
+      if (notes.length <= 50) {
+        return <span>{notes}</span>;
+      }
+
+      return (
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="text-left hover:text-blue-600 cursor-pointer">
+              {truncatedNotes}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-3">
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">Full Note</h4>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                {notes}
+              </p>
+            </div>
+          </PopoverContent>
+        </Popover>
+      );
+    },
+  }),
+  columnHelper.accessor("createdAt", {
     header: "Accepted At",
-    cell: (info) => format(info.getValue(), "MMM d, yyyy HH:mm"),
+    cell: (info) => format(new Date(info.getValue()), "MMM d, yyyy HH:mm"),
   }),
 ];
 
 interface AcceptedParticipantsTableProps {
-  submissions: Submission[];
+  verifications: (ParticipantVerification & {
+    participant: Participant & {
+      validationResults: ValidationResult[];
+      competitionClass: CompetitionClass | null;
+      deviceGroup: DeviceGroup | null;
+    };
+  })[];
 }
 
 export function AcceptedParticipantsTable({
-  submissions,
+  verifications,
 }: AcceptedParticipantsTableProps) {
   const table = useReactTable({
-    data: submissions,
+    data: verifications,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -111,7 +166,7 @@ export function AcceptedParticipantsTable({
                   colSpan={columns.length}
                   className="text-center text-muted-foreground"
                 >
-                  No submissions yet
+                  No accepted participants yet
                 </TableCell>
               </TableRow>
             )}

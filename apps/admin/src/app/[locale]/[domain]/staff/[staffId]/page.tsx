@@ -1,97 +1,37 @@
 import { Avatar, AvatarFallback } from "@vimmer/ui/components/avatar";
 import { Button } from "@vimmer/ui/components/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@vimmer/ui/components/table";
-import { format } from "date-fns";
 import { Mail, Trash2, User2Icon, Pencil } from "lucide-react";
 import { ScrollArea } from "@vimmer/ui/components/scroll-area";
 import { notFound } from "next/navigation";
 import { AcceptedParticipantsTable } from "./accepted-participants-table";
 import { Badge } from "@vimmer/ui/components/badge";
+import { RefreshButton } from "./refresh-button";
 import {
-  getParticipantsByDomain,
   getParticipantVerificationsByStaffId,
   getStaffMemberById,
 } from "@vimmer/supabase/cached-queries";
 
-const staffMembers = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john.doe@example.com",
-    lastLogin: new Date(),
-    role: "admin" as const,
-    submissions: [
-      {
-        id: 1,
-        participantName: "Alice Smith",
-        participantNumber: "P001",
-        topic: "Nature",
-        acceptedAt: new Date(2024, 2, 15, 14, 30),
-      },
-      {
-        id: 2,
-        participantName: "Bob Johnson",
-        participantNumber: "P002",
-        topic: "Urban Life",
-        acceptedAt: new Date(2024, 2, 15, 15, 45),
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    lastLogin: new Date(2024, 2, 15),
-    role: "user" as const,
-    submissions: [],
-  },
-  {
-    id: 3,
-    name: "Mike Johnson",
-    email: "mike.johnson@example.com",
-    lastLogin: new Date(2024, 2, 14),
-    role: "user" as const,
-    submissions: [],
-  },
-];
-
-async function demoGetStaffMember(staffId: string) {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  return staffMembers.find((s) => s.id === Number(staffId));
-}
-
 interface PageProps {
   params: Promise<{
-    domain: string;
     staffId: string;
   }>;
 }
 
 export default async function StaffDetailsPage({ params }: PageProps) {
-  const { staffId, domain } = await params;
-  const staff = await getStaffMemberById(Number(staffId));
+  const { staffId } = await params;
+  const staff = await getStaffMemberById(staffId);
 
   if (!staff) {
     notFound();
   }
-  const participants = await getParticipantsByDomain(domain);
 
-  const verifications = await getParticipantVerificationsByStaffId(
-    staff.user.id
+  const verifications = (
+    await getParticipantVerificationsByStaffId(staff.userId)
+  ).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
-  const submissions = participants.filter((participant) =>
-    verifications.some(
-      (verification) => verification.participantId === participant.id
-    )
-  );
+  console.log({ verifications });
 
   return (
     <>
@@ -119,6 +59,7 @@ export default async function StaffDetailsPage({ params }: PageProps) {
             </div>
           </div>
           <div className="flex gap-2">
+            <RefreshButton staffId={staffId} />
             <Button size="sm" variant="outline">
               <Pencil className="h-4 w-4" />
               Edit
@@ -132,7 +73,7 @@ export default async function StaffDetailsPage({ params }: PageProps) {
       </div>
 
       <ScrollArea className="flex-1 p-8">
-        <AcceptedParticipantsTable submissions={[]} />
+        <AcceptedParticipantsTable verifications={verifications} />
       </ScrollArea>
     </>
   );

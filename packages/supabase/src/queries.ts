@@ -40,7 +40,15 @@ export async function getParticipantByIdQuery(
 export async function getParticipantByReferenceQuery(
   supabase: SupabaseClient,
   { reference, domain }: { reference: string; domain: string }
-): Promise<Participant | null> {
+): Promise<
+  | (Participant & {
+      submissions: Submission[];
+      competitionClass: CompetitionClass | null;
+      deviceGroup: DeviceGroup | null;
+      validationResults: ValidationResult[];
+    })
+  | null
+> {
   const { data } = await supabase
     .from("participants")
     .select(
@@ -375,7 +383,15 @@ export async function getJuryInvitationByIdQuery(
 export async function getParticipantVerificationsByStaffIdQuery(
   supabase: SupabaseClient,
   staffId: string
-): Promise<ParticipantVerification[]> {
+): Promise<
+  (ParticipantVerification & {
+    participant: Participant & {
+      validationResults: ValidationResult[];
+      competitionClass: CompetitionClass | null;
+      deviceGroup: DeviceGroup | null;
+    };
+  })[]
+> {
   const { data } = await supabase
     .from("participant_verifications")
     .select(
@@ -499,7 +515,7 @@ export async function getStaffMembersByDomainQuery(
 
 export async function getStaffMemberByIdQuery(
   supabase: SupabaseClient,
-  staffId: number
+  staffId: string
 ): Promise<
   | (UserMarathonRelation & {
       user: User & { participantVerifications: ParticipantVerification[] };
@@ -509,7 +525,7 @@ export async function getStaffMemberByIdQuery(
   const { data } = await supabase
     .from("user_marathons")
     .select("*, user(*, participant_verifications(*))")
-    .eq("id", staffId)
+    .eq("user_id", staffId)
     .maybeSingle()
     .throwOnError();
 

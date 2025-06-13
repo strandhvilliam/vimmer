@@ -17,7 +17,7 @@ export function StaffListMenu({
   domain: string;
   staffMembersPromise: Promise<(UserMarathonRelation & { user: User })[]>;
 }) {
-  const { staffId } = useParams();
+  const { staffId } = useParams<{ staffId: string }>();
   const staffMembers = use(staffMembersPromise);
 
   const [search, setSearch] = useState("");
@@ -30,6 +30,8 @@ export function StaffListMenu({
     );
     setFilteredStaff(filteredStaff);
   }, [search, staffMembers]);
+
+  console.log({ staffMembers });
 
   return (
     <>
@@ -46,10 +48,10 @@ export function StaffListMenu({
         <div className="space-y-2 p-2">
           {filteredStaff.map((staff) => (
             <Link
-              key={staff.id}
-              href={`/${domain}/staff/${staff.id}`}
+              key={staff.userId}
+              href={`/${domain}/staff/${staff.userId}`}
               className={`block w-full p-2 text-left  transition-colors rounded-md ${
-                Number(staffId) === staff.id ? "bg-gray-100" : ""
+                staffId === staff.userId ? "bg-gray-100" : ""
               }`}
             >
               <div className="flex items-center gap-3">

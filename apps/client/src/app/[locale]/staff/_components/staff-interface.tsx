@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { QrCodeIcon, PenIcon, UsersIcon, LogOutIcon } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import { DotPattern } from "@vimmer/ui/components/dot-pattern";
@@ -41,7 +41,12 @@ export function StaffInterface({
 }: StaffInterfaceProps) {
   const [participantDataIsOpen, setParticipantDataIsOpen] = useState(false);
   const [participantData, setParticipantData] = useState<
-    (Participant & { validationResults: ValidationResult[] }) | null
+    | (Participant & {
+        validationResults: ValidationResult[];
+        competitionClass: CompetitionClass | null;
+        deviceGroup: DeviceGroup | null;
+      })
+    | null
   >(null);
   const [qrScanOpen, setQrScanOpen] = useState(false);
   const [manualEntryOpen, setManualEntryOpen] = useState(false);
