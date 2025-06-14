@@ -14,7 +14,11 @@ type DashboardContextType = {
   competitionClassesPromise: Promise<CompetitionClass[]>;
   deviceGroupsPromise: Promise<DeviceGroup[]>;
   participantsPromise: Promise<
-    (Participant & { validationResults: ValidationResult[] })[]
+    (Participant & {
+      competitionClass: CompetitionClass | null;
+      deviceGroup: DeviceGroup | null;
+      validationResults: ValidationResult[];
+    })[]
   >;
 };
 
@@ -37,7 +41,11 @@ export function DashboardProvider({
   competitionClassesPromise: Promise<CompetitionClass[]>;
   deviceGroupsPromise: Promise<DeviceGroup[]>;
   participantsPromise: Promise<
-    (Participant & { validationResults: ValidationResult[] })[]
+    (Participant & {
+      competitionClass: CompetitionClass | null;
+      deviceGroup: DeviceGroup | null;
+      validationResults: ValidationResult[];
+    })[]
   >;
   children: ReactNode;
 }) {

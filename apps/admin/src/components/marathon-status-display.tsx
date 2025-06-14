@@ -12,10 +12,17 @@ interface MarathonStatusDisplayProps {
 }
 
 function formatCountdown(seconds: number) {
-  const hours = Math.floor(seconds / 3600);
+  const days = Math.floor(seconds / 86400); // 86400 seconds in a day
+  const hours = Math.floor((seconds % 86400) / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const remainingSeconds = seconds % 60;
 
+  // If more than 24 hours (1 day), show days and hours
+  if (seconds >= 86400) {
+    return `${days}d ${hours.toString().padStart(2, "0")}h`;
+  }
+
+  // Otherwise show hours:minutes:seconds
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
 
@@ -29,6 +36,54 @@ export function MarathonStatusDisplay({
     "not-setup" | "upcoming" | "live" | "ended"
   >("upcoming");
 
+  useEffect(() => {
+    const updateCountdownAndStatus = () => {
+      const now = new Date();
+
+      // If setup is not complete, show not-setup status
+      if (!isSetupComplete) {
+        setStatus("not-setup");
+        setCountdown("00:00:00");
+        return;
+      }
+
+      // If no dates are provided, default to upcoming
+      if (!marathonStartDate || !marathonEndDate) {
+        setStatus("upcoming");
+        setCountdown("00:00:00");
+        return;
+      }
+
+      const startDate = new Date(marathonStartDate);
+      const endDate = new Date(marathonEndDate);
+
+      if (now < startDate) {
+        // Marathon hasn't started yet - countdown to start
+        setStatus("upcoming");
+        const secondsUntilStart = differenceInSeconds(startDate, now);
+        setCountdown(formatCountdown(Math.max(0, secondsUntilStart)));
+      } else if (now >= startDate && now <= endDate) {
+        // Marathon is currently running - countdown to end
+        setStatus("live");
+        const secondsUntilEnd = differenceInSeconds(endDate, now);
+        setCountdown(formatCountdown(Math.max(0, secondsUntilEnd)));
+      } else {
+        // Marathon has ended
+        setStatus("ended");
+        setCountdown("00:00:00");
+      }
+    };
+
+    // Update immediately
+    updateCountdownAndStatus();
+
+    // Set up interval to update every second
+    const interval = setInterval(updateCountdownAndStatus, 1000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(interval);
+  }, [marathonStartDate, marathonEndDate, isSetupComplete]);
+
   return (
     <div className="flex items-center gap-4">
       {status === "not-setup" && (
@@ -39,18 +94,22 @@ export function MarathonStatusDisplay({
       {status === "upcoming" && (
         <div className="flex items-center gap-2">
           <Badge variant="secondary">Upcoming</Badge>
-          <span className="text-sm font-medium">{countdown}</span>
+          <span className="text-sm font-medium font-mono">{countdown}</span>
         </div>
       )}
       {status === "live" && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Badge
             variant="default"
-            className="bg-green-500 hover:bg-green-500/80"
+            className="bg-vimmer-primary hover:bg-vimmer-primary/80 text-white font-bold px-3 py-1 text-sm animate-pulse"
           >
-            LIVE
+            🔴 LIVE
           </Badge>
-          <span className="text-sm font-medium">{countdown}</span>
+          <div className="flex flex-col">
+            <span className="text-lg font-bold font-mono text-vimmer-primary">
+              {countdown}
+            </span>
+          </div>
         </div>
       )}
       {status === "ended" && <Badge variant="secondary">Ended</Badge>}

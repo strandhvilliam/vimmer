@@ -80,7 +80,9 @@ export async function getMarathonByDomain(domain: string) {
   return data;
 }
 
-export async function getCompetitionClassesByDomain(domain: string) {
+export async function getCompetitionClassesByDomain(
+  domain: string
+): Promise<CompetitionClass[]> {
   "use cache";
   cacheTag(competitionClassesByDomainTag({ domain }));
   cacheLife("hours");
@@ -89,7 +91,9 @@ export async function getCompetitionClassesByDomain(domain: string) {
   return data;
 }
 
-export async function getDeviceGroupsByDomain(domain: string) {
+export async function getDeviceGroupsByDomain(
+  domain: string
+): Promise<DeviceGroup[]> {
   "use cache";
   cacheTag(deviceGroupsByDomainTag({ domain }));
   cacheLife("hours");
@@ -98,7 +102,13 @@ export async function getDeviceGroupsByDomain(domain: string) {
   return data;
 }
 
-export async function getParticipantsByDomain(domain: string) {
+export async function getParticipantsByDomain(domain: string): Promise<
+  (Participant & {
+    competitionClass: CompetitionClass | null;
+    deviceGroup: DeviceGroup | null;
+    validationResults: ValidationResult[];
+  })[]
+> {
   "use cache";
   cacheTag(participantsByDomainTag({ domain }));
   cacheLife("minutes");

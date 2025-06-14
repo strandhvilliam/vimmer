@@ -308,7 +308,13 @@ export async function getDeviceGroupByIdQuery(
 export async function getParticipantsByDomainQuery(
   supabase: SupabaseClient,
   domain: string
-): Promise<Participant[]> {
+): Promise<
+  (Participant & {
+    competitionClass: CompetitionClass | null;
+    deviceGroup: DeviceGroup | null;
+    validationResults: ValidationResult[];
+  })[]
+> {
   const { data } = await supabase
     .from("participants")
     .select(
