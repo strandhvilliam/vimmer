@@ -173,6 +173,11 @@ export default $config({
       ],
     });
 
+    const api = new sst.aws.Function("Api", {
+      handler: "./apps/api/index.handler",
+      url: true,
+    });
+
     const clientApp = new sst.aws.Nextjs("ClientApp", {
       path: "./apps/client",
       dev: {
@@ -213,6 +218,7 @@ export default $config({
       apps: {
         client: clientApp.url,
         admin: adminApp.url,
+        api: api.url,
       },
       buckets: {
         submissionBucket: submissionBucket.name,

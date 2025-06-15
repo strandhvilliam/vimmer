@@ -9,6 +9,11 @@ declare module "sst" {
       "type": "sst.aws.Nextjs"
       "url": string
     }
+    "Api": {
+      "name": string
+      "type": "sst.aws.Function"
+      "url": string
+    }
     "ClientApp": {
       "type": "sst.aws.Nextjs"
       "url": string
