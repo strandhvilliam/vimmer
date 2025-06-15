@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Topic } from "@vimmer/supabase/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

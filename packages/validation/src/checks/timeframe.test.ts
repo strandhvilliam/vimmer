@@ -1,7 +1,7 @@
 import { test, expect, describe } from "bun:test";
-import { validate as checkTimeframe } from "./timeframe.js";
-import { createMockInput } from "../utils.js";
-import { VALIDATION_OUTCOME } from "../constants.js";
+import { validate as checkTimeframe } from "./timeframe";
+import { createMockInput } from "../utils";
+import { VALIDATION_OUTCOME } from "../constants";
 
 describe("timeframe check", () => {
   test("should validate images within timeframe", () => {

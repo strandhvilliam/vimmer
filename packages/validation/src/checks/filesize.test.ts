@@ -1,7 +1,7 @@
 import { test, expect, describe } from "bun:test";
-import { validate as checkFileSize } from "./filesize.js";
-import { createMockInput } from "../utils.js";
-import { VALIDATION_OUTCOME } from "../constants.js";
+import { validate as checkFileSize } from "./filesize";
+import { createMockInput } from "../utils";
+import { VALIDATION_OUTCOME } from "../constants";
 
 describe("filesize check", () => {
   test("should validate files under the size limit", () => {

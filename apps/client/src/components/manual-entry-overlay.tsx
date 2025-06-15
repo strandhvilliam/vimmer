@@ -11,7 +11,6 @@ import {
 } from "@vimmer/ui/components/sheet";
 import { cn } from "@vimmer/ui/lib/utils";
 import * as React from "react";
-import { useRef, useState } from "react";
 
 interface ManualEntrySheetProps {
   open: boolean;
@@ -25,7 +24,6 @@ export function ManualEntrySheet({
   onEnterAction,
 }: ManualEntrySheetProps) {
   const [inputValue, setInputValue] = React.useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
   const domain = useDomain();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -65,7 +63,6 @@ export function ManualEntrySheet({
           <div className="px-4">
             <Input
               autoFocus
-              ref={inputRef}
               type="number"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}

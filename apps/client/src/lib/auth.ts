@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { resend } from "./resend";
 import { OTPEmail } from "@vimmer/email/otp-email";
 import { render } from "@react-email/render";
+import { AWS_CONFIG } from "@/config/aws";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -23,6 +24,11 @@ export const auth = betterAuth({
       },
     },
   },
+  trustedOrigins: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    `https://${AWS_CONFIG.routers.clientApp}`,
+  ],
   cookieCache: {
     enabled: true,
     maxAge: 5 * 60,

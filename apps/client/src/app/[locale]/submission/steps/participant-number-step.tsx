@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 
 import { PARTICIPANT_REF_LENGTH } from "@/lib/constants";

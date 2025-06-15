@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     dynamicIO: true,
     reactCompiler: true,
     ppr: true,
+    useCache: true,
   },
 };
 

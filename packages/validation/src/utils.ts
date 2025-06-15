@@ -6,10 +6,10 @@ import type {
   ValidationFunction,
   ValidationInput,
   ValidationOutcome,
-} from "./types.js";
-import type { ValidationResult } from "./types.js";
+} from "./types";
+import type { ValidationResult } from "./types";
 import { z } from "zod";
-import { RULE_KEYS, VALIDATION_OUTCOME } from "./constants.js";
+import { RULE_KEYS, VALIDATION_OUTCOME } from "./constants";
 
 export const createValidationResult = (
   outcome: ValidationOutcome,

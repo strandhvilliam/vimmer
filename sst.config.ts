@@ -75,9 +75,9 @@ export default $config({
 
     const exportSubmissionsTask = new sst.aws.Task("ExportSubmissionsTask", {
       cluster,
+      architecture: "arm64",
       image: {
-        context: "./services/export-submission-zip",
-        dockerfile: "Dockerfile",
+        dockerfile: "./services/export-submission-zip/Dockerfile",
       },
       environment: env,
       link: [submissionBucket, thumbnailBucket, previewBucket, exportsBucket],
@@ -96,9 +96,9 @@ export default $config({
       "GenerateParticipantZipTask",
       {
         cluster,
+        architecture: "arm64",
         image: {
-          context: "./services/generate-participant-zip",
-          dockerfile: "Dockerfile",
+          dockerfile: "./services/generate-participant-zip/Dockerfile",
         },
         environment: env,
         link: [submissionBucket, thumbnailBucket, previewBucket, exportsBucket],
@@ -113,16 +113,6 @@ export default $config({
         },
       }
     );
-
-    // const photoValidatorFunction = new sst.aws.Function(
-    //   "PhotoValidatorFunction",
-    //   {
-    //     handler: "services/photo-validator/index.handler",
-    //     environment: env,
-    //     link: [submissionBucket],
-    //     url: true,
-    //   }
-    // );
 
     const exportCaller = new sst.aws.Function("ExportCaller", {
       handler: "services/export-caller/index.handler",
@@ -141,15 +131,6 @@ export default $config({
       }
     );
 
-    // const generateParticipantZipQueue = new sst.aws.Queue(
-    //   "GenerateParticipantZipQueue"
-    // );
-
-    // generateParticipantZipQueue.subscribe({
-    //   handler: "./services/generate-participant-zip/index.handler",
-    //   environment: env,
-    //   link: [submissionBucket, thumbnailBucket, previewBucket, exportsBucket],
-    // });
     const processSubmissionQueue = new sst.aws.Queue("ProcessPhotoQueue");
     const validateSubmissionQueue = new sst.aws.Queue(
       "ValidateSubmissionQueue"
@@ -192,20 +173,46 @@ export default $config({
       ],
     });
 
-    // new sst.aws.Cron("ScheduledTopicsCron", {
-    //   function: {
-    //     handler: "services/scheduled-topics-cron/index.handler",
-    //     environment: env,
-    //     // link: [adminApp],
-    //   },
-    //   schedule: "rate(1 minute)",
-    // });
+    const clientApp = new sst.aws.Nextjs("ClientApp", {
+      path: "./apps/client",
+      dev: {
+        command: "bun run dev --port 3000",
+      },
+      link: [
+        submissionBucket,
+        thumbnailBucket,
+        previewBucket,
+        exportsBucket,
+        submissionsRouter,
+        thumbnailsRouter,
+        previewsRouter,
+        marathonSettingsRouter,
+      ],
+    });
+
+    const adminApp = new sst.aws.Nextjs("AdminApp", {
+      path: "./apps/admin",
+      dev: {
+        command: "bun run dev --port 3001",
+      },
+      link: [
+        submissionBucket,
+        thumbnailBucket,
+        previewBucket,
+        exportsBucket,
+        marathonSettingsBucket,
+        submissionsRouter,
+        thumbnailsRouter,
+        previewsRouter,
+        marathonSettingsRouter,
+        clientApp,
+      ],
+    });
 
     return {
       apps: {
-        // client: clientApp.url,
-        // staff: staffApp.url,
-        // admin: adminApp.url,
+        client: clientApp.url,
+        admin: adminApp.url,
       },
       buckets: {
         submissionBucket: submissionBucket.name,
@@ -216,10 +223,8 @@ export default $config({
       },
       functions: {
         // photoValidatorFunction: photoValidatorFunction.url,
-        exportSubmissionsTask: exportSubmissionsTask.urn,
         exportCaller: exportCaller.url,
         downloadPresignedFunction: downloadPresignedFunction.url,
-        generateParticipantZipTask: generateParticipantZipTask.urn,
       },
       routers: {
         submissionsRouter: submissionsRouter.url,

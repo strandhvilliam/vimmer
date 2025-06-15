@@ -160,7 +160,7 @@ export async function exportSubmissionsToZip({
     for (let i = 0; i < participants.length; i++) {
       const participant = participants[i];
 
-      if (!participant.submissions || participant.submissions.length === 0) {
+      if (!participant?.submissions || participant.submissions.length === 0) {
         progress.processedParticipants++;
         await updateProgress(supabase, progress);
         continue;

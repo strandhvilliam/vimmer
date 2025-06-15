@@ -1,5 +1,6 @@
 "use server";
 
+import { AWS_CONFIG } from "@/lib/constants";
 import { actionClient } from "@/lib/safe-action";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -10,7 +11,7 @@ const getOnboardingLogoUploadUrlSchema = z.object({
   currentKey: z.string().nullable(),
 });
 
-const bucket = "vimmer-development-marathonsettingsbucketbucket-huvkamue";
+const bucket = AWS_CONFIG.buckets.marathonSettings;
 
 export const getOnboardingLogoUploadAction = actionClient
   .schema(getOnboardingLogoUploadUrlSchema)

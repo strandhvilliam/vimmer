@@ -1,7 +1,7 @@
 import { test, expect, describe } from "bun:test";
-import { validate as checkModified } from "./modified.js";
-import { RULE_KEYS, VALIDATION_OUTCOME } from "../constants.js";
-import { createMockInput } from "../utils.js";
+import { validate as checkModified } from "./modified";
+import { RULE_KEYS, VALIDATION_OUTCOME } from "../constants";
+import { createMockInput } from "../utils";
 
 describe("modified check", () => {
   test("should validate unmodified images", () => {

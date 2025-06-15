@@ -17,7 +17,7 @@ import { Marathon } from "@vimmer/supabase/types";
 import { SelectDomainTitle } from "@/components/select-domain-title";
 import { DomainSelectSkeleton } from "@/components/domain-select-skeleton";
 
-export async function getUserDomains(): Promise<Marathon[]> {
+async function getUserDomains(): Promise<Marathon[]> {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -27,9 +27,7 @@ export async function getUserDomains(): Promise<Marathon[]> {
   }
   const supabase = await createClient();
   const user = await getUserWithMarathonsQuery(supabase, session.user.id);
-  return (
-    user?.userMarathons.map((userMarathon) => userMarathon.marathons) ?? []
-  );
+  return user?.userMarathons.map((userMarathon) => userMarathon.marathon) ?? [];
 }
 
 export default async function DomainSelectPage() {

@@ -1,3 +1,3 @@
-export * from "./jury-invitation-email.js";
-export * from "./otp-email.js";
-export * from "./staff-invite-email.js";
+export * from "./jury-invitation-email";
+export * from "./otp-email";
+export * from "./staff-invite-email";

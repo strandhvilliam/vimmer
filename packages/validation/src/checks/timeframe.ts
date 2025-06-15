@@ -1,11 +1,11 @@
-import { RULE_KEYS, VALIDATION_OUTCOME } from "../constants.js";
+import { RULE_KEYS, VALIDATION_OUTCOME } from "../constants";
 import type {
   RuleParams,
   ValidationFunction,
   ValidationInput,
   ValidationResult,
-} from "../types.js";
-import { attachFileName, createValidationResult } from "../utils.js";
+} from "../types";
+import { attachFileName, createValidationResult } from "../utils";
 
 function checkTimeframe(
   rule: RuleParams["within_timerange"],

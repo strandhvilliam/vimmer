@@ -5,6 +5,14 @@
 
 declare module "sst" {
   export interface Resource {
+    "AdminApp": {
+      "type": "sst.aws.Nextjs"
+      "url": string
+    }
+    "ClientApp": {
+      "type": "sst.aws.Nextjs"
+      "url": string
+    }
     "DownloadPresignedFunction": {
       "name": string
       "type": "sst.aws.Function"

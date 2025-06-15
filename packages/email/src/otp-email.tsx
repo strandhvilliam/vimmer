@@ -93,5 +93,3 @@ export const OTPEmail = ({
     </Html>
   );
 };
-
-export default OTPEmail;

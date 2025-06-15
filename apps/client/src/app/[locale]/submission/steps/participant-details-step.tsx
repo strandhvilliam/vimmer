@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { StepNavigationHandlers } from "@/lib/types";

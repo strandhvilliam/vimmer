@@ -19,7 +19,15 @@ import { toCamelCase } from "./utils/format-helpers";
 export async function getParticipantByIdQuery(
   supabase: SupabaseClient,
   id: number
-): Promise<Participant | null> {
+): Promise<
+  | (Participant & {
+      submissions: Submission[];
+      competitionClass: CompetitionClass | null;
+      deviceGroup: DeviceGroup | null;
+      validationResults: ValidationResult[];
+    })
+  | null
+> {
   const { data } = await supabase
     .from("participants")
     .select(
@@ -27,7 +35,8 @@ export async function getParticipantByIdQuery(
         *, 
         submissions(*),
         competition_class:competition_classes(*),
-        device_group:device_groups(*)
+        device_group:device_groups(*),
+        validation_results(*)
     `
     )
     .eq("id", id)
@@ -139,13 +148,20 @@ export async function getManySubmissionsByKeysQuery(
 export async function getUserWithMarathonsQuery(
   supabase: SupabaseClient,
   userId: string
-): Promise<(User & { userMarathons: UserMarathonRelation[] }) | null> {
+): Promise<
+  | (User & {
+      userMarathons: (UserMarathonRelation & {
+        marathon: Marathon;
+      })[];
+    })
+  | null
+> {
   const { data } = await supabase
     .from("user")
     .select(
       `
       *,
-      user_marathons (*, marathons (*))
+      user_marathons (*, marathon:marathons (*))
       `
     )
     .eq("id", userId)
@@ -438,7 +454,15 @@ export async function getSubmissionsForJuryQuery(
     deviceGroupId?: number | null;
     topicId?: number | null;
   }
-): Promise<Submission[]> {
+): Promise<
+  (Submission & {
+    participant: Participant & {
+      competitionClass: CompetitionClass | null;
+      deviceGroup: DeviceGroup | null;
+    };
+    topic: Topic;
+  })[]
+> {
   const { data: marathon } = await supabase
     .from("marathons")
     .select("id")

@@ -2,14 +2,14 @@ import {
   RULE_KEYS,
   IMAGE_EXTENSION_TO_MIME_TYPE,
   VALIDATION_OUTCOME,
-} from "../constants.js";
+} from "../constants";
 import type {
   RuleParams,
   ValidationFunction,
   ValidationInput,
   ValidationResult,
-} from "../types.js";
-import { attachFileName, createValidationResult } from "../utils.js";
+} from "../types";
+import { attachFileName, createValidationResult } from "../utils";
 
 function getExtensionFromFilename(
   filename: string

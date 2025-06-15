@@ -11,7 +11,7 @@ import { QrDataArgs } from "@/lib/schemas/verification-data-schema";
 import { qrScanSchema } from "@/lib/schemas/qr-scan-schema";
 import dynamic from "next/dynamic";
 
-const QrScanner = dynamic(() => import("@/components/qr-scanner"), {
+const QrScanner = dynamic(() => import("./qr-scanner"), {
   ssr: false,
 });
 

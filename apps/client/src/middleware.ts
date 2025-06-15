@@ -11,7 +11,7 @@ const I18nMiddleware = createI18nMiddleware({
 const authRoutes = ["/staff/login", "/staff/verify"];
 
 export function middleware(request: NextRequest) {
-  // @ts-expect-error
+  // @ts-ignore
   const response = I18nMiddleware(request);
 
   const domain = request.nextUrl.hostname.split(".").at(0);

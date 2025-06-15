@@ -1,16 +1,25 @@
-FROM oven/bun:1.1-slim
-
+FROM oven/bun:1 as base
 WORKDIR /app
 
-# Copy package.json and install dependencies
-COPY package.json bun.lockb ./
-RUN bun install --frozen-lockfile
+COPY package.json bun.lock ./
 
-# Copy the application code
-COPY . .
+# Copy workspace packages
+COPY packages/ ./packages/
+COPY services/export-submission-zip/ ./services/export-submission-zip/
 
-# Build the application
+# Install dependencies
+RUN bun install
+
+# Build the app
+WORKDIR /app/services/export-submission-zip
 RUN bun run build
 
-# Run the application
-CMD ["bun", "run", "start"] 
+# Production stage
+FROM oven/bun:1-slim as production
+WORKDIR /app
+
+# Copy built application
+COPY --from=base /app/services/export-submission-zip/dist ./dist
+COPY --from=base /app/node_modules ./node_modules
+
+CMD ["bun", "run", "dist/index.js"]

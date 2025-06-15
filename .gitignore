@@ -43,3 +43,7 @@ yarn-error.log*
 
 */**/.prettierrc
 .prettierrc
+
+
+# opennext
+.open-next

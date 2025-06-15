@@ -1,11 +1,5 @@
 {
   "extends": "@vimmer/typescript-config/react-library.json",
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@vimmer/emails/*": ["./src/*"]
-    }
-  },
   "include": ["src", "."],
   "exclude": ["node_modules"]
 }

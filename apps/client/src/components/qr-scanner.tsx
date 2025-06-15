@@ -20,7 +20,6 @@ export default function QrScanner({ onScan, onError }: QrScannerProps) {
       onScan={(result) => result[0] && onScan(result[0].rawValue)}
       components={{
         finder: false,
-        audio: false,
       }}
       classNames={{
         container: "flex flex-grow w-full justify-center items-center",

@@ -1,5 +1,4 @@
 import { User2Icon } from "lucide-react";
-import { notFound } from "next/navigation";
 
 export default function NotFound() {
   return (

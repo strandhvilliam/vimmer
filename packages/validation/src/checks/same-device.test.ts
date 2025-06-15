@@ -1,7 +1,7 @@
 import { test, expect, describe } from "bun:test";
-import { validate as checkSameDevice } from "./same-device.js";
-import { createMockInput } from "../utils.js";
-import { VALIDATION_OUTCOME } from "../constants.js";
+import { validate as checkSameDevice } from "./same-device";
+import { createMockInput } from "../utils";
+import { VALIDATION_OUTCOME } from "../constants";
 
 describe("same-device check", () => {
   test("should validate images from same device", () => {

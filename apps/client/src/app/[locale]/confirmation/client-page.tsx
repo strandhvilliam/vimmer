@@ -18,7 +18,12 @@ interface ConfirmationClientProps {
   images: ConfirmationData[];
 }
 
-const Confetti = dynamic(() => import("react-confetti"), { ssr: false });
+const Confetti = dynamic(
+  () => import("react-confetti").then((mod) => mod.default),
+  {
+    ssr: false,
+  }
+);
 
 export function ConfirmationClient({ images }: ConfirmationClientProps) {
   const [selectedImage, setSelectedImage] = useState<ConfirmationData | null>(

@@ -2,7 +2,7 @@
 
 import { AlertCircle, CheckCircle, Clock } from "lucide-react";
 import { Badge } from "@vimmer/ui/components/badge";
-import { JuryInvitation } from "../types";
+import { JuryInvitation } from "@vimmer/supabase/types";
 
 interface StatusBadgeProps {
   status: JuryInvitation["status"];

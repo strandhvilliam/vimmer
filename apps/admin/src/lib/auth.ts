@@ -5,6 +5,7 @@ import { Pool } from "pg";
 import { resend } from "./resend";
 import { render } from "@react-email/render";
 import { headers } from "next/headers";
+import { AWS_CONFIG } from "./constants";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -25,7 +26,11 @@ export const auth = betterAuth({
     enabled: true,
     maxAge: 5 * 60,
   },
-  trustedOrigins: ["http://localhost:3000", "http://localhost:3001"],
+  trustedOrigins: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    `https://${AWS_CONFIG.routers.adminApp}`,
+  ],
   plugins: [
     admin(),
     emailOTP({

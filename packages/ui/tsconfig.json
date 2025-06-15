@@ -1,11 +1,8 @@
 {
-    "extends": "@vimmer/typescript-config/react-library.json",
-    "compilerOptions": {
-        "baseUrl": ".",
-        "paths": {
-            "@vimmer/ui/*": ["./src/*"]
-        }
-    },
-    "include": ["src"],
-    "exclude": ["node_modules"]
+  "extends": "@vimmer/typescript-config/react-library.json",
+  "compilerOptions": {
+    "rootDir": "./src"
+  },
+  "include": ["./src"],
+  "exclude": ["node_modules"]
 }

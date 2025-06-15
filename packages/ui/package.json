@@ -1,19 +1,24 @@
 {
   "name": "@vimmer/ui",
   "version": "0.0.0",
+  "type": "module",
   "private": true,
+  "sideEffects": false,
+  "files": [
+    "tailwind.config.ts",
+    "postcss.config.js",
+    "globals.css"
+  ],
   "scripts": {
     "ui": "bunx shadcn@latest",
     "lint": "eslint ."
   },
   "peerDependencies": {
-    "react": "^19"
+    "react": "19.1"
   },
   "devDependencies": {
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@vimmer/eslint-config": "workspace:*",
-    "@vimmer/typescript-config": "workspace:*",
+    "@types/react": "^19.1.8",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
     "postcss-load-config": "^6",
@@ -73,8 +78,9 @@
     "./globals.css": "./src/globals.css",
     "./postcss.config": "./postcss.config.mjs",
     "./tailwind.config": "./tailwind.config.ts",
-    "./lib/*": "./src/lib/*.ts",
+    "./lib/utils": "./src/lib/utils.ts",
     "./components/*": "./src/components/*.tsx",
-    "./hooks/*": "./src/hooks/*.ts"
+    "./hooks/*": "./src/hooks/*.ts",
+    "./lib/*": "./src/lib/*.ts"
   }
 }

@@ -5,9 +5,9 @@ import {
   checkSameDevice,
   checkAllowedFileTypes,
   checkFileSize,
-} from "./checks/index.js";
+} from "./checks/index";
 
-import { RULE_KEYS } from "./constants.js";
+import { RULE_KEYS } from "./constants";
 import type {
   RuleConfig,
   RuleKey,
@@ -16,9 +16,9 @@ import type {
   ValidationInput,
   ValidationResult,
   SeverityLevel,
-} from "./types.js";
+} from "./types";
 
-import { createValidationPipeline, pipe } from "./utils.js";
+import { createValidationPipeline, pipe } from "./utils";
 
 const validationFunctions: Record<RuleKey, ValidationFunction<any>> = {
   [RULE_KEYS.MAX_FILE_SIZE]: checkFileSize,

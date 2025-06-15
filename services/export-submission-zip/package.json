@@ -1,7 +1,5 @@
 {
-  "name": "export-submission-zip",
-  "module": "index.ts",
-  "type": "module",
+  "name": "@vimmer/export-submission-zip",
   "scripts": {
     "start": "bun run index.ts",
     "build": "bun build index.ts --target node --minify --outdir dist"
@@ -19,5 +17,8 @@
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
-  }
+  },
+  "module": "index.ts",
+  "type": "module",
+  "private": true
 }

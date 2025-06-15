@@ -1,5 +1,6 @@
 "use server";
 
+import { AWS_CONFIG } from "@/lib/constants";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextRequest, NextResponse } from "next/server";
@@ -10,8 +11,8 @@ const logoUploadSchema = z.object({
   contentType: z.string(),
 });
 
-const bucket = "vimmer-development-marathonsettingsbucketbucket-huvkamue";
-const CDN_URL = "https://d1irn00yzrui1x.cloudfront.net";
+const bucket = AWS_CONFIG.buckets.marathonSettings;
+const CDN_URL = AWS_CONFIG.routers.adminApp;
 
 export async function POST(request: NextRequest) {
   try {

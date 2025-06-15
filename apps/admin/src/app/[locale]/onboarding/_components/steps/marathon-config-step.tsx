@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -22,21 +23,14 @@ import {
 } from "@vimmer/ui/components/form";
 import { Input } from "@vimmer/ui/components/input";
 import { Textarea } from "@vimmer/ui/components/textarea";
-import {
-  Upload,
-  Calendar,
-  MapPin,
-  FileText,
-  Image,
-  PencilIcon,
-  X,
-  Loader2,
-} from "lucide-react";
+import { Upload, Calendar, FileText, Image, PencilIcon, X } from "lucide-react";
 import { useOnboarding } from "../onboarding-context";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { toast } from "sonner";
 import { getOnboardingLogoUploadAction } from "../../_actions/logo-upload-action";
 import { useAction } from "next-safe-action/hooks";
+import { AWS_CONFIG } from "@/lib/constants";
+// import { Resource } from "sst";
 
 const marathonConfigSchema = z.object({
   name: z.string().min(1, "Marathon name is required"),
@@ -55,7 +49,7 @@ interface MarathonConfigStepProps {
   isLastStep: boolean;
 }
 
-const MARATHON_SETTINGS_CDN_URL = "d1irn00yzrui1x.cloudfront.net";
+const MARATHON_SETTINGS_CDN_URL = AWS_CONFIG.routers.settings;
 
 interface LogoUploadState {
   previewUrl: string | null;

@@ -51,6 +51,7 @@ import {
   User,
   UserMarathonRelation,
   ValidationResult,
+  Topic,
 } from "./types";
 
 export async function getUserMarathons(userId: string) {
@@ -227,7 +228,15 @@ export async function getSubmissionsForJury(filters: {
   competitionClassId?: number | null;
   deviceGroupId?: number | null;
   topicId?: number | null;
-}): Promise<Submission[]> {
+}): Promise<
+  (Submission & {
+    participant: Participant & {
+      competitionClass: CompetitionClass | null;
+      deviceGroup: DeviceGroup | null;
+    };
+    topic: Topic;
+  })[]
+> {
   "use cache";
   cacheLife("minutes");
   const supabase = await createClient();

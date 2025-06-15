@@ -4,15 +4,18 @@
   "scripts": {
     "check-aws-account": "if [ \"$(aws sts get-caller-identity --query 'Account' --output text)\" = \"975050331958\" ]; then echo '✅ Correct AWS account'; else echo '❌ Wrong AWS account, aborting.' && exit 1; fi",
     "serve:dev": "bun check-aws-account && sst dev --stage development",
+    "deploy:prod": "bun check-aws-account && sst deploy --stage production",
     "build": "turbo build",
     "dev": "turbo dev",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "lint": "turbo lint"
+    "lint": "turbo lint",
+    "clean": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' + && echo '🧹 All node_modules directories have been removed'",
+    "fix-react-versions": "node scripts/fix-react-versions.js"
   },
   "devDependencies": {
     "@types/aws-lambda": "8.10.146",
-    "prettier": "^3.2.5",
-    "turbo": "^2.5.0",
+    "prettier": "^3.5.3",
+    "turbo": "^2.5.4",
     "typescript": "5.5.4"
   },
   "engines": {
@@ -25,9 +28,9 @@
     "services/*"
   ],
   "dependencies": {
-    "@aws-sdk/lib-storage": "^3.812.0",
+    "@aws-sdk/lib-storage": "^3.828.0",
     "@types/archiver": "^6.0.3",
     "archiver": "^7.0.1",
-    "sst": "^3.11.21"
+    "sst": "^3.17.5"
   }
 }

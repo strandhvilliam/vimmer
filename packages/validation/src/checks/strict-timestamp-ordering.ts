@@ -1,12 +1,12 @@
-import { RULE_KEYS, VALIDATION_OUTCOME } from "../constants.js";
+import { RULE_KEYS, VALIDATION_OUTCOME } from "../constants";
 import type {
   ExifData,
   RuleParams,
   ValidationFunction,
   ValidationInput,
   ValidationResult,
-} from "../types.js";
-import { createValidationResult } from "../utils.js";
+} from "../types";
+import { createValidationResult } from "../utils";
 
 function getTimestamp(exif: ExifData): Date | null {
   const { DateTimeOriginal, DateTimeDigitized, CreateDate } = exif;

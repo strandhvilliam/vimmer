@@ -18,7 +18,10 @@ import { getCompetitionClassByIdQuery } from "@vimmer/supabase/queries";
 import { juryInvitationsByDomainTag } from "@vimmer/supabase/cache-tags";
 
 const MAX_EXPIRY_DAYS = 90;
-const CLIENT_URL = process.env.NEXT_PUBLIC_CLIENT_URL;
+const CLIENT_URL =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:3000"
+    : "https://d";
 
 const createJuryInvitationSchema = z.object({
   displayName: z.string(),

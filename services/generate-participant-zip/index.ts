@@ -357,7 +357,7 @@ async function exportParticipantSubmissionsToZip({
 
     const participantZip = new JSZip();
     const date = new Date().toISOString().split("T")[0];
-    const time = new Date().toISOString().split("T")[1].split(".")[0];
+    const time = new Date().toISOString().split("T")[1]?.split(".")[0];
     const zipFileName = `${domain}/${date}-${time}/${participant.reference}.zip`;
 
     const result = await processAllSubmissions(participant.submissions, {

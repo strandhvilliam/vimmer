@@ -5,6 +5,7 @@ import { Button } from "@vimmer/ui/components/button";
 import Link from "next/link";
 import { LinkIcon } from "lucide-react";
 import { Separator } from "@vimmer/ui/components/separator";
+import { AWS_CONFIG } from "@/lib/constants";
 
 interface AppHeaderProps {
   domain: string;
@@ -13,15 +14,8 @@ interface AppHeaderProps {
 export async function AppHeader({ domain }: AppHeaderProps) {
   const marathon = await getMarathonByDomain(domain);
 
-  const staffSiteUrl =
-    process.env.NODE_ENV === "production"
-      ? `https://${domain}.pmuploader.com/staff`
-      : `http://localhost:3000/staff`;
-
-  const participantSiteUrl =
-    process.env.NODE_ENV === "production"
-      ? `https://${domain}.pmuploader.com`
-      : `http://localhost:3000`;
+  const staffSiteUrl = `${AWS_CONFIG.routers.clientApp}/staff`;
+  const participantSiteUrl = `${AWS_CONFIG.routers.clientApp}`;
 
   return (
     <div className="z-50 w-full px-4 bg-sidebar">
