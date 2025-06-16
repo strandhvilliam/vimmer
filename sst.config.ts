@@ -174,8 +174,11 @@ export default $config({
     });
 
     const api = new sst.aws.Function("Api", {
-      handler: "./apps/api/index.handler",
+      handler: "./apps/api/src/index.handler",
       url: true,
+      environment: {
+        DATABASE_URL: process.env.DATABASE_URL!,
+      },
     });
 
     const clientApp = new sst.aws.Nextjs("ClientApp", {

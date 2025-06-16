@@ -1,10 +1,11 @@
 {
-  "name": "api",
-  "module": "index.ts",
+  "name": "@vimmer/api",
+  "module": "src/index.ts",
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "drizzle-kit": "^0.31.1"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -13,6 +14,8 @@
     "@hono/trpc-server": "^0.3.4",
     "@trpc/client": "^11.4.1",
     "@trpc/server": "^11.4.1",
-    "hono": "^4.7.11"
+    "drizzle-orm": "^0.44.2",
+    "hono": "^4.7.11",
+    "postgres": "^3.4.7"
   }
 }
