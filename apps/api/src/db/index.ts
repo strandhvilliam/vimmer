@@ -4,6 +4,10 @@ import * as schema from "./schema";
 
 const client = postgres(process.env.DATABASE_URL!, { prepare: false });
 
+export interface IdResponse {
+  id: number | null;
+}
+
 export const connectDb = () =>
   drizzle(client, {
     schema,
