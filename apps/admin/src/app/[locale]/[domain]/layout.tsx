@@ -6,6 +6,7 @@ import { SessionProvider } from "@/lib/hooks/use-session";
 import { Toaster } from "@vimmer/ui/components/sonner";
 import { getMarathonByDomain } from "@vimmer/supabase/cached-queries";
 import { notFound, redirect } from "next/navigation";
+import { DotPattern } from "@vimmer/ui/components/dot-pattern";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -37,6 +38,7 @@ export default async function DashboardLayout({
         <SidebarInset className=" flex flex-1 flex-col max-h-screen overflow-hidden relative">
           <AppHeader domain={domain} />
           <div className="border rounded-tl-2xl overflow-y-auto h-full overflow-hidden relative z-0">
+            <DotPattern className="opacity-10" />
             {children}
           </div>
         </SidebarInset>

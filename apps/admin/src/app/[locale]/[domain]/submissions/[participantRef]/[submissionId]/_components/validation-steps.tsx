@@ -40,7 +40,7 @@ export function ValidationStepsTable({
   return (
     <div className="rounded-md border">
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-muted">
           <TableRow>
             <TableHead>Status</TableHead>
             <TableHead>Rule</TableHead>
@@ -50,7 +50,7 @@ export function ValidationStepsTable({
         <TableBody>
           {validationResults.length > 0 ? (
             validationResults.map((result, index) => (
-              <TableRow key={index}>
+              <TableRow key={index} className="bg-background">
                 <TableCell>
                   {getStatusContent(result.severity, result.outcome)}
                 </TableCell>

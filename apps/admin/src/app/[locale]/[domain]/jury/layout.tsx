@@ -31,7 +31,7 @@ export default async function JuryLayout({
 
   return (
     <div className="flex overflow-hidden h-full mx-auto">
-      <div className="w-80 border-r flex flex-col">
+      <div className="w-80 border-r flex flex-col bg-background">
         <div className="pt-4 space-y-4 bg-background">
           <div className="flex items-center justify-between px-4">
             <h2 className="text-lg font-semibold font-rocgrotesk">

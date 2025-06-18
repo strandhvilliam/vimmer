@@ -455,8 +455,8 @@ export function SubmissionsParticipantsTable({
 
       <div className="rounded-md border">
         <Table>
-          <TableHeader className="bg-muted/50">
-            <TableRow className="hover:bg-transparent">
+          <TableHeader className="bg-muted">
+            <TableRow className="hover:bg-background">
               {table.getFlatHeaders().map((header) => (
                 <TableHead
                   key={header.id}
@@ -478,7 +478,7 @@ export function SubmissionsParticipantsTable({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="cursor-pointer hover:bg-muted/50"
+                  className="cursor-pointer hover:bg-muted/50 bg-background"
                   onClick={() => handleRowClick(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
