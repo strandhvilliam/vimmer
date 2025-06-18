@@ -47,3 +47,5 @@ yarn-error.log*
 
 # opennext
 .open-next
+
+.migrations

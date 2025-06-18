@@ -144,6 +144,9 @@ export default $config({
     processSubmissionQueue.subscribe({
       handler: "./services/photo-processor/index.handler",
       environment: env,
+      nodejs: {
+        install: ["sharp"],
+      },
       link: [
         submissionBucket,
         thumbnailBucket,
