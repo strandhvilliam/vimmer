@@ -1,5 +1,5 @@
 import { eq, and } from "drizzle-orm";
-import type { Database } from "@/db";
+import type { Database, IdResponse } from "@/db";
 import { participants } from "@/db/schema";
 import type {
   Participant,
@@ -74,30 +74,33 @@ export async function getParticipantsByDomainQuery(
 export async function createParticipantMutation(
   db: Database,
   { data }: { data: NewParticipant }
-) {
-  const result = await db.insert(participants).values(data).returning();
-  return result[0];
+): Promise<IdResponse> {
+  const result = await db
+    .insert(participants)
+    .values(data)
+    .returning({ id: participants.id });
+  return { id: result[0]?.id ?? null };
 }
 
 export async function updateParticipantMutation(
   db: Database,
   { id, data }: { id: number; data: Partial<NewParticipant> }
-) {
+): Promise<IdResponse | null> {
   const result = await db
     .update(participants)
     .set(data)
     .where(eq(participants.id, id))
-    .returning();
-  return result[0];
+    .returning({ id: participants.id });
+  return { id: result[0]?.id ?? null };
 }
 
 export async function deleteParticipantMutation(
   db: Database,
   { id }: { id: number }
-) {
+): Promise<IdResponse | null> {
   const result = await db
     .delete(participants)
     .where(eq(participants.id, id))
-    .returning();
-  return result[0];
+    .returning({ id: participants.id });
+  return { id: result[0]?.id ?? null };
 }
