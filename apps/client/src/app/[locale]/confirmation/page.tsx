@@ -11,11 +11,11 @@ import {
 import { notFound, redirect } from "next/navigation";
 import { ConfirmationData } from "@/lib/types";
 import { AWS_CONFIG } from "@/config/aws";
+import { Resource } from "sst";
 
 interface ConfirmationPageProps {
   searchParams: Promise<SearchParams>;
 }
-const THUMBNAIL_BASE_URL = "https://d2xu2hgpxoda9b.cloudfront.net";
 
 export default async function ConfirmationPage({
   searchParams,
@@ -49,10 +49,10 @@ export default async function ConfirmationPage({
     .map((submission) => ({
       id: submission.id.toString(),
       thumbnailUrl: submission.thumbnailKey
-        ? `${THUMBNAIL_BASE_URL}/${submission.thumbnailKey}`
+        ? `${Resource.ThumbnailsRouter.url}/${submission.thumbnailKey}`
         : undefined,
       previewUrl: submission.previewKey
-        ? `${THUMBNAIL_BASE_URL}/${submission.previewKey}`
+        ? `${Resource.PreviewsRouter.url}/${submission.previewKey}`
         : undefined,
       name: submission.topic?.name || `Photo ${submission.id}`,
       orderIndex: submission.topic?.orderIndex ?? 0,

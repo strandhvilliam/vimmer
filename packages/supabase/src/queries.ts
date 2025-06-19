@@ -376,6 +376,34 @@ export async function getRulesByMarathonIdQuery(
   return data?.map(toCamelCase) ?? [];
 }
 
+export async function getRulesByDomainQuery(
+  supabase: SupabaseClient,
+  domain: string
+): Promise<RuleConfig[]> {
+  const { data } = await supabase
+    .from("marathons")
+    .select("rule_configs(*)")
+    .eq("domain", domain)
+    .throwOnError();
+
+  return data?.flatMap(({ rule_configs }) => toCamelCase(rule_configs)) ?? [];
+}
+
+export async function getRuleConfigByMarathonIdAndRuleKeyQuery(
+  supabase: SupabaseClient,
+  marathonId: number,
+  ruleKey: string
+): Promise<RuleConfig | null> {
+  const { data } = await supabase
+    .from("rule_configs")
+    .select("*")
+    .eq("marathon_id", marathonId)
+    .eq("rule_key", ruleKey)
+    .maybeSingle()
+    .throwOnError();
+  return toCamelCase(data);
+}
+
 export async function getJuryInvitationsByMarathonIdQuery(
   supabase: SupabaseClient,
   marathonId: number

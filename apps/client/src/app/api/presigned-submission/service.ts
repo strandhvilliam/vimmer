@@ -2,7 +2,6 @@ import { S3Client } from "@aws-sdk/client-s3";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { formatSubmissionKey } from "@/lib/utils";
 import { generatePresignedUrl } from "@/lib/generate-presigned-url";
-import { AWS_CONFIG } from "@/config/aws";
 import {
   createMultipleSubmissions,
   updateParticipant,
@@ -14,6 +13,8 @@ import {
 } from "@vimmer/supabase/cached-queries";
 import { getManySubmissionsByKeysQuery } from "@vimmer/supabase/queries";
 import { PresignedSubmission } from "@/lib/types";
+import { Submission, Topic } from "@vimmer/supabase/types";
+import { Resource } from "sst";
 
 export class PresignedSubmissionService {
   constructor(
@@ -85,9 +86,9 @@ export class PresignedSubmissionService {
   }
 
   private async handleNewSubmissions(
-    existingSubmissions: any[],
+    existingSubmissions: Submission[],
     submissionKeys: string[],
-    orderedTopics: any[],
+    orderedTopics: Topic[],
     marathonId: number,
     participantId: number
   ): Promise<PresignedSubmission[]> {
@@ -126,8 +127,8 @@ export class PresignedSubmissionService {
   }
 
   private async generatePresignedObjects(
-    submissions: any[],
-    orderedTopics: any[]
+    submissions: Submission[],
+    orderedTopics: Topic[]
   ): Promise<PresignedSubmission[]> {
     const presignedObjects = await Promise.all(
       submissions.map(async (submission) => {
@@ -137,7 +138,7 @@ export class PresignedSubmissionService {
         const presignedUrl = await generatePresignedUrl(
           this.s3,
           submission.key,
-          AWS_CONFIG.buckets.submission
+          Resource.SubmissionBucket.name
         );
         return {
           presignedUrl,

@@ -11,7 +11,8 @@ function getDeviceIdentifier(exif: ExifData): string | null {
   const { Make, Model, SerialNumber } = exif;
 
   if (Make && Model && typeof Make === "string" && typeof Model === "string") {
-    return `${Make}-${Model}${SerialNumber && typeof SerialNumber === "string" ? `-${SerialNumber}` : ""}`;
+    const identifier = `${Make}-${Model}${SerialNumber && typeof SerialNumber === "string" ? `-${SerialNumber}` : ""}`;
+    return identifier;
   }
 
   if (Model && typeof Model === "string") {

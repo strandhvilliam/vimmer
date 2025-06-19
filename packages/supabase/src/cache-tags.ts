@@ -44,6 +44,10 @@ export function rulesByMarathonIdTag({ marathonId }: { marathonId: number }) {
   return `rules-${marathonId}`;
 }
 
+export function rulesByDomainTag({ domain }: { domain: string }) {
+  return `rules-${domain}`;
+}
+
 export function topicsWithSubmissionCountTag({
   marathonId,
 }: {

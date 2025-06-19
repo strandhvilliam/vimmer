@@ -22,12 +22,14 @@ import {
   submissionQueryClientParamSerializer,
 } from "@/lib/schemas/submission-query-client-schema";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
+import { RuleConfig, RuleKey } from "@vimmer/validation/types";
 
 interface ClientPageProps {
   marathon: Marathon;
   topics: Topic[];
   competitionClasses: CompetitionClass[];
   deviceGroups: DeviceGroup[];
+  ruleConfigs: RuleConfig<RuleKey>[];
 }
 
 export function SubmissionClientPage({
@@ -35,6 +37,7 @@ export function SubmissionClientPage({
   topics,
   competitionClasses,
   deviceGroups,
+  ruleConfigs,
 }: ClientPageProps) {
   const [step, setStep] = useQueryState(
     "s",
@@ -128,6 +131,7 @@ export function SubmissionClientPage({
             <UploadSubmissionsStep
               competitionClasses={competitionClasses}
               topics={topics}
+              ruleConfigs={ruleConfigs}
               onPrevStep={handlePrevStep}
               onNextStep={handleNavigateToVerification}
             />

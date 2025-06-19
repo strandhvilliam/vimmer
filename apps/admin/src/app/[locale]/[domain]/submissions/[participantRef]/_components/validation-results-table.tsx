@@ -80,13 +80,6 @@ const columns = [
             Passed
           </Badge>
         );
-      } else if (outcome === "skipped") {
-        return (
-          <Badge className="bg-gray-300/15 text-gray-600 hover:bg-gray-300/20">
-            <span className="h-3.5 w-3.5 mr-1">—</span>
-            Skipped
-          </Badge>
-        );
       } else {
         return (
           <Badge

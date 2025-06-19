@@ -20,6 +20,7 @@ import {
   juryInvitationsByDomainTag,
   staffMembersByDomainTag,
   staffMemberByIdTag,
+  rulesByDomainTag,
 } from "./cache-tags";
 
 import { createClient } from "./clients/lambda";
@@ -41,6 +42,7 @@ import {
   getJuryInvitationsByMarathonIdQuery,
   getStaffMembersByDomainQuery,
   getStaffMemberByIdQuery,
+  getRulesByDomainQuery,
 } from "./queries";
 import {
   CompetitionClass,
@@ -159,9 +161,18 @@ export async function getValidationResultsByParticipantId(
 export async function getRulesByMarathonId(marathonId: number) {
   "use cache";
   cacheTag(rulesByMarathonIdTag({ marathonId }));
-  cacheLife("hours");
+  cacheLife("minutes");
   const supabase = await createClient();
   const data = await getRulesByMarathonIdQuery(supabase, marathonId);
+  return data;
+}
+
+export async function getRulesByDomain(domain: string) {
+  "use cache";
+  cacheTag(rulesByDomainTag({ domain }));
+  cacheLife("minutes");
+  const supabase = await createClient();
+  const data = await getRulesByDomainQuery(supabase, domain);
   return data;
 }
 

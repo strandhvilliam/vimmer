@@ -16,6 +16,7 @@ import {
   getTopicsByDomain,
 } from "@vimmer/supabase/cached-queries";
 import { getManySubmissionsByKeysQuery } from "@vimmer/supabase/queries";
+import { Resource } from "sst";
 
 /**
  * @deprecated Use the /api/submissions endpoint with SWR instead
@@ -107,7 +108,7 @@ async function generatePresignedUrl(s3Client: S3Client, key: string) {
       s3Client,
       new PutObjectCommand({
         Key: key,
-        Bucket: "vimmer-development-submissionbucketbucket-mssednck",
+        Bucket: Resource.SubmissionBucket.name,
       })
     );
   } catch (error: unknown) {

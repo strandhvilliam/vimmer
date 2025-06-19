@@ -15,8 +15,16 @@ export default $config({
       REVALIDATE_SECRET: process.env.REVALIDATE_SECRET!,
     };
 
+    const allowOrigins =
+      process.env.SUBMISSION_BUCKETS_ALLOW_ORIGINS?.split(",") ?? [];
+
     const submissionBucket = new sst.aws.Bucket("SubmissionBucket", {
       access: "cloudfront",
+      cors: {
+        allowOrigins,
+        allowMethods: ["PUT"],
+        allowHeaders: ["*"],
+      },
     });
     const thumbnailBucket = new sst.aws.Bucket("ThumbnailBucket", {
       access: "cloudfront",

@@ -5,23 +5,44 @@ import {
   getCompetitionClassesByDomain,
   getDeviceGroupsByDomain,
   getMarathonByDomain,
+  getRulesByDomain,
+  getRulesByMarathonId,
   getTopicsByDomain,
 } from "@vimmer/supabase/cached-queries";
+import { RuleConfig, RuleKey } from "@vimmer/validation/types";
+import { createRule } from "@vimmer/validation/validator";
+import { RuleConfig as DbRuleConfig } from "@vimmer/supabase/types";
+
+function mapDbRuleConfigsToValidationConfigs(
+  dbRuleConfigs: DbRuleConfig[]
+): RuleConfig<RuleKey>[] {
+  return dbRuleConfigs
+    .filter((rule) => rule.enabled) // Only include enabled rules
+    .map((rule) => {
+      const ruleKey = rule.ruleKey as RuleKey;
+      const severity = rule.severity as "error" | "warning";
+
+      return createRule(ruleKey, severity, rule.params as any);
+    });
+}
 
 export default async function SubmissionPage() {
   const domain = "dev0";
 
-  const [marathon, topics, competitionClasses, deviceGroups] =
+  const [marathon, topics, competitionClasses, deviceGroups, rules] =
     await Promise.all([
       getMarathonByDomain(domain),
       getTopicsByDomain(domain),
       getCompetitionClassesByDomain(domain),
       getDeviceGroupsByDomain(domain),
+      getRulesByDomain(domain),
     ]);
 
   if (!marathon) {
     notFound();
   }
+
+  const ruleConfigs = mapDbRuleConfigsToValidationConfigs(rules);
 
   return (
     <SubmissionClientPage
@@ -29,6 +50,7 @@ export default async function SubmissionPage() {
       topics={topics}
       competitionClasses={competitionClasses}
       deviceGroups={deviceGroups}
+      ruleConfigs={ruleConfigs}
     />
   );
 }
