@@ -7,14 +7,14 @@ import {
 import { ClientVerificationPage } from "./client-page";
 import { getParticipantByReference } from "@vimmer/supabase/cached-queries";
 import { notFound, redirect } from "next/navigation";
-import { revalidateTag } from "next/cache";
+import { getDomain } from "@/lib/get-domain";
 
 export default async function VerificationPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const domain = "dev0";
+  const domain = await getDomain();
   const params = await loadSubmissionQueryServerParams(searchParams);
 
   if (!params.participantRef) notFound();
@@ -24,10 +24,7 @@ export default async function VerificationPage({
   );
   if (!participant) notFound();
 
-  console.log("participant", participant);
-
   if (participant.status === "verified") {
-    console.log("revalidating");
     const redirectParams = submissionQueryServerParamSerializer(params);
     redirect(`/confirmation${redirectParams}`);
   }

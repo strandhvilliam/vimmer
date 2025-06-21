@@ -27,7 +27,7 @@ export const auth = betterAuth({
     maxAge: 5 * 60,
   },
   trustedOrigins: [
-    "http://localhost:3000",
+    "https://admin.vimmer.photo",
     "http://localhost:3001",
     `https://${AWS_CONFIG.routers.adminApp}`,
   ],

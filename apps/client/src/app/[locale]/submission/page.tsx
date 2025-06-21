@@ -12,6 +12,7 @@ import {
 import { RuleConfig, RuleKey } from "@vimmer/validation/types";
 import { createRule } from "@vimmer/validation/validator";
 import { RuleConfig as DbRuleConfig } from "@vimmer/supabase/types";
+import { getDomain } from "@/lib/get-domain";
 
 function mapDbRuleConfigsToValidationConfigs(
   dbRuleConfigs: DbRuleConfig[]
@@ -27,7 +28,7 @@ function mapDbRuleConfigsToValidationConfigs(
 }
 
 export default async function SubmissionPage() {
-  const domain = "dev0";
+  const domain = await getDomain();
 
   const [marathon, topics, competitionClasses, deviceGroups, rules] =
     await Promise.all([

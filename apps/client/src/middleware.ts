@@ -15,7 +15,6 @@ export function middleware(request: NextRequest) {
   const response = I18nMiddleware(request);
 
   const domain = request.nextUrl.hostname.split(".").at(0);
-  const requestHeaders = new Headers(request.headers);
   if (domain) {
     response.headers.set("x-domain", domain);
   }

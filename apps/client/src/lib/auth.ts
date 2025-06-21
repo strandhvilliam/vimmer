@@ -25,8 +25,8 @@ export const auth = betterAuth({
     },
   },
   trustedOrigins: [
+    "*.vimmer.photo",
     "http://localhost:3000",
-    "http://localhost:3001",
     `https://${AWS_CONFIG.routers.clientApp}`,
   ],
   cookieCache: {

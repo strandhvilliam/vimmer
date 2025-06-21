@@ -10,8 +10,8 @@ import {
 } from "@/lib/schemas/submission-query-server-schema";
 import { notFound, redirect } from "next/navigation";
 import { ConfirmationData } from "@/lib/types";
-import { AWS_CONFIG } from "@/config/aws";
 import { Resource } from "sst";
+import { getDomain } from "@/lib/get-domain";
 
 interface ConfirmationPageProps {
   searchParams: Promise<SearchParams>;
@@ -20,7 +20,7 @@ interface ConfirmationPageProps {
 export default async function ConfirmationPage({
   searchParams,
 }: ConfirmationPageProps) {
-  const domain = "dev0";
+  const domain = await getDomain();
   const params = await loadSubmissionQueryServerParams(searchParams);
 
   if (!params.participantRef) notFound();

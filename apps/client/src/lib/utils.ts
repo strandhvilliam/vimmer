@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { NextRequest } from "next/server";
 
 export function parseDateFromExif(exif?: Record<string, unknown>) {
   if (!exif) return null;
