@@ -7,6 +7,10 @@ import { createParticipantVerification } from "@vimmer/supabase/mutations";
 import { getSession } from "@/lib/auth";
 import { updateParticipant } from "@vimmer/supabase/mutations";
 import { revalidatePath, revalidateTag } from "next/cache";
+import {
+  participantByReferenceTag,
+  participantsByDomainTag,
+} from "@vimmer/supabase/cache-tags";
 
 const verifyParticipantSchema = z.object({
   participantId: z.number().int().positive(),
@@ -29,11 +33,18 @@ export const verifyParticipant = actionClient
       staffId,
     });
 
-    await updateParticipant(supabase, participantId, {
+    const participant = await updateParticipant(supabase, participantId, {
       status: "verified",
     });
 
     revalidateTag(`participant-verifications-${staffId}`);
+    revalidateTag(
+      participantByReferenceTag({
+        domain: participant.domain,
+        reference: participant.reference,
+      })
+    );
+    revalidateTag(participantsByDomainTag({ domain: participant.domain }));
     revalidatePath(`/staff`);
 
     return verification;

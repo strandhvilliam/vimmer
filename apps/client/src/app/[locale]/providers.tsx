@@ -17,15 +17,15 @@ export function Providers({ locale, children }: ProviderProps) {
     <I18nProviderClient locale={locale}>
       <PostHogProvider>
         <NuqsAdapter>
-          <ThemeProvider
+          {/* <ThemeProvider
             attribute="class"
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
-          >
-            {children}
-            <Toaster />
-          </ThemeProvider>
+          > */}
+          {children}
+          <Toaster />
+          {/* </ThemeProvider> */}
         </NuqsAdapter>
       </PostHogProvider>
     </I18nProviderClient>

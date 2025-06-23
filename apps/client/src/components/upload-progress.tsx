@@ -130,7 +130,7 @@ function FileProgressItem({ file, topic }: { file: FileState; topic: Topic }) {
       exit={{ opacity: 0, y: -20 }}
       className="flex items-center justify-between p-3 bg-muted rounded-lg"
     >
-      <span className="truncate flex-1 mr-3">{topic.name}</span>
+      <span className="truncate flex-1 mr-3">{`${(topic.orderIndex + 1).toString().padStart(2, "0")}. ${topic.name}`}</span>
       <div className="flex-shrink-0">{statusIcon[file.status]}</div>
     </motion.div>
   );

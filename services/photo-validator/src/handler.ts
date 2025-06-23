@@ -72,6 +72,14 @@ export const handler = async (event: SQSEvent): Promise<void> => {
       throw new Error(`Participant with id ${participantId} not found`);
     }
 
+    if (
+      participantWithSubmissions.status === "verified" ||
+      participantWithSubmissions.status === "completed"
+    ) {
+      console.log("Participant is already verified or completed, skipping");
+      continue;
+    }
+
     const dbRuleConfigs = await getRulesByMarathonIdQuery(
       supabase,
       participantWithSubmissions.marathonId
