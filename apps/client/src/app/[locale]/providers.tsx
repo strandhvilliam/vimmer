@@ -14,8 +14,8 @@ type ProviderProps = {
 
 export function Providers({ locale, children }: ProviderProps) {
   return (
-    <PostHogProvider>
-      <I18nProviderClient locale={locale}>
+    <I18nProviderClient locale={locale}>
+      <PostHogProvider>
         <NuqsAdapter>
           <ThemeProvider
             attribute="class"
@@ -27,7 +27,7 @@ export function Providers({ locale, children }: ProviderProps) {
             <Toaster />
           </ThemeProvider>
         </NuqsAdapter>
-      </I18nProviderClient>
-    </PostHogProvider>
+      </PostHogProvider>
+    </I18nProviderClient>
   );
 }

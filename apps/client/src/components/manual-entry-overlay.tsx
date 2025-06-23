@@ -11,6 +11,7 @@ import {
 } from "@vimmer/ui/components/sheet";
 import { cn } from "@vimmer/ui/lib/utils";
 import * as React from "react";
+import { toast } from "sonner";
 
 interface ManualEntrySheetProps {
   open: boolean;
@@ -29,6 +30,10 @@ export function ManualEntrySheet({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onOpenChange(false);
+    if (!domain) {
+      toast.error("Unable to determine domain");
+      return;
+    }
     onEnterAction({ reference: inputValue, domain });
   };
 

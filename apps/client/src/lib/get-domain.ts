@@ -1,10 +1,12 @@
 import { headers } from "next/headers";
 import "server-only";
 
+const DEV_DOMAIN = "dev0";
+
 export async function getDomain() {
   const headersList = await headers();
   const domain = headersList.get("x-domain");
   if (!domain) throw new Error("Domain not found");
-  if (domain === "localhost") return "dev0";
+  if (domain === "localhost") return DEV_DOMAIN;
   return domain;
 }

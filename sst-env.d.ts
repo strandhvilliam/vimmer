@@ -23,27 +23,9 @@ declare module "sst" {
       "type": "sst.aws.Function"
       "url": string
     }
-    "ExportSubmissionsTask": {
-      "assignPublicIp": boolean
-      "cluster": string
-      "containers": any
-      "securityGroups": any
-      "subnets": any
-      "taskDefinition": string
-      "type": "sst.aws.Task"
-    }
     "ExportsBucket": {
       "name": string
       "type": "sst.aws.Bucket"
-    }
-    "GenerateParticipantZipTask": {
-      "assignPublicIp": boolean
-      "cluster": string
-      "containers": any
-      "securityGroups": any
-      "subnets": any
-      "taskDefinition": string
-      "type": "sst.aws.Task"
     }
     "MarathonSettingsBucket": {
       "name": string

@@ -1,4 +1,5 @@
 import { PhotoWithPresignedUrl } from "@/lib/types";
+import posthog from "posthog-js";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -23,6 +24,7 @@ export function useFileUpload() {
     } catch (error) {
       console.error(error);
       toast.error("Upload failed");
+      posthog.captureException(error);
       if (error instanceof Error) {
         setError(error);
       }

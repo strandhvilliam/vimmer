@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { QrCodeIcon, PenIcon, UsersIcon, LogOutIcon } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { DotPattern } from "@vimmer/ui/components/dot-pattern";
 import QrScanDrawer from "@/components/qr-scan-drawer";
 import { ManualEntrySheet } from "@/components/manual-entry-overlay";
@@ -92,7 +93,7 @@ export function StaffInterface({
 
   return (
     <>
-      <div className="flex flex-col items-center justify-between h-[100dvh] pb-20">
+      <div className="flex flex-col items-center justify-between h-[100dvh] ">
         <DotPattern />
         <div className="w-full flex justify-center pt-20 pb-6 flex-col items-center gap-2 relative">
           <Button
@@ -111,15 +112,18 @@ export function StaffInterface({
           </p>
         </div>
 
-        <div className="flex flex-col items-center justify-center gap-10 mt-12">
-          <QrCodeIcon className="w-24 h-24 text-vimmer-primary" />
-
-          <Button
-            onClick={() => setQrScanOpen(true)}
-            className="w-64 h-14 text-base rounded-full font-medium shadow "
-          >
-            Scan QR Code
-          </Button>
+        <div className="flex flex-col items-center justify-center gap-10">
+          <div className="flex flex-col items-center gap-4">
+            <PrimaryButton
+              onClick={() => setQrScanOpen(true)}
+              className="w-48 h-48 rounded-full flex items-center justify-center !shadow-xl"
+            >
+              <QrCodeIcon className="w-28 h-28" />
+            </PrimaryButton>
+            <span className="text-lg font-medium text-gray-700 select-none">
+              Scan QR Code
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-12 mb-6">

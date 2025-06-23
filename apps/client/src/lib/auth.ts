@@ -14,20 +14,11 @@ const pool = new Pool({
 export const auth = betterAuth({
   database: pool,
   secret: process.env.BETTER_AUTH_SECRET,
-  user: {
-    additionalFields: {
-      role: {
-        type: "string",
-        required: false,
-        defaultValue: "user",
-        input: false,
-      },
-    },
-  },
   trustedOrigins: [
     "*.vimmer.photo",
     "http://localhost:3000",
     `https://${AWS_CONFIG.routers.clientApp}`,
+    "http://192.168.50.119:3000",
   ],
   cookieCache: {
     enabled: true,

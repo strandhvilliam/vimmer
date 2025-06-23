@@ -5,6 +5,6 @@ export default async function SubmissionLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await connection();
+  // await connection();
   return children;
 }

@@ -11,18 +11,6 @@ const fetcher = (url: string) =>
     return res.json();
   });
 
-const generateUrl = (
-  domain: string,
-  participantRef: string | null,
-  participantId: number | null,
-  competitionClassId: number | null
-) => {
-  if (!participantRef || !participantId || !competitionClassId) {
-    return null;
-  }
-  return `/api/presigned-submission?domain=${domain}&participantRef=${participantRef}&participantId=${participantId}&competitionClassId=${competitionClassId}`;
-};
-
 export function usePresignedSubmissions({
   onError,
 }: {
@@ -33,12 +21,11 @@ export function usePresignedSubmissions({
     submissionState: { participantRef, participantId, competitionClassId },
   } = useSubmissionQueryState();
 
-  const url = generateUrl(
-    domain,
-    participantRef,
-    participantId,
-    competitionClassId
-  );
+  let url = null;
+  if (domain && participantRef && participantId && competitionClassId) {
+    url = `/api/presigned-submission?domain=${domain}&participantRef=${participantRef}&participantId=${participantId}&competitionClassId=${competitionClassId}`;
+  }
+
   return useSWR<PresignedSubmission[]>(url, fetcher, {
     fallbackData: [],
     onError: (err) => {
