@@ -19,13 +19,32 @@ import {
   useSidebar,
 } from "@vimmer/ui/components/sidebar";
 import { Marathon } from "@vimmer/supabase/types";
+import { useSession } from "@/lib/hooks/use-session";
 
 interface DomainSwitcherProps {
   marathons: Marathon[];
+  activeDomain: string | undefined;
 }
 
-export function DomainSwitchDropdown({ marathons }: DomainSwitcherProps) {
+export function DomainSwitchDropdown({
+  marathons,
+  activeDomain,
+}: DomainSwitcherProps) {
   const { isMobile } = useSidebar();
+  const { user } = useSession();
+  const [hasImageError, setHasImageError] = React.useState(false);
+
+  const activeMarathon = marathons.find(
+    (marathon) => marathon.domain === activeDomain
+  );
+
+  const handleImageError = () => {
+    setHasImageError(true);
+  };
+
+  const handleImageLoad = () => {
+    setHasImageError(false);
+  };
 
   return (
     <DropdownMenu>
@@ -35,11 +54,23 @@ export function DomainSwitchDropdown({ marathons }: DomainSwitcherProps) {
           className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
         >
           <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-            <Frame className="size-4" />
+            {activeMarathon?.logoUrl && !hasImageError ? (
+              <img
+                src={activeMarathon.logoUrl}
+                alt="Marathon logo"
+                className="size-4"
+                onError={handleImageError}
+                onLoad={handleImageLoad}
+              />
+            ) : (
+              <Frame className="size-4" />
+            )}
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold">Dev marathon</span>
-            <span className="truncate text-xs">demo@vimmer.app</span>
+            <span className="truncate font-semibold">
+              {activeMarathon?.name}
+            </span>
+            <span className="truncate text-xs">{user?.email}</span>
           </div>
           <ChevronsUpDown className="ml-auto" />
         </SidebarMenuButton>
@@ -53,22 +84,14 @@ export function DomainSwitchDropdown({ marathons }: DomainSwitcherProps) {
         <DropdownMenuLabel className="text-xs text-muted-foreground">
           Domains
         </DropdownMenuLabel>
-        {marathons.map((marathon, index) => (
-          <DropdownMenuItem key={marathon.name} className="gap-2 p-2">
+        {marathons.map((marathon) => (
+          <DropdownMenuItem key={marathon.id} className="gap-2 p-2">
             <div className="flex size-6 items-center justify-center rounded-sm border">
               <Frame className="size-4 shrink-0" />
             </div>
-            {marathon.name}
-            <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
+            <span className="truncate font-semibold">{marathon.name}</span>
           </DropdownMenuItem>
         ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="gap-2 p-2">
-          <div className="flex size-6 items-center justify-center rounded-md border bg-background">
-            <Plus className="size-4" />
-          </div>
-          <div className="font-medium text-muted-foreground">Add team</div>
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

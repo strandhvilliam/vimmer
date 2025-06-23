@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useOnboarding } from "../onboarding-context";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { cn } from "@vimmer/ui/lib/utils";
 
 interface SummaryStepProps {
   onNext: () => void;
@@ -47,7 +48,7 @@ export function SummaryStep({ onPrev, canGoBack }: SummaryStepProps) {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <Card className="border-0 shadow-xl">
+      <Card className="border-muted shadow-lg backdrop-blur-sm rounded-2xl ">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 rounded-full flex items-center justify-center">
             <CheckCircle className="w-16 h-16" />
@@ -112,15 +113,21 @@ export function SummaryStep({ onPrev, canGoBack }: SummaryStepProps) {
                       <span className="capitalize">
                         {rule.ruleKey.replace(/([A-Z])/g, " $1").trim()}
                       </span>
-                      <Badge
-                        variant={
-                          rule.severity === "error"
-                            ? "destructive"
-                            : "secondary"
-                        }
-                      >
-                        {rule.severity}
-                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground">
+                          Severity:{" "}
+                        </span>
+                        <Badge
+                          className={cn(
+                            "text-xs",
+                            rule.severity === "error"
+                              ? "bg-red-100 text-red-800 shadow-sm border border-red-200"
+                              : "bg-amber-100 text-amber-800 shadow-sm border border-amber-200"
+                          )}
+                        >
+                          {rule.severity === "error" ? "Restrict" : "Warning"}
+                        </Badge>
+                      </div>
                     </div>
                   ))}
                 </div>

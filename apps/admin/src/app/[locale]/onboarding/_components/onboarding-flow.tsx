@@ -6,12 +6,14 @@ import { MarathonConfigStep } from "./steps/marathon-config-step";
 import { ValidationRulesStep } from "./steps/validation-rules-step";
 import { CompetitionClassStep } from "./steps/competition-class-step";
 import { DeviceGroupStep } from "./steps/device-group-step";
+import { TopicsStep } from "./steps/topics-step";
 import { SummaryStep } from "./steps/summary-step";
 import { OnboardingProvider } from "./onboarding-context";
 import { Marathon } from "@vimmer/supabase/types";
 import { CheckIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { cn } from "@vimmer/ui/lib/utils";
+import { DotPattern } from "@vimmer/ui/components/dot-pattern";
 
 interface OnboardingFlowProps {
   marathon: Marathon;
@@ -23,7 +25,8 @@ const STEPS = {
   ValidationRulesStep: 3,
   CompetitionClassStep: 4,
   DeviceGroupStep: 5,
-  SummaryStep: 6,
+  TopicsStep: 6,
+  SummaryStep: 7,
 } as const;
 
 type StepNumber = (typeof STEPS)[keyof typeof STEPS];
@@ -34,6 +37,7 @@ const STEP_LABELS: Record<StepNumber, string> = {
   [STEPS.ValidationRulesStep]: "Rules",
   [STEPS.CompetitionClassStep]: "Classes",
   [STEPS.DeviceGroupStep]: "Devices",
+  [STEPS.TopicsStep]: "Topics",
   [STEPS.SummaryStep]: "Summary",
 } as const;
 
@@ -57,6 +61,10 @@ const STEP_COMPONENTS: Record<
   [STEPS.DeviceGroupStep]: {
     component: DeviceGroupStep,
     title: "Device Groups",
+  },
+  [STEPS.TopicsStep]: {
+    component: TopicsStep,
+    title: "Topics",
   },
   [STEPS.SummaryStep]: { component: SummaryStep, title: "Summary" },
 } as const;
@@ -99,8 +107,8 @@ export function OnboardingFlow({ marathon }: OnboardingFlowProps) {
 
   return (
     <OnboardingProvider marathon={marathon}>
-      {/* <></> */}
-      <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-800">
+      <DotPattern />
+      <div className="min-h-screen bg-gradient-to-br ">
         <div className="container mx-auto px-4 py-8">
           <nav className="mb-12">
             <ol className="flex items-center mx-auto max-w-4xl">

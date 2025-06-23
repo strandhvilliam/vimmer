@@ -10,6 +10,7 @@ import {
   createDeviceGroup,
   addRuleConfig,
   updateMarathonByDomain,
+  createTopic,
 } from "@vimmer/supabase/mutations";
 import { getMarathonByDomain } from "@vimmer/supabase/cached-queries";
 import { redirect } from "next/navigation";
@@ -42,6 +43,14 @@ const completeOnboardingSchema = z.object({
       ruleKey: z.string(),
       severity: z.enum(["warning", "error"]),
       params: z.any().optional(),
+    })
+  ),
+  topics: z.array(
+    z.object({
+      name: z.string(),
+      visibility: z.enum(["public", "private", "scheduled"]),
+      scheduledStart: z.string().nullable().optional(),
+      orderIndex: z.number(),
     })
   ),
 });
@@ -96,11 +105,20 @@ export const completeOnboardingAction = actionClient
         });
       }
 
+      // 5. Create topics
+      for (const topic of parsedInput.topics) {
+        await createTopic(supabase, {
+          ...topic,
+          marathonId: marathon.id,
+        });
+      }
+
       // Revalidate relevant cache tags
       revalidateTag(`marathon-${domain}`);
       revalidateTag(`competition-classes-${domain}`);
       revalidateTag(`device-groups-${domain}`);
       revalidateTag(`rule-configs-${domain}`);
+      revalidateTag(`topics-${domain}`);
 
       return { success: true };
     } catch (error) {

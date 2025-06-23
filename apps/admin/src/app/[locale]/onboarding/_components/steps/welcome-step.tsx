@@ -28,7 +28,7 @@ interface WelcomeStepProps {
 export function WelcomeStep({ onNext }: WelcomeStepProps) {
   return (
     <div className="max-w-3xl mx-auto">
-      <Card className="border-0 shadow-xl backdrop-blur-sm ">
+      <Card className="border-muted shadow-lg backdrop-blur-sm rounded-2xl ">
         <CardHeader className="text-center pb-8">
           <CardTitle className="text-3xl font-rocgrotesk ">
             Welcome to PMUploader

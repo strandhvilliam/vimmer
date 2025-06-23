@@ -6,6 +6,7 @@ import {
   CompetitionClass,
   DeviceGroup,
   RuleConfig,
+  Topic,
 } from "@vimmer/supabase/types";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -16,6 +17,7 @@ interface OnboardingData {
   competitionClasses: CompetitionClass[];
   deviceGroups: DeviceGroup[];
   validationRules: RuleConfig[];
+  topics: Topic[];
 }
 
 interface OnboardingContextType {
@@ -28,6 +30,7 @@ interface OnboardingContextType {
   addDeviceGroup: (deviceGroup: DeviceGroup) => void;
   removeDeviceGroup: (id: number) => void;
   updateValidationRules: (rules: RuleConfig[]) => void;
+  updateTopics: (topics: Topic[]) => void;
   completeOnboarding: () => Promise<void>;
 }
 
@@ -57,6 +60,7 @@ export function OnboardingProvider({
     competitionClasses: [],
     deviceGroups: [],
     validationRules: [],
+    topics: [],
   });
 
   const updateMarathonConfig = (config: Partial<Marathon>) => {
@@ -101,6 +105,13 @@ export function OnboardingProvider({
     }));
   };
 
+  const updateTopics = (topics: Topic[]) => {
+    setData((prev) => ({
+      ...prev,
+      topics: topics,
+    }));
+  };
+
   const completeOnboarding = async () => {
     setIsCompleting(true);
 
@@ -128,6 +139,12 @@ export function OnboardingProvider({
           ruleKey: rule.ruleKey,
           severity: rule.severity as "warning" | "error",
           params: rule.params,
+        })),
+        topics: data.topics.map((topic) => ({
+          name: topic.name,
+          visibility: topic.visibility as "public" | "private" | "scheduled",
+          scheduledStart: topic.scheduledStart,
+          orderIndex: topic.orderIndex,
         })),
       };
 
@@ -157,6 +174,7 @@ export function OnboardingProvider({
     addDeviceGroup,
     removeDeviceGroup,
     updateValidationRules,
+    updateTopics,
     completeOnboarding,
   };
 

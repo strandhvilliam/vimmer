@@ -59,7 +59,7 @@ import {
 export async function getUserMarathons(userId: string) {
   "use cache";
   cacheTag(userMarathonsTag({ userId }));
-  cacheLife("hours");
+  cacheLife("minutes");
   const supabase = await createClient();
   const data = await getMarathonsByUserIdQuery(supabase, userId);
   return data;
@@ -68,7 +68,7 @@ export async function getUserMarathons(userId: string) {
 export async function getTopicsByDomain(domain: string) {
   "use cache";
   cacheTag(topicsByDomainTag({ domain }));
-  cacheLife("hours");
+  cacheLife("minutes");
   const supabase = await createClient();
   const data = await getTopicsByDomainQuery(supabase, domain);
   return data;
@@ -77,7 +77,7 @@ export async function getTopicsByDomain(domain: string) {
 export async function getMarathonByDomain(domain: string) {
   "use cache";
   cacheTag(marathonByDomainTag({ domain }));
-  cacheLife("hours");
+  cacheLife("minutes");
   const supabase = await createClient();
   const data = await getMarathonByDomainQuery(supabase, domain);
   return data;
@@ -88,7 +88,7 @@ export async function getCompetitionClassesByDomain(
 ): Promise<CompetitionClass[]> {
   "use cache";
   cacheTag(competitionClassesByDomainTag({ domain }));
-  cacheLife("hours");
+  cacheLife("minutes");
   const supabase = await createClient();
   const data = await getCompetitionClassesByDomainQuery(supabase, domain);
   return data;
@@ -99,7 +99,7 @@ export async function getDeviceGroupsByDomain(
 ): Promise<DeviceGroup[]> {
   "use cache";
   cacheTag(deviceGroupsByDomainTag({ domain }));
-  cacheLife("hours");
+  cacheLife("minutes");
   const supabase = await createClient();
   const data = await getDeviceGroupsByDomainQuery(supabase, domain);
   return data;
