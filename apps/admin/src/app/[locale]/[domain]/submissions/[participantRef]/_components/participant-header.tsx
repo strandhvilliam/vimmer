@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@vimmer/ui/components/button";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { Badge } from "@vimmer/ui/components/badge";
 import {
   CompetitionClass,
@@ -39,6 +40,9 @@ import {
   CardTitle,
 } from "@vimmer/ui/components/card";
 import { cn } from "@vimmer/ui/lib/utils";
+import { useAction } from "next-safe-action/hooks";
+import { verifyParticipant } from "../_actions/verify-participant";
+import { toast } from "sonner";
 
 interface ParticipantHeaderProps {
   participant: Participant & {
@@ -75,6 +79,28 @@ export function ParticipantHeader({
 
   // All validations passed
   const allPassed = globalValidations.length > 0 && !hasFailedValidations;
+
+  // Check if participant is already verified
+  const isVerified = participant.status === "verified";
+
+  // Verify participant action
+  const { execute: executeVerifyParticipant, isExecuting: isVerifying } =
+    useAction(verifyParticipant, {
+      onSuccess: () => {
+        toast.success("Participant verified successfully");
+      },
+      onError: () => {
+        toast.error("Failed to verify participant");
+      },
+    });
+
+  const handleVerifyParticipant = () => {
+    executeVerifyParticipant({
+      participantId: participant.id,
+      domain: domain as string,
+      reference: participant.reference,
+    });
+  };
 
   return (
     <div className="">
@@ -121,6 +147,15 @@ export function ParticipantHeader({
 
         {/* Action buttons */}
         <div className="flex flex-wrap gap-2">
+          {!isVerified && (
+            <PrimaryButton
+              onClick={handleVerifyParticipant}
+              disabled={isVerifying}
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              {isVerifying ? "Verifying..." : "Verify"}
+            </PrimaryButton>
+          )}
           <Button size="sm">
             <Mail className="h-4 w-4 mr-2" />
             Email
@@ -192,7 +227,19 @@ export function ParticipantHeader({
               <span className="text-xs text-muted-foreground block mb-1">
                 Status
               </span>
-              <span className="text-sm capitalize">{participant.status}</span>
+              <div className="flex items-center gap-2">
+                {isVerified && (
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                )}
+                <span
+                  className={cn(
+                    "text-sm capitalize",
+                    isVerified ? "text-green-600 font-medium" : ""
+                  )}
+                >
+                  {participant.status}
+                </span>
+              </div>
             </div>
           </div>
         </CardContent>
