@@ -21,6 +21,7 @@ import {
   maxFileSizeParamsSchema,
   withinTimerangeParamsSchema,
 } from "./_lib/schemas";
+import { connection } from "next/server";
 
 const DEFAULT_RULE_CONFIGS: RulesFormValues = {
   max_file_size: {
@@ -170,6 +171,7 @@ export default async function RulesPage({
 }: {
   params: Promise<{ domain: string }>;
 }) {
+  await connection();
   const { domain } = await params;
   const marathon = await getMarathonByDomain(domain);
   if (!marathon) {

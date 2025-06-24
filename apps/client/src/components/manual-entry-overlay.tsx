@@ -34,7 +34,14 @@ export function ManualEntrySheet({
       toast.error("Unable to determine domain");
       return;
     }
-    onEnterAction({ reference: inputValue, domain });
+
+    // Pad 3-digit numbers with leading zero
+    const formattedValue =
+      inputValue.trim().length === 3
+        ? `0${inputValue.trim()}`
+        : inputValue.trim();
+
+    onEnterAction({ reference: formattedValue, domain });
   };
 
   return (

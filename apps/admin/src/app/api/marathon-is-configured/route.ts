@@ -1,40 +1,32 @@
-import { SetupClientPage } from "./client-page";
 import {
   getCompetitionClassesByDomain,
   getDeviceGroupsByDomain,
   getMarathonByDomain,
   getTopicsByDomain,
 } from "@vimmer/supabase/cached-queries";
-import { notFound } from "next/navigation";
-import { getDomain } from "@/lib/get-domain";
-import { Marathon } from "@vimmer/supabase/types";
-import { MarathonNotConfigured } from "@/components/marathon-not-configured";
+import { NextRequest, NextResponse } from "next/server";
 
-export default async function SetupPage() {
-  const domain = await getDomain();
+export async function GET(request: NextRequest) {
+  const queryParams = request.nextUrl.searchParams;
+
+  const domain = queryParams.get("domain");
+
+  if (!domain) {
+    return NextResponse.json({
+      isConfigured: false,
+      requiredActions: [
+        {
+          action: "missing_domain",
+          description: "Add the domain to the marathon",
+        },
+      ],
+    });
+  }
+
   const marathon = await getMarathonByDomain(domain);
 
-  if (!marathon) {
-    notFound();
-  }
-
-  const data = await checkIfMarathonIsProperlyConfigured(marathon);
-
-  if (!data.isConfigured) {
-    return (
-      <MarathonNotConfigured
-        marathon={marathon}
-        requiredActions={data.requiredActions}
-      />
-    );
-  }
-
-  return <SetupClientPage marathon={marathon} />;
-}
-
-async function checkIfMarathonIsProperlyConfigured(marathon: Marathon) {
   if (!marathon?.startDate || !marathon?.endDate) {
-    return {
+    return NextResponse.json({
       isConfigured: false,
       requiredActions: [
         {
@@ -42,11 +34,11 @@ async function checkIfMarathonIsProperlyConfigured(marathon: Marathon) {
           description: "Add the start and end dates to the marathon",
         },
       ],
-    };
+    });
   }
 
   if (!marathon?.name) {
-    return {
+    return NextResponse.json({
       isConfigured: false,
       requiredActions: [
         {
@@ -54,13 +46,13 @@ async function checkIfMarathonIsProperlyConfigured(marathon: Marathon) {
           description: "Add the name to the marathon",
         },
       ],
-    };
+    });
   }
 
-  const deviceGroups = await getDeviceGroupsByDomain(marathon.domain);
+  const deviceGroups = await getDeviceGroupsByDomain(domain);
 
   if (deviceGroups.length === 0) {
-    return {
+    return NextResponse.json({
       isConfigured: false,
       requiredActions: [
         {
@@ -68,15 +60,13 @@ async function checkIfMarathonIsProperlyConfigured(marathon: Marathon) {
           description: "Add device groups to the marathon",
         },
       ],
-    };
+    });
   }
 
-  const competitionClasses = await getCompetitionClassesByDomain(
-    marathon.domain
-  );
+  const competitionClasses = await getCompetitionClassesByDomain(domain);
 
   if (competitionClasses.length === 0) {
-    return {
+    return NextResponse.json({
       isConfigured: false,
       requiredActions: [
         {
@@ -84,13 +74,13 @@ async function checkIfMarathonIsProperlyConfigured(marathon: Marathon) {
           description: "Add competition classes to the marathon",
         },
       ],
-    };
+    });
   }
 
-  const topics = await getTopicsByDomain(marathon.domain);
+  const topics = await getTopicsByDomain(domain);
 
   if (topics.length === 0) {
-    return {
+    return NextResponse.json({
       isConfigured: false,
       requiredActions: [
         {
@@ -98,28 +88,24 @@ async function checkIfMarathonIsProperlyConfigured(marathon: Marathon) {
           description: "Add topics to the marathon",
         },
       ],
-    };
+    });
   }
 
-  if (
-    competitionClasses.some(
-      (competitionClass) => competitionClass.numberOfPhotos > topics.length
-    )
-  ) {
-    return {
+  if (competitionClasses.length !== topics.length) {
+    return NextResponse.json({
       isConfigured: false,
       requiredActions: [
         {
           action: "missing_competition_class_topics",
           description:
-            "Add topics to the competition classes to minimally match the number of photos required for each competition class",
+            "Add topics to the competition classes to minimally match the number of competition classes",
         },
       ],
-    };
+    });
   }
 
-  return {
+  return NextResponse.json({
     isConfigured: true,
     requiredActions: [],
-  };
+  });
 }

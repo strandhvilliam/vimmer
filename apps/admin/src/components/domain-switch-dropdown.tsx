@@ -20,6 +20,8 @@ import {
 } from "@vimmer/ui/components/sidebar";
 import { Marathon } from "@vimmer/supabase/types";
 import { useSession } from "@/lib/hooks/use-session";
+import { selectDomain } from "@/lib/actions/select-domain";
+import { useAction } from "next-safe-action/hooks";
 
 interface DomainSwitcherProps {
   marathons: Marathon[];
@@ -33,6 +35,8 @@ export function DomainSwitchDropdown({
   const { isMobile } = useSidebar();
   const { user } = useSession();
   const [hasImageError, setHasImageError] = React.useState(false);
+
+  const { execute } = useAction(selectDomain);
 
   const activeMarathon = marathons.find(
     (marathon) => marathon.domain === activeDomain
@@ -85,7 +89,11 @@ export function DomainSwitchDropdown({
           Domains
         </DropdownMenuLabel>
         {marathons.map((marathon) => (
-          <DropdownMenuItem key={marathon.id} className="gap-2 p-2">
+          <DropdownMenuItem
+            key={marathon.id}
+            className="gap-2 p-2"
+            onClick={() => execute({ domain: marathon.domain })}
+          >
             <div className="flex size-6 items-center justify-center rounded-sm border">
               <Frame className="size-4 shrink-0" />
             </div>

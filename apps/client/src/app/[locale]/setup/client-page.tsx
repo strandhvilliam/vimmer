@@ -44,7 +44,7 @@ export function SetupClientPage({ marathon }: { marathon: Marathon }) {
           <div>
             <Button variant="link" className="text-xs h-8 px-2 gap-0" asChild>
               <Link href="/staff">
-                I am staff
+                Staff
                 <ChevronRight className="w-4 h-4" />
               </Link>
             </Button>

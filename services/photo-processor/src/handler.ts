@@ -86,11 +86,11 @@ async function processSubmission(
     if (isComplete) {
       await Promise.all([
         triggerValidationQueue(submission.participantId),
-        // triggerZipGenerationTask(
-        //   participant.domain,
-        //   participant.reference,
-        //   "zip_submissions"
-        // ),
+        triggerZipGenerationTask(
+          participant.domain,
+          participant.reference,
+          "zip_submissions"
+        ),
       ]);
     }
   } catch (error) {
@@ -145,21 +145,21 @@ async function prepareSubmission(supabase: SupabaseClient, key: string) {
   return { submission, participant };
 }
 
-// async function triggerZipGenerationTask(
-//   domain: string,
-//   participantReference: string,
-//   exportType: "zip_submissions" | "zip_thumbnails" | "zip_previews"
-// ) {
-//   try {
-//     await task.run(Resource.GenerateParticipantZipTask, {
-//       PARTICIPANT_REFERENCE: participantReference,
-//       DOMAIN: domain,
-//       EXPORT_TYPE: exportType,
-//     });
-//   } catch (error) {
-//     console.error("Error triggering zip generation task:", error);
-//   }
-// }
+async function triggerZipGenerationTask(
+  domain: string,
+  participantReference: string,
+  exportType: "zip_submissions" | "zip_thumbnails" | "zip_previews"
+) {
+  try {
+    await task.run(Resource.GenerateParticipantZipTask, {
+      PARTICIPANT_REFERENCE: participantReference,
+      DOMAIN: domain,
+      EXPORT_TYPE: exportType,
+    });
+  } catch (error) {
+    console.error("Error triggering zip generation task:", error);
+  }
+}
 
 async function triggerValidationQueue(participantId: number) {
   const sqs = new SQSClient();

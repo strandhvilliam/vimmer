@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getMarathonByDomain } from "@vimmer/supabase/cached-queries";
 import SettingsForm from "./_components/settings-form";
+import { connection } from "next/server";
 
 interface SettingsPageProps {
   params: Promise<{
@@ -10,6 +11,7 @@ interface SettingsPageProps {
 }
 
 export default async function SettingsPage({ params }: SettingsPageProps) {
+  await connection();
   const { domain } = await params;
   const marathonData = await getMarathonByDomain(domain);
 

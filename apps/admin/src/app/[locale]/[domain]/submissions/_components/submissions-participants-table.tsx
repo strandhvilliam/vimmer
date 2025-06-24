@@ -495,7 +495,7 @@ export function SubmissionsParticipantsTable({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-24 text-center bg-background"
                 >
                   No submissions found
                 </TableCell>

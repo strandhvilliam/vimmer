@@ -4,11 +4,23 @@ import { Badge } from "@vimmer/ui/components/badge";
 import { Button } from "@vimmer/ui/components/button";
 import { differenceInDays, differenceInSeconds, format } from "date-fns";
 import { useEffect, useState } from "react";
+import { AlertTriangle } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@vimmer/ui/components/popover";
+
+interface RequiredAction {
+  action: string;
+  description: string;
+}
 
 interface MarathonStatusDisplayProps {
   marathonStartDate?: string | null;
   marathonEndDate?: string | null;
   isSetupComplete?: boolean;
+  requiredActions?: RequiredAction[];
 }
 
 function formatCountdown(seconds: number) {
@@ -30,6 +42,7 @@ export function MarathonStatusDisplay({
   marathonStartDate,
   marathonEndDate,
   isSetupComplete,
+  requiredActions = [],
 }: MarathonStatusDisplayProps) {
   const [countdown, setCountdown] = useState<string>("00:00:00");
   const [status, setStatus] = useState<
@@ -87,9 +100,37 @@ export function MarathonStatusDisplay({
   return (
     <div className="flex items-center gap-4">
       {status === "not-setup" && (
-        <Button variant="default" size="sm">
-          Finish marathon setup
-        </Button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="destructive" size="sm" className="gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              Setup Required
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80" align="end">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-destructive" />
+                <h4 className="font-semibold">Marathon Setup Incomplete</h4>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                The following items need to be configured before the marathon
+                can go live:
+              </p>
+              <div className="space-y-2">
+                {requiredActions.map((action, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start gap-2 p-2 bg-muted rounded-md"
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full bg-destructive mt-2 flex-shrink-0" />
+                    <p className="text-sm">{action.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
       )}
       {status === "upcoming" && (
         <div className="flex items-center gap-2">

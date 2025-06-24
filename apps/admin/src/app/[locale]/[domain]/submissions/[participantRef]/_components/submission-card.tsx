@@ -16,25 +16,22 @@ import { useState } from "react";
 import { Submission, ValidationResult, Topic } from "@vimmer/supabase/types";
 import { cn } from "@vimmer/ui/lib/utils";
 import { useParams } from "next/navigation";
+// import { Resource } from "sst";
 
 interface PhotoSubmissionCardProps {
   submission: Submission;
   topic?: Topic;
   validationResults?: ValidationResult[];
+  imageUrl: string;
 }
 
 const PLACEHOLDER_HASH = "LLI5Y-%M?bxuWBxu-;of~q%MWBt7";
-
-const THUMBNAIL_BASE_URL = "https://d2xu2hgpxoda9b.cloudfront.net";
-
-function getThumbnailImageUrl(submission: Submission) {
-  return `${THUMBNAIL_BASE_URL}/${submission.thumbnailKey}`;
-}
 
 export function PhotoSubmissionCard({
   submission,
   validationResults = [],
   topic,
+  imageUrl,
 }: PhotoSubmissionCardProps) {
   const { domain, participantRef } = useParams();
 
@@ -70,7 +67,7 @@ export function PhotoSubmissionCard({
           <CardContent className="relative p-0 flex items-center justify-center aspect-[4/3] bg-neutral-200/40 overflow-hidden">
             <div className="absolute top-2 left-2 z-10">
               <Badge variant="outline" className="bg-white/80 backdrop-blur-sm">
-                #{!!topic?.orderIndex.toString() ? topic.orderIndex + 1 : "?"}
+                #{topic?.orderIndex.toString() ? topic.orderIndex + 1 : "?"}
               </Badge>
             </div>
 
@@ -80,7 +77,7 @@ export function PhotoSubmissionCard({
               transition={{ opacity: { delay: 0.5, duration: 0.3 } }}
               loading="lazy"
               className={cn("w-full h-full object-contain rounded-t-lg")}
-              src={getThumbnailImageUrl(submission)}
+              src={imageUrl}
               alt={topic?.name ?? ""}
             />
           </CardContent>

@@ -69,7 +69,7 @@ export function SubmissionClientPage({
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
+    <div className="max-w-2xl mx-auto py-4">
       <div className="mb-12 px-4 sm:px-0">
         <StepNavigator currentStep={step} handleSetStep={handleSetStep} />
       </div>

@@ -2,6 +2,7 @@ import {
   getMarathonByDomain,
   getTopicsByDomain,
   getTopicsWithSubmissionCount,
+  getCompetitionClassesByDomain,
 } from "@vimmer/supabase/cached-queries";
 import { Metadata } from "next";
 import { Suspense } from "react";
@@ -9,6 +10,7 @@ import { TopicsClientWrapper } from "./_components/topics-client-wrapper";
 import { TopicsTableSkeleton } from "./_components/topics-table-skeleton";
 import { TopicsHeader } from "./_components/topics-header";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 
 interface TopicsPageProps {
   params: Promise<{
@@ -23,11 +25,13 @@ export const metadata: Metadata = {
 };
 
 export default async function TopicsPage({ params }: TopicsPageProps) {
+  await connection();
   const { domain } = await params;
 
-  const [marathon, topics] = await Promise.all([
+  const [marathon, topics, competitionClasses] = await Promise.all([
     getMarathonByDomain(domain),
     getTopicsByDomain(domain),
+    getCompetitionClassesByDomain(domain),
   ]);
 
   if (!marathon || !topics) {
@@ -37,8 +41,6 @@ export default async function TopicsPage({ params }: TopicsPageProps) {
   const topicsWithSubmissionCount = await getTopicsWithSubmissionCount(
     marathon.id
   );
-
-  console.log(topicsWithSubmissionCount);
 
   const sortedTopics = [...topics]
     .map((topic) => ({
@@ -60,6 +62,7 @@ export default async function TopicsPage({ params }: TopicsPageProps) {
                 <TopicsClientWrapper
                   marathonId={marathon.id}
                   initialTopics={sortedTopics}
+                  competitionClasses={competitionClasses}
                 />
               </Suspense>
             </div>

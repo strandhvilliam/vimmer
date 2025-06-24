@@ -122,7 +122,7 @@ export const createJuryInvitationAction = actionClient
       : null;
 
     const { data, error } = await resend.emails.send({
-      from: "Acme <onboarding@resend.dev>",
+      from: "Vimmer Support <support@vimmer.photo>",
       to: [parsedInput.email],
       subject: `Invitation to review ${marathon.name} submissions`,
       react: JuryReviewEmail({
@@ -135,6 +135,8 @@ export const createJuryInvitationAction = actionClient
         competitionGroup: competitionClass?.name ?? "",
       }),
     });
+
+    console.log({ data, error });
 
     revalidateTag(juryInvitationsByDomainTag({ domain }));
     revalidatePath(`/${domain}/jury`);

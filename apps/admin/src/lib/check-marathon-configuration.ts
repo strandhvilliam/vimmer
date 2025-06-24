@@ -1,38 +1,24 @@
-import { SetupClientPage } from "./client-page";
 import {
   getCompetitionClassesByDomain,
   getDeviceGroupsByDomain,
   getMarathonByDomain,
   getTopicsByDomain,
 } from "@vimmer/supabase/cached-queries";
-import { notFound } from "next/navigation";
-import { getDomain } from "@/lib/get-domain";
 import { Marathon } from "@vimmer/supabase/types";
-import { MarathonNotConfigured } from "@/components/marathon-not-configured";
 
-export default async function SetupPage() {
-  const domain = await getDomain();
-  const marathon = await getMarathonByDomain(domain);
-
-  if (!marathon) {
-    notFound();
-  }
-
-  const data = await checkIfMarathonIsProperlyConfigured(marathon);
-
-  if (!data.isConfigured) {
-    return (
-      <MarathonNotConfigured
-        marathon={marathon}
-        requiredActions={data.requiredActions}
-      />
-    );
-  }
-
-  return <SetupClientPage marathon={marathon} />;
+interface RequiredAction {
+  action: string;
+  description: string;
 }
 
-async function checkIfMarathonIsProperlyConfigured(marathon: Marathon) {
+interface ConfigurationCheck {
+  isConfigured: boolean;
+  requiredActions: RequiredAction[];
+}
+
+export async function checkIfMarathonIsProperlyConfigured(
+  marathon: Marathon
+): Promise<ConfigurationCheck> {
   if (!marathon?.startDate || !marathon?.endDate) {
     return {
       isConfigured: false,
@@ -101,6 +87,11 @@ async function checkIfMarathonIsProperlyConfigured(marathon: Marathon) {
     };
   }
 
+  console.log(
+    "competitionClasses",
+    JSON.stringify(competitionClasses, null, 2)
+  );
+  console.log("topics", topics.length);
   if (
     competitionClasses.some(
       (competitionClass) => competitionClass.numberOfPhotos > topics.length

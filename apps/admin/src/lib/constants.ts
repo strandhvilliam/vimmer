@@ -18,7 +18,7 @@ export const NAV_LINKS = {
   marathon: [
     {
       name: "Dashboard",
-      url: "/",
+      url: "/dashboard",
       icon: LayoutDashboard as LucideIcon,
     },
     {

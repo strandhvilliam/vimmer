@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import "server-only";
 
-const DEV_DOMAIN = "dev0";
+const DEV_DOMAIN = "demo";
 
 export async function getDomain() {
   const headersList = await headers();

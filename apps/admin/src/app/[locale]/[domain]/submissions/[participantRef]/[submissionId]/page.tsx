@@ -14,6 +14,7 @@ import { ValidationStepsTable } from "./_components/validation-steps";
 import { ExifDataDisplay } from "./_components/exif-data-display";
 import { SubmissionDetails } from "./_components/submission-details";
 import { SubmissionHeader } from "./_components/submission-header";
+import { Resource } from "sst";
 
 export default async function SubmissionDetailPage({
   params,
@@ -106,6 +107,7 @@ export default async function SubmissionDetailPage({
           submission={submission}
           participant={participant}
           topic={topic}
+          imageUrl={`${Resource.PreviewsRouter.url}/${submission.previewKey}`}
         />
       </div>
     </div>

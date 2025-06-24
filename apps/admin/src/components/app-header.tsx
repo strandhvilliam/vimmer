@@ -5,6 +5,7 @@ import { Button } from "@vimmer/ui/components/button";
 import Link from "next/link";
 import { LinkIcon } from "lucide-react";
 import { Separator } from "@vimmer/ui/components/separator";
+import { checkIfMarathonIsProperlyConfigured } from "@/lib/check-marathon-configuration";
 
 interface AppHeaderProps {
   domain: string;
@@ -12,6 +13,15 @@ interface AppHeaderProps {
 
 export async function AppHeader({ domain }: AppHeaderProps) {
   const marathon = await getMarathonByDomain(domain);
+
+  let isSetupComplete = true;
+  let requiredActions: Array<{ action: string; description: string }> = [];
+
+  if (marathon) {
+    const configCheck = await checkIfMarathonIsProperlyConfigured(marathon);
+    isSetupComplete = configCheck.isConfigured;
+    requiredActions = configCheck.requiredActions;
+  }
 
   const staffSiteUrl = `https://${domain}.vimmer.photo/staff`;
   const participantSiteUrl = `https://${domain}.vimmer.photo`;
@@ -38,7 +48,8 @@ export async function AppHeader({ domain }: AppHeaderProps) {
         <MarathonStatusDisplay
           marathonStartDate={marathon?.startDate}
           marathonEndDate={marathon?.endDate}
-          isSetupComplete={true}
+          isSetupComplete={isSetupComplete}
+          requiredActions={requiredActions}
         />
       </div>
     </div>

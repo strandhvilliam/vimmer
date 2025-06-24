@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const DEV_DOMAIN = "dev0";
+const DEV_DOMAIN = "demo";
 
 export function useDomain(): string | null {
   const [domain, setDomain] = useState<string | null>(null);

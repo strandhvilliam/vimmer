@@ -79,7 +79,7 @@ export function DeviceSelectionStep({
           Choose Your Device
         </CardTitle>
         <CardDescription className="text-center">
-          Select the device you'll use during the race
+          Select the device you've used during the marathon
         </CardDescription>
       </CardHeader>
 
@@ -210,7 +210,7 @@ function DeviceGroupItem({
                   {deviceGroup.name}
                 </CardTitle>
                 <p className="text-xs text-muted-foreground/60 mt-0.5">
-                  ID: {deviceGroup.id}
+                  {deviceGroup.description}
                 </p>
               </div>
               <motion.div

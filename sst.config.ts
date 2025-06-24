@@ -15,6 +15,7 @@ export default $config({
       NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY!,
       NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
       REVALIDATE_SECRET: process.env.REVALIDATE_SECRET!,
+      POSTHOG_API_KEY: process.env.POSTHOG_API_KEY!,
     };
 
     const allowOrigins =
@@ -83,51 +84,51 @@ export default $config({
     const vpc = new sst.aws.Vpc("VimmerVPC");
     const cluster = new sst.aws.Cluster("VimmerCluster", { vpc });
 
-    // const exportSubmissionsTask = new sst.aws.Task("ExportSubmissionsTask", {
-    //   cluster,
-    //   architecture: "arm64",
-    //   image: {
-    //     dockerfile: "./services/export-submission-zip/Dockerfile",
-    //   },
-    //   environment: env,
-    //   link: [submissionBucket, thumbnailBucket, previewBucket, exportsBucket],
-    //   permissions: [
-    //     {
-    //       actions: ["s3:GetObject", "s3:PutObject"],
-    //       resources: [previewBucket.arn, exportsBucket.arn],
-    //     },
-    //   ],
-    //   dev: {
-    //     command: "bun start",
-    //   },
-    // });
+    const exportSubmissionsTask = new sst.aws.Task("ExportSubmissionsTask", {
+      cluster,
+      architecture: "arm64",
+      image: {
+        dockerfile: "./services/export-submission-zip/Dockerfile",
+      },
+      environment: env,
+      link: [submissionBucket, thumbnailBucket, previewBucket, exportsBucket],
+      permissions: [
+        {
+          actions: ["s3:GetObject", "s3:PutObject"],
+          resources: [previewBucket.arn, exportsBucket.arn],
+        },
+      ],
+      dev: {
+        command: "bun start",
+      },
+    });
 
-    // const generateParticipantZipTask = new sst.aws.Task(
-    //   "GenerateParticipantZipTask",
-    //   {
-    //     cluster,
-    //     architecture: "arm64",
-    //     image: {
-    //       dockerfile: "./services/generate-participant-zip/Dockerfile",
-    //     },
-    //     environment: env,
-    //     link: [submissionBucket, thumbnailBucket, previewBucket, exportsBucket],
-    //     permissions: [
-    //       {
-    //         actions: ["s3:GetObject", "s3:PutObject"],
-    //         resources: [previewBucket.arn, exportsBucket.arn],
-    //       },
-    //     ],
-    //     dev: {
-    //       command: "bun start",
-    //     },
-    //   }
-    // );
+    const generateParticipantZipTask = new sst.aws.Task(
+      "GenerateParticipantZipTask",
+      {
+        cluster,
+        architecture: "arm64",
+        image: {
+          dockerfile: "./services/generate-participant-zip/Dockerfile",
+        },
+        environment: env,
+        link: [submissionBucket, thumbnailBucket, previewBucket, exportsBucket],
+        permissions: [
+          {
+            actions: ["s3:GetObject", "s3:PutObject"],
+            resources: [previewBucket.arn, exportsBucket.arn],
+          },
+        ],
+        dev: {
+          command: "bun start",
+        },
+      }
+    );
 
     const exportCaller = new sst.aws.Function("ExportCaller", {
       handler: "services/export-caller/index.handler",
       environment: env,
-      // link: [exportSubmissionsTask, generateParticipantZipTask],
+      link: [exportSubmissionsTask, generateParticipantZipTask],
       url: true,
     });
 
@@ -162,7 +163,7 @@ export default $config({
         thumbnailBucket,
         previewBucket,
         validateSubmissionQueue,
-        // generateParticipantZipTask,
+        generateParticipantZipTask,
       ],
       permissions: [
         {

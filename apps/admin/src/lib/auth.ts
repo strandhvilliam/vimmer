@@ -28,15 +28,16 @@ export const auth = betterAuth({
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
         switch (type) {
-          case "sign-in":
+          case "sign-in": {
             const { data, error } = await resend.emails.send({
-              from: "Acme <onboarding@resend.dev>",
+              from: "Vimmer Support <support@vimmer.photo>",
               to: [email],
               subject: "Sign in to Your Account",
               html: await render(OTPEmail({ otp, username: email })),
             });
             console.log({ data, error });
             break;
+          }
           case "forget-password":
             console.log(`Register OTP for ${email}: ${otp}`);
             break;

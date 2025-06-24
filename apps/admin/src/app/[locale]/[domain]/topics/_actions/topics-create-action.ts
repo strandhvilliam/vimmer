@@ -50,16 +50,26 @@ export const createTopicAction = actionClient
 
       let newOrdering = [];
       try {
-        if (finalOrderIndex < (existingTopics?.length || 0)) {
-          for (let i = 0; i < existingTopics.length; i++) {
-            if (i === finalOrderIndex) {
-              newOrdering.push(createdTopic.id);
-            }
-            const topic = existingTopics.find(
-              (topic) => topic.orderIndex === i
-            );
-            if (topic) {
-              newOrdering.push(topic.id);
+        // Always reorder if we have existing topics, regardless of position
+        if (existingTopics && existingTopics.length > 0) {
+          // If placing at the end, just append to existing order
+          if (finalOrderIndex >= existingTopics.length) {
+            newOrdering = [
+              ...existingTopics.map((topic) => topic.id),
+              createdTopic.id,
+            ];
+          } else {
+            // Insert at specific position
+            for (let i = 0; i < existingTopics.length; i++) {
+              if (i === finalOrderIndex) {
+                newOrdering.push(createdTopic.id);
+              }
+              const topic = existingTopics.find(
+                (topic) => topic.orderIndex === i
+              );
+              if (topic) {
+                newOrdering.push(topic.id);
+              }
             }
           }
           await updateTopicsOrder(supabase, newOrdering, marathonId);

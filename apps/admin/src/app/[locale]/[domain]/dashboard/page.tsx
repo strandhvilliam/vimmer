@@ -19,6 +19,7 @@ import {
   GpsMapChartSkeleton,
   RecentParticipantsTableSkeleton,
 } from "./_components/loading-skeletons";
+import { connection } from "next/server";
 
 interface PageProps {
   params: Promise<{
@@ -27,6 +28,7 @@ interface PageProps {
 }
 
 export default async function DashboardPage({ params }: PageProps) {
+  await connection();
   const { domain } = await params;
 
   const deviceGroupsPromise = getDeviceGroupsByDomain(domain);

@@ -1,6 +1,6 @@
 "use client";
 
-import { Topic } from "@vimmer/supabase/types";
+import { Topic, CompetitionClass } from "@vimmer/supabase/types";
 import { updateTopicOrderAction } from "../_actions/topics-update-order-action";
 import { editTopicAction } from "../_actions/topics-edit-action";
 import { deleteTopicAction } from "../_actions/topics-delete-action";
@@ -23,11 +23,13 @@ const TopicsTable = dynamic(
 interface TopicsClientWrapperProps {
   marathonId: number;
   initialTopics: Topic[];
+  competitionClasses: CompetitionClass[];
 }
 
 export function TopicsClientWrapper({
   marathonId,
   initialTopics,
+  competitionClasses,
 }: TopicsClientWrapperProps) {
   const [topics, setTopics] = useState<Topic[]>(initialTopics);
 
@@ -133,6 +135,7 @@ export function TopicsClientWrapper({
       onUpdateTopic={handleUpdateTopic}
       onDeleteTopic={handleDeleteTopic}
       isLoading={isLoading}
+      competitionClasses={competitionClasses}
     />
   );
 }

@@ -34,6 +34,9 @@ export function ReviewTimeline({
   participant,
   hasIssues,
 }: ReviewTimelineProps) {
+  // Check if participant is verified
+  const isParticipantVerified = participant.status === "verified";
+
   const reviewSteps: ReviewStep[] = [
     {
       status: "completed",
@@ -50,36 +53,49 @@ export function ReviewTimeline({
       icon: ImageIcon,
     },
     {
-      status: hasIssues ? "completed" : "current",
+      status: submission.status === "uploaded" ? "completed" : "current",
       title: "Submission Processed",
-      description: hasIssues
-        ? "Issues found during processing"
-        : "Technical validation complete",
-      timestamp: hasIssues
-        ? format(new Date(submission.createdAt), "MMM d, yyyy HH:mm")
-        : undefined,
+      description:
+        submission.status === "uploaded"
+          ? "Technical validation complete"
+          : "Processing submission",
+      timestamp:
+        submission.status === "uploaded"
+          ? format(
+              new Date(submission.updatedAt || submission.createdAt),
+              "MMM d, yyyy HH:mm"
+            )
+          : undefined,
       icon: AlertTriangle,
     },
     {
       status:
-        submission.status === "approved"
+        submission.status === "approved" || isParticipantVerified
           ? "completed"
           : submission.status === "rejected"
             ? "completed"
             : "upcoming",
       title: "Staff Verified",
       description:
-        submission.status === "approved"
+        submission.status === "approved" || isParticipantVerified
           ? "Photo verified for competition"
           : submission.status === "rejected"
             ? "Photo rejected"
             : "Awaiting staff verification",
       timestamp:
-        submission.status !== "pending" && submission.updatedAt
-          ? format(new Date(submission.updatedAt), "MMM d, yyyy HH:mm")
+        (submission.status !== "pending" && submission.updatedAt) ||
+        isParticipantVerified
+          ? format(
+              new Date(
+                isParticipantVerified && participant.updatedAt
+                  ? participant.updatedAt
+                  : submission.updatedAt || submission.createdAt
+              ),
+              "MMM d, yyyy HH:mm"
+            )
           : undefined,
       icon:
-        submission.status === "approved"
+        submission.status === "approved" || isParticipantVerified
           ? CheckCircle2
           : submission.status === "rejected"
             ? XCircle
