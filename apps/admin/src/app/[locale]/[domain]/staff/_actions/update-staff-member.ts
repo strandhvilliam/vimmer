@@ -55,7 +55,7 @@ export const updateStaffMemberAction = actionClient
     await updateUserMarathonRelation(supabase, staffId, marathon.id, { role });
 
     // Revalidate cache
-    revalidateTag(staffMemberByIdTag({ staffId }));
+    revalidateTag(staffMemberByIdTag({ staffId, marathonId: marathon.id }));
     revalidateTag(staffMembersByDomainTag({ domain }));
 
     return { success: true };

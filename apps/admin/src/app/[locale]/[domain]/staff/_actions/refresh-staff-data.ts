@@ -11,22 +11,20 @@ import {
 
 const refreshStaffDataSchema = z.object({
   staffId: z.string(),
+  marathonId: z.number(),
 });
 
 export const refreshStaffData = actionClient
   .schema(refreshStaffDataSchema)
-  .action(async ({ parsedInput: { staffId } }) => {
+  .action(async ({ parsedInput: { staffId, marathonId } }) => {
     const cookieStore = await cookies();
     const domain = cookieStore.get("activeDomain")?.value;
-    const locale = cookieStore.get("Next-Locale")?.value;
-
-    console.log({ domain, locale });
 
     if (!domain) {
       throw new Error("Domain not found");
     }
 
-    revalidateTag(staffMemberByIdTag({ staffId }));
+    revalidateTag(staffMemberByIdTag({ staffId, marathonId }));
     revalidateTag(participantVerificationsByStaffIdTag({ staffId }));
 
     return {

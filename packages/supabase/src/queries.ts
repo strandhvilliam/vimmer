@@ -559,21 +559,20 @@ export async function getStaffMembersByDomainQuery(
   domain: string
 ): Promise<(UserMarathonRelation & { user: User })[]> {
   const { data } = await supabase
-    .from("user_marathons")
-    .select("*, user(*), marathons(*)")
-    .eq("marathons.domain", domain)
+    .from("marathons")
+    .select("*, user_marathons(*, user(*))")
+    .eq("domain", domain)
     .throwOnError();
 
   return (
-    data?.map(({ marathons: _, ...rest }) => ({
-      ...toCamelCase(rest),
-    })) ?? []
+    data?.flatMap(({ user_marathons }) => toCamelCase(user_marathons)) ?? []
   );
 }
 
 export async function getStaffMemberByIdQuery(
   supabase: SupabaseClient,
-  staffId: string
+  staffId: string,
+  marathonId: number
 ): Promise<
   | (UserMarathonRelation & {
       user: User & { participantVerifications: ParticipantVerification[] };
@@ -584,6 +583,7 @@ export async function getStaffMemberByIdQuery(
     .from("user_marathons")
     .select("*, user(*, participant_verifications(*))")
     .eq("user_id", staffId)
+    .eq("marathon_id", marathonId)
     .maybeSingle()
     .throwOnError();
 

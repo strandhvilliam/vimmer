@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@vimmer/ui/globals.css";
 import { Providers } from "./providers";
+import { connection } from "next/server";
 
 const GeistSans = Geist({
   variable: "--font-geist-sans",

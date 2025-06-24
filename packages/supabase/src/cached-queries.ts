@@ -267,12 +267,13 @@ export async function getStaffMembersByDomain(
 }
 
 export async function getStaffMemberById(
-  staffId: string
+  staffId: string,
+  marathonId: number
 ): Promise<(UserMarathonRelation & { user: User }) | null> {
   "use cache";
-  cacheTag(staffMemberByIdTag({ staffId }));
+  cacheTag(staffMemberByIdTag({ staffId, marathonId }));
   cacheLife("minutes");
   const supabase = await createClient();
-  const data = await getStaffMemberByIdQuery(supabase, staffId);
+  const data = await getStaffMemberByIdQuery(supabase, staffId, marathonId);
   return data;
 }

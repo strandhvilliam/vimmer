@@ -7,6 +7,7 @@ import { Toaster } from "@vimmer/ui/components/sonner";
 import { getMarathonByDomain } from "@vimmer/supabase/cached-queries";
 import { notFound, redirect } from "next/navigation";
 import { DotPattern } from "@vimmer/ui/components/dot-pattern";
+import { connection } from "next/server";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,6 +20,7 @@ export default async function DashboardLayout({
   children,
   params,
 }: LayoutProps) {
+  await connection();
   const { domain } = await params;
 
   const sessionPromise = getSession();

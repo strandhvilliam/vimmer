@@ -70,8 +70,9 @@ export default async function StaffLayout({
           </Suspense>
         </div>
       </div>
-
-      <div className="flex-1 flex flex-col h-full">{children}</div>
+      <div className="flex-1 flex flex-col h-full">
+        <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+      </div>
     </div>
   );
 }

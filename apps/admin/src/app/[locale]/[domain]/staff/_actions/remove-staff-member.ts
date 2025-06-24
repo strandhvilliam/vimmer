@@ -42,7 +42,7 @@ export const removeStaffMemberAction = actionClient
     await deleteUserMarathonRelation(supabase, staffId, marathon.id);
 
     // Revalidate cache
-    revalidateTag(staffMemberByIdTag({ staffId }));
+    revalidateTag(staffMemberByIdTag({ staffId, marathonId: marathon.id }));
     revalidateTag(staffMembersByDomainTag({ domain }));
 
     return { success: true };
