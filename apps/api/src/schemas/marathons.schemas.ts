@@ -35,6 +35,19 @@ export const updateMarathonSchema = z.object({
   }),
 });
 
+export const updateMarathonByDomainSchema = z.object({
+  domain: z.string(),
+  data: z.object({
+    name: z.string().optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+    logoUrl: z.string().optional(),
+    description: z.string().optional(),
+    languages: z.string().optional(),
+    setupCompleted: z.boolean().optional(),
+  }),
+});
+
 export const deleteMarathonSchema = z.object({
   id: z.number(),
 });

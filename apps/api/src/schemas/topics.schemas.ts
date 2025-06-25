@@ -40,3 +40,13 @@ export const updateTopicsOrderSchema = z.object({
 export const deleteTopicSchema = z.object({
   id: z.number(),
 });
+
+export const getTopicsWithSubmissionCountSchema = z.object({
+  marathonId: z.number(),
+});
+
+export const getTotalSubmissionCountSchema = z.object({
+  marathonId: z.number(),
+});
+
+export const getScheduledTopicsSchema = z.object({});

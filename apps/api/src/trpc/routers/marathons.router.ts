@@ -5,6 +5,7 @@ import {
   getMarathonByIdSchema,
   getMarathonByDomainSchema,
   updateMarathonSchema,
+  updateMarathonByDomainSchema,
 } from "@/schemas/marathons.schemas";
 import {
   createMarathonMutation,
@@ -12,6 +13,7 @@ import {
   getMarathonByIdQuery,
   getMarathonByDomainQuery,
   updateMarathonMutation,
+  updateMarathonByDomainMutation,
 } from "@/db/queries/marathons.queries";
 
 export const marathonsRouter = createTRPCRouter({
@@ -41,6 +43,15 @@ export const marathonsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return updateMarathonMutation(ctx.db, {
         id: input.id,
+        data: input.data,
+      });
+    }),
+
+  updateMarathonByDomain: publicProcedure
+    .input(updateMarathonByDomainSchema)
+    .mutation(async ({ ctx, input }) => {
+      return updateMarathonByDomainMutation(ctx.db, {
+        domain: input.domain,
         data: input.data,
       });
     }),

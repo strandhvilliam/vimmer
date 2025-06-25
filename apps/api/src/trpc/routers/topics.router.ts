@@ -7,6 +7,9 @@ import {
   getTopicsByMarathonIdSchema,
   updateTopicSchema,
   updateTopicsOrderSchema,
+  getTopicsWithSubmissionCountSchema,
+  getTotalSubmissionCountSchema,
+  getScheduledTopicsSchema,
 } from "@/schemas/topics.schemas";
 import {
   createTopic,
@@ -16,6 +19,9 @@ import {
   getTopicsByMarathonIdQuery,
   updateTopic,
   updateTopicsOrder,
+  getTopicsWithSubmissionCountQuery,
+  getTotalSubmissionCountQuery,
+  getScheduledTopicsQuery,
 } from "@/db/queries/topics.queries";
 
 export const topicsRouter = createTRPCRouter({
@@ -69,5 +75,27 @@ export const topicsRouter = createTRPCRouter({
       return deleteTopic(ctx.db, {
         id: input.id,
       });
+    }),
+
+  getTopicsWithSubmissionCount: publicProcedure
+    .input(getTopicsWithSubmissionCountSchema)
+    .query(async ({ ctx, input }) => {
+      return getTopicsWithSubmissionCountQuery(ctx.supabase, {
+        marathonId: input.marathonId,
+      });
+    }),
+
+  getTotalSubmissionCount: publicProcedure
+    .input(getTotalSubmissionCountSchema)
+    .query(async ({ ctx, input }) => {
+      return getTotalSubmissionCountQuery(ctx.supabase, {
+        marathonId: input.marathonId,
+      });
+    }),
+
+  getScheduledTopics: publicProcedure
+    .input(getScheduledTopicsSchema)
+    .query(async ({ ctx, input }) => {
+      return getScheduledTopicsQuery(ctx.db);
     }),
 });

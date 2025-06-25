@@ -1,5 +1,5 @@
 import { eq, and, desc } from "drizzle-orm";
-import type { Database } from "@/db";
+import type { Database, IdResponse } from "@/db";
 import {
   submissions,
   participants,
@@ -13,6 +13,7 @@ import type {
   DeviceGroup,
   Topic,
   JuryInvitation,
+  NewJuryInvitation,
 } from "@/db/types";
 import type { SupabaseClient } from "@vimmer/supabase/types";
 
@@ -102,4 +103,38 @@ export async function getJuryInvitationByIdQuery(
     where: eq(juryInvitations.id, id),
   });
   return result ?? null;
+}
+
+export async function createJuryInvitationMutation(
+  db: Database,
+  { data }: { data: NewJuryInvitation }
+): Promise<IdResponse> {
+  const result = await db
+    .insert(juryInvitations)
+    .values(data)
+    .returning({ id: juryInvitations.id });
+  return { id: result[0]?.id ?? null };
+}
+
+export async function updateJuryInvitationMutation(
+  db: Database,
+  { id, data }: { id: number; data: Partial<NewJuryInvitation> }
+): Promise<IdResponse | null> {
+  const result = await db
+    .update(juryInvitations)
+    .set(data)
+    .where(eq(juryInvitations.id, id))
+    .returning({ id: juryInvitations.id });
+  return { id: result[0]?.id ?? null };
+}
+
+export async function deleteJuryInvitationMutation(
+  db: Database,
+  { id }: { id: number }
+): Promise<IdResponse | null> {
+  const result = await db
+    .delete(juryInvitations)
+    .where(eq(juryInvitations.id, id))
+    .returning({ id: juryInvitations.id });
+  return { id: result[0]?.id ?? null };
 }

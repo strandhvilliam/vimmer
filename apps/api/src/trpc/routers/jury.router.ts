@@ -1,11 +1,19 @@
 import {
   getJuryInvitationsByMarathonIdQuery,
   getJurySubmissionsQuery,
+  getJuryInvitationByIdQuery,
+  createJuryInvitationMutation,
+  updateJuryInvitationMutation,
+  deleteJuryInvitationMutation,
 } from "@/db/queries/jury.queries";
 import { createTRPCRouter, publicProcedure } from "../init";
 import {
   getJuryInvitationsByMarathonIdSchema,
   getJurySubmissionsSchema,
+  getJuryInvitationByIdSchema,
+  createJuryInvitationSchema,
+  updateJuryInvitationSchema,
+  deleteJuryInvitationSchema,
 } from "@/schemas/jury.schemas";
 
 export const juryRouter = createTRPCRouter({
@@ -14,9 +22,41 @@ export const juryRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return getJurySubmissionsQuery(ctx.db, input);
     }),
+
   getJuryInvitationsByMarathonId: publicProcedure
     .input(getJuryInvitationsByMarathonIdSchema)
     .query(async ({ ctx, input }) => {
       return getJuryInvitationsByMarathonIdQuery(ctx.db, input);
+    }),
+
+  getJuryInvitationById: publicProcedure
+    .input(getJuryInvitationByIdSchema)
+    .query(async ({ ctx, input }) => {
+      return getJuryInvitationByIdQuery(ctx.db, input);
+    }),
+
+  createJuryInvitation: publicProcedure
+    .input(createJuryInvitationSchema)
+    .mutation(async ({ ctx, input }) => {
+      return createJuryInvitationMutation(ctx.db, {
+        data: input.data,
+      });
+    }),
+
+  updateJuryInvitation: publicProcedure
+    .input(updateJuryInvitationSchema)
+    .mutation(async ({ ctx, input }) => {
+      return updateJuryInvitationMutation(ctx.db, {
+        id: input.id,
+        data: input.data,
+      });
+    }),
+
+  deleteJuryInvitation: publicProcedure
+    .input(deleteJuryInvitationSchema)
+    .mutation(async ({ ctx, input }) => {
+      return deleteJuryInvitationMutation(ctx.db, {
+        id: input.id,
+      });
     }),
 });

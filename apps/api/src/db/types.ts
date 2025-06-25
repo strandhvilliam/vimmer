@@ -10,6 +10,8 @@ import {
   ruleConfigs,
   juryInvitations,
   user,
+  zippedSubmissions,
+  participantVerifications,
 } from "./schema";
 
 export type Participant = typeof participants.$inferSelect;
@@ -44,3 +46,11 @@ export type NewJuryInvitation = typeof juryInvitations.$inferInsert;
 
 export type User = typeof user.$inferSelect;
 export type NewUser = typeof user.$inferInsert;
+
+export type ZippedSubmission = typeof zippedSubmissions.$inferSelect;
+export type NewZippedSubmission = typeof zippedSubmissions.$inferInsert;
+
+export type ParticipantVerification =
+  typeof participantVerifications.$inferSelect;
+export type NewParticipantVerification =
+  typeof participantVerifications.$inferInsert;

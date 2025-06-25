@@ -70,6 +70,22 @@ export async function updateMarathonMutation(
   return { id: result[0]?.id ?? null };
 }
 
+export async function updateMarathonByDomainMutation(
+  db: Database,
+  { domain, data }: { domain: string; data: Partial<NewMarathon> }
+): Promise<IdResponse | null> {
+  if (!data.updatedAt) {
+    data.updatedAt = new Date().toISOString();
+  }
+
+  const result = await db
+    .update(marathons)
+    .set(data)
+    .where(eq(marathons.domain, domain))
+    .returning({ id: marathons.id });
+  return { id: result[0]?.id ?? null };
+}
+
 export async function deleteMarathonMutation(
   db: Database,
   { id }: { id: number }

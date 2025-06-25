@@ -1,7 +1,7 @@
 import type { Database, IdResponse } from "@/db";
 import { marathons, topics } from "../schema";
 import { and, eq } from "drizzle-orm";
-import type { NewTopic, Topic } from "../types";
+import type { NewTopic, Topic, Marathon } from "../types";
 import type { SupabaseClient } from "@vimmer/supabase/types";
 
 export async function getTopicsByMarathonIdQuery(
@@ -93,4 +93,50 @@ export async function deleteTopic(
     id: topics.id,
   });
   return { id: result[0]?.id ?? null };
+}
+
+export async function getTopicsWithSubmissionCountQuery(
+  supabase: SupabaseClient,
+  { marathonId }: { marathonId: number }
+) {
+  const { data } = await supabase
+    .from("topics")
+    .select("id, submissions:submissions(count)", {
+      count: "exact",
+    })
+    .eq("marathon_id", marathonId)
+    .throwOnError();
+
+  return (
+    data?.map((topic: any) => ({
+      id: topic.id,
+      submissions: topic.submissions,
+    })) ?? []
+  );
+}
+
+export async function getTotalSubmissionCountQuery(
+  supabase: SupabaseClient,
+  { marathonId }: { marathonId: number }
+) {
+  const { count } = await supabase
+    .from("submissions")
+    .select("*", { count: "exact", head: true })
+    .eq("marathon_id", marathonId)
+    .throwOnError();
+
+  return count ?? 0;
+}
+
+export async function getScheduledTopicsQuery(
+  db: Database
+): Promise<(Topic & { marathon: Marathon })[]> {
+  const result = await db.query.topics.findMany({
+    where: eq(topics.visibility, "scheduled"),
+    with: {
+      marathon: true,
+    },
+  });
+
+  return result;
 }
