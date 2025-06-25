@@ -18,10 +18,13 @@ import { getCompetitionClassByIdQuery } from "@vimmer/supabase/queries";
 import { juryInvitationsByDomainTag } from "@vimmer/supabase/cache-tags";
 
 const MAX_EXPIRY_DAYS = 90;
-const CLIENT_URL =
-  process.env.NODE_ENV === "development"
-    ? "http://localhost:3000"
-    : "https://d";
+
+const getClientUrl = (domain: string) => {
+  if (process.env.NODE_ENV === "development") {
+    return "http://localhost:3000";
+  }
+  return `https://${domain}.vimmer.photo`;
+};
 
 const createJuryInvitationSchema = z.object({
   displayName: z.string(),
@@ -65,14 +68,10 @@ export const createJuryInvitationAction = actionClient
     const cookieStore = await cookies();
     const domain = cookieStore.get("activeDomain")?.value;
 
-    const baseUrl =
-      process.env.NODE_ENV === "development"
-        ? `${CLIENT_URL}`
-        : `${domain}/${CLIENT_URL}`;
-
     if (!domain) {
       throw new Error("No domain found");
     }
+    const baseUrl = getClientUrl(domain);
 
     const marathon = await getMarathonByDomain(domain);
 
@@ -122,7 +121,7 @@ export const createJuryInvitationAction = actionClient
       : null;
 
     const { data, error } = await resend.emails.send({
-      from: "Acme <onboarding@resend.dev>",
+      from: "Vimmer Support <support@vimmer.photo>",
       to: [parsedInput.email],
       subject: `Invitation to review ${marathon.name} submissions`,
       react: JuryReviewEmail({
@@ -135,6 +134,8 @@ export const createJuryInvitationAction = actionClient
         competitionGroup: competitionClass?.name ?? "",
       }),
     });
+
+    console.log({ data, error });
 
     revalidateTag(juryInvitationsByDomainTag({ domain }));
     revalidatePath(`/${domain}/jury`);

@@ -32,6 +32,8 @@
     "next-safe-action": "^7.10.8",
     "nuqs": "^2.4.3",
     "pg": "^8.16.0",
+    "posthog-js": "^1.255.0",
+    "posthog-node": "^5.1.1",
     "qrcode.react": "^4.2.0",
     "react": "19.1.0",
     "react-confetti": "^6.4.0",

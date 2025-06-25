@@ -17,6 +17,8 @@ import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import TermsAndConditionsDialog from "../../../components/terms-and-conditions-dialog";
 import { useTheme } from "next-themes";
 import { cn } from "@vimmer/ui/lib/utils";
+import Link from "next/link";
+import { format } from "date-fns";
 
 const LOGO =
   "https://www.stockholmfotomaraton.se/wp-content/uploads/2022/11/Logga-22-png-1024x1024-1.png";
@@ -36,35 +38,37 @@ export function SetupClientPage({ marathon }: { marathon: Marathon }) {
 
   return (
     <div className="flex flex-col min-h-[100dvh] relative overflow-hidden">
-      <div className="relative z-20 flex flex-col flex-1 h-full">
-        <div className="absolute top-4 right-4 z-30">
-          <Button
-            variant="outline"
-            size="icon"
-            className="rounded-full"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          >
-            {theme === "dark" ? (
-              <Sun className="h-[1.2rem] w-[1.2rem]" />
-            ) : (
-              <Moon className="h-[1.2rem] w-[1.2rem]" />
-            )}
-            <span className="sr-only">Toggle theme</span>
-          </Button>
-        </div>
-        <header className="flex flex-col items-center pt-16 pb-4 px-4">
-          <div className="w-24 h-24 rounded-full flex items-center justify-center mb-3">
-            <img src={LOGO} alt="Logo" width={96} height={96} />
+      <div className=" z-20 flex flex-col flex-1 h-full">
+        <header className="flex justify-between items-center p-4">
+          <div className="font-rocgrotesk font-extrabold">vimmer</div>
+          <div>
+            <Button variant="link" className="text-xs h-8 px-2 gap-0" asChild>
+              <Link href="/staff">
+                Staff
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </Button>
           </div>
-          <h1 className="text-3xl font-rocgrotesk font-extrabold text-gray-900 text-center mt-2">
-            Stockholm Fotomaraton
-          </h1>
-          <p className=" text-center text-lg mt-1 font-medium tracking-wide">
-            16 August 2025
-          </p>
         </header>
-
         <main className="flex-1 px-6 pb-6 max-w-md mx-auto w-full flex flex-col justify-end">
+          <div className="flex flex-col items-center pb-12">
+            <div className="w-24 h-24 rounded-full flex items-center justify-center mb-3">
+              <img src={LOGO} alt="Logo" width={96} height={96} />
+            </div>
+            <h1 className="text-3xl font-rocgrotesk font-extrabold text-gray-900 text-center mt-2">
+              {marathon.name}
+            </h1>
+            <p className=" text-center text-lg mt-1 font-medium tracking-wide">
+              {marathon.startDate && marathon.endDate ? (
+                <>
+                  {format(marathon.startDate, "dd MMMM yyyy")} -{" "}
+                  {format(marathon.endDate, "dd MMMM yyyy")}
+                </>
+              ) : (
+                "Dates to be announced"
+              )}
+            </p>
+          </div>
           <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-6 border border-background/20 shadow-xl">
             <h2 className="text-2xl font-rocgrotesk font-semibold  mb-4">
               Getting Started

@@ -80,13 +80,6 @@ const columns = [
             Passed
           </Badge>
         );
-      } else if (outcome === "skipped") {
-        return (
-          <Badge className="bg-gray-300/15 text-gray-600 hover:bg-gray-300/20">
-            <span className="h-3.5 w-3.5 mr-1">—</span>
-            Skipped
-          </Badge>
-        );
       } else {
         return (
           <Badge
@@ -182,7 +175,7 @@ export function ValidationResultsTable({
     <div className="space-y-4">
       <div className="rounded-md border">
         <Table>
-          <TableHeader className="bg-muted/50">
+          <TableHeader className="bg-muted">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -213,6 +206,7 @@ export function ValidationResultsTable({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className="bg-background"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -225,7 +219,7 @@ export function ValidationResultsTable({
                 </TableRow>
               ))
             ) : (
-              <TableRow>
+              <TableRow className="bg-background">
                 <TableCell
                   colSpan={columns.length}
                   className="h-24 text-center"

@@ -4,6 +4,7 @@ import { createRule, runValidations } from "@vimmer/validation/validator";
 import { createClient } from "@vimmer/supabase/lambda";
 import {
   getParticipantByIdQuery,
+  getRulesByMarathonIdQuery,
   getTopicsByDomainQuery,
   getTopicsByMarathonIdQuery,
 } from "@vimmer/supabase/queries";
@@ -13,8 +14,9 @@ import { RuleKey } from "@vimmer/validation/types";
 import { RULE_KEYS } from "@vimmer/validation/constants";
 import { SEVERITY_LEVELS } from "@vimmer/validation/constants";
 import { RuleConfig } from "@vimmer/validation/types";
+import type { RuleConfig as DbRuleConfig } from "@vimmer/supabase/types";
 
-const ruleConfigs: RuleConfig<RuleKey>[] = [
+const defaultRuleConfigs: RuleConfig<RuleKey>[] = [
   createRule(RULE_KEYS.ALLOWED_FILE_TYPES, SEVERITY_LEVELS.ERROR, {
     allowedFileTypes: ["jpg", "jpeg"],
   }),
@@ -25,6 +27,20 @@ const ruleConfigs: RuleConfig<RuleKey>[] = [
   }),
   createRule(RULE_KEYS.SAME_DEVICE, SEVERITY_LEVELS.ERROR),
 ];
+
+// Function to map database rule configs to validation rule configs
+function mapDbRuleConfigsToValidationConfigs(
+  dbRuleConfigs: DbRuleConfig[]
+): RuleConfig<RuleKey>[] {
+  return dbRuleConfigs
+    .filter((rule) => rule.enabled) // Only include enabled rules
+    .map((rule) => {
+      const ruleKey = rule.ruleKey as RuleKey;
+      const severity = rule.severity as "error" | "warning";
+
+      return createRule(ruleKey, severity, rule.params as any);
+    });
+}
 
 const validationInputSchema = z.object({
   exif: z.record(z.unknown(), { message: "No exif data found" }),
@@ -56,9 +72,22 @@ export const handler = async (event: SQSEvent): Promise<void> => {
       throw new Error(`Participant with id ${participantId} not found`);
     }
 
+    if (participantWithSubmissions.status === "verified") {
+      console.log("Participant is already verified, skipping");
+      continue;
+    }
+
+    const dbRuleConfigs = await getRulesByMarathonIdQuery(
+      supabase,
+      participantWithSubmissions.marathonId
+    );
+
+    // Map database rule configs to validation rule configs
+    const ruleConfigs = mapDbRuleConfigsToValidationConfigs(dbRuleConfigs);
+
     const topics = await getTopicsByMarathonIdQuery(
       supabase,
-      participantWithSubmissions?.marathonId
+      participantWithSubmissions.marathonId
     );
 
     const parsedSubmissions = z.array(validationInputSchema).safeParse(

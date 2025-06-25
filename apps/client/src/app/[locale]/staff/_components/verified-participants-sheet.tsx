@@ -148,7 +148,7 @@ function ParticipantItem({ verification, topics }: ParticipantItemProps) {
     <div>
       <button
         type="button"
-        className="w-full p-4 flex items-center justify-between hover:bg-accent focus:outline-none transition-colors"
+        className="w-full p-4 flex items-center justify-between  focus:outline-none transition-colors"
         onClick={() => setExpanded((prev) => !prev)}
         aria-expanded={expanded}
       >
@@ -191,9 +191,29 @@ function ParticipantItem({ verification, topics }: ParticipantItemProps) {
           ) : (
             <ul className="space-y-2">
               {[...verification.participant.validationResults]
-                .sort((a, b) =>
-                  a.outcome === "failed" ? -1 : b.outcome === "failed" ? 1 : 0
-                )
+                .sort((a, b) => {
+                  // First priority: outcome (failed first)
+                  if (a.outcome === "failed" && b.outcome !== "failed")
+                    return -1;
+                  if (b.outcome === "failed" && a.outcome !== "failed")
+                    return 1;
+
+                  // Second priority: topic order index
+                  const aTopicIndex = getTopicIndexFromFileName(
+                    a.fileName || ""
+                  );
+                  const bTopicIndex = getTopicIndexFromFileName(
+                    b.fileName || ""
+                  );
+
+                  if (aTopicIndex && bTopicIndex) {
+                    return aTopicIndex - bTopicIndex;
+                  }
+                  if (aTopicIndex && !bTopicIndex) return -1;
+                  if (!aTopicIndex && bTopicIndex) return 1;
+
+                  return 0;
+                })
                 .map((result, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <div className="w-20">

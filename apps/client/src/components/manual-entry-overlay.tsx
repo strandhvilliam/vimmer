@@ -11,6 +11,7 @@ import {
 } from "@vimmer/ui/components/sheet";
 import { cn } from "@vimmer/ui/lib/utils";
 import * as React from "react";
+import { toast } from "sonner";
 
 interface ManualEntrySheetProps {
   open: boolean;
@@ -29,7 +30,18 @@ export function ManualEntrySheet({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onOpenChange(false);
-    onEnterAction({ reference: inputValue, domain });
+    if (!domain) {
+      toast.error("Unable to determine domain");
+      return;
+    }
+
+    // Pad 3-digit numbers with leading zero
+    const formattedValue =
+      inputValue.trim().length === 3
+        ? `0${inputValue.trim()}`
+        : inputValue.trim();
+
+    onEnterAction({ reference: formattedValue, domain });
   };
 
   return (

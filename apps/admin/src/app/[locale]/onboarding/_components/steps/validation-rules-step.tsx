@@ -210,7 +210,7 @@ export function ValidationRulesStep({
 
   return (
     <div className="max-w-4xl mx-auto">
-      <Card className="border-0 shadow-xl">
+      <Card className="border-muted shadow-lg backdrop-blur-sm rounded-2xl ">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-rocgrotesk">
             Validation Rules

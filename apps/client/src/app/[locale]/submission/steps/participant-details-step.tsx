@@ -123,6 +123,7 @@ export function ParticipantDetailsStep({
             <Input
               {...register("email")}
               className="rounded-xl text-lg py-6"
+              type="email"
               placeholder="your@email.com"
             />
             {errors.email && (

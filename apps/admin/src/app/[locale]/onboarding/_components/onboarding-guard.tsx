@@ -20,14 +20,10 @@ export function OnboardingGuard({
 
   useEffect(() => {
     // If marathon exists but setup is not completed, redirect to onboarding
-    if (
-      marathon &&
-      !marathon.setupCompleted &&
-      pathname !== `/${domain}/onboarding`
-    ) {
-      router.push(`/${domain}/onboarding`);
+    if (marathon && !marathon.setupCompleted && pathname !== `/onboarding`) {
+      router.push(`/onboarding`);
     }
-  }, [marathon, domain, router]);
+  }, [marathon, domain, router, pathname]);
 
   if (!marathon || !marathon.setupCompleted) {
     return null;

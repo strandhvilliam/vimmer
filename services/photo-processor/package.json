@@ -9,7 +9,8 @@
     "@vimmer/supabase": "workspace:*",
     "@vimmer/validation": "workspace:*",
     "exifr": "^7.1.3",
-    "sst": "^3.5.13"
+    "sst": "^3.5.13",
+    "sharp": "^0.33.5"
   },
   "devDependencies": {
     "@types/bun": "latest",

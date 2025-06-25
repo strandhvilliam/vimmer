@@ -43,6 +43,24 @@ async function processSubmission(
 ) {
   try {
     const { submission, participant } = await prepareSubmission(supabase, key);
+
+    if (
+      participant.status === "verified" ||
+      participant.status === "completed"
+    ) {
+      console.log("Participant is already verified or completed, skipping");
+      return;
+    }
+
+    if (
+      participant.uploadCount >= participant.competitionClass?.numberOfPhotos!
+    ) {
+      console.log(
+        "Participant has already reached the maximum number of uploads, skipping"
+      );
+      return;
+    }
+
     const { file, size, metadata, mimeType } = await getFileFromS3(
       s3Client,
       key
@@ -132,11 +150,15 @@ async function triggerZipGenerationTask(
   participantReference: string,
   exportType: "zip_submissions" | "zip_thumbnails" | "zip_previews"
 ) {
-  await task.run(Resource.GenerateParticipantZipTask, {
-    PARTICIPANT_REFERENCE: participantReference,
-    DOMAIN: domain,
-    EXPORT_TYPE: exportType,
-  });
+  try {
+    await task.run(Resource.GenerateParticipantZipTask, {
+      PARTICIPANT_REFERENCE: participantReference,
+      DOMAIN: domain,
+      EXPORT_TYPE: exportType,
+    });
+  } catch (error) {
+    console.error("Error triggering zip generation task:", error);
+  }
 }
 
 async function triggerValidationQueue(participantId: number) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Topic } from "@vimmer/supabase/types";
+import { Topic, CompetitionClass } from "@vimmer/supabase/types";
 import {
   ColumnDef,
   flexRender,
@@ -39,7 +39,7 @@ import { cn } from "@vimmer/ui/lib/utils";
 import { TopicsDragHandle } from "./topics-drag-handle";
 import { TopicsSortableRow } from "./topics-sortable-row";
 import { EditTopicInput } from "../_actions/topics-edit-action";
-import { TopicsSubmissionsCell } from "./topics-submissions-cell";
+import { TopicsCompetitionClassesCell } from "./topics-competition-classes-cell";
 import { TopicsActionCell } from "./topics-action-cell";
 
 interface TopicsTableProps {
@@ -48,6 +48,7 @@ interface TopicsTableProps {
   onUpdateTopic: (topic: EditTopicInput) => void;
   onDeleteTopic: (topicId: number) => void;
   isLoading?: boolean;
+  competitionClasses: CompetitionClass[];
 }
 
 export function TopicsTable({
@@ -56,6 +57,7 @@ export function TopicsTable({
   onUpdateTopic,
   onDeleteTopic,
   isLoading,
+  competitionClasses,
 }: TopicsTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -121,9 +123,14 @@ export function TopicsTable({
       },
     },
     {
-      id: "submissions",
-      header: "Submissions",
-      cell: ({ row }) => <TopicsSubmissionsCell row={row} />,
+      id: "competitionClasses",
+      header: "Competition Classes",
+      cell: ({ row }) => (
+        <TopicsCompetitionClassesCell
+          row={row}
+          competitionClasses={competitionClasses}
+        />
+      ),
     },
     {
       id: "status",

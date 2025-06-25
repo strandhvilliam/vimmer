@@ -14,20 +14,11 @@ const pool = new Pool({
 export const auth = betterAuth({
   database: pool,
   secret: process.env.BETTER_AUTH_SECRET,
-  user: {
-    additionalFields: {
-      role: {
-        type: "string",
-        required: false,
-        defaultValue: "user",
-        input: false,
-      },
-    },
-  },
   trustedOrigins: [
+    "*.vimmer.photo",
     "http://localhost:3000",
-    "http://localhost:3001",
     `https://${AWS_CONFIG.routers.clientApp}`,
+    "http://192.168.50.119:3000",
   ],
   cookieCache: {
     enabled: true,
@@ -37,15 +28,16 @@ export const auth = betterAuth({
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
         switch (type) {
-          case "sign-in":
+          case "sign-in": {
             const { data, error } = await resend.emails.send({
-              from: "Acme <onboarding@resend.dev>",
+              from: "Vimmer Support <support@vimmer.photo>",
               to: [email],
               subject: "Sign in to Your Account",
               html: await render(OTPEmail({ otp, username: email })),
             });
             console.log({ data, error });
             break;
+          }
           case "forget-password":
             console.log(`Register OTP for ${email}: ${otp}`);
             break;

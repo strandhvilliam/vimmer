@@ -302,6 +302,23 @@ export async function updateRuleConfig(
   return toCamelCase(data);
 }
 
+export async function updateRuleConfigByMarathonIdAndRuleKey(
+  supabase: SupabaseClient,
+  marathonId: number,
+  ruleKey: string,
+  dto: Partial<UpdateRuleConfig>
+) {
+  const { data } = await supabase
+    .from("rule_configs")
+    .update(toSnakeCase(dto))
+    .eq("marathon_id", marathonId)
+    .eq("rule_key", ruleKey)
+    .select()
+    .maybeSingle()
+    .throwOnError();
+  return toCamelCase(data);
+}
+
 export async function deleteRuleConfig(supabase: SupabaseClient, id: number) {
   await supabase.from("rule_configs").delete().eq("id", id);
 }

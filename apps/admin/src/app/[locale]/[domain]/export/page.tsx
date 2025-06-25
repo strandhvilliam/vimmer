@@ -27,6 +27,7 @@ import {
   AlertTitle,
 } from "@vimmer/ui/components/alert";
 import { EXPORT_KEYS } from "@/lib/constants";
+import { connection } from "next/server";
 
 export default async function ExportPage({
   params,
@@ -35,6 +36,7 @@ export default async function ExportPage({
     domain: string;
   }>;
 }) {
+  await connection();
   const { domain } = await params;
   const marathon = await getMarathonByDomain(domain);
 
@@ -102,7 +104,7 @@ export default async function ExportPage({
                   <AlertDescription className="text-red-500/90 text-xs">
                     {participantCount === 0
                       ? "There are no participants in this marathon."
-                      : `Photo archives are not ready. Expected ${participantCount} archives, but found ${zippedSubmissionsCount}. Please generate archives first.`}
+                      : `Photo downloads are not ready. Expected ${participantCount} participants, but found ${zippedSubmissionsCount}. Please generate archives first.`}
                   </AlertDescription>
                 </Alert>
               )}
@@ -114,7 +116,7 @@ export default async function ExportPage({
                 label="Save to Local Folder"
                 description="Download all participant photo archives"
                 marathonId={marathon.id.toString()}
-                isExternallyDisabled={!canDownloadZippedSubmissions}
+                // isExternallyDisabled={!canDownloadZippedSubmissions}
               />
             </div>
           </CardContent>

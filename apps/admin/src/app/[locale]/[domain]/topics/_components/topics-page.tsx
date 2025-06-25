@@ -3,7 +3,10 @@ import { cookies } from "next/headers";
 import { TopicsTableSkeleton } from "./topics-table-skeleton";
 import { Suspense } from "react";
 import { TopicsClientWrapper } from "./topics-client-wrapper";
-import { getTopicsByDomain } from "@vimmer/supabase/cached-queries";
+import {
+  getCompetitionClassesByDomain,
+  getTopicsByDomain,
+} from "@vimmer/supabase/cached-queries";
 import { notFound } from "next/navigation";
 interface TopicsPageProps {
   marathonId: number;
@@ -17,7 +20,10 @@ export async function TopicsPage({ marathonId }: TopicsPageProps) {
     notFound();
   }
 
-  const topics = await getTopicsByDomain(domain);
+  const [topics, competitionClasses] = await Promise.all([
+    getTopicsByDomain(domain),
+    getCompetitionClassesByDomain(domain),
+  ]);
 
   const sortedTopics = [...topics].sort((a, b) => a.orderIndex - b.orderIndex);
 
@@ -32,6 +38,7 @@ export async function TopicsPage({ marathonId }: TopicsPageProps) {
                 <TopicsClientWrapper
                   marathonId={marathonId}
                   initialTopics={sortedTopics}
+                  competitionClasses={competitionClasses}
                 />
               </Suspense>
             </div>

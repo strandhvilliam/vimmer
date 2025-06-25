@@ -1,7 +1,6 @@
 // @ts-nocheck
 "use client";
 
-import { PARTICIPANT_REF_LENGTH } from "@/lib/constants";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { StepNavigationHandlers } from "@/lib/types";
 import {
@@ -11,11 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@vimmer/ui/components/card";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@vimmer/ui/components/input-otp";
+import { Input } from "@vimmer/ui/components/input";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,7 +23,7 @@ import {
   initializeParticipantSchema,
 } from "@/lib/schemas/initialize-participant-schema";
 import { Button } from "@vimmer/ui/components/button";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 
 interface Props extends StepNavigationHandlers {
@@ -51,11 +46,10 @@ export function ParticipantNumberStep({
   } = useSubmissionQueryState();
 
   const {
+    control,
     handleSubmit,
     watch,
-    setValue,
     setError,
-    clearErrors,
     formState: { errors },
   } = useForm<InitializeParticipantSchema>({
     resolver: zodResolver(initializeParticipantSchema),
@@ -96,15 +90,8 @@ export function ParticipantNumberStep({
   );
 
   const participantRefValue = watch("participantRef");
-  const disabledButton = participantRefValue?.length !== PARTICIPANT_REF_LENGTH;
-
-  const handleChange = (value: string) => {
-    setValue("participantRef", value);
-    if (value.length === PARTICIPANT_REF_LENGTH) {
-      clearErrors("participantRef");
-      participantRefRef.current?.blur();
-    }
-  };
+  const disabledButton =
+    !participantRefValue || participantRefValue.length === 0;
 
   return (
     <div className="max-w-md mx-auto min-h-[80vh] flex flex-col justify-center">
@@ -123,26 +110,37 @@ export function ParticipantNumberStep({
       >
         <CardContent className="space-y-6">
           <div>
-            <InputOTP
-              ref={participantRefRef}
-              inputMode="numeric"
-              onChange={handleChange}
-              maxLength={PARTICIPANT_REF_LENGTH}
-              containerClassName="gap-6 flex-row justify-center"
-              disabled={!!participantId}
-            >
-              <InputOTPGroup className="">
-                {Array.from({ length: PARTICIPANT_REF_LENGTH }).map(
-                  (_, index) => (
-                    <InputOTPSlot
-                      key={index}
-                      index={index}
-                      className="size-16 bg-background text-3xl"
-                    />
-                  )
-                )}
-              </InputOTPGroup>
-            </InputOTP>
+            <Controller
+              name="participantRef"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  ref={participantRefRef}
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="1234"
+                  className="text-center text-4xl h-16 bg-background tracking-widest"
+                  disabled={!!participantId}
+                  maxLength={4}
+                  value={field.value}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Only allow numbers and limit to 4 characters
+                    const numericValue = value.replace(/\D/g, "").slice(0, 4);
+
+                    // Store the raw numeric value without padding for UI
+                    field.onChange(numericValue);
+                  }}
+                  onBlur={() => {
+                    // Pad with zeros when the field loses focus (for saving/logic)
+                    if (field.value && field.value.length > 0) {
+                      const paddedValue = field.value.padStart(4, "0");
+                      field.onChange(paddedValue);
+                    }
+                  }}
+                />
+              )}
+            />
 
             {errors.participantRef && (
               <span className="flex flex-1 w-full justify-center text-center text-base pt-4 text-destructive font-medium">

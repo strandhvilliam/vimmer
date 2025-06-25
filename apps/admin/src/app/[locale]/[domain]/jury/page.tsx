@@ -1,7 +1,9 @@
 import { Mail } from "lucide-react";
+import { connection } from "next/server";
 import React from "react";
 
-export default function JuryDefaultPage() {
+export default async function JuryDefaultPage() {
+  await connection();
   return (
     <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
       <Mail className="h-12 w-12 mb-4" />

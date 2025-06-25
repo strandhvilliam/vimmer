@@ -35,10 +35,10 @@ export function ClassSelectionStep({
     <div className="max-w-4xl mx-auto space-y-8">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl font-rocgrotesk font-bold text-center">
-          Choose Your Challenge
+          Choose Your Class
         </CardTitle>
         <CardDescription className="text-center">
-          Select the competition class that matches your endurance goals
+          Select the class you want to compete in
         </CardDescription>
       </CardHeader>
 
@@ -151,7 +151,7 @@ export function CompetitionClassItem({
               <p className="text-sm text-muted-foreground">
                 {competitionClass.numberOfPhotos === 1
                   ? "1 photo"
-                  : `${competitionClass.numberOfPhotos} photos`}
+                  : `Number of photos: ${competitionClass.numberOfPhotos}`}
               </p>
               {competitionClass.description && (
                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2">

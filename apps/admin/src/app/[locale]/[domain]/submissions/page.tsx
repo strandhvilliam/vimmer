@@ -23,7 +23,7 @@ export default async function SubmissionsPage() {
       </div>
 
       <Tabs defaultValue="participants">
-        <TabsList className="bg-background rounded-none p-0 h-auto border-b border-muted-foreground/25 w-full flex justify-start">
+        <TabsList className="bg-transparent rounded-none p-0 h-auto border-b border-muted-foreground/25 w-full flex justify-start">
           <TabsTrigger
             value="participants"
             className="px-4 py-2 bg-background rounded-none data-[state=active]:shadow-none data-[state=active]:border-primary border-b-2 border-transparent"

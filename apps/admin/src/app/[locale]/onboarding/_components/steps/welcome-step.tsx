@@ -1,5 +1,6 @@
 "use client";
 
+import { Marathon } from "@vimmer/supabase/types";
 import { Button } from "@vimmer/ui/components/button";
 import {
   Card,
@@ -17,6 +18,7 @@ import {
   Trophy,
   Settings,
 } from "lucide-react";
+import { useOnboarding } from "../onboarding-context";
 
 interface WelcomeStepProps {
   onNext: () => void;
@@ -26,19 +28,23 @@ interface WelcomeStepProps {
 }
 
 export function WelcomeStep({ onNext }: WelcomeStepProps) {
+  const { marathon } = useOnboarding();
   return (
     <div className="max-w-3xl mx-auto">
-      <Card className="border-0 shadow-xl backdrop-blur-sm ">
-        <CardHeader className="text-center pb-8">
+      <Card className="border-muted shadow-lg backdrop-blur-sm rounded-2xl ">
+        <CardHeader className="text-center pb-4">
           <CardTitle className="text-3xl font-rocgrotesk ">
-            Welcome to PMUploader
+            Welcome to the onboarding process
           </CardTitle>
           <CardDescription className="text-lg max-w-2xl mx-auto">
-            The complete photo marathon management platform. Let's get your
-            marathon set up and ready for participants.
+            Let&apos;s get your marathon set up and ready for participants.
           </CardDescription>
         </CardHeader>
-
+        <div className="flex justify-center pb-4">
+          <span className="text-sm text-muted-foreground font-medium">
+            Domain Code: {marathon.domain}
+          </span>
+        </div>
         <CardContent className="space-y-8">
           <div className="flex flex-col items-center gap-6">
             <div className="space-y-4 bg-neutral-100 p-6 rounded-lg">

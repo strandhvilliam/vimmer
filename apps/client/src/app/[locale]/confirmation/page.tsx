@@ -10,17 +10,17 @@ import {
 } from "@/lib/schemas/submission-query-server-schema";
 import { notFound, redirect } from "next/navigation";
 import { ConfirmationData } from "@/lib/types";
-import { AWS_CONFIG } from "@/config/aws";
+import { Resource } from "sst";
+import { getDomain } from "@/lib/get-domain";
 
 interface ConfirmationPageProps {
   searchParams: Promise<SearchParams>;
 }
-const THUMBNAIL_BASE_URL = "https://d2xu2hgpxoda9b.cloudfront.net";
 
 export default async function ConfirmationPage({
   searchParams,
 }: ConfirmationPageProps) {
-  const domain = "dev0";
+  const domain = await getDomain();
   const params = await loadSubmissionQueryServerParams(searchParams);
 
   if (!params.participantRef) notFound();
@@ -49,10 +49,10 @@ export default async function ConfirmationPage({
     .map((submission) => ({
       id: submission.id.toString(),
       thumbnailUrl: submission.thumbnailKey
-        ? `${THUMBNAIL_BASE_URL}/${submission.thumbnailKey}`
+        ? `${Resource.ThumbnailsRouter.url}/${submission.thumbnailKey}`
         : undefined,
       previewUrl: submission.previewKey
-        ? `${THUMBNAIL_BASE_URL}/${submission.previewKey}`
+        ? `${Resource.PreviewsRouter.url}/${submission.previewKey}`
         : undefined,
       name: submission.topic?.name || `Photo ${submission.id}`,
       orderIndex: submission.topic?.orderIndex ?? 0,

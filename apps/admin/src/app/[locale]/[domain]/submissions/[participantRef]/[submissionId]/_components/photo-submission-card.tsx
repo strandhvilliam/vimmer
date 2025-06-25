@@ -1,20 +1,16 @@
 import { Submission, Topic } from "@vimmer/supabase/types";
 import { Card, CardContent } from "@vimmer/ui/components/card";
 
-const PREVIEW_BASE_URL = "https://d2w93ix7jvihnu.cloudfront.net";
-
-function getPreviewImageUrl(submission: Submission) {
-  return `${PREVIEW_BASE_URL}/${submission.previewKey}`;
-}
-
 export function PhotoSubmissionCard({
   submission,
   participant,
   topic,
+  imageUrl,
 }: {
   submission: Submission;
   participant: any;
   topic: Topic;
+  imageUrl: string;
 }) {
   return (
     <div className="space-y-4">
@@ -22,7 +18,7 @@ export function PhotoSubmissionCard({
         <CardContent className="p-0 bg-black/50">
           <div className="relative w-full overflow-hidden">
             <img
-              src={getPreviewImageUrl(submission)}
+              src={imageUrl}
               alt={topic.name}
               className="object-contain w-full h-full max-h-[70vh]"
             />

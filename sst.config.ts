@@ -12,11 +12,22 @@ export default $config({
     const env = {
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL!,
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY!,
+      NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
       REVALIDATE_SECRET: process.env.REVALIDATE_SECRET!,
+      POSTHOG_API_KEY: process.env.POSTHOG_API_KEY!,
     };
+
+    const allowOrigins =
+      process.env.SUBMISSION_BUCKETS_ALLOW_ORIGINS?.split(",") ?? [];
 
     const submissionBucket = new sst.aws.Bucket("SubmissionBucket", {
       access: "cloudfront",
+      cors: {
+        allowOrigins,
+        allowMethods: ["PUT"],
+        allowHeaders: ["*"],
+      },
     });
     const thumbnailBucket = new sst.aws.Bucket("ThumbnailBucket", {
       access: "cloudfront",
@@ -144,6 +155,9 @@ export default $config({
     processSubmissionQueue.subscribe({
       handler: "./services/photo-processor/index.handler",
       environment: env,
+      nodejs: {
+        install: ["sharp"],
+      },
       link: [
         submissionBucket,
         thumbnailBucket,
@@ -196,6 +210,13 @@ export default $config({
         previewsRouter,
         marathonSettingsRouter,
       ],
+      environment: {
+        ...env,
+        BETTER_AUTH_URL:
+          process.env.NODE_ENV === "production"
+            ? process.env.BETTER_AUTH_URL!
+            : "http://localhost:3000",
+      },
     });
 
     const adminApp = new sst.aws.Nextjs("AdminApp", {
@@ -215,6 +236,13 @@ export default $config({
         marathonSettingsRouter,
         clientApp,
       ],
+      environment: {
+        ...env,
+        BETTER_AUTH_URL:
+          process.env.NODE_ENV === "production"
+            ? process.env.BETTER_AUTH_URL!
+            : "http://localhost:3001",
+      },
     });
 
     return {

@@ -40,7 +40,7 @@ function checkTimeframe(
     return createValidationResult(
       VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.WITHIN_TIMERANGE,
-      `Timestamp is out of range of the specified timeframe: ${timestampDate.toISOString()} (allowed range: ${start.toISOString()} - ${end.toISOString()})`
+      `Timestamp is out of range of the specified timeframe: ${timestampDate.toISOString().split("T")[0]} (allowed range: ${start.toISOString().split("T")[0]} - ${end.toISOString().split("T")[0]})`
     );
   }
 

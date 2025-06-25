@@ -1,52 +1,77 @@
-import { createClient } from "@vimmer/supabase/browser";
-import { Participant, SupabaseRealtimeChannel } from "@vimmer/supabase/types";
-import { parseAsInteger, useQueryState } from "nuqs";
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { useSubmissionQueryState } from "./use-submission-query-state";
-
-const supabase = createClient();
+import useSWR from "swr";
 
 interface Props {
   onVerified: () => void;
 }
 
+async function fetchParticipant(participantId: number): Promise<boolean> {
+  const response = await fetch(`/api/is-participant-verified/${participantId}`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch participant: ${response.statusText}`);
+  }
+
+  const { isVerified } = await response.json();
+  console.log("isVerified", isVerified);
+  return isVerified;
+}
+
 export function useVerificationListener(props?: Props) {
-  const channel = useRef<SupabaseRealtimeChannel | null>(null);
+  // Commented out realtime implementation
+  // const channel = useRef<SupabaseRealtimeChannel | null>(null);
+  // const supabase = createClient();
+
   const {
     submissionState: { participantId },
   } = useSubmissionQueryState();
 
-  const [isVerified, setIsVerified] = useState(false);
+  // SWR implementation with polling
+  const { data: isVerified } = useSWR(
+    participantId ? `participant-${participantId}` : null,
+    () => fetchParticipant(participantId!),
+    {
+      refreshInterval: 2000,
+    }
+  );
 
   useEffect(() => {
-    if (!participantId) {
-      throw new Error("Participant ID is required");
+    if (isVerified) {
+      props?.onVerified?.();
     }
+  }, [isVerified, props]);
 
-    channel.current = supabase
-      .channel("verification-listener")
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "participants",
-          filter: `id=eq.${participantId}`,
-        },
-        (payload) => {
-          const newParticipant = payload.new as Participant;
-          if (newParticipant.status === "verified") {
-            setIsVerified(true);
-            props?.onVerified?.();
-          }
-        }
-      )
-      .subscribe();
-    return () => {
-      channel.current?.unsubscribe();
-      channel.current = null;
-    };
-  }, [participantId]);
+  // Commented out original realtime implementation
+  // useEffect(() => {
+  //   if (!participantId) {
+  //     throw new Error("Participant ID is required");
+  //   }
+
+  //   channel.current = supabase
+  //     .channel("verification-listener")
+  //     .on(
+  //       "postgres_changes",
+  //       {
+  //         event: "UPDATE",
+  //         schema: "public",
+  //         table: "participants",
+  //         filter: `id=eq.${participantId}`,
+  //       },
+  //       (payload) => {
+  //         const newParticipant = payload.new as Participant;
+  //         if (newParticipant.status === "verified") {
+  //           setIsVerified(true);
+  //           props?.onVerified?.();
+  //         }
+  //       }
+  //     )
+  //     .subscribe();
+  //   return () => {
+  //     channel.current?.unsubscribe();
+  //     channel.current = null;
+  //   };
+  // }, [participantId]);
 
   return isVerified;
 }

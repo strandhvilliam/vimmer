@@ -69,7 +69,7 @@ export async function middleware(request: NextRequest) {
       return response;
     }
 
-    if (url.pathname === "/onboarding") {
+    if (url.pathname.endsWith("onboarding")) {
       return response;
     }
 

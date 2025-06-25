@@ -21,6 +21,7 @@ import {
   maxFileSizeParamsSchema,
   withinTimerangeParamsSchema,
 } from "./_lib/schemas";
+import { connection } from "next/server";
 
 const DEFAULT_RULE_CONFIGS: RulesFormValues = {
   max_file_size: {
@@ -34,7 +35,7 @@ const DEFAULT_RULE_CONFIGS: RulesFormValues = {
     enabled: false,
     severity: "error",
     params: {
-      allowedFileTypes: ["image/jpeg", "image/png", "image/gif"],
+      allowedFileTypes: ["jpg"],
     },
   },
   within_timerange: {
@@ -75,7 +76,7 @@ function parseRuleWithParams<TParams>(
   if (!ok.success) return {};
   return {
     [key]: {
-      enabled: true,
+      enabled: rule.enabled,
       severity: rule.severity,
       params: paramOverride ? { ...ok.data, ...paramOverride } : ok.data,
     },
@@ -88,7 +89,7 @@ function parseSimpleRule(
 ): Partial<RulesFormValues> {
   return {
     [key]: {
-      enabled: true,
+      enabled: rule.enabled,
       severity: rule.severity,
       params: null,
     },
@@ -122,7 +123,10 @@ function parseRules(
         rule,
         withinTimerangeParamsSchema,
         RULE_KEYS.WITHIN_TIMERANGE,
-        { start: marathon.startDate ?? "", end: marathon.endDate ?? "" }
+        {
+          start: marathon.startDate,
+          end: marathon.endDate,
+        }
       ),
     [RULE_KEYS.SAME_DEVICE]: (rule) =>
       parseSimpleRule(RULE_KEYS.SAME_DEVICE, rule),
@@ -135,6 +139,9 @@ function parseRules(
     const isValidRuleKey = Object.values(RULE_KEYS).includes(
       rule.ruleKey as RuleKey
     );
+    if (rule.ruleKey === RULE_KEYS.WITHIN_TIMERANGE) {
+      console.log({ rule });
+    }
     if (!isValidRuleKey) continue;
     const handler = ruleHandlers[rule.ruleKey as RuleKey];
     if (handler) {
@@ -142,8 +149,19 @@ function parseRules(
     }
   }
 
-  return {
+  const defaultRulesWithMarathonDates = {
     ...DEFAULT_RULE_CONFIGS,
+    within_timerange: {
+      ...DEFAULT_RULE_CONFIGS.within_timerange,
+      params: {
+        start: marathon.startDate ?? "",
+        end: marathon.endDate ?? "",
+      },
+    },
+  };
+
+  return {
+    ...defaultRulesWithMarathonDates,
     ...parsedRules,
   };
 }
@@ -153,6 +171,7 @@ export default async function RulesPage({
 }: {
   params: Promise<{ domain: string }>;
 }) {
+  await connection();
   const { domain } = await params;
   const marathon = await getMarathonByDomain(domain);
   if (!marathon) {
@@ -166,7 +185,7 @@ export default async function RulesPage({
   });
 
   return (
-    <RulesProvider initialRules={DEFAULT_RULE_CONFIGS}>
+    <RulesProvider initialRules={rules}>
       <div className="container max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4">
           <div>
@@ -177,7 +196,7 @@ export default async function RulesPage({
               Configure validation rules for photo submissions.
             </p>
           </div>
-          <RulesButtons />
+          <RulesButtons initialRules={rules} />
         </div>
         <div className="space-y-4">
           <MaxFileSizeRule />

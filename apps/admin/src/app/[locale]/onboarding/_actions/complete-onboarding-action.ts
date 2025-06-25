@@ -10,9 +10,17 @@ import {
   createDeviceGroup,
   addRuleConfig,
   updateMarathonByDomain,
+  createTopic,
 } from "@vimmer/supabase/mutations";
 import { getMarathonByDomain } from "@vimmer/supabase/cached-queries";
 import { redirect } from "next/navigation";
+import {
+  competitionClassesByDomainTag,
+  deviceGroupsByDomainTag,
+  marathonByDomainTag,
+  rulesByMarathonIdTag,
+  topicsByDomainTag,
+} from "@vimmer/supabase/cache-tags";
 
 const completeOnboardingSchema = z.object({
   marathonConfig: z.object({
@@ -42,6 +50,14 @@ const completeOnboardingSchema = z.object({
       ruleKey: z.string(),
       severity: z.enum(["warning", "error"]),
       params: z.any().optional(),
+    })
+  ),
+  topics: z.array(
+    z.object({
+      name: z.string(),
+      visibility: z.enum(["public", "private", "scheduled"]),
+      scheduledStart: z.string().nullable().optional(),
+      orderIndex: z.number(),
     })
   ),
 });
@@ -91,16 +107,27 @@ export const completeOnboardingAction = actionClient
       // 4. Create validation rules
       for (const rule of parsedInput.validationRules) {
         await addRuleConfig(supabase, {
-          ...rule,
+          marathonId: marathon.id,
+          ruleKey: rule.ruleKey,
+          severity: rule.severity,
+          params: rule.params,
+        });
+      }
+
+      // 5. Create topics
+      for (const topic of parsedInput.topics) {
+        await createTopic(supabase, {
+          ...topic,
           marathonId: marathon.id,
         });
       }
 
       // Revalidate relevant cache tags
-      revalidateTag(`marathon-${domain}`);
-      revalidateTag(`competition-classes-${domain}`);
-      revalidateTag(`device-groups-${domain}`);
-      revalidateTag(`rule-configs-${domain}`);
+      revalidateTag(marathonByDomainTag({ domain }));
+      revalidateTag(competitionClassesByDomainTag({ domain }));
+      revalidateTag(deviceGroupsByDomainTag({ domain }));
+      revalidateTag(rulesByMarathonIdTag({ marathonId: marathon.id }));
+      revalidateTag(topicsByDomainTag({ domain }));
 
       return { success: true };
     } catch (error) {

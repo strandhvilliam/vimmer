@@ -26,34 +26,36 @@ import { useFileUpload } from "@/hooks/use-file-upload";
 interface Props extends StepNavigationHandlers {
   competitionClasses: CompetitionClass[];
   topics: Topic[];
+  ruleConfigs: RuleConfig<RuleKey>[];
 }
 
-const ruleConfigs: RuleConfig<RuleKey>[] = [
-  createRule(RULE_KEYS.ALLOWED_FILE_TYPES, SEVERITY_LEVELS.ERROR, {
-    allowedFileTypes: ["jpg", "jpeg"],
-  }),
-  createRule(RULE_KEYS.SAME_DEVICE, SEVERITY_LEVELS.ERROR),
-  createRule(RULE_KEYS.MODIFIED, SEVERITY_LEVELS.WARNING),
-  createRule(RULE_KEYS.WITHIN_TIMERANGE, SEVERITY_LEVELS.ERROR, {
-    start: new Date("2023-01-01"),
-    end: new Date("2026-01-01"),
-  }),
-  createRule(RULE_KEYS.SAME_DEVICE, SEVERITY_LEVELS.ERROR),
-];
+// const ruleConfigs: RuleConfig<RuleKey>[] = [
+//   createRule(RULE_KEYS.ALLOWED_FILE_TYPES, SEVERITY_LEVELS.ERROR, {
+//     allowedFileTypes: ["jpg", "jpeg"],
+//   }),
+//   createRule(RULE_KEYS.SAME_DEVICE, SEVERITY_LEVELS.ERROR),
+//   createRule(RULE_KEYS.MODIFIED, SEVERITY_LEVELS.WARNING),
+//   createRule(RULE_KEYS.WITHIN_TIMERANGE, SEVERITY_LEVELS.ERROR, {
+//     start: new Date("2023-01-01"),
+//     end: new Date("2026-01-01"),
+//   }),
+//   createRule(RULE_KEYS.SAME_DEVICE, SEVERITY_LEVELS.ERROR),
+// ];
 
 export function UploadSubmissionsStep({
   onPrevStep,
   onNextStep,
   topics,
   competitionClasses,
+  ruleConfigs,
 }: Props) {
   const {
     submissionState: { competitionClassId },
   } = useSubmissionQueryState();
 
-  const { photos, validateAndAddPhotos } = usePhotoStore();
+  const { photos } = usePhotoStore();
   const { data: presignedSubmissions = [] } = usePresignedSubmissions();
-  const { isUploading, error, executeUpload } = useFileUpload();
+  const { isUploading, executeUpload } = useFileUpload();
 
   const combinedPhotos = combinePhotos(photos, presignedSubmissions);
 

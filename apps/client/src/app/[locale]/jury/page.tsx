@@ -27,8 +27,9 @@ import {
   Submission,
   Topic,
 } from "@vimmer/supabase/types";
+import { Resource } from "sst";
 
-const PREVIEW_BASE_URL = "https://d2w93ix7jvihnu.cloudfront.net";
+const PREVIEW_BASE_URL = Resource.PreviewsRouter.url;
 
 type TokenPayload = {
   domain: string;

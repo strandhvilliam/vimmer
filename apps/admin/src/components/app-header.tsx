@@ -5,7 +5,7 @@ import { Button } from "@vimmer/ui/components/button";
 import Link from "next/link";
 import { LinkIcon } from "lucide-react";
 import { Separator } from "@vimmer/ui/components/separator";
-import { AWS_CONFIG } from "@/lib/constants";
+import { checkIfMarathonIsProperlyConfigured } from "@/lib/check-marathon-configuration";
 
 interface AppHeaderProps {
   domain: string;
@@ -14,8 +14,17 @@ interface AppHeaderProps {
 export async function AppHeader({ domain }: AppHeaderProps) {
   const marathon = await getMarathonByDomain(domain);
 
-  const staffSiteUrl = `${AWS_CONFIG.routers.clientApp}/staff`;
-  const participantSiteUrl = `${AWS_CONFIG.routers.clientApp}`;
+  let isSetupComplete = true;
+  let requiredActions: Array<{ action: string; description: string }> = [];
+
+  if (marathon) {
+    const configCheck = await checkIfMarathonIsProperlyConfigured(marathon);
+    isSetupComplete = configCheck.isConfigured;
+    requiredActions = configCheck.requiredActions;
+  }
+
+  const staffSiteUrl = `https://${domain}.vimmer.photo/staff`;
+  const participantSiteUrl = `https://${domain}.vimmer.photo`;
 
   return (
     <div className="z-50 w-full px-4 bg-sidebar">
@@ -39,7 +48,8 @@ export async function AppHeader({ domain }: AppHeaderProps) {
         <MarathonStatusDisplay
           marathonStartDate={marathon?.startDate}
           marathonEndDate={marathon?.endDate}
-          isSetupComplete={true}
+          isSetupComplete={isSetupComplete}
+          requiredActions={requiredActions}
         />
       </div>
     </div>

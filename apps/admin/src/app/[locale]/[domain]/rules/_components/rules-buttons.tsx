@@ -1,7 +1,7 @@
 // @ts-nocheck
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { RefreshCcw, Save } from "lucide-react";
 import { useFormContext } from "react-hook-form";
@@ -9,23 +9,44 @@ import { toast } from "sonner";
 import { RulesFormValues } from "../_lib/schemas";
 import { saveRules } from "../_actions/save-rules";
 import { useAction } from "next-safe-action/hooks";
-import { parseAsBoolean, useQueryState } from "nuqs";
 import { Button } from "@vimmer/ui/components/button";
 
-export function RulesButtons() {
-  const { getValues, reset } = useFormContext<RulesFormValues>();
-  const [isDirty, setIsDirty] = useQueryState("isDirty", parseAsBoolean);
+export function RulesButtons({
+  initialRules,
+}: {
+  initialRules: RulesFormValues;
+}) {
+  const { getValues, reset, watch } = useFormContext<RulesFormValues>();
+  const [isDirty, setIsDirty] = useState(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const { execute, isExecuting } = useAction(saveRules, {
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success("Rules saved successfully");
       const currentValues = getValues();
       reset(currentValues);
-      setIsDirty(false);
     },
     onError: () => {
       toast.error("Failed to save rules");
     },
+  });
+
+  watch(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      const isDirtyValue =
+        JSON.stringify(getValues()) !== JSON.stringify(initialRules);
+      setIsDirty(isDirtyValue);
+    }, 300);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
   });
 
   const handleSaveChanges = async () => {
@@ -36,7 +57,6 @@ export function RulesButtons() {
 
   const handleReset = () => {
     reset();
-    setIsDirty(false);
   };
 
   return (

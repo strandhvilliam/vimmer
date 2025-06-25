@@ -1,5 +1,6 @@
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface QrScannerProps {
   onScan: (data: string | null) => void;
@@ -17,7 +18,14 @@ export default function QrScanner({ onScan, onError }: QrScannerProps) {
 
   return (
     <Scanner
-      onScan={(result) => result[0] && onScan(result[0].rawValue)}
+      onScan={(result) => {
+        if (result[0]) {
+          onScan(result[0].rawValue);
+        } else {
+          toast.error("No QR code found");
+        }
+      }}
+      sound={false}
       components={{
         finder: false,
       }}

@@ -8,9 +8,10 @@ import { toast } from "sonner";
 
 interface RefreshButtonProps {
   staffId: string;
+  marathonId: number;
 }
 
-export function RefreshButton({ staffId }: RefreshButtonProps) {
+export function RefreshButton({ staffId, marathonId }: RefreshButtonProps) {
   const { execute, isExecuting } = useAction(refreshStaffData, {
     onSuccess: () => {
       toast.success("Data refreshed successfully");
@@ -22,7 +23,7 @@ export function RefreshButton({ staffId }: RefreshButtonProps) {
   });
 
   const handleRefresh = () => {
-    execute({ staffId });
+    execute({ staffId, marathonId });
   };
 
   return (

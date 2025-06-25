@@ -26,9 +26,15 @@ interface StaffHeaderProps {
   staff: UserMarathonRelation & { user: User };
   staffId: string;
   domain: string;
+  marathonId: number;
 }
 
-export function StaffHeader({ staff, staffId, domain }: StaffHeaderProps) {
+export function StaffHeader({
+  staff,
+  staffId,
+  domain,
+  marathonId,
+}: StaffHeaderProps) {
   const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
   const router = useRouter();
 
@@ -59,7 +65,7 @@ export function StaffHeader({ staff, staffId, domain }: StaffHeaderProps) {
   );
 
   const handleRefresh = () => {
-    executeRefresh({ staffId });
+    executeRefresh({ staffId, marathonId });
   };
 
   const handleRemove = () => {

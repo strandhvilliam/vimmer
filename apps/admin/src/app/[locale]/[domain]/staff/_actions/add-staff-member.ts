@@ -62,15 +62,15 @@ export const addStaffMemberAction = actionClient
     });
 
     const response = await resend.emails.send({
-      from: "PM Uploader <support@pmuploader.com>",
+      from: "Vimmer Support <support@vimmer.photo>",
       to: email,
       subject: `You've been added as staff to ${marathon.name}`,
       react: StaffInviteEmail({
         staffName: name,
         contestName: marathon.name,
         inviterName: adminUser.name,
-        loginUrl: `http://localhost:3000/staff`,
-        supportEmail: "support@pmuploader.com",
+        loginUrl: `https://${domain}.vimmer.photo/staff`,
+        supportEmail: "support@vimmer.photo",
       }),
     });
 

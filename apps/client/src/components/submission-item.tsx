@@ -10,6 +10,7 @@ import {
 import { useState } from "react";
 import { Button } from "@vimmer/ui/components/button";
 import { Topic } from "@vimmer/supabase/types";
+import { format } from "date-fns";
 
 interface Props {
   photo?: SelectedPhotoV2;
@@ -73,19 +74,29 @@ export function SubmissionItem({
   const exifData = photo.exif || {};
   const relevantExifData = getRelevantExifData(exifData);
   const hasExifData = Object.keys(relevantExifData).length > 0;
+  const takenAt = getTimeTaken(photo.exif);
 
   return (
     <div className="flex flex-col border rounded-lg bg-background overflow-hidden">
       <div className="flex flex-row gap-4 p-4">
         <div className="flex-1 space-y-2">
           <div className="space-y-1">
-            <p className="text-base text-muted-foreground">
-              # {photo.orderIndex} {index + 1}
-            </p>
+            <p className="text-base text-muted-foreground"># {index + 1}</p>
             <p className="font-medium">{topic?.name}</p>
           </div>
 
-          {validationResults && (
+          {validationResults && validationResults.length === 0 && (
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <ValidationStatusBadge
+                  outcome={VALIDATION_OUTCOME.PASSED}
+                  severity={SEVERITY_LEVELS.ERROR}
+                />
+              </div>
+            </div>
+          )}
+
+          {validationResults && validationResults.length > 0 && (
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
                 <ValidationStatusBadge
@@ -119,8 +130,8 @@ export function SubmissionItem({
             </div>
           )}
 
-          <p className="text-sm text-muted-foreground">
-            Size: {formatFileSize(photo.file.size)}
+          <p className="text-xs  text-muted-foreground">
+            {takenAt && `Captured at: ${format(takenAt, "HH:mm")}`}
           </p>
 
           {hasExifData && (
@@ -205,6 +216,22 @@ function formatRuleKey(key: string): string {
     .split("_")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+function getTimeTaken(exif?: { [key: string]: unknown }): Date | null {
+  if (!exif?.DateTimeOriginal) return null;
+
+  try {
+    const dateString = String(exif.DateTimeOriginal);
+    const date = new Date(dateString);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  } catch (error) {
+    // Skip if date parsing fails
+  }
+
+  return null;
 }
 
 function getRelevantExifData(exif: {

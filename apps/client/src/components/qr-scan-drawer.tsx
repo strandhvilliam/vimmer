@@ -8,8 +8,9 @@ import {
 import { QrCodeIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { QrDataArgs } from "@/lib/schemas/verification-data-schema";
-import { qrScanSchema } from "@/lib/schemas/qr-scan-schema";
 import dynamic from "next/dynamic";
+import { toast } from "sonner";
+import posthog from "posthog-js";
 
 const QrScanner = dynamic(() => import("./qr-scanner"), {
   ssr: false,
@@ -28,12 +29,18 @@ export default function QrScanDrawer({
 }: QrScanDrawerProps) {
   const handleScan = async (data: string | null) => {
     if (!data) return;
-    const { success, data: validatedData } = qrScanSchema.safeParse(data);
-    if (!success) {
-      //TODO: Show toast message
+
+    const [domain, _, participantReference] = data.split("-");
+    if (!domain || !participantReference) {
+      toast.error("Invalid QR code");
+      posthog.captureException(new Error("Invalid QR code"), {
+        properties: {
+          data,
+        },
+      });
       return;
     }
-    onScanAction(validatedData);
+    onScanAction({ domain, reference: participantReference });
     onOpenChange(false);
   };
 

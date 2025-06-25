@@ -44,6 +44,10 @@ export function rulesByMarathonIdTag({ marathonId }: { marathonId: number }) {
   return `rules-${marathonId}`;
 }
 
+export function rulesByDomainTag({ domain }: { domain: string }) {
+  return `rules-${domain}`;
+}
+
 export function topicsWithSubmissionCountTag({
   marathonId,
 }: {
@@ -84,6 +88,12 @@ export function staffMembersByDomainTag({ domain }: { domain: string }) {
   return `staff-members-${domain}`;
 }
 
-export function staffMemberByIdTag({ staffId }: { staffId: string }) {
-  return `staff-member-${staffId}`;
+export function staffMemberByIdTag({
+  staffId,
+  marathonId,
+}: {
+  staffId: string;
+  marathonId: number;
+}) {
+  return `staff-member-${staffId}-${marathonId}`;
 }

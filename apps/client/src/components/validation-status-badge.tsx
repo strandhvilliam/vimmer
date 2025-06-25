@@ -34,11 +34,11 @@ export function ValidationStatusBadge({
       Icon = AlertTriangle;
       label = "Warning";
     }
-  } else {
+  } else if (outcome === VALIDATION_OUTCOME.SKIPPED) {
     badgeClass =
-      "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
+      "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100";
     Icon = AlertTriangle;
-    label = "Skipped";
+    label = "Warning";
   }
 
   return (

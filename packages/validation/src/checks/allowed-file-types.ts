@@ -25,6 +25,14 @@ function checkIfValidExtension(
 ): ValidationResult {
   const extension = getExtensionFromFilename(input.fileName);
 
+  const parsedAllowedFileTypes = rule.allowedFileTypes.reduce((acc, curr) => {
+    if (curr === "jpg") {
+      acc.push("jpeg");
+    }
+    acc.push(curr);
+    return acc;
+  }, [] as string[]);
+
   if (!extension) {
     return createValidationResult(
       VALIDATION_OUTCOME.SKIPPED,
@@ -33,11 +41,11 @@ function checkIfValidExtension(
     );
   }
 
-  if (!rule.allowedFileTypes.includes(extension)) {
+  if (!parsedAllowedFileTypes.includes(extension)) {
     return createValidationResult(
       VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.ALLOWED_FILE_TYPES,
-      `Invalid file extension: ${extension} (allowed: ${rule.allowedFileTypes.join(", ")})`
+      `Invalid file extension: ${extension} (allowed: ${parsedAllowedFileTypes.join(", ")})`
     );
   }
 
