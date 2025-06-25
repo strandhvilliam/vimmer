@@ -14,6 +14,13 @@ import {
 } from "@vimmer/supabase/mutations";
 import { getMarathonByDomain } from "@vimmer/supabase/cached-queries";
 import { redirect } from "next/navigation";
+import {
+  competitionClassesByDomainTag,
+  deviceGroupsByDomainTag,
+  marathonByDomainTag,
+  rulesByMarathonIdTag,
+  topicsByDomainTag,
+} from "@vimmer/supabase/cache-tags";
 
 const completeOnboardingSchema = z.object({
   marathonConfig: z.object({
@@ -100,8 +107,10 @@ export const completeOnboardingAction = actionClient
       // 4. Create validation rules
       for (const rule of parsedInput.validationRules) {
         await addRuleConfig(supabase, {
-          ...rule,
           marathonId: marathon.id,
+          ruleKey: rule.ruleKey,
+          severity: rule.severity,
+          params: rule.params,
         });
       }
 
@@ -114,11 +123,11 @@ export const completeOnboardingAction = actionClient
       }
 
       // Revalidate relevant cache tags
-      revalidateTag(`marathon-${domain}`);
-      revalidateTag(`competition-classes-${domain}`);
-      revalidateTag(`device-groups-${domain}`);
-      revalidateTag(`rule-configs-${domain}`);
-      revalidateTag(`topics-${domain}`);
+      revalidateTag(marathonByDomainTag({ domain }));
+      revalidateTag(competitionClassesByDomainTag({ domain }));
+      revalidateTag(deviceGroupsByDomainTag({ domain }));
+      revalidateTag(rulesByMarathonIdTag({ marathonId: marathon.id }));
+      revalidateTag(topicsByDomainTag({ domain }));
 
       return { success: true };
     } catch (error) {
