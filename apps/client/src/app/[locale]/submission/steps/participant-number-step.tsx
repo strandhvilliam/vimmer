@@ -15,10 +15,10 @@ import { ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { initializeParticipantSchema } from "@/lib/schemas/initialize-participant-schema";
 import { Button } from "@vimmer/ui/components/button";
-import { useForm, useStore } from "@tanstack/react-form";
+import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
-import { Marathon } from "@api/db/types";
+import { Marathon } from "@vimmer/api/db/types";
 import { useDomain } from "@/contexts/domain-context";
 
 interface Props extends StepNavigationHandlers {

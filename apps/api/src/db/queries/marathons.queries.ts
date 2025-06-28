@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
-import type { Database } from "@api/db";
-import { marathons } from "@api/db/schema";
-import type { NewMarathon } from "@api/db/types";
+import type { Database } from "@vimmer/api/db";
+import { marathons } from "@vimmer/api/db/schema";
+import type { NewMarathon } from "@vimmer/api/db/types";
 import { TRPCError } from "@trpc/server";
 
 // export interface MarathonResponse extends Marathon {

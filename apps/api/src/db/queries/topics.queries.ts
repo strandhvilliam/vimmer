@@ -1,7 +1,7 @@
-import type { Database } from "@api/db";
-import { marathons, topics } from "../schema";
+import type { Database } from "@vimmer/api/db";
+import { marathons, topics } from "@vimmer/api/db/schema";
 import { eq } from "drizzle-orm";
-import type { NewTopic } from "../types";
+import type { NewTopic } from "@vimmer/api/db/types";
 import type { SupabaseClient } from "@vimmer/supabase/types";
 
 export async function getTopicsByMarathonIdQuery(

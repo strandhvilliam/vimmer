@@ -9,7 +9,7 @@
     "allowJs": true,
     "paths": {
       "@/*": ["src/*"],
-      "@api/*": ["../../apps/api/src/*"]
+      "@vimmer/api/*": ["../../apps/api/src/*"]
     },
     "strict": true
   },

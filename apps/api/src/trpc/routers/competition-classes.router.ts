@@ -5,14 +5,14 @@ import {
   getCompetitionClassByIdSchema,
   getCompetitionClassesByDomainSchema,
   updateCompetitionClassSchema,
-} from "@api/schemas/competition-classes.schemas";
+} from "@vimmer/api/schemas/competition-classes.schemas";
 import {
   createCompetitionClass,
   deleteCompetitionClass,
   getCompetitionClassByIdQuery,
   getCompetitionClassesByDomainQuery,
   updateCompetitionClass,
-} from "@api/db/queries/competition-classes.queries";
+} from "@vimmer/api/db/queries/competition-classes.queries";
 
 export const competitionClassesRouter = createTRPCRouter({
   getById: publicProcedure

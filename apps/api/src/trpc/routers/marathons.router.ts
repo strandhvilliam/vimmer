@@ -6,7 +6,7 @@ import {
   getMarathonByDomainSchema,
   updateMarathonSchema,
   updateMarathonByDomainSchema,
-} from "@api/schemas/marathons.schemas";
+} from "@vimmer/api/schemas/marathons.schemas";
 import {
   createMarathonMutation,
   deleteMarathonMutation,
@@ -14,7 +14,7 @@ import {
   getMarathonByDomainQuery,
   updateMarathonMutation,
   updateMarathonByDomainMutation,
-} from "@api/db/queries/marathons.queries";
+} from "@vimmer/api/db/queries/marathons.queries";
 
 export const marathonsRouter = createTRPCRouter({
   getById: publicProcedure

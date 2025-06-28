@@ -1,39 +1,7 @@
 import { eq, and } from "drizzle-orm";
-import type { Database } from "@api/db";
-import {
-  user,
-  userMarathons,
-  marathons,
-  participantVerifications,
-} from "@api/db/schema";
-import type {
-  User,
-  NewUser,
-  UserMarathonRelation,
-  NewUserMarathonRelation,
-  Marathon,
-  ParticipantVerification,
-} from "@api/db/types";
-
-// interface UserWithMarathonsResponse extends User {
-//   userMarathons: (UserMarathonRelation & {
-//     marathon: Marathon;
-//   })[];
-// }
-
-// interface UserWithMarathonsSimpleResponse extends User {
-//   userMarathons: UserMarathonRelation[];
-// }
-
-// interface StaffMemberResponse extends UserMarathonRelation {
-//   user: User;
-// }
-
-// interface StaffMemberWithVerificationsResponse extends UserMarathonRelation {
-//   user: User & {
-//     participantVerifications: ParticipantVerification[];
-//   };
-// }
+import type { Database } from "@vimmer/api/db";
+import { user, userMarathons, marathons } from "@vimmer/api/db/schema";
+import type { NewUser, NewUserMarathonRelation } from "@vimmer/api/db/types";
 
 export async function getUserWithMarathonsQuery(
   db: Database,

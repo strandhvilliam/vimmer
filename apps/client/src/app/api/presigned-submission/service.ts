@@ -2,7 +2,7 @@ import { S3Client } from "@aws-sdk/client-s3";
 import { formatSubmissionKey } from "@/lib/utils";
 import { generatePresignedUrl } from "@/lib/generate-presigned-url";
 import { PresignedSubmission } from "@/lib/types";
-import { Submission, Topic } from "@api/db/types";
+import { Submission, Topic } from "@vimmer/api/db/types";
 import { Resource } from "sst";
 import { ServerApiClient } from "@/trpc/server";
 

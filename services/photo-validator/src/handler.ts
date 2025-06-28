@@ -2,11 +2,8 @@ import type { SQSEvent } from "aws-lambda";
 import { createRule, runValidations } from "@vimmer/validation/validator";
 
 import { z } from "zod";
-import { RuleKey } from "@vimmer/validation/types";
-import { RULE_KEYS } from "@vimmer/validation/constants";
-import { SEVERITY_LEVELS } from "@vimmer/validation/constants";
-import { RuleConfig } from "@vimmer/validation/types";
-import type { RuleConfig as DbRuleConfig } from "@api/db/types";
+import { RuleConfig, RuleKey } from "@vimmer/validation/types";
+import type { RuleConfig as DbRuleConfig } from "@vimmer/api/db/types";
 import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
 import { Resource } from "sst";
 import { AppRouter } from "@vimmer/api/trpc/routers/_app";

@@ -1,18 +1,13 @@
 import { eq } from "drizzle-orm";
-import type { Database } from "@api/db";
-import { validationResults, participantVerifications } from "@api/db/schema";
+import type { Database } from "@vimmer/api/db";
+import {
+  validationResults,
+  participantVerifications,
+} from "@vimmer/api/db/schema";
 import type {
   NewValidationResult,
   NewParticipantVerification,
-} from "@api/db/types";
-
-// interface ParticipantVerificationResponse extends ParticipantVerification {
-//   participant: Participant & {
-//     validationResults: ValidationResult[];
-//     competitionClass: CompetitionClass | null;
-//     deviceGroup: DeviceGroup | null;
-//   };
-// }
+} from "@vimmer/api/db/types";
 
 export async function getValidationResultsByParticipantIdQuery(
   db: Database,

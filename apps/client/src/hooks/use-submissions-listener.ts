@@ -1,6 +1,4 @@
-import { createClient } from "@vimmer/supabase/browser";
-import { Submission, SupabaseRealtimeChannel } from "@vimmer/supabase/types";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSubmissionQueryState } from "./use-submission-query-state";
 import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";

@@ -5,14 +5,14 @@ import {
   getDeviceGroupByIdSchema,
   getDeviceGroupsByDomainSchema,
   updateDeviceGroupSchema,
-} from "@api/schemas/device-groups.schemas";
+} from "@vimmer/api/schemas/device-groups.schemas";
 import {
   createDeviceGroup,
   deleteDeviceGroup,
   getDeviceGroupByIdQuery,
   getDeviceGroupsByDomainQuery,
   updateDeviceGroup,
-} from "@api/db/queries/device-groups.queries";
+} from "@vimmer/api/db/queries/device-groups.queries";
 
 export const deviceGroupsRouter = createTRPCRouter({
   getById: publicProcedure

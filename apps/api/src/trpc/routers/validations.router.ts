@@ -5,7 +5,7 @@ import {
   createMultipleValidationResultsMutation,
   updateValidationResultMutation,
   createParticipantVerificationMutation,
-} from "@api/db/queries/validations.queries";
+} from "@vimmer/api/db/queries/validations.queries";
 import { createTRPCRouter, publicProcedure } from "..";
 import {
   getValidationResultsByParticipantIdSchema,
@@ -14,7 +14,7 @@ import {
   createMultipleValidationResultsSchema,
   updateValidationResultSchema,
   createParticipantVerificationSchema,
-} from "@api/schemas/validations.schemas";
+} from "@vimmer/api/schemas/validations.schemas";
 
 export const validationsRouter = createTRPCRouter({
   getValidationResultsByParticipantId: publicProcedure

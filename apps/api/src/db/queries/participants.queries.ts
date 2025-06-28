@@ -1,14 +1,7 @@
 import { eq, and } from "drizzle-orm";
-import type { Database } from "@api/db";
-import { participants } from "@api/db/schema";
-import type {
-  Participant,
-  Submission,
-  CompetitionClass,
-  DeviceGroup,
-  ValidationResult,
-  NewParticipant,
-} from "@api/db/types";
+import type { Database } from "@vimmer/api/db";
+import { participants } from "@vimmer/api/db/schema";
+import type { NewParticipant } from "@vimmer/api/db/types";
 import { TRPCError } from "@trpc/server";
 import type { SupabaseClient } from "@vimmer/supabase/types";
 

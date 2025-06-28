@@ -10,7 +10,7 @@ import {
   getTopicsWithSubmissionCountSchema,
   getTotalSubmissionCountSchema,
   getScheduledTopicsSchema,
-} from "@api/schemas/topics.schemas";
+} from "@vimmer/api/schemas/topics.schemas";
 import {
   createTopic,
   deleteTopic,
@@ -22,7 +22,7 @@ import {
   getTopicsWithSubmissionCountQuery,
   getTotalSubmissionCountQuery,
   getScheduledTopicsQuery,
-} from "@api/db/queries/topics.queries";
+} from "@vimmer/api/db/queries/topics.queries";
 
 export const topicsRouter = createTRPCRouter({
   getByMarathonId: publicProcedure

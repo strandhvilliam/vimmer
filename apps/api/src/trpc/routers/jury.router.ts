@@ -5,7 +5,7 @@ import {
   createJuryInvitationMutation,
   updateJuryInvitationMutation,
   deleteJuryInvitationMutation,
-} from "@api/db/queries/jury.queries";
+} from "@vimmer/api/db/queries/jury.queries";
 import { createTRPCRouter, publicProcedure } from "..";
 import {
   getJuryInvitationsByMarathonIdSchema,
@@ -14,7 +14,7 @@ import {
   createJuryInvitationSchema,
   updateJuryInvitationSchema,
   deleteJuryInvitationSchema,
-} from "@api/schemas/jury.schemas";
+} from "@vimmer/api/schemas/jury.schemas";
 
 export const juryRouter = createTRPCRouter({
   getJurySubmissions: publicProcedure

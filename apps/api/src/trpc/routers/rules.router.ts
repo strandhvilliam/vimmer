@@ -7,7 +7,7 @@ import {
   getRulesByMarathonIdQuery,
   updateRuleConfigMutation,
   updateRuleConfigByMarathonIdAndRuleKeyMutation,
-} from "@api/db/queries/rules.queries";
+} from "@vimmer/api/db/queries/rules.queries";
 import { createTRPCRouter, publicProcedure } from "..";
 import {
   createRuleConfigSchema,
@@ -18,7 +18,7 @@ import {
   getRulesByMarathonIdSchema,
   updateRuleConfigSchema,
   updateRuleConfigByMarathonIdAndRuleKeySchema,
-} from "@api/schemas/rules.schemas";
+} from "@vimmer/api/schemas/rules.schemas";
 
 export const rulesRouter = createTRPCRouter({
   getByMarathonId: publicProcedure

@@ -1,4 +1,4 @@
-import type { Database } from "@api/db";
+import type { Database } from "@vimmer/api/db";
 import { competitionClasses, marathons } from "../schema";
 import { eq } from "drizzle-orm";
 import type { NewCompetitionClass } from "../types";

@@ -6,7 +6,7 @@ import {
   getParticipantsByDomainQuery,
   incrementUploadCounterMutation,
   updateParticipantMutation,
-} from "@api/db/queries/participants.queries";
+} from "@vimmer/api/db/queries/participants.queries";
 import { createTRPCRouter, publicProcedure } from "..";
 import {
   createParticipantSchema,
@@ -16,7 +16,7 @@ import {
   getParticipantsByDomainSchema,
   incrementUploadCounterSchema,
   updateParticipantSchema,
-} from "@api/schemas/participants.schemas";
+} from "@vimmer/api/schemas/participants.schemas";
 
 export const participantsRouter = createTRPCRouter({
   getByDomain: publicProcedure

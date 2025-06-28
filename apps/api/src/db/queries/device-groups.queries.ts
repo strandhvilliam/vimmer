@@ -1,4 +1,4 @@
-import type { Database } from "@api/db";
+import type { Database } from "@vimmer/api/db";
 import { deviceGroups, marathons } from "../schema";
 import { eq } from "drizzle-orm";
 import type { NewDeviceGroup } from "../types";

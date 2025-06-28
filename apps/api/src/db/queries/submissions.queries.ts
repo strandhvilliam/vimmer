@@ -1,11 +1,11 @@
 import { eq, inArray, and } from "drizzle-orm";
-import type { Database } from "@api/db";
+import type { Database } from "@vimmer/api/db";
 import {
   submissions,
   zippedSubmissions,
   marathons,
   participants,
-} from "@api/db/schema";
+} from "@vimmer/api/db/schema";
 import type {
   Submission,
   ZippedSubmission,
@@ -15,7 +15,7 @@ import type {
   CompetitionClass,
   DeviceGroup,
   Topic,
-} from "@api/db/types";
+} from "@vimmer/api/db/types";
 import type { SupabaseClient } from "@vimmer/supabase/types";
 
 // interface SubmissionForJuryResponse extends Submission {

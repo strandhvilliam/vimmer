@@ -1,7 +1,7 @@
 import { eq, and } from "drizzle-orm";
-import type { Database } from "@api/db";
-import { ruleConfigs, marathons } from "@api/db/schema";
-import type { RuleConfig, NewRuleConfig } from "@api/db/types";
+import type { Database } from "@vimmer/api/db";
+import { ruleConfigs, marathons } from "@vimmer/api/db/schema";
+import type { NewRuleConfig } from "@vimmer/api/db/types";
 
 export async function getRulesByMarathonIdQuery(
   db: Database,

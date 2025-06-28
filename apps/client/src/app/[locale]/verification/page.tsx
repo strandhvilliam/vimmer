@@ -5,7 +5,6 @@ import {
   submissionQueryServerParamSerializer,
 } from "@/lib/schemas/submission-query-server-schema";
 import { ClientVerificationPage } from "./client-page";
-import { getParticipantByReference } from "@vimmer/supabase/cached-queries";
 import { notFound, redirect } from "next/navigation";
 import { getDomain } from "@/lib/get-domain";
 import { batchPrefetch, getQueryClient, trpc } from "@/trpc/server";

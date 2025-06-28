@@ -10,7 +10,7 @@ import {
   updateZippedSubmissionMutation,
   getSubmissionsByParticipantIdQuery,
   getSubmissionByIdQuery,
-} from "@api/db/queries/submissions.queries";
+} from "@vimmer/api/db/queries/submissions.queries";
 import { createTRPCRouter, publicProcedure } from "..";
 import {
   getZippedSubmissionsByDomainSchema,
@@ -24,7 +24,7 @@ import {
   updateZippedSubmissionSchema,
   getSubmissionsByParticipantIdSchema,
   getSubmissionByIdSchema,
-} from "@api/schemas/submissions.schemas";
+} from "@vimmer/api/schemas/submissions.schemas";
 
 export const submissionsRouter = createTRPCRouter({
   getById: publicProcedure

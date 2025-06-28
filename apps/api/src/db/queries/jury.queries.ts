@@ -1,12 +1,12 @@
 import { eq, and, desc } from "drizzle-orm";
-import type { Database } from "@api/db";
+import type { Database } from "@vimmer/api/db";
 import {
   submissions,
   participants,
   marathons,
   juryInvitations,
-} from "@api/db/schema";
-import type { NewJuryInvitation } from "@api/db/types";
+} from "@vimmer/api/db/schema";
+import type { NewJuryInvitation } from "@vimmer/api/db/types";
 
 export async function getJurySubmissionsQuery(
   db: Database,

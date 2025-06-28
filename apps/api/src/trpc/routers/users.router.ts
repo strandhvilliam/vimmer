@@ -10,7 +10,7 @@ import {
   createUserMarathonRelationMutation,
   updateUserMarathonRelationMutation,
   deleteUserMarathonRelationMutation,
-} from "@api/db/queries/users.queries";
+} from "@vimmer/api/db/queries/users.queries";
 import { createTRPCRouter, publicProcedure } from "..";
 import {
   createUserSchema,
@@ -24,7 +24,7 @@ import {
   createUserMarathonRelationSchema,
   updateUserMarathonRelationSchema,
   deleteUserMarathonRelationSchema,
-} from "@api/schemas/users.schemas";
+} from "@vimmer/api/schemas/users.schemas";
 
 export const usersRouter = createTRPCRouter({
   getUserWithMarathons: publicProcedure
