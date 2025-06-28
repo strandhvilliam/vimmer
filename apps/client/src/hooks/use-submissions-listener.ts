@@ -5,7 +5,7 @@ import { useSubmissionQueryState } from "./use-submission-query-state";
 import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 
-export function useSubmissionsListener() {
+export function useSubmissionsListener({ enabled }: { enabled: boolean }) {
   const {
     submissionState: { participantId },
   } = useSubmissionQueryState();
@@ -21,7 +21,7 @@ export function useSubmissionsListener() {
       },
       {
         refetchInterval: 2000,
-        enabled: !!participantId,
+        enabled: !!participantId && enabled,
       }
     )
   );

@@ -6,6 +6,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { S3Event, SQSEvent } from "aws-lambda";
 import sharp from "sharp";
+import { PostHog } from "posthog-node";
 
 import exifr from "exifr";
 import { Resource } from "sst";
@@ -18,6 +19,10 @@ const IMAGE_VARIANTS = {
   thumbnail: { width: 200, prefix: "thumbnail" },
   preview: { width: 800, prefix: "preview" },
 } as const;
+
+const posthog = new PostHog(process.env.POSTHOG_API_KEY!, {
+  host: process.env.POSTHOG_HOST,
+});
 
 const createApiClient = () =>
   createTRPCProxyClient<AppRouter>({
@@ -35,15 +40,22 @@ const createApiClient = () =>
   });
 
 export const handler = async (event: SQSEvent): Promise<void> => {
-  const s3Client = new S3Client();
-  const apiClient = createApiClient();
-  const keys = event.Records.map((r) => JSON.parse(r.body) as S3Event)
-    .flatMap((e) => e.Records?.map((r) => decodeURIComponent(r.s3.object.key)))
-    .filter(Boolean);
+  try {
+    const s3Client = new S3Client();
+    const apiClient = createApiClient();
+    const keys = event.Records.map((r) => JSON.parse(r.body) as S3Event)
+      .flatMap((e) =>
+        e.Records?.map((r) => decodeURIComponent(r.s3.object.key))
+      )
+      .filter(Boolean);
 
-  await Promise.all(
-    keys.map((key) => processSubmission(key, s3Client, apiClient))
-  );
+    await Promise.all(
+      keys.map((key) => processSubmission(key, s3Client, apiClient))
+    );
+  } catch (error) {
+    console.error(error);
+    posthog.captureException(error);
+  }
 };
 
 async function processSubmission(

@@ -14,27 +14,16 @@ import {
   Topic,
 } from "@vimmer/supabase/types";
 import { AnimatePresence } from "motion/react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { parseAsInteger, useQueryState } from "nuqs";
-import { useEffect, useState } from "react";
-import {
-  submissionQueryClientParams,
-  submissionQueryClientParamSerializer,
-} from "@/lib/schemas/submission-query-client-schema";
+import { useState } from "react";
+import { submissionQueryClientParamSerializer } from "@/lib/schemas/submission-query-client-schema";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { RuleConfig, RuleKey } from "@vimmer/validation/types";
 import { useSuspenseQueries } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { useDomain } from "@/contexts/domain-context";
 import { mapDbRuleConfigsToValidationConfigs } from "@/lib/utils";
-
-interface ClientPageProps {
-  marathon: Marathon;
-  topics: Topic[];
-  competitionClasses: CompetitionClass[];
-  deviceGroups: DeviceGroup[];
-  ruleConfigs: RuleConfig<RuleKey>[];
-}
 
 export function SubmissionClientPage() {
   const trpc = useTRPC();

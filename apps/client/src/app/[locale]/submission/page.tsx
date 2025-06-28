@@ -1,19 +1,7 @@
 import { SubmissionClientPage } from "./client-page";
-import { createClient } from "@vimmer/supabase/server";
-import { notFound } from "next/navigation";
-import {
-  getCompetitionClassesByDomain,
-  getDeviceGroupsByDomain,
-  getMarathonByDomain,
-  getRulesByDomain,
-  getRulesByMarathonId,
-  getTopicsByDomain,
-} from "@vimmer/supabase/cached-queries";
-import { RuleConfig, RuleKey } from "@vimmer/validation/types";
-import { createRule } from "@vimmer/validation/validator";
-import { RuleConfig as DbRuleConfig } from "@vimmer/supabase/types";
 import { getDomain } from "@/lib/get-domain";
 import { batchPrefetch, HydrateClient, trpc } from "@/trpc/server";
+import { Suspense } from "react";
 
 export default async function SubmissionPage() {
   const domain = await getDomain();
@@ -38,7 +26,9 @@ export default async function SubmissionPage() {
 
   return (
     <HydrateClient>
-      <SubmissionClientPage />
+      <Suspense>
+        <SubmissionClientPage />
+      </Suspense>
     </HydrateClient>
   );
 }

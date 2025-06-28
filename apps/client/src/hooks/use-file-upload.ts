@@ -10,6 +10,7 @@ export function useFileUpload() {
   const executeUpload = async (combinedPhotos: PhotoWithPresignedUrl[]) => {
     setIsUploading(true);
     try {
+      console.log("combinedPhotos", combinedPhotos);
       await Promise.all(
         combinedPhotos.map(async (photo) =>
           fetch(photo.presignedUrl, {

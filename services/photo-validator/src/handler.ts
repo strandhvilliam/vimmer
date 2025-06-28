@@ -2,7 +2,6 @@ import type { SQSEvent } from "aws-lambda";
 import { createRule, runValidations } from "@vimmer/validation/validator";
 
 import { z } from "zod";
-import { insertValidationResults } from "@vimmer/supabase/mutations";
 import { RuleKey } from "@vimmer/validation/types";
 import { RULE_KEYS } from "@vimmer/validation/constants";
 import { SEVERITY_LEVELS } from "@vimmer/validation/constants";
@@ -12,18 +11,6 @@ import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
 import { Resource } from "sst";
 import { AppRouter } from "@vimmer/api/trpc/routers/_app";
 import superjson from "superjson";
-
-const defaultRuleConfigs: RuleConfig<RuleKey>[] = [
-  createRule(RULE_KEYS.ALLOWED_FILE_TYPES, SEVERITY_LEVELS.ERROR, {
-    allowedFileTypes: ["jpg", "jpeg"],
-  }),
-  createRule(RULE_KEYS.SAME_DEVICE, SEVERITY_LEVELS.ERROR),
-  createRule(RULE_KEYS.WITHIN_TIMERANGE, SEVERITY_LEVELS.ERROR, {
-    start: new Date("2023-01-01"),
-    end: new Date("2026-01-01"),
-  }),
-  createRule(RULE_KEYS.SAME_DEVICE, SEVERITY_LEVELS.ERROR),
-];
 
 const createApiClient = () =>
   createTRPCProxyClient<AppRouter>({

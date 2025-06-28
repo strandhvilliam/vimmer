@@ -15,7 +15,6 @@ export default $config({
       NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY!,
       NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
       REVALIDATE_SECRET: process.env.REVALIDATE_SECRET!,
-      POSTHOG_API_KEY: process.env.POSTHOG_API_KEY!,
       DATABASE_URL: process.env.DATABASE_URL!,
     };
 
@@ -82,6 +81,16 @@ export default $config({
       }
     );
 
+    const api = new sst.aws.Function("Api", {
+      handler: "./apps/api/src/index.handler",
+      url: true,
+      environment: {
+        POSTHOG_API_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY!,
+        POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
+        ...env,
+      },
+    });
+
     const vpc = new sst.aws.Vpc("VimmerVPC");
     const cluster = new sst.aws.Cluster("VimmerCluster", { vpc });
 
@@ -92,7 +101,13 @@ export default $config({
         dockerfile: "./services/export-submission-zip/Dockerfile",
       },
       environment: env,
-      link: [submissionBucket, thumbnailBucket, previewBucket, exportsBucket],
+      link: [
+        submissionBucket,
+        thumbnailBucket,
+        previewBucket,
+        exportsBucket,
+        api,
+      ],
       permissions: [
         {
           actions: ["s3:GetObject", "s3:PutObject"],
@@ -113,7 +128,13 @@ export default $config({
           dockerfile: "./services/generate-participant-zip/Dockerfile",
         },
         environment: env,
-        link: [submissionBucket, thumbnailBucket, previewBucket, exportsBucket],
+        link: [
+          submissionBucket,
+          thumbnailBucket,
+          previewBucket,
+          exportsBucket,
+          api,
+        ],
         permissions: [
           {
             actions: ["s3:GetObject", "s3:PutObject"],
@@ -126,22 +147,19 @@ export default $config({
       }
     );
 
-    const exportCaller = new sst.aws.Function("ExportCaller", {
+    new sst.aws.Function("ExportCaller", {
       handler: "services/export-caller/index.handler",
       environment: env,
       link: [exportSubmissionsTask, generateParticipantZipTask],
       url: true,
     });
 
-    const downloadPresignedFunction = new sst.aws.Function(
-      "DownloadPresignedFunction",
-      {
-        handler: "services/download-presigned/index.handler",
-        environment: env,
-        url: true,
-        link: [exportsBucket],
-      }
-    );
+    new sst.aws.Function("DownloadPresignedFunction", {
+      handler: "services/download-presigned/index.handler",
+      environment: env,
+      url: true,
+      link: [exportsBucket],
+    });
 
     const processSubmissionQueue = new sst.aws.Queue("ProcessPhotoQueue");
     const validateSubmissionQueue = new sst.aws.Queue(
@@ -150,12 +168,21 @@ export default $config({
 
     validateSubmissionQueue.subscribe({
       handler: "./services/photo-validator/index.handler",
-      environment: env,
+      environment: {
+        ...env,
+        POSTHOG_API_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY!,
+        POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
+      },
+      link: [api],
     });
 
     processSubmissionQueue.subscribe({
       handler: "./services/photo-processor/index.handler",
-      environment: env,
+      environment: {
+        ...env,
+        POSTHOG_API_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY!,
+        POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
+      },
       nodejs: {
         install: ["sharp"],
       },
@@ -165,6 +192,7 @@ export default $config({
         previewBucket,
         validateSubmissionQueue,
         generateParticipantZipTask,
+        api,
       ],
       permissions: [
         {
@@ -186,16 +214,6 @@ export default $config({
           events: ["s3:ObjectCreated:*"],
         },
       ],
-    });
-
-    const api = new sst.aws.Function("Api", {
-      handler: "./apps/api/src/index.handler",
-      url: true,
-      environment: {
-        POSTHOG_PUBLIC_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY!,
-        POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
-        ...env,
-      },
     });
 
     const clientApp = new sst.aws.Nextjs("ClientApp", {
@@ -249,31 +267,5 @@ export default $config({
             : "http://localhost:3001",
       },
     });
-
-    return {
-      apps: {
-        client: clientApp.url,
-        admin: adminApp.url,
-        api: api.url,
-      },
-      buckets: {
-        submissionBucket: submissionBucket.name,
-        exportsBucket: exportsBucket.name,
-      },
-      queues: {
-        processSubmissionQueue: processSubmissionQueue.url,
-      },
-      functions: {
-        // photoValidatorFunction: photoValidatorFunction.url,
-        exportCaller: exportCaller.url,
-        downloadPresignedFunction: downloadPresignedFunction.url,
-      },
-      routers: {
-        submissionsRouter: submissionsRouter.url,
-        thumbnailsRouter: thumbnailsRouter.url,
-        previewsRouter: previewsRouter.url,
-        marathonSettingsRouter: marathonSettingsRouter.url,
-      },
-    };
   },
 });

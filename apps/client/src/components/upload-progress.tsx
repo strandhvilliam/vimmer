@@ -35,7 +35,9 @@ export function UploadProgress({
   onComplete,
   open = true,
 }: Props) {
-  const uploadedSubmissions = useSubmissionsListener();
+  const uploadedSubmissions = useSubmissionsListener({
+    enabled: open,
+  });
 
   const fileStates = files.map((file) => ({
     ...file,

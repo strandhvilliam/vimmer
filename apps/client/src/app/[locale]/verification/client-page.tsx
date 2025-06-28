@@ -8,28 +8,43 @@ import {
   CardHeader,
 } from "@vimmer/ui/components/card";
 import { useState, useEffect } from "react";
-import { useVerificationListener } from "@/hooks/use-verification-listener";
 import { useRouter } from "next/navigation";
 import { submissionQueryClientParamSerializer } from "@/lib/schemas/submission-query-client-schema";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
-import { Resource } from "sst";
+import { useTRPC } from "@/trpc/client";
+import { useQuery } from "@tanstack/react-query";
+import { useDomain } from "@/contexts/domain-context";
 
-interface ClientVerificationPageProps {
-  qrCodeValue: string;
-}
-
-export function ClientVerificationPage({
-  qrCodeValue,
-}: ClientVerificationPageProps) {
+export function ClientVerificationPage() {
+  const trpc = useTRPC();
+  const { domain } = useDomain();
   const { submissionState } = useSubmissionQueryState();
-  useVerificationListener({
-    onVerified: () => {
+  const router = useRouter();
+
+  const { data: participant } = useQuery(
+    trpc.participants.getByReference.queryOptions(
+      {
+        domain,
+        reference: submissionState.participantRef ?? "",
+      },
+      {
+        enabled: !!submissionState.participantRef,
+        refetchOnMount: true,
+        refetchOnWindowFocus: true,
+        refetchOnReconnect: true,
+        refetchInterval: 5000,
+      }
+    )
+  );
+
+  useEffect(() => {
+    if (participant?.status === "verified") {
       const params = submissionQueryClientParamSerializer(submissionState);
       router.push(`/confirmation${params}`);
-    },
-  });
+    }
+  }, [participant, router, submissionState]);
+
   const [isFlipped, setIsFlipped] = useState(false);
-  const router = useRouter();
   useEffect(() => {
     const style = document.createElement("style");
     style.textContent = `
@@ -42,11 +57,12 @@ export function ClientVerificationPage({
     `;
     document.head.appendChild(style);
 
-    // Cleanup on unmount
     return () => {
       document.head.removeChild(style);
     };
   }, []);
+
+  const qrCodeValue = `${domain}-${participant?.id}-${participant?.reference}`;
 
   return (
     <div className="flex flex-col items-center justify-center h-[100dvh] p-4 space-y-8">

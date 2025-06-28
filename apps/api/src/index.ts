@@ -17,11 +17,11 @@ app.use((c, next) => {
 });
 
 app.onError((err, c) => {
-  const { POSTHOG_PUBLIC_KEY, POSTHOG_HOST } = env<{
-    POSTHOG_PUBLIC_KEY: string;
+  const { POSTHOG_API_KEY, POSTHOG_HOST } = env<{
+    POSTHOG_API_KEY: string;
     POSTHOG_HOST: string;
   }>(c);
-  const posthog = new PostHog(POSTHOG_PUBLIC_KEY, {
+  const posthog = new PostHog(POSTHOG_API_KEY, {
     host: POSTHOG_HOST,
   });
 

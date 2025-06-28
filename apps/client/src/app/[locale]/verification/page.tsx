@@ -8,20 +8,33 @@ import { ClientVerificationPage } from "./client-page";
 import { getParticipantByReference } from "@vimmer/supabase/cached-queries";
 import { notFound, redirect } from "next/navigation";
 import { getDomain } from "@/lib/get-domain";
+import { batchPrefetch, getQueryClient, trpc } from "@/trpc/server";
 
 export default async function VerificationPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
 }) {
+  const queryClient = getQueryClient();
   const domain = await getDomain();
   const params = await loadSubmissionQueryServerParams(searchParams);
 
   if (!params.participantRef) notFound();
-  const participant = await getParticipantByReference(
-    domain,
-    params.participantRef
+
+  void batchPrefetch([
+    trpc.participants.getByReference.queryOptions({
+      domain,
+      reference: params.participantRef,
+    }),
+  ]);
+
+  const participant = await queryClient.fetchQuery(
+    trpc.participants.getByReference.queryOptions({
+      domain,
+      reference: params.participantRef,
+    })
   );
+
   if (!participant) notFound();
 
   if (participant.status === "verified") {
@@ -29,6 +42,5 @@ export default async function VerificationPage({
     redirect(`/confirmation${redirectParams}`);
   }
 
-  const qrCodeValue = `${domain}-${params.participantId}-${params.participantRef}`;
-  return <ClientVerificationPage qrCodeValue={qrCodeValue} />;
+  return <ClientVerificationPage />;
 }

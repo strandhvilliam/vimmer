@@ -3,11 +3,7 @@ import { z } from "zod";
 import ImageViewer from "./_components/image-viewer";
 import InitialView from "./_components/initial-view";
 import CompleteReviewButton from "./_components/complete-review-button";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@vimmer/ui/components/avatar";
+import { Avatar, AvatarFallback } from "@vimmer/ui/components/avatar";
 
 import { jwtVerify } from "jose";
 import { notFound, redirect } from "next/navigation";

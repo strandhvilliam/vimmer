@@ -7,9 +7,13 @@ import {
 } from "@trpc/tanstack-react-query";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { AppRouter } from "@vimmer/api/trpc/routers/_app";
-import { createTRPCProxyClient, loggerLink } from "@trpc/client";
+import {
+  createTRPCProxyClient,
+  httpBatchLink,
+  httpBatchStreamLink,
+  loggerLink,
+} from "@trpc/client";
 
-import { httpBatchLink } from "@trpc/client/links/httpBatchLink";
 import { Resource } from "sst";
 import superjson from "superjson";
 
@@ -40,9 +44,6 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
 
 export function HydrateClient(props: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
-
-  console.log("resource", Resource.Api.url);
-  console.log("env", process.env.NEXT_PUBLIC_API_URL);
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
