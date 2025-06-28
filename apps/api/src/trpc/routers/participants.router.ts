@@ -2,7 +2,9 @@ import {
   createParticipantMutation,
   deleteParticipantMutation,
   getParticipantByIdQuery,
+  getParticipantByReferenceQuery,
   getParticipantsByDomainQuery,
+  incrementUploadCounterMutation,
   updateParticipantMutation,
 } from "@api/db/queries/participants.queries";
 import { createTRPCRouter, publicProcedure } from "..";
@@ -10,7 +12,9 @@ import {
   createParticipantSchema,
   deleteParticipantSchema,
   getParticipantByIdSchema,
+  getParticipantByReferenceSchema,
   getParticipantsByDomainSchema,
+  incrementUploadCounterSchema,
   updateParticipantSchema,
 } from "@api/schemas/participants.schemas";
 
@@ -28,6 +32,15 @@ export const participantsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return getParticipantByIdQuery(ctx.db, {
         id: input.id,
+      });
+    }),
+
+  getByReference: publicProcedure
+    .input(getParticipantByReferenceSchema)
+    .query(async ({ ctx, input }) => {
+      return getParticipantByReferenceQuery(ctx.db, {
+        reference: input.reference,
+        domain: input.domain,
       });
     }),
 
@@ -53,6 +66,15 @@ export const participantsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return deleteParticipantMutation(ctx.db, {
         id: input.id,
+      });
+    }),
+
+  incrementUploadCounter: publicProcedure
+    .input(incrementUploadCounterSchema)
+    .mutation(async ({ ctx, input }) => {
+      return incrementUploadCounterMutation(ctx.supabase, {
+        participantId: input.participantId,
+        totalExpected: input.totalExpected,
       });
     }),
 });

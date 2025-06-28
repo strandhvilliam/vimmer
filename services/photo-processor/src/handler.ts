@@ -1,48 +1,58 @@
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
-import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
 import {
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { createClient } from "@vimmer/supabase/lambda";
 import { S3Event, SQSEvent } from "aws-lambda";
 import sharp from "sharp";
 
-import {
-  incrementUploadCounter,
-  updateSubmissionByKey,
-} from "@vimmer/supabase/mutations";
-import { getParticipantByIdQuery } from "@vimmer/supabase/queries";
-import { SupabaseClient } from "@vimmer/supabase/types";
 import exifr from "exifr";
 import { Resource } from "sst";
 import { task } from "sst/aws/task";
+import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
+import { AppRouter } from "@vimmer/api/trpc/routers/_app";
+import superjson from "superjson";
 
 const IMAGE_VARIANTS = {
   thumbnail: { width: 200, prefix: "thumbnail" },
   preview: { width: 800, prefix: "preview" },
 } as const;
 
+const createApiClient = () =>
+  createTRPCProxyClient<AppRouter>({
+    links: [
+      loggerLink({
+        enabled: (op) =>
+          process.env.NODE_ENV === "development" ||
+          (op.direction === "down" && op.result instanceof Error),
+      }),
+      httpBatchLink({
+        url: Resource.Api.url + "trpc",
+        transformer: superjson,
+      }),
+    ],
+  });
+
 export const handler = async (event: SQSEvent): Promise<void> => {
   const s3Client = new S3Client();
-  const supabase = await createClient();
+  const apiClient = createApiClient();
   const keys = event.Records.map((r) => JSON.parse(r.body) as S3Event)
     .flatMap((e) => e.Records?.map((r) => decodeURIComponent(r.s3.object.key)))
     .filter(Boolean);
 
   await Promise.all(
-    keys.map((key) => processSubmission(key, s3Client, supabase))
+    keys.map((key) => processSubmission(key, s3Client, apiClient))
   );
 };
 
 async function processSubmission(
   key: string,
   s3Client: S3Client,
-  supabase: SupabaseClient
+  apiClient: ReturnType<typeof createApiClient>
 ) {
   try {
-    const { submission, participant } = await prepareSubmission(supabase, key);
+    const { submission, participant } = await prepareSubmission(apiClient, key);
 
     if (
       participant.status === "verified" ||
@@ -68,21 +78,25 @@ async function processSubmission(
     const exif = await parseExifData(file);
     const variants = await generateImageVariants(key, file, s3Client);
 
-    await updateSubmissionByKey(supabase, key, {
-      status: "uploaded",
-      thumbnailKey: variants.thumbnailKey,
-      previewKey: variants.previewKey,
-      exif,
-      size,
-      mimeType,
-      metadata,
+    await apiClient.submissions.updateByKey.mutate({
+      key,
+      data: {
+        status: "uploaded",
+        thumbnailKey: variants.thumbnailKey,
+        previewKey: variants.previewKey,
+        exif,
+        size,
+        mimeType,
+        metadata,
+      },
     });
 
-    const { isComplete } = await incrementUploadCounter(
-      supabase,
-      submission.participantId,
-      participant.competitionClass?.numberOfPhotos!
-    );
+    const { isComplete } =
+      await apiClient.participants.incrementUploadCounter.mutate({
+        participantId: submission.participantId,
+        totalExpected: participant.competitionClass?.numberOfPhotos!,
+      });
+
     if (isComplete) {
       await Promise.all([
         triggerValidationQueue(submission.participantId),
@@ -94,7 +108,7 @@ async function processSubmission(
       ]);
     }
   } catch (error) {
-    await handleProcessingError(supabase, key, error);
+    await handleProcessingError(apiClient, key, error);
     throw error;
   }
 }
@@ -128,20 +142,37 @@ async function parseExifData(file: Uint8Array<ArrayBufferLike>) {
   return exif;
 }
 
-async function prepareSubmission(supabase: SupabaseClient, key: string) {
-  const submission = await updateSubmissionByKey(supabase, key, {
-    status: "processing",
+async function prepareSubmission(
+  apiClient: ReturnType<typeof createApiClient>,
+  key: string
+) {
+  const { participantRef, domain } = parseKey(key);
+  const { id: submissionId } = await apiClient.submissions.updateByKey.mutate({
+    key,
+    data: {
+      status: "processing",
+    },
   });
-  if (!submission) {
+
+  if (!submissionId) {
     throw new Error("Submission mutation failed");
   }
-  const participant = await getParticipantByIdQuery(
-    supabase,
-    submission.participantId
-  );
+
+  const participant = await apiClient.participants.getByReference.query({
+    reference: participantRef,
+    domain,
+  });
+
   if (!participant) {
-    throw new Error("Unknown error");
+    throw new Error("Unable to find participant");
   }
+
+  const submission = participant.submissions.find((s) => s.key === key);
+
+  if (!submission) {
+    throw new Error("Unable to find submission");
+  }
+
   return { submission, participant };
 }
 
@@ -174,15 +205,19 @@ async function triggerValidationQueue(participantId: number) {
 }
 
 async function handleProcessingError(
-  supabase: SupabaseClient,
+  apiClient: ReturnType<typeof createApiClient>,
   key: string,
   error: unknown
 ) {
   await Promise.all([
-    updateSubmissionByKey(supabase, key, {
-      status: "error",
+    apiClient.submissions.updateByKey.mutate({
+      key,
+      data: {
+        status: "error",
+      },
     }),
   ]);
+  console.error(error);
 }
 
 async function getFileFromS3(s3: S3Client, key: string) {

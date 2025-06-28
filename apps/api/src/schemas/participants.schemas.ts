@@ -8,6 +8,11 @@ export const getParticipantByIdSchema = z.object({
   id: z.number(),
 });
 
+export const getParticipantByReferenceSchema = z.object({
+  reference: z.string(),
+  domain: z.string(),
+});
+
 export const createParticipantSchema = z.object({
   data: z.object({
     reference: z.string(),
@@ -39,4 +44,9 @@ export const updateParticipantSchema = z.object({
 
 export const deleteParticipantSchema = z.object({
   id: z.number(),
+});
+
+export const incrementUploadCounterSchema = z.object({
+  participantId: z.number(),
+  totalExpected: z.number(),
 });

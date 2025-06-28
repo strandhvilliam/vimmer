@@ -1,20 +1,17 @@
-import type { Handler, SQSEvent } from "aws-lambda";
+import type { SQSEvent } from "aws-lambda";
 import { createRule, runValidations } from "@vimmer/validation/validator";
 
-import { createClient } from "@vimmer/supabase/lambda";
-import {
-  getParticipantByIdQuery,
-  getRulesByMarathonIdQuery,
-  getTopicsByDomainQuery,
-  getTopicsByMarathonIdQuery,
-} from "@vimmer/supabase/queries";
 import { z } from "zod";
 import { insertValidationResults } from "@vimmer/supabase/mutations";
 import { RuleKey } from "@vimmer/validation/types";
 import { RULE_KEYS } from "@vimmer/validation/constants";
 import { SEVERITY_LEVELS } from "@vimmer/validation/constants";
 import { RuleConfig } from "@vimmer/validation/types";
-import type { RuleConfig as DbRuleConfig } from "@vimmer/supabase/types";
+import type { RuleConfig as DbRuleConfig } from "@api/db/types";
+import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
+import { Resource } from "sst";
+import { AppRouter } from "@vimmer/api/trpc/routers/_app";
+import superjson from "superjson";
 
 const defaultRuleConfigs: RuleConfig<RuleKey>[] = [
   createRule(RULE_KEYS.ALLOWED_FILE_TYPES, SEVERITY_LEVELS.ERROR, {
@@ -27,6 +24,21 @@ const defaultRuleConfigs: RuleConfig<RuleKey>[] = [
   }),
   createRule(RULE_KEYS.SAME_DEVICE, SEVERITY_LEVELS.ERROR),
 ];
+
+const createApiClient = () =>
+  createTRPCProxyClient<AppRouter>({
+    links: [
+      loggerLink({
+        enabled: (op) =>
+          process.env.NODE_ENV === "development" ||
+          (op.direction === "down" && op.result instanceof Error),
+      }),
+      httpBatchLink({
+        url: Resource.Api.url + "trpc",
+        transformer: superjson,
+      }),
+    ],
+  });
 
 // Function to map database rule configs to validation rule configs
 function mapDbRuleConfigsToValidationConfigs(
@@ -51,6 +63,7 @@ const validationInputSchema = z.object({
 });
 
 export const handler = async (event: SQSEvent): Promise<void> => {
+  const apiClient = createApiClient();
   const records = event.Records;
   for (const record of records) {
     const parsedBody = JSON.parse(record.body) as { participantId: number };
@@ -60,38 +73,32 @@ export const handler = async (event: SQSEvent): Promise<void> => {
       throw new Error("Participant id is required");
     }
 
-    const supabase = await createClient();
+    const participant = await apiClient.participants.getById.query({
+      id: participantId,
+    });
 
-    const participantWithSubmissions = await getParticipantByIdQuery(
-      supabase,
-      participantId
-    );
-
-    if (!participantWithSubmissions) {
+    if (!participant) {
       //TODO: Add error NOT ABLE TO VALIDATE
       throw new Error(`Participant with id ${participantId} not found`);
     }
 
-    if (participantWithSubmissions.status === "verified") {
+    if (participant.status === "verified") {
       console.log("Participant is already verified, skipping");
       continue;
     }
 
-    const dbRuleConfigs = await getRulesByMarathonIdQuery(
-      supabase,
-      participantWithSubmissions.marathonId
-    );
+    const dbRuleConfigs = await apiClient.rules.getByMarathonId.query({
+      marathonId: participant.marathonId,
+    });
 
-    // Map database rule configs to validation rule configs
     const ruleConfigs = mapDbRuleConfigsToValidationConfigs(dbRuleConfigs);
 
-    const topics = await getTopicsByMarathonIdQuery(
-      supabase,
-      participantWithSubmissions.marathonId
-    );
+    const topics = await apiClient.topics.getByMarathonId.query({
+      id: participant.marathonId,
+    });
 
     const parsedSubmissions = z.array(validationInputSchema).safeParse(
-      participantWithSubmissions.submissions.map((s) => ({
+      participant.submissions.map((s) => ({
         exif: s.exif,
         fileName: s.key,
         fileSize: s.size,
@@ -113,6 +120,8 @@ export const handler = async (event: SQSEvent): Promise<void> => {
       participantId,
     }));
 
-    await insertValidationResults(supabase, validationResults);
+    await apiClient.validations.createMultipleValidationResults.mutate({
+      data: validationResults,
+    });
   }
 };

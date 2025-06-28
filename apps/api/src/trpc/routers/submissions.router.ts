@@ -6,10 +6,10 @@ import {
   createMultipleSubmissionsMutation,
   updateSubmissionByKeyMutation,
   updateSubmissionByIdMutation,
-  incrementUploadCounterMutation,
   createZippedSubmissionMutation,
   updateZippedSubmissionMutation,
   getSubmissionsByParticipantIdQuery,
+  getSubmissionByIdQuery,
 } from "@api/db/queries/submissions.queries";
 import { createTRPCRouter, publicProcedure } from "..";
 import {
@@ -20,13 +20,20 @@ import {
   createMultipleSubmissionsSchema,
   updateSubmissionByKeySchema,
   updateSubmissionByIdSchema,
-  incrementUploadCounterSchema,
   createZippedSubmissionSchema,
   updateZippedSubmissionSchema,
   getSubmissionsByParticipantIdSchema,
+  getSubmissionByIdSchema,
 } from "@api/schemas/submissions.schemas";
 
 export const submissionsRouter = createTRPCRouter({
+  getById: publicProcedure
+    .input(getSubmissionByIdSchema)
+    .query(async ({ ctx, input }) => {
+      return getSubmissionByIdQuery(ctx.db, {
+        id: input.id,
+      });
+    }),
   getZippedSubmissionsByDomain: publicProcedure
     .input(getZippedSubmissionsByDomainSchema)
     .query(async ({ ctx, input }) => {
@@ -93,15 +100,6 @@ export const submissionsRouter = createTRPCRouter({
       return updateSubmissionByIdMutation(ctx.db, {
         id: input.id,
         data: input.data,
-      });
-    }),
-
-  incrementUploadCounterMutation: publicProcedure
-    .input(incrementUploadCounterSchema)
-    .mutation(async ({ ctx, input }) => {
-      return incrementUploadCounterMutation(ctx.supabase, {
-        participantId: input.participantId,
-        totalExpected: input.totalExpected,
       });
     }),
 

@@ -10,6 +10,7 @@ import type {
   NewParticipant,
 } from "@api/db/types";
 import { TRPCError } from "@trpc/server";
+import type { SupabaseClient } from "@vimmer/supabase/types";
 
 export async function getParticipantByIdQuery(
   db: Database,
@@ -157,4 +158,25 @@ export async function deleteParticipantMutation(
   }
 
   return { id: result[0].id };
+}
+
+export async function incrementUploadCounterMutation(
+  supabase: SupabaseClient,
+  {
+    participantId,
+    totalExpected,
+  }: { participantId: number; totalExpected: number }
+) {
+  const { data } = await supabase
+    .rpc("increment_upload_counter", {
+      participant_id: participantId,
+      total_expected: totalExpected,
+    })
+    .throwOnError();
+
+  return data as {
+    uploadCount: number;
+    status: string;
+    isComplete: boolean;
+  };
 }

@@ -26,6 +26,17 @@ import type { SupabaseClient } from "@vimmer/supabase/types";
 //   topic: Topic;
 // }
 
+export async function getSubmissionByIdQuery(
+  db: Database,
+  { id }: { id: number }
+) {
+  const result = await db.query.submissions.findFirst({
+    where: eq(submissions.id, id),
+  });
+
+  return result;
+}
+
 export async function getZippedSubmissionsByDomainQuery(
   db: Database,
   { marathonId }: { marathonId: number }
@@ -168,27 +179,6 @@ export async function updateSubmissionByIdMutation(
     .where(eq(submissions.id, id))
     .returning({ id: submissions.id });
   return { id: result[0]?.id ?? null };
-}
-
-export async function incrementUploadCounterMutation(
-  supabase: SupabaseClient,
-  {
-    participantId,
-    totalExpected,
-  }: { participantId: number; totalExpected: number }
-) {
-  const { data } = await supabase
-    .rpc("increment_upload_counter", {
-      participant_id: participantId,
-      total_expected: totalExpected,
-    })
-    .throwOnError();
-
-  return data as {
-    uploadCount: number;
-    status: string;
-    isComplete: boolean;
-  };
 }
 
 export async function createZippedSubmissionMutation(

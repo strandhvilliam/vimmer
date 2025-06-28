@@ -7,7 +7,7 @@ import { juryRouter } from "./jury.router";
 import { usersRouter } from "./users.router";
 import { rulesRouter } from "./rules.router";
 import { submissionsRouter } from "./submissions.router";
-import { verificationsRouter } from "./verifications.router";
+import { validationsRouter } from "./validations.router";
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { createTRPCRouter } from "..";
 
@@ -21,7 +21,7 @@ export const appRouter = createTRPCRouter({
   users: usersRouter,
   rules: rulesRouter,
   submissions: submissionsRouter,
-  verifications: verificationsRouter,
+  validations: validationsRouter,
 });
 
 export type AppRouter = typeof appRouter;

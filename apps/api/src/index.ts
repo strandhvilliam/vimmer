@@ -3,23 +3,41 @@ import { Hono } from "hono";
 import { handle } from "hono/aws-lambda";
 import { appRouter } from "./trpc/routers/_app";
 import { createTRPCContext } from "./trpc";
+import { env } from "hono/adapter";
+import { PostHog } from "posthog-node";
 import { secureHeaders } from "hono/secure-headers";
-import { cors } from "hono/cors";
-import { awsLambdaRequestHandler } from "@trpc/server/adapters/aws-lambda";
 
 const app = new Hono();
+
+app.use(secureHeaders());
 
 app.use((c, next) => {
   console.log("request", c.req.raw.url);
   return next();
 });
 
-// app.use(
-//   "/trpc/*",
-//   cors({
-//     origin: "*",
-//   })
-// );
+app.onError((err, c) => {
+  const { POSTHOG_PUBLIC_KEY, POSTHOG_HOST } = env<{
+    POSTHOG_PUBLIC_KEY: string;
+    POSTHOG_HOST: string;
+  }>(c);
+  const posthog = new PostHog(POSTHOG_PUBLIC_KEY, {
+    host: POSTHOG_HOST,
+  });
+
+  posthog.captureException(
+    new Error(err.message, { cause: err }),
+    "user_distinct_id_with_err_rethrow",
+    {
+      path: c.req.path,
+      method: c.req.method,
+      url: c.req.url,
+      headers: c.req.header(),
+    }
+  );
+  posthog.shutdown();
+  return c.text("Internal Server Error", 500);
+});
 
 app.use(
   "/trpc/*",
@@ -32,12 +50,3 @@ app.use(
 app.get("/", (c) => c.text("Hello World"));
 
 export const handler = handle(app);
-
-// export const handler = awsLambdaRequestHandler({
-//   router: appRouter,
-//   createContext: async () => {
-//     console.log("creating context");
-//     const ctx = await createTRPCContext();
-//     return ctx;
-//   },
-// });

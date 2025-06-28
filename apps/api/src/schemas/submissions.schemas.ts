@@ -1,5 +1,9 @@
 import { z } from "zod/v4";
 
+export const getSubmissionByIdSchema = z.object({
+  id: z.number(),
+});
+
 export const getZippedSubmissionsByDomainSchema = z.object({
   marathonId: z.number(),
 });
@@ -84,11 +88,6 @@ export const updateSubmissionByIdSchema = z.object({
     topicId: z.number().optional(),
     status: z.string().optional(),
   }),
-});
-
-export const incrementUploadCounterSchema = z.object({
-  participantId: z.number(),
-  totalExpected: z.number(),
 });
 
 export const createZippedSubmissionSchema = z.object({
