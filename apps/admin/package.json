@@ -62,6 +62,6 @@
     "eslint-config-next": "15.1.5",
     "eslint-plugin-react-compiler": "^19.0.0-beta-714736e-20250131",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5.7.2"
   }
 }

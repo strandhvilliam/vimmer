@@ -1,11 +1,11 @@
 import { eq, inArray, and } from "drizzle-orm";
-import type { Database, IdResponse } from "@/db";
+import type { Database } from "@api/db";
 import {
   submissions,
   zippedSubmissions,
   marathons,
   participants,
-} from "@/db/schema";
+} from "@api/db/schema";
 import type {
   Submission,
   ZippedSubmission,
@@ -15,21 +15,21 @@ import type {
   CompetitionClass,
   DeviceGroup,
   Topic,
-} from "@/db/types";
+} from "@api/db/types";
 import type { SupabaseClient } from "@vimmer/supabase/types";
 
-interface SubmissionForJuryResponse extends Submission {
-  participant: Participant & {
-    competitionClass: CompetitionClass | null;
-    deviceGroup: DeviceGroup | null;
-  };
-  topic: Topic;
-}
+// interface SubmissionForJuryResponse extends Submission {
+//   participant: Participant & {
+//     competitionClass: CompetitionClass | null;
+//     deviceGroup: DeviceGroup | null;
+//   };
+//   topic: Topic;
+// }
 
 export async function getZippedSubmissionsByDomainQuery(
   db: Database,
   { marathonId }: { marathonId: number }
-): Promise<ZippedSubmission[]> {
+) {
   const result = await db.query.zippedSubmissions.findMany({
     where: eq(zippedSubmissions.marathonId, marathonId),
   });
@@ -40,9 +40,20 @@ export async function getZippedSubmissionsByDomainQuery(
 export async function getManySubmissionsByKeysQuery(
   db: Database,
   { keys }: { keys: string[] }
-): Promise<Submission[]> {
+) {
   const result = await db.query.submissions.findMany({
     where: inArray(submissions.key, keys),
+  });
+
+  return result;
+}
+
+export async function getSubmissionsByParticipantIdQuery(
+  db: Database,
+  { participantId }: { participantId: number }
+) {
+  const result = await db.query.submissions.findMany({
+    where: eq(submissions.participantId, participantId),
   });
 
   return result;
@@ -56,7 +67,7 @@ export async function getSubmissionsForJuryQuery(
     deviceGroupId?: number | null;
     topicId?: number | null;
   }
-): Promise<SubmissionForJuryResponse[]> {
+) {
   const marathon = await db.query.marathons.findFirst({
     where: eq(marathons.domain, filters.domain),
   });
@@ -116,7 +127,7 @@ export async function getSubmissionsForJuryQuery(
 export async function createSubmissionMutation(
   db: Database,
   { data }: { data: NewSubmission }
-): Promise<IdResponse> {
+) {
   const result = await db
     .insert(submissions)
     .values(data)
@@ -127,7 +138,7 @@ export async function createSubmissionMutation(
 export async function createMultipleSubmissionsMutation(
   db: Database,
   { data }: { data: NewSubmission[] }
-): Promise<IdResponse[]> {
+) {
   const result = await db
     .insert(submissions)
     .values(data)
@@ -138,7 +149,7 @@ export async function createMultipleSubmissionsMutation(
 export async function updateSubmissionByKeyMutation(
   db: Database,
   { key, data }: { key: string; data: Partial<NewSubmission> }
-): Promise<IdResponse | null> {
+) {
   const result = await db
     .update(submissions)
     .set(data)
@@ -150,7 +161,7 @@ export async function updateSubmissionByKeyMutation(
 export async function updateSubmissionByIdMutation(
   db: Database,
   { id, data }: { id: number; data: Partial<NewSubmission> }
-): Promise<IdResponse | null> {
+) {
   const result = await db
     .update(submissions)
     .set(data)
@@ -165,11 +176,7 @@ export async function incrementUploadCounterMutation(
     participantId,
     totalExpected,
   }: { participantId: number; totalExpected: number }
-): Promise<{
-  uploadCount: number;
-  status: string;
-  isComplete: boolean;
-}> {
+) {
   const { data } = await supabase
     .rpc("increment_upload_counter", {
       participant_id: participantId,
@@ -187,7 +194,7 @@ export async function incrementUploadCounterMutation(
 export async function createZippedSubmissionMutation(
   db: Database,
   { data }: { data: NewZippedSubmission }
-): Promise<IdResponse> {
+) {
   const result = await db
     .insert(zippedSubmissions)
     .values(data)
@@ -198,7 +205,7 @@ export async function createZippedSubmissionMutation(
 export async function updateZippedSubmissionMutation(
   db: Database,
   { id, data }: { id: number; data: Partial<NewZippedSubmission> }
-): Promise<IdResponse | null> {
+) {
   const result = await db
     .update(zippedSubmissions)
     .set(data)

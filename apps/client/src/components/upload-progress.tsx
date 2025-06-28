@@ -1,3 +1,4 @@
+"use client";
 import { useSubmissionsListener } from "@/hooks/use-submissions-listener";
 import { FileState, FileStatus, PhotoWithPresignedUrl } from "@/lib/types";
 import { Topic } from "@vimmer/supabase/types";

@@ -12,9 +12,7 @@ import {
 import { UploadProgress } from "@/components/upload-progress";
 import { StepNavigationHandlers } from "@/lib/types";
 import { usePhotoStore } from "@/lib/stores/photo-store";
-import { SEVERITY_LEVELS, RULE_KEYS } from "@vimmer/validation/constants";
 import { RuleKey, RuleConfig } from "@vimmer/validation/types";
-import { createRule } from "@vimmer/validation/validator";
 import { SubmissionsList } from "@/components/submission-list";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { usePresignedSubmissions } from "@/hooks/use-presigned-submissions";
@@ -29,19 +27,6 @@ interface Props extends StepNavigationHandlers {
   ruleConfigs: RuleConfig<RuleKey>[];
 }
 
-// const ruleConfigs: RuleConfig<RuleKey>[] = [
-//   createRule(RULE_KEYS.ALLOWED_FILE_TYPES, SEVERITY_LEVELS.ERROR, {
-//     allowedFileTypes: ["jpg", "jpeg"],
-//   }),
-//   createRule(RULE_KEYS.SAME_DEVICE, SEVERITY_LEVELS.ERROR),
-//   createRule(RULE_KEYS.MODIFIED, SEVERITY_LEVELS.WARNING),
-//   createRule(RULE_KEYS.WITHIN_TIMERANGE, SEVERITY_LEVELS.ERROR, {
-//     start: new Date("2023-01-01"),
-//     end: new Date("2026-01-01"),
-//   }),
-//   createRule(RULE_KEYS.SAME_DEVICE, SEVERITY_LEVELS.ERROR),
-// ];
-
 export function UploadSubmissionsStep({
   onPrevStep,
   onNextStep,
@@ -55,6 +40,7 @@ export function UploadSubmissionsStep({
 
   const { photos } = usePhotoStore();
   const { data: presignedSubmissions = [] } = usePresignedSubmissions();
+
   const { isUploading, executeUpload } = useFileUpload();
 
   const combinedPhotos = combinePhotos(photos, presignedSubmissions);

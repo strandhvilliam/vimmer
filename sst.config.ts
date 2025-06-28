@@ -16,6 +16,7 @@ export default $config({
       NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
       REVALIDATE_SECRET: process.env.REVALIDATE_SECRET!,
       POSTHOG_API_KEY: process.env.POSTHOG_API_KEY!,
+      DATABASE_URL: process.env.DATABASE_URL!,
     };
 
     const allowOrigins =
@@ -191,7 +192,7 @@ export default $config({
       handler: "./apps/api/src/index.handler",
       url: true,
       environment: {
-        DATABASE_URL: process.env.DATABASE_URL!,
+        ...env,
       },
     });
 
@@ -204,6 +205,7 @@ export default $config({
         submissionBucket,
         thumbnailBucket,
         previewBucket,
+        api,
         exportsBucket,
         submissionsRouter,
         thumbnailsRouter,
@@ -212,6 +214,7 @@ export default $config({
       ],
       environment: {
         ...env,
+        NEXT_PUBLIC_API_URL: api.url,
         BETTER_AUTH_URL:
           process.env.NODE_ENV === "production"
             ? process.env.BETTER_AUTH_URL!

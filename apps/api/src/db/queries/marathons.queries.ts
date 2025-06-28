@@ -1,31 +1,21 @@
 import { eq } from "drizzle-orm";
-import type { Database, IdResponse } from "@/db";
-import { marathons } from "@/db/schema";
-import type {
-  Marathon,
-  CompetitionClass,
-  DeviceGroup,
-  Topic,
-  NewMarathon,
-} from "@/db/types";
+import type { Database } from "@api/db";
+import { marathons } from "@api/db/schema";
+import type { NewMarathon } from "@api/db/types";
+import { TRPCError } from "@trpc/server";
 
-interface MarathonResponse extends Marathon {
-  competitionClasses: CompetitionClass[];
-  deviceGroups: DeviceGroup[];
-  topics: Topic[];
-}
+// export interface MarathonResponse extends Marathon {
+//   competitionClasses: CompetitionClass[];
+//   deviceGroups: DeviceGroup[];
+//   topics: Topic[];
+// }
 
 export async function getMarathonByIdQuery(
   db: Database,
   { id }: { id: number }
-): Promise<MarathonResponse | null> {
+) {
   const result = await db.query.marathons.findFirst({
     where: eq(marathons.id, id),
-    with: {
-      competitionClasses: true,
-      deviceGroups: true,
-      topics: true,
-    },
   });
 
   return result ?? null;
@@ -34,46 +24,48 @@ export async function getMarathonByIdQuery(
 export async function getMarathonByDomainQuery(
   db: Database,
   { domain }: { domain: string }
-): Promise<MarathonResponse | null> {
+) {
   const result = await db.query.marathons.findFirst({
     where: eq(marathons.domain, domain),
-    with: {
-      competitionClasses: true,
-      deviceGroups: true,
-      topics: true,
-    },
   });
 
-  return result ?? null;
+  if (!result) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: `Marathon not found for domain ${domain}`,
+    });
+  }
+
+  return result;
 }
 
 export async function createMarathonMutation(
   db: Database,
   { data }: { data: NewMarathon }
-): Promise<IdResponse> {
+) {
   const result = await db
     .insert(marathons)
     .values(data)
     .returning({ id: marathons.id });
-  return { id: result[0]?.id ?? null };
+  return result[0]?.id ?? null;
 }
 
 export async function updateMarathonMutation(
   db: Database,
   { id, data }: { id: number; data: Partial<NewMarathon> }
-): Promise<IdResponse> {
+) {
   const result = await db
     .update(marathons)
     .set(data)
     .where(eq(marathons.id, id))
     .returning({ id: marathons.id });
-  return { id: result[0]?.id ?? null };
+  return result[0]?.id ?? null;
 }
 
 export async function updateMarathonByDomainMutation(
   db: Database,
   { domain, data }: { domain: string; data: Partial<NewMarathon> }
-): Promise<IdResponse | null> {
+) {
   if (!data.updatedAt) {
     data.updatedAt = new Date().toISOString();
   }
@@ -83,16 +75,16 @@ export async function updateMarathonByDomainMutation(
     .set(data)
     .where(eq(marathons.domain, domain))
     .returning({ id: marathons.id });
-  return { id: result[0]?.id ?? null };
+  return result[0]?.id ?? null;
 }
 
 export async function deleteMarathonMutation(
   db: Database,
   { id }: { id: number }
-): Promise<IdResponse> {
+) {
   const result = await db
     .delete(marathons)
     .where(eq(marathons.id, id))
     .returning({ id: marathons.id });
-  return { id: result[0]?.id ?? null };
+  return result[0]?.id ?? null;
 }

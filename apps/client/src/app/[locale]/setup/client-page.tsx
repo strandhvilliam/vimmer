@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, Info, Camera, X, Moon, Sun } from "lucide-react";
+import { ChevronRight, Info } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import { Checkbox } from "@vimmer/ui/components/checkbox";
 import ReactCountryFlag from "react-country-flag";
@@ -12,29 +12,50 @@ import {
   AccordionTrigger,
 } from "@vimmer/ui/components/accordion";
 import { useRouter } from "next/navigation";
-import { Marathon } from "@vimmer/supabase/types";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import TermsAndConditionsDialog from "../../../components/terms-and-conditions-dialog";
-import { useTheme } from "next-themes";
 import { cn } from "@vimmer/ui/lib/utils";
 import Link from "next/link";
 import { format } from "date-fns";
+import { useTRPC } from "@/trpc/client";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useDomain } from "@/contexts/domain-context";
+import { useMarathonIsConfigured } from "@/hooks/use-marathon-is-configured";
+import { MarathonNotConfigured } from "@/components/marathon-not-configured";
 
 const LOGO =
   "https://www.stockholmfotomaraton.se/wp-content/uploads/2022/11/Logga-22-png-1024x1024-1.png";
 
-export function SetupClientPage({ marathon }: { marathon: Marathon }) {
+export function SetupClientPage() {
   const router = useRouter();
+  const trpc = useTRPC();
+  const { domain } = useDomain();
+
+  const { data: marathon } = useSuspenseQuery(
+    trpc.marathons.getByDomain.queryOptions({
+      domain,
+    })
+  );
+  const { isConfigured, requiredActions } = useMarathonIsConfigured();
+
   const [language, setLanguage] = useState<string>("en");
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
   const [termsOpen, setTermsOpen] = useState<boolean>(false);
-  const { theme, setTheme } = useTheme();
 
   const handleBeginUpload = () => {
     if (termsAccepted) {
       router.push("/submission");
     }
   };
+
+  if (!isConfigured) {
+    return (
+      <MarathonNotConfigured
+        marathon={marathon}
+        requiredActions={requiredActions}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-[100dvh] relative overflow-hidden">

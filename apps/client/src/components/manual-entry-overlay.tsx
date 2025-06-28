@@ -1,4 +1,4 @@
-import { useDomain } from "@/hooks/use-domain";
+import { useDomain } from "@/hooks/old-use-domain";
 import { QrDataArgs } from "@/lib/schemas/verification-data-schema";
 import { Button } from "@vimmer/ui/components/button";
 import { Input } from "@vimmer/ui/components/input";

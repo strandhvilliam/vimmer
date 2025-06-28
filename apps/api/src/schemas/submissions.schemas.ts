@@ -15,6 +15,10 @@ export const getSubmissionsForJurySchema = z.object({
   topicId: z.number().optional().nullable(),
 });
 
+export const getSubmissionsByParticipantIdSchema = z.object({
+  participantId: z.number(),
+});
+
 export const createSubmissionSchema = z.object({
   data: z.object({
     participantId: z.number(),

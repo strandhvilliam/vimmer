@@ -1,6 +1,5 @@
 "use client";
 
-import { readyParticipant } from "@/lib/actions/ready-participant";
 import { StepNavigationHandlers } from "@/lib/types";
 import { DeviceGroup } from "@vimmer/supabase/types";
 import { Button } from "@vimmer/ui/components/button";
@@ -12,14 +11,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@vimmer/ui/components/card";
-import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { CheckCircle2, Loader2 } from "lucide-react";
-import { useAction } from "next-safe-action/hooks";
 import { cn } from "@vimmer/ui/lib/utils";
 import { Icon } from "@iconify/react";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
+import { useTRPC } from "@/trpc/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDomain } from "@/contexts/domain-context";
 
 interface Props extends StepNavigationHandlers {
   deviceGroups: DeviceGroup[];
@@ -30,6 +30,9 @@ export function DeviceSelectionStep({
   onNextStep,
   onPrevStep,
 }: Props) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { domain } = useDomain();
   const {
     submissionState: {
       competitionClassId,
@@ -42,16 +45,24 @@ export function DeviceSelectionStep({
     setSubmissionState,
   } = useSubmissionQueryState();
 
-  const {
-    execute: readyParticipantAction,
-    isPending: isReadyParticipantPending,
-  } = useAction(readyParticipant, {
-    onSuccess: async () => onNextStep?.(),
-    onError: (error) => {
-      console.log("error", error);
-      toast.error(error.error.serverError);
-    },
-  });
+  const { mutate: updateParticipant, isPending: isUpdateParticipantPending } =
+    useMutation(
+      trpc.participants.update.mutationOptions({
+        onSuccess: async ({ id }) => {
+          queryClient.invalidateQueries({
+            queryKey: trpc.participants.getByDomain.queryKey({
+              domain,
+            }),
+          });
+          queryClient.invalidateQueries({
+            queryKey: trpc.participants.getById.queryKey({
+              id,
+            }),
+          });
+          onNextStep?.();
+        },
+      })
+    );
 
   const isValid =
     deviceGroupId &&
@@ -62,13 +73,16 @@ export function DeviceSelectionStep({
     participantEmail;
 
   const handleContinue = () => {
-    readyParticipantAction({
-      participantId: participantId!,
-      competitionClassId: competitionClassId!,
-      deviceGroupId: deviceGroupId!,
-      firstname: participantFirstName!,
-      lastname: participantLastName!,
-      email: participantEmail!,
+    updateParticipant({
+      id: participantId!,
+      data: {
+        competitionClassId: competitionClassId!,
+        deviceGroupId: deviceGroupId!,
+        status: "ready_to_upload",
+        firstname: participantFirstName!,
+        lastname: participantLastName!,
+        email: participantEmail!,
+      },
     });
   };
 
@@ -99,10 +113,10 @@ export function DeviceSelectionStep({
       <CardFooter className="flex flex-col gap-3 items-center justify-center pt-4 px-4 sm:px-0">
         <PrimaryButton
           onClick={handleContinue}
-          disabled={!isValid || isReadyParticipantPending}
+          disabled={!isValid || isUpdateParticipantPending}
           className="w-full py-3 text-lg rounded-full"
         >
-          {isReadyParticipantPending ? (
+          {isUpdateParticipantPending ? (
             <Loader2 className="animate-spin" />
           ) : (
             "Continue"

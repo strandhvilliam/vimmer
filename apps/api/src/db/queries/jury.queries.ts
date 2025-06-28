@@ -1,29 +1,12 @@
 import { eq, and, desc } from "drizzle-orm";
-import type { Database, IdResponse } from "@/db";
+import type { Database } from "@api/db";
 import {
   submissions,
   participants,
   marathons,
   juryInvitations,
-} from "@/db/schema";
-import type {
-  Submission,
-  Participant,
-  CompetitionClass,
-  DeviceGroup,
-  Topic,
-  JuryInvitation,
-  NewJuryInvitation,
-} from "@/db/types";
-import type { SupabaseClient } from "@vimmer/supabase/types";
-
-export interface JurySubmissionsResponse extends Submission {
-  participant: Participant & {
-    competitionClass: CompetitionClass | null;
-    deviceGroup: DeviceGroup | null;
-  };
-  topic: Topic;
-}
+} from "@api/db/schema";
+import type { NewJuryInvitation } from "@api/db/types";
 
 export async function getJurySubmissionsQuery(
   db: Database,
@@ -33,7 +16,7 @@ export async function getJurySubmissionsQuery(
     deviceGroupId?: number | null;
     topicId?: number | null;
   }
-): Promise<JurySubmissionsResponse[]> {
+) {
   const marathon = await db
     .select({ id: marathons.id })
     .from(marathons)
@@ -87,7 +70,7 @@ export async function getJurySubmissionsQuery(
 export async function getJuryInvitationsByMarathonIdQuery(
   db: Database,
   { id }: { id: number }
-): Promise<JuryInvitation[]> {
+) {
   const result = await db.query.juryInvitations.findMany({
     where: eq(juryInvitations.marathonId, id),
     orderBy: [desc(juryInvitations.createdAt)],
@@ -98,7 +81,7 @@ export async function getJuryInvitationsByMarathonIdQuery(
 export async function getJuryInvitationByIdQuery(
   db: Database,
   { id }: { id: number }
-): Promise<JuryInvitation | null> {
+) {
   const result = await db.query.juryInvitations.findFirst({
     where: eq(juryInvitations.id, id),
   });
@@ -108,33 +91,33 @@ export async function getJuryInvitationByIdQuery(
 export async function createJuryInvitationMutation(
   db: Database,
   { data }: { data: NewJuryInvitation }
-): Promise<IdResponse> {
+) {
   const result = await db
     .insert(juryInvitations)
     .values(data)
     .returning({ id: juryInvitations.id });
-  return { id: result[0]?.id ?? null };
+  return result[0]?.id ?? null;
 }
 
 export async function updateJuryInvitationMutation(
   db: Database,
   { id, data }: { id: number; data: Partial<NewJuryInvitation> }
-): Promise<IdResponse | null> {
+) {
   const result = await db
     .update(juryInvitations)
     .set(data)
     .where(eq(juryInvitations.id, id))
     .returning({ id: juryInvitations.id });
-  return { id: result[0]?.id ?? null };
+  return result[0]?.id ?? null;
 }
 
 export async function deleteJuryInvitationMutation(
   db: Database,
   { id }: { id: number }
-): Promise<IdResponse | null> {
+) {
   const result = await db
     .delete(juryInvitations)
     .where(eq(juryInvitations.id, id))
     .returning({ id: juryInvitations.id });
-  return { id: result[0]?.id ?? null };
+  return result[0]?.id ?? null;
 }

@@ -1,24 +1,14 @@
 import { S3Client } from "@aws-sdk/client-s3";
-import { SupabaseClient } from "@supabase/supabase-js";
 import { formatSubmissionKey } from "@/lib/utils";
 import { generatePresignedUrl } from "@/lib/generate-presigned-url";
-import {
-  createMultipleSubmissions,
-  updateParticipant,
-} from "@vimmer/supabase/mutations";
-import {
-  getMarathonByDomain,
-  getCompetitionClassesByDomain,
-  getTopicsByDomain,
-} from "@vimmer/supabase/cached-queries";
-import { getManySubmissionsByKeysQuery } from "@vimmer/supabase/queries";
 import { PresignedSubmission } from "@/lib/types";
-import { Submission, Topic } from "@vimmer/supabase/types";
+import { Submission, Topic } from "@api/db/types";
 import { Resource } from "sst";
+import { ServerApiClient } from "@/trpc/server";
 
 export class PresignedSubmissionService {
   constructor(
-    private readonly supabase: SupabaseClient,
+    private readonly client: ServerApiClient,
     private readonly s3: S3Client
   ) {}
 
@@ -29,9 +19,9 @@ export class PresignedSubmissionService {
     competitionClassId: string
   ): Promise<PresignedSubmission[]> {
     const [marathon, competitionClasses, topics] = await Promise.all([
-      getMarathonByDomain(domain),
-      getCompetitionClassesByDomain(domain),
-      getTopicsByDomain(domain),
+      this.client.marathons.getByDomain.query({ domain }),
+      this.client.competitionClasses.getByDomain.query({ domain }),
+      this.client.topics.getByDomain.query({ domain }),
     ]);
 
     if (!marathon) {
@@ -53,10 +43,9 @@ export class PresignedSubmissionService {
       competitionClass.numberOfPhotos
     );
 
-    const existingSubmissions = await getManySubmissionsByKeysQuery(
-      this.supabase,
-      submissionKeys
-    );
+    const existingSubmissions = await this.client.submissions.getByKeys.query({
+      keys: submissionKeys,
+    });
 
     if (existingSubmissions.length < competitionClass.numberOfPhotos) {
       return this.handleNewSubmissions(
@@ -92,37 +81,46 @@ export class PresignedSubmissionService {
     marathonId: number,
     participantId: number
   ): Promise<PresignedSubmission[]> {
-    await updateParticipant(this.supabase, participantId, {
-      uploadCount: 0,
+    await this.client.participants.update.mutate({
+      id: participantId,
+      data: {
+        uploadCount: 0,
+      },
     });
 
     const keysToCreate = submissionKeys.filter(
       (key) => !existingSubmissions.some((submission) => submission.key === key)
     );
 
-    const newSubmissions = await createMultipleSubmissions(
-      this.supabase,
-      keysToCreate.map((key) => {
-        const originalIndex = submissionKeys.findIndex((k) => k === key);
-        const topicId = orderedTopics[originalIndex]?.id;
+    const createdSubmissionIds = (
+      await this.client.submissions.createMultiple.mutate({
+        data: keysToCreate.map((key) => {
+          const originalIndex = submissionKeys.findIndex((k) => k === key);
+          const topicId = orderedTopics[originalIndex]?.id;
 
-        if (!topicId) {
-          throw new Error(
-            `Unable to determine topic id for submission at index ${originalIndex}`
-          );
-        }
+          if (!topicId) {
+            throw new Error(
+              `Unable to determine topic id for submission at index ${originalIndex}`
+            );
+          }
 
-        return {
-          key,
-          marathonId,
-          participantId,
-          topicId,
-          status: "initialized",
-        };
+          return {
+            key,
+            marathonId,
+            participantId,
+            topicId,
+            status: "initialized",
+          };
+        }),
       })
-    );
+    ).map((s) => s.id);
 
-    const allSubmissions = [...existingSubmissions, ...newSubmissions];
+    const allSubmissions = (
+      await this.client.submissions.getByParticipantId.query({
+        participantId,
+      })
+    ).filter((s) => createdSubmissionIds.includes(s.id));
+
     return this.generatePresignedObjects(allSubmissions, orderedTopics);
   }
 

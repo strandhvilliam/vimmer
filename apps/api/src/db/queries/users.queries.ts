@@ -1,11 +1,11 @@
 import { eq, and } from "drizzle-orm";
-import type { Database, IdResponse } from "@/db";
+import type { Database } from "@api/db";
 import {
   user,
   userMarathons,
   marathons,
   participantVerifications,
-} from "@/db/schema";
+} from "@api/db/schema";
 import type {
   User,
   NewUser,
@@ -13,32 +13,32 @@ import type {
   NewUserMarathonRelation,
   Marathon,
   ParticipantVerification,
-} from "@/db/types";
+} from "@api/db/types";
 
-interface UserWithMarathonsResponse extends User {
-  userMarathons: (UserMarathonRelation & {
-    marathon: Marathon;
-  })[];
-}
+// interface UserWithMarathonsResponse extends User {
+//   userMarathons: (UserMarathonRelation & {
+//     marathon: Marathon;
+//   })[];
+// }
 
-interface UserWithMarathonsSimpleResponse extends User {
-  userMarathons: UserMarathonRelation[];
-}
+// interface UserWithMarathonsSimpleResponse extends User {
+//   userMarathons: UserMarathonRelation[];
+// }
 
-interface StaffMemberResponse extends UserMarathonRelation {
-  user: User;
-}
+// interface StaffMemberResponse extends UserMarathonRelation {
+//   user: User;
+// }
 
-interface StaffMemberWithVerificationsResponse extends UserMarathonRelation {
-  user: User & {
-    participantVerifications: ParticipantVerification[];
-  };
-}
+// interface StaffMemberWithVerificationsResponse extends UserMarathonRelation {
+//   user: User & {
+//     participantVerifications: ParticipantVerification[];
+//   };
+// }
 
 export async function getUserWithMarathonsQuery(
   db: Database,
   { userId }: { userId: string }
-): Promise<UserWithMarathonsResponse | null> {
+) {
   const result = await db.query.user.findFirst({
     where: eq(user.id, userId),
     with: {
@@ -56,7 +56,7 @@ export async function getUserWithMarathonsQuery(
 export async function getMarathonsByUserIdQuery(
   db: Database,
   { userId }: { userId: string }
-): Promise<Marathon[]> {
+) {
   const result = await db.query.userMarathons.findMany({
     where: eq(userMarathons.userId, userId),
     with: {
@@ -70,7 +70,7 @@ export async function getMarathonsByUserIdQuery(
 export async function getUserByEmailWithMarathonsQuery(
   db: Database,
   { email }: { email: string }
-): Promise<UserWithMarathonsSimpleResponse | null> {
+) {
   const result = await db.query.user.findFirst({
     where: eq(user.email, email),
     with: {
@@ -84,7 +84,7 @@ export async function getUserByEmailWithMarathonsQuery(
 export async function getStaffMembersByDomainQuery(
   db: Database,
   { domain }: { domain: string }
-): Promise<StaffMemberResponse[]> {
+) {
   const result = await db.query.marathons.findFirst({
     where: eq(marathons.domain, domain),
     with: {
@@ -102,7 +102,7 @@ export async function getStaffMembersByDomainQuery(
 export async function getStaffMemberByIdQuery(
   db: Database,
   { staffId, marathonId }: { staffId: string; marathonId: number }
-): Promise<StaffMemberWithVerificationsResponse | null> {
+) {
   const result = await db.query.userMarathons.findFirst({
     where: and(
       eq(userMarathons.userId, staffId),
@@ -123,7 +123,7 @@ export async function getStaffMemberByIdQuery(
 export async function createUserMutation(
   db: Database,
   { data }: { data: NewUser }
-): Promise<{ id: string | null }> {
+) {
   const result = await db.insert(user).values(data).returning({ id: user.id });
   return { id: result[0]?.id ?? null };
 }
@@ -131,7 +131,7 @@ export async function createUserMutation(
 export async function updateUserMutation(
   db: Database,
   { id, data }: { id: string; data: Partial<NewUser> }
-): Promise<{ id: string | null }> {
+) {
   const result = await db
     .update(user)
     .set(data)
@@ -140,10 +140,7 @@ export async function updateUserMutation(
   return { id: result[0]?.id ?? null };
 }
 
-export async function deleteUserMutation(
-  db: Database,
-  { id }: { id: string }
-): Promise<{ id: string | null }> {
+export async function deleteUserMutation(db: Database, { id }: { id: string }) {
   const result = await db
     .delete(user)
     .where(eq(user.id, id))
@@ -154,7 +151,7 @@ export async function deleteUserMutation(
 export async function createUserMarathonRelationMutation(
   db: Database,
   { data }: { data: NewUserMarathonRelation }
-): Promise<IdResponse> {
+) {
   const result = await db
     .insert(userMarathons)
     .values(data)
@@ -173,7 +170,7 @@ export async function updateUserMarathonRelationMutation(
     marathonId: number;
     data: Partial<Pick<NewUserMarathonRelation, "role">>;
   }
-): Promise<IdResponse | null> {
+) {
   const result = await db
     .update(userMarathons)
     .set(data)
@@ -190,7 +187,7 @@ export async function updateUserMarathonRelationMutation(
 export async function deleteUserMarathonRelationMutation(
   db: Database,
   { userId, marathonId }: { userId: string; marathonId: number }
-): Promise<IdResponse | null> {
+) {
   const result = await db
     .delete(userMarathons)
     .where(

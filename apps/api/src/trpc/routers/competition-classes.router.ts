@@ -1,42 +1,42 @@
-import { createTRPCRouter, publicProcedure } from "../init";
+import { createTRPCRouter, publicProcedure } from "..";
 import {
   createCompetitionClassSchema,
   deleteCompetitionClassSchema,
   getCompetitionClassByIdSchema,
   getCompetitionClassesByDomainSchema,
   updateCompetitionClassSchema,
-} from "@/schemas/competition-classes.schemas";
+} from "@api/schemas/competition-classes.schemas";
 import {
   createCompetitionClass,
   deleteCompetitionClass,
   getCompetitionClassByIdQuery,
   getCompetitionClassesByDomainQuery,
   updateCompetitionClass,
-} from "@/db/queries/competition-classes.queries";
+} from "@api/db/queries/competition-classes.queries";
 
 export const competitionClassesRouter = createTRPCRouter({
-  getCompetitionClassById: publicProcedure
+  getById: publicProcedure
     .input(getCompetitionClassByIdSchema)
     .query(async ({ ctx, input }) => {
       return getCompetitionClassByIdQuery(ctx.db, {
         id: input.id,
       });
     }),
-  getCompetitionClassesByDomain: publicProcedure
+  getByDomain: publicProcedure
     .input(getCompetitionClassesByDomainSchema)
     .query(async ({ ctx, input }) => {
       return getCompetitionClassesByDomainQuery(ctx.db, {
         domain: input.domain,
       });
     }),
-  createCompetitionClass: publicProcedure
+  create: publicProcedure
     .input(createCompetitionClassSchema)
     .mutation(async ({ ctx, input }) => {
       return createCompetitionClass(ctx.db, {
         data: input.data,
       });
     }),
-  updateCompetitionClass: publicProcedure
+  update: publicProcedure
     .input(updateCompetitionClassSchema)
     .mutation(async ({ ctx, input }) => {
       return updateCompetitionClass(ctx.db, {
@@ -44,7 +44,7 @@ export const competitionClassesRouter = createTRPCRouter({
         data: input.data,
       });
     }),
-  deleteCompetitionClass: publicProcedure
+  delete: publicProcedure
     .input(deleteCompetitionClassSchema)
     .mutation(async ({ ctx, input }) => {
       return deleteCompetitionClass(ctx.db, {

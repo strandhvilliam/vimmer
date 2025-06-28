@@ -1,9 +1,8 @@
 {
   "name": "@vimmer/typescript-config",
-  "version": "0.0.0",
   "private": true,
-  "license": "MIT",
-  "publishConfig": {
-    "access": "public"
-  }
+  "version": "1.0.0",
+  "files": [
+    "base.json"
+  ]
 }

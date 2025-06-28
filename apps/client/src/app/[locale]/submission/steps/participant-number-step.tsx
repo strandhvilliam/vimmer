@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
@@ -13,85 +12,80 @@ import {
 import { Input } from "@vimmer/ui/components/input";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { ArrowRight, Loader2 } from "lucide-react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRef } from "react";
-import { initializeParticipant } from "@/lib/actions/initialize-participant";
-import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
-import {
-  InitializeParticipantSchema,
-  initializeParticipantSchema,
-} from "@/lib/schemas/initialize-participant-schema";
+import { initializeParticipantSchema } from "@/lib/schemas/initialize-participant-schema";
 import { Button } from "@vimmer/ui/components/button";
-import { useForm, Controller } from "react-hook-form";
-import { z } from "zod";
+import { useForm, useStore } from "@tanstack/react-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
+import { Marathon } from "@api/db/types";
+import { useDomain } from "@/contexts/domain-context";
 
 interface Props extends StepNavigationHandlers {
-  marathonId: number;
-  domain: string;
+  marathon: Marathon;
 }
 
-// Define the shape of the form data using the Zod schema
-type ParticipantNumberSchema = z.infer<typeof initializeParticipantSchema>;
-
-export function ParticipantNumberStep({
-  onNextStep,
-  marathonId,
-  domain,
-}: Props) {
-  const participantRefRef = useRef<HTMLInputElement>(null);
+export function ParticipantNumberStep({ onNextStep, marathon }: Props) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { domain } = useDomain();
   const {
     submissionState: { participantRef, participantId },
     setSubmissionState,
   } = useSubmissionQueryState();
 
-  const {
-    control,
-    handleSubmit,
-    watch,
-    setError,
-    formState: { errors },
-  } = useForm<InitializeParticipantSchema>({
-    resolver: zodResolver(initializeParticipantSchema),
+  const form = useForm({
     defaultValues: {
       participantRef: participantRef ?? "",
-      marathonId,
       domain,
+    },
+    onSubmit: async ({ value }) => {
+      createParticipant({
+        data: {
+          ...value,
+          reference: value.participantRef,
+          marathonId: marathon.id,
+        },
+      });
+    },
+    validators: {
+      onChange: initializeParticipantSchema,
     },
   });
 
-  const { execute: initializeParticiantAction, isExecuting } = useAction(
-    initializeParticipant,
-    {
-      onSuccess: async (result) => {
-        const participantRef = result.data?.reference;
-        const participantId = result.data?.id;
-        if (!participantRef || !participantId) return;
+  const { mutate: createParticipant } = useMutation(
+    trpc.participants.create.mutationOptions({
+      onSuccess: async ({ id }, variables) => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.participants.getByDomain.queryKey({
+            domain,
+          }),
+        });
         await setSubmissionState((prev) => ({
           ...prev,
-          participantRef,
-          participantId,
+          participantId: id,
+          participantRef: variables.data.reference,
         }));
         onNextStep?.();
       },
-      onError: ({ error: { validationErrors, serverError } }) => {
-        if (validationErrors) {
-          setError("participantRef", {
-            message:
-              validationErrors.participantRef?._errors?.[0] ??
-              "Invalid participant number",
+      onError: (error) => {
+        if (error.data?.code === "BAD_REQUEST") {
+          console.log("error", error.message);
+          form.setErrorMap({
+            onChange: {
+              fields: {
+                participantRef: {
+                  message: "Participant already exists",
+                },
+              },
+            },
           });
-        }
-        if (serverError) {
-          toast.error(serverError);
+        } else {
+          toast.error("Failed to create participant");
         }
       },
-    }
+    })
   );
-
-  const participantRefValue = watch("participantRef");
-  const disabledButton =
-    !participantRefValue || participantRefValue.length === 0;
 
   return (
     <div className="max-w-md mx-auto min-h-[80vh] flex flex-col justify-center">
@@ -105,48 +99,50 @@ export function ParticipantNumberStep({
       </CardHeader>
 
       <form
-        onSubmit={handleSubmit(initializeParticiantAction)}
+        onSubmit={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          form.handleSubmit();
+        }}
         className="space-y-6"
       >
         <CardContent className="space-y-6">
           <div>
-            <Controller
+            <form.Field
               name="participantRef"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  ref={participantRefRef}
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="1234"
-                  className="text-center text-4xl h-16 bg-background tracking-widest"
-                  disabled={!!participantId}
-                  maxLength={4}
-                  value={field.value}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    // Only allow numbers and limit to 4 characters
-                    const numericValue = value.replace(/\D/g, "").slice(0, 4);
-
-                    // Store the raw numeric value without padding for UI
-                    field.onChange(numericValue);
-                  }}
-                  onBlur={() => {
-                    // Pad with zeros when the field loses focus (for saving/logic)
-                    if (field.value && field.value.length > 0) {
-                      const paddedValue = field.value.padStart(4, "0");
-                      field.onChange(paddedValue);
-                    }
-                  }}
-                />
+              children={(field) => (
+                <>
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="1234"
+                    className="text-center text-4xl h-16 bg-background tracking-widest"
+                    disabled={!!participantId}
+                    maxLength={4}
+                    value={field.state.value}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const numericValue = value.replace(/\D/g, "").slice(0, 4);
+                      field.handleChange(numericValue);
+                    }}
+                    onBlur={() => {
+                      if (field.state.value && field.state.value.length > 0) {
+                        const paddedValue = field.state.value.padStart(4, "0");
+                        field.handleChange(paddedValue);
+                      }
+                      field.handleBlur();
+                    }}
+                  />
+                  {field.state.meta.errors &&
+                    form.state.isSubmitted &&
+                    field.state.meta.errors.length > 0 && (
+                      <span className="flex flex-1 w-full justify-center text-center text-base pt-4 text-destructive font-medium">
+                        {field.state.meta.errors[0]?.message}
+                      </span>
+                    )}
+                </>
               )}
             />
-
-            {errors.participantRef && (
-              <span className="flex flex-1 w-full justify-center text-center text-base pt-4 text-destructive font-medium">
-                {errors.participantRef.message}
-              </span>
-            )}
           </div>
         </CardContent>
 
@@ -156,25 +152,33 @@ export function ParticipantNumberStep({
               type="button"
               className="w-full rounded-full py-6 text-lg"
               onClick={onNextStep}
-              disabled={isExecuting}
             >
               Continue
             </Button>
           ) : (
-            <PrimaryButton
-              type="submit"
-              className="w-full py-3 text-lg rounded-full"
-              disabled={disabledButton}
-            >
-              {isExecuting ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                <>
-                  <span>Continue</span>
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </>
+            <form.Subscribe
+              selector={(state) => [
+                state.canSubmit,
+                state.isSubmitting,
+                state.values.participantRef,
+              ]}
+              children={([canSubmit, isSubmitting, participantRefValue]) => (
+                <PrimaryButton
+                  type="submit"
+                  className="w-full py-3 text-lg rounded-full"
+                  disabled={!canSubmit || !participantRefValue}
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <>
+                      <span>Continue</span>
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </>
+                  )}
+                </PrimaryButton>
               )}
-            </PrimaryButton>
+            />
           )}
         </CardFooter>
       </form>

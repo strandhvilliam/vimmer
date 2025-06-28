@@ -5,8 +5,8 @@ import {
   createMultipleValidationResultsMutation,
   updateValidationResultMutation,
   createParticipantVerificationMutation,
-} from "@/db/queries/verifications.queries";
-import { createTRPCRouter, publicProcedure } from "../init";
+} from "@api/db/queries/verifications.queries";
+import { createTRPCRouter, publicProcedure } from "..";
 import {
   getValidationResultsByParticipantIdSchema,
   getParticipantVerificationsByStaffIdSchema,
@@ -14,7 +14,7 @@ import {
   createMultipleValidationResultsSchema,
   updateValidationResultSchema,
   createParticipantVerificationSchema,
-} from "@/schemas/verifications.schemas";
+} from "@api/schemas/verifications.schemas";
 
 export const verificationsRouter = createTRPCRouter({
   getValidationResultsByParticipantId: publicProcedure

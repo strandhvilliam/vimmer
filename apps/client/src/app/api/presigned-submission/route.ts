@@ -1,8 +1,8 @@
 import { S3Client } from "@aws-sdk/client-s3";
-import { createClient } from "@vimmer/supabase/server";
 import { AWS_CONFIG } from "@/config/aws";
 import { PresignedSubmissionService } from "./service";
 import { presignedSubmissionQuerySchema } from "./types";
+import { createServerApiClient } from "@/trpc/server";
 
 export async function GET(request: Request) {
   try {
@@ -22,10 +22,10 @@ export async function GET(request: Request) {
       );
     }
 
-    const supabase = await createClient();
+    const client = createServerApiClient();
     const s3 = new S3Client({ region: AWS_CONFIG.region });
 
-    const service = new PresignedSubmissionService(supabase, s3);
+    const service = new PresignedSubmissionService(client, s3);
 
     const presignedSubmissions = await service.generatePresignedSubmissions(
       result.data.participantRef,

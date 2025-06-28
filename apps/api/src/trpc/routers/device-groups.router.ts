@@ -1,42 +1,42 @@
-import { createTRPCRouter, publicProcedure } from "../init";
+import { createTRPCRouter, publicProcedure } from "..";
 import {
   createDeviceGroupSchema,
   deleteDeviceGroupSchema,
   getDeviceGroupByIdSchema,
   getDeviceGroupsByDomainSchema,
   updateDeviceGroupSchema,
-} from "@/schemas/device-groups.schemas";
+} from "@api/schemas/device-groups.schemas";
 import {
   createDeviceGroup,
   deleteDeviceGroup,
   getDeviceGroupByIdQuery,
   getDeviceGroupsByDomainQuery,
   updateDeviceGroup,
-} from "@/db/queries/device-groups.queries";
+} from "@api/db/queries/device-groups.queries";
 
 export const deviceGroupsRouter = createTRPCRouter({
-  getDeviceGroupById: publicProcedure
+  getById: publicProcedure
     .input(getDeviceGroupByIdSchema)
     .query(async ({ ctx, input }) => {
       return getDeviceGroupByIdQuery(ctx.db, {
         id: input.id,
       });
     }),
-  getDeviceGroupsByDomain: publicProcedure
+  getByDomain: publicProcedure
     .input(getDeviceGroupsByDomainSchema)
     .query(async ({ ctx, input }) => {
       return getDeviceGroupsByDomainQuery(ctx.db, {
         domain: input.domain,
       });
     }),
-  createDeviceGroup: publicProcedure
+  create: publicProcedure
     .input(createDeviceGroupSchema)
     .mutation(async ({ ctx, input }) => {
       return createDeviceGroup(ctx.db, {
         data: input.data,
       });
     }),
-  updateDeviceGroup: publicProcedure
+  update: publicProcedure
     .input(updateDeviceGroupSchema)
     .mutation(async ({ ctx, input }) => {
       return updateDeviceGroup(ctx.db, {
@@ -44,7 +44,7 @@ export const deviceGroupsRouter = createTRPCRouter({
         data: input.data,
       });
     }),
-  deleteDeviceGroup: publicProcedure
+  delete: publicProcedure
     .input(deleteDeviceGroupSchema)
     .mutation(async ({ ctx, input }) => {
       return deleteDeviceGroup(ctx.db, {

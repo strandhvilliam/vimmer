@@ -1,4 +1,3 @@
-import { createTRPCRouter } from "../init";
 import { participantsRouter } from "./participants.router";
 import { topicsRouter } from "./topics.router";
 import { competitionClassesRouter } from "./competition-classes.router";
@@ -9,8 +8,10 @@ import { usersRouter } from "./users.router";
 import { rulesRouter } from "./rules.router";
 import { submissionsRouter } from "./submissions.router";
 import { verificationsRouter } from "./verifications.router";
+import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
+import { createTRPCRouter } from "..";
 
-export const apiRouter = createTRPCRouter({
+export const appRouter = createTRPCRouter({
   participants: participantsRouter,
   topics: topicsRouter,
   deviceGroups: deviceGroupsRouter,
@@ -23,4 +24,6 @@ export const apiRouter = createTRPCRouter({
   verifications: verificationsRouter,
 });
 
-export type AppRouter = typeof apiRouter;
+export type AppRouter = typeof appRouter;
+export type RouterInputs = inferRouterInputs<AppRouter>;
+export type RouterOutputs = inferRouterOutputs<AppRouter>;

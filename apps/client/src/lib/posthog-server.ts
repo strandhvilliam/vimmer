@@ -11,6 +11,10 @@ function PostHogClient() {
     };
   }
 
+  console.log("posthog host", process.env.NEXT_PUBLIC_POSTHOG_HOST);
+  console.log("posthog api key", process.env.POSTHOG_API_KEY);
+  console.log("posthog key", process.env.NEXT_PUBLIC_POSTHOG_KEY);
+
   const posthogClient = new PostHog(process.env.POSTHOG_API_KEY, {
     host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
     flushAt: 1,

@@ -10,7 +10,6 @@ export const initializeParticipantSchema = z.object({
     .refine((val) => val.length === 4, {
       message: `Must be exactly ${4} digits.`,
     }),
-  marathonId: z.number().min(1, "Invalid marathon ID"),
   domain: z.string().min(1, "Invalid domain"),
 });
 

@@ -4,6 +4,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
+      "@api/*": ["../api/src/*"],
       "next-international/*": ["../../node_modules/next-international/*"]
     },
     "plugins": [
@@ -11,9 +12,16 @@
         "name": "next"
       }
     ],
-    "rootDir": ".",
-    "outDir": "dist"
+    "strict": true
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "../../types",
+    "next-env.d.ts",
+    "next.config.js",
+    "tailwind.config.ts",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": ["node_modules, .next"]
 }

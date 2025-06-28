@@ -1,13 +1,13 @@
-import type { Database, IdResponse } from "@/db";
+import type { Database } from "@api/db";
 import { marathons, topics } from "../schema";
-import { and, eq } from "drizzle-orm";
-import type { NewTopic, Topic, Marathon } from "../types";
+import { eq } from "drizzle-orm";
+import type { NewTopic } from "../types";
 import type { SupabaseClient } from "@vimmer/supabase/types";
 
 export async function getTopicsByMarathonIdQuery(
   db: Database,
   { id }: { id: number }
-): Promise<Topic[]> {
+) {
   const result = await db.query.topics.findMany({
     where: eq(topics.marathonId, id),
   });
@@ -17,7 +17,7 @@ export async function getTopicsByMarathonIdQuery(
 export async function getTopicsByDomainQuery(
   db: Database,
   { domain }: { domain: string }
-): Promise<Topic[]> {
+) {
   const result = await db.query.marathons.findMany({
     where: eq(marathons.domain, domain),
     with: {
@@ -27,10 +27,7 @@ export async function getTopicsByDomainQuery(
   return result.flatMap(({ topics }) => topics);
 }
 
-export async function getTopicByIdQuery(
-  db: Database,
-  { id }: { id: number }
-): Promise<Topic | null> {
+export async function getTopicByIdQuery(db: Database, { id }: { id: number }) {
   const result = await db.query.topics.findFirst({
     where: eq(topics.id, id),
   });
@@ -46,7 +43,7 @@ export async function updateTopic(
     id: number;
     data: Partial<NewTopic>;
   }
-): Promise<IdResponse> {
+) {
   const result = await db
     .update(topics)
     .set(data)
@@ -75,20 +72,14 @@ export async function updateTopicsOrder(
     .throwOnError();
 }
 
-export async function createTopic(
-  db: Database,
-  { data }: { data: NewTopic }
-): Promise<IdResponse> {
+export async function createTopic(db: Database, { data }: { data: NewTopic }) {
   const result = await db.insert(topics).values(data).returning({
     id: topics.id,
   });
   return { id: result[0]?.id ?? null };
 }
 
-export async function deleteTopic(
-  db: Database,
-  { id }: { id: number }
-): Promise<IdResponse> {
+export async function deleteTopic(db: Database, { id }: { id: number }) {
   const result = await db.delete(topics).where(eq(topics.id, id)).returning({
     id: topics.id,
   });
@@ -128,9 +119,7 @@ export async function getTotalSubmissionCountQuery(
   return count ?? 0;
 }
 
-export async function getScheduledTopicsQuery(
-  db: Database
-): Promise<(Topic & { marathon: Marathon })[]> {
+export async function getScheduledTopicsQuery(db: Database) {
   const result = await db.query.topics.findMany({
     where: eq(topics.visibility, "scheduled"),
     with: {

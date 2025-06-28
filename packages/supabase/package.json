@@ -12,7 +12,7 @@
     "server-only": "^0.0.1"
   },
   "devDependencies": {
-    "typescript": "^5.6.3",
+    "typescript": "^5.7.2",
     "@vimmer/typescript-config": "workspace:*",
     "@vimmer/eslint-config": "workspace:*"
   },

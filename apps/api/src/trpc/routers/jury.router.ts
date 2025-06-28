@@ -5,8 +5,8 @@ import {
   createJuryInvitationMutation,
   updateJuryInvitationMutation,
   deleteJuryInvitationMutation,
-} from "@/db/queries/jury.queries";
-import { createTRPCRouter, publicProcedure } from "../init";
+} from "@api/db/queries/jury.queries";
+import { createTRPCRouter, publicProcedure } from "..";
 import {
   getJuryInvitationsByMarathonIdSchema,
   getJurySubmissionsSchema,
@@ -14,7 +14,7 @@ import {
   createJuryInvitationSchema,
   updateJuryInvitationSchema,
   deleteJuryInvitationSchema,
-} from "@/schemas/jury.schemas";
+} from "@api/schemas/jury.schemas";
 
 export const juryRouter = createTRPCRouter({
   getJurySubmissions: publicProcedure

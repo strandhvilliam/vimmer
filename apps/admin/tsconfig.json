@@ -12,7 +12,8 @@
       }
     ],
     "outDir": "dist",
-    "rootDir": "./"
+    "rootDir": "./",
+    "strict": true
   },
   "include": [
     "next-env.d.ts",

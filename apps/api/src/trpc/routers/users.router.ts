@@ -10,8 +10,8 @@ import {
   createUserMarathonRelationMutation,
   updateUserMarathonRelationMutation,
   deleteUserMarathonRelationMutation,
-} from "@/db/queries/users.queries";
-import { createTRPCRouter, publicProcedure } from "../init";
+} from "@api/db/queries/users.queries";
+import { createTRPCRouter, publicProcedure } from "..";
 import {
   createUserSchema,
   deleteUserSchema,
@@ -24,7 +24,7 @@ import {
   createUserMarathonRelationSchema,
   updateUserMarathonRelationSchema,
   deleteUserMarathonRelationSchema,
-} from "@/schemas/users.schemas";
+} from "@api/schemas/users.schemas";
 
 export const usersRouter = createTRPCRouter({
   getUserWithMarathons: publicProcedure

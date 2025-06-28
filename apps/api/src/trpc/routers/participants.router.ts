@@ -4,18 +4,18 @@ import {
   getParticipantByIdQuery,
   getParticipantsByDomainQuery,
   updateParticipantMutation,
-} from "@/db/queries/participants.queries";
-import { createTRPCRouter, publicProcedure } from "../init";
+} from "@api/db/queries/participants.queries";
+import { createTRPCRouter, publicProcedure } from "..";
 import {
   createParticipantSchema,
   deleteParticipantSchema,
   getParticipantByIdSchema,
   getParticipantsByDomainSchema,
   updateParticipantSchema,
-} from "@/schemas/participants.schemas";
+} from "@api/schemas/participants.schemas";
 
 export const participantsRouter = createTRPCRouter({
-  getParticipants: publicProcedure
+  getByDomain: publicProcedure
     .input(getParticipantsByDomainSchema)
     .query(async ({ ctx, input }) => {
       return getParticipantsByDomainQuery(ctx.db, {
@@ -23,7 +23,7 @@ export const participantsRouter = createTRPCRouter({
       });
     }),
 
-  getParticipantById: publicProcedure
+  getById: publicProcedure
     .input(getParticipantByIdSchema)
     .query(async ({ ctx, input }) => {
       return getParticipantByIdQuery(ctx.db, {
@@ -31,7 +31,7 @@ export const participantsRouter = createTRPCRouter({
       });
     }),
 
-  createParticipant: publicProcedure
+  create: publicProcedure
     .input(createParticipantSchema)
     .mutation(async ({ ctx, input }) => {
       return createParticipantMutation(ctx.db, {
@@ -39,7 +39,7 @@ export const participantsRouter = createTRPCRouter({
       });
     }),
 
-  updateParticipant: publicProcedure
+  update: publicProcedure
     .input(updateParticipantSchema)
     .mutation(async ({ ctx, input }) => {
       return updateParticipantMutation(ctx.db, {
@@ -48,7 +48,7 @@ export const participantsRouter = createTRPCRouter({
       });
     }),
 
-  deleteParticipant: publicProcedure
+  delete: publicProcedure
     .input(deleteParticipantSchema)
     .mutation(async ({ ctx, input }) => {
       return deleteParticipantMutation(ctx.db, {

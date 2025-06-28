@@ -1,5 +1,7 @@
+import { RuleConfig as DbRuleConfig } from "@api/db/types";
+import { RuleConfig, RuleKey } from "@vimmer/validation/types";
+import { createRule } from "@vimmer/validation/validator";
 import { format } from "date-fns";
-import { NextRequest } from "next/server";
 
 export function parseDateFromExif(exif?: Record<string, unknown>) {
   if (!exif) return null;
@@ -27,4 +29,17 @@ export function formatSubmissionKey({
   const displayIndex = (index + 1).toString().padStart(2, "0");
   const fileName = `${displayRef}_${displayIndex}.jpg`;
   return `${domain}/${displayRef}/${displayIndex}/${fileName}`;
+}
+
+export function mapDbRuleConfigsToValidationConfigs(
+  dbRuleConfigs: DbRuleConfig[]
+): RuleConfig<RuleKey>[] {
+  return dbRuleConfigs
+    .filter((rule) => rule.enabled)
+    .map((rule) => {
+      const ruleKey = rule.ruleKey as RuleKey;
+      const severity = rule.severity as "error" | "warning";
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return createRule(ruleKey, severity, rule.params as any);
+    });
 }

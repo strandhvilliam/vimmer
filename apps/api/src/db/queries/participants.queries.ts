@@ -1,6 +1,6 @@
 import { eq, and } from "drizzle-orm";
-import type { Database, IdResponse } from "@/db";
-import { participants } from "@/db/schema";
+import type { Database } from "@api/db";
+import { participants } from "@api/db/schema";
 import type {
   Participant,
   Submission,
@@ -8,19 +8,13 @@ import type {
   DeviceGroup,
   ValidationResult,
   NewParticipant,
-} from "@/db/types";
-
-interface ParticipantResponse extends Participant {
-  submissions: Submission[];
-  competitionClass: CompetitionClass | null;
-  deviceGroup: DeviceGroup | null;
-  validationResults: ValidationResult[];
-}
+} from "@api/db/types";
+import { TRPCError } from "@trpc/server";
 
 export async function getParticipantByIdQuery(
   db: Database,
   { id }: { id: number }
-): Promise<ParticipantResponse | null> {
+) {
   const result = await db.query.participants.findFirst({
     where: eq(participants.id, id),
     with: {
@@ -31,13 +25,20 @@ export async function getParticipantByIdQuery(
     },
   });
 
-  return result ?? null;
+  if (!result) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Participant not found",
+    });
+  }
+
+  return result;
 }
 
 export async function getParticipantByReferenceQuery(
   db: Database,
   { reference, domain }: { reference: string; domain: string }
-): Promise<ParticipantResponse | null> {
+) {
   const result = await db.query.participants.findFirst({
     where: and(
       eq(participants.reference, reference),
@@ -51,13 +52,17 @@ export async function getParticipantByReferenceQuery(
     },
   });
 
-  return result ?? null;
+  if (!result) {
+    return null;
+  }
+
+  return result;
 }
 
 export async function getParticipantsByDomainQuery(
   db: Database,
   { domain }: { domain: string }
-): Promise<ParticipantResponse[]> {
+) {
   const result = await db.query.participants.findMany({
     where: eq(participants.domain, domain),
     with: {
@@ -74,33 +79,82 @@ export async function getParticipantsByDomainQuery(
 export async function createParticipantMutation(
   db: Database,
   { data }: { data: NewParticipant }
-): Promise<IdResponse> {
+): Promise<{ id: number }> {
+  if (!data.domain) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Domain is required",
+    });
+  }
+
+  let existingParticipant;
+  try {
+    existingParticipant = await getParticipantByReferenceQuery(db, {
+      reference: data.reference,
+      domain: data.domain,
+    });
+  } catch (error) {
+    console.log("error", error);
+  }
+  console.log("existingParticipant", existingParticipant);
+
+  if (existingParticipant) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Participant already exists",
+    });
+  }
+
   const result = await db
     .insert(participants)
     .values(data)
     .returning({ id: participants.id });
-  return { id: result[0]?.id ?? null };
+
+  if (!result[0]) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to create participant",
+    });
+  }
+
+  return { id: result[0].id };
 }
 
 export async function updateParticipantMutation(
   db: Database,
   { id, data }: { id: number; data: Partial<NewParticipant> }
-): Promise<IdResponse | null> {
+): Promise<{ id: number }> {
   const result = await db
     .update(participants)
     .set(data)
     .where(eq(participants.id, id))
     .returning({ id: participants.id });
-  return { id: result[0]?.id ?? null };
+
+  if (!result[0]) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to update participant",
+    });
+  }
+
+  return { id: result[0].id };
 }
 
 export async function deleteParticipantMutation(
   db: Database,
   { id }: { id: number }
-): Promise<IdResponse | null> {
+): Promise<{ id: number }> {
   const result = await db
     .delete(participants)
     .where(eq(participants.id, id))
     .returning({ id: participants.id });
-  return { id: result[0]?.id ?? null };
+
+  if (!result[0]) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to delete participant",
+    });
+  }
+
+  return { id: result[0].id };
 }

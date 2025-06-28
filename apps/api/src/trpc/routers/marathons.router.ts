@@ -1,4 +1,4 @@
-import { createTRPCRouter, publicProcedure } from "../init";
+import { createTRPCRouter, publicProcedure } from "..";
 import {
   createMarathonSchema,
   deleteMarathonSchema,
@@ -6,7 +6,7 @@ import {
   getMarathonByDomainSchema,
   updateMarathonSchema,
   updateMarathonByDomainSchema,
-} from "@/schemas/marathons.schemas";
+} from "@api/schemas/marathons.schemas";
 import {
   createMarathonMutation,
   deleteMarathonMutation,
@@ -14,31 +14,32 @@ import {
   getMarathonByDomainQuery,
   updateMarathonMutation,
   updateMarathonByDomainMutation,
-} from "@/db/queries/marathons.queries";
+} from "@api/db/queries/marathons.queries";
 
 export const marathonsRouter = createTRPCRouter({
-  getMarathonById: publicProcedure
+  getById: publicProcedure
     .input(getMarathonByIdSchema)
     .query(async ({ ctx, input }) => {
       return getMarathonByIdQuery(ctx.db, {
         id: input.id,
       });
     }),
-  getMarathonByDomain: publicProcedure
+  getByDomain: publicProcedure
     .input(getMarathonByDomainSchema)
     .query(async ({ ctx, input }) => {
-      return getMarathonByDomainQuery(ctx.db, {
+      const data = await getMarathonByDomainQuery(ctx.db, {
         domain: input.domain,
       });
+      return data;
     }),
-  createMarathon: publicProcedure
+  create: publicProcedure
     .input(createMarathonSchema)
     .mutation(async ({ ctx, input }) => {
       return createMarathonMutation(ctx.db, {
         data: input.data,
       });
     }),
-  updateMarathon: publicProcedure
+  update: publicProcedure
     .input(updateMarathonSchema)
     .mutation(async ({ ctx, input }) => {
       return updateMarathonMutation(ctx.db, {
@@ -47,7 +48,7 @@ export const marathonsRouter = createTRPCRouter({
       });
     }),
 
-  updateMarathonByDomain: publicProcedure
+  updateByDomain: publicProcedure
     .input(updateMarathonByDomainSchema)
     .mutation(async ({ ctx, input }) => {
       return updateMarathonByDomainMutation(ctx.db, {
@@ -55,7 +56,7 @@ export const marathonsRouter = createTRPCRouter({
         data: input.data,
       });
     }),
-  deleteMarathon: publicProcedure
+  delete: publicProcedure
     .input(deleteMarathonSchema)
     .mutation(async ({ ctx, input }) => {
       return deleteMarathonMutation(ctx.db, {

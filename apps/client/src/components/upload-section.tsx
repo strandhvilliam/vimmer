@@ -3,7 +3,7 @@ import { Card, CardContent } from "@vimmer/ui/components/card";
 import { Skeleton } from "@vimmer/ui/components/skeleton";
 import { Alert } from "@vimmer/ui/components/alert";
 import { toast } from "sonner";
-import { CloudUpload, Loader2, AlertTriangle } from "lucide-react";
+import { CloudUpload, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import React from "react";
 import { UploadZone } from "./upload-zone";
@@ -48,12 +48,6 @@ export default function UploadSection({
       result.outcome === VALIDATION_OUTCOME.FAILED &&
       result.severity === SEVERITY_LEVELS.WARNING
   );
-
-  console.log({
-    hasValidationErrors,
-    hasValidationWarnings,
-    validationResults,
-  });
 
   const errorMessages = validationResults
     .filter(

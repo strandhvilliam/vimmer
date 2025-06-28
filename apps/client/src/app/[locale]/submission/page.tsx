@@ -13,45 +13,32 @@ import { RuleConfig, RuleKey } from "@vimmer/validation/types";
 import { createRule } from "@vimmer/validation/validator";
 import { RuleConfig as DbRuleConfig } from "@vimmer/supabase/types";
 import { getDomain } from "@/lib/get-domain";
-
-function mapDbRuleConfigsToValidationConfigs(
-  dbRuleConfigs: DbRuleConfig[]
-): RuleConfig<RuleKey>[] {
-  return dbRuleConfigs
-    .filter((rule) => rule.enabled) // Only include enabled rules
-    .map((rule) => {
-      const ruleKey = rule.ruleKey as RuleKey;
-      const severity = rule.severity as "error" | "warning";
-
-      return createRule(ruleKey, severity, rule.params as any);
-    });
-}
+import { batchPrefetch, HydrateClient, trpc } from "@/trpc/server";
 
 export default async function SubmissionPage() {
   const domain = await getDomain();
 
-  const [marathon, topics, competitionClasses, deviceGroups, rules] =
-    await Promise.all([
-      getMarathonByDomain(domain),
-      getTopicsByDomain(domain),
-      getCompetitionClassesByDomain(domain),
-      getDeviceGroupsByDomain(domain),
-      getRulesByDomain(domain),
-    ]);
-
-  if (!marathon) {
-    notFound();
-  }
-
-  const ruleConfigs = mapDbRuleConfigsToValidationConfigs(rules);
+  batchPrefetch([
+    trpc.marathons.getByDomain.queryOptions({
+      domain,
+    }),
+    trpc.rules.getByDomain.queryOptions({
+      domain,
+    }),
+    trpc.competitionClasses.getByDomain.queryOptions({
+      domain,
+    }),
+    trpc.deviceGroups.getByDomain.queryOptions({
+      domain,
+    }),
+    trpc.topics.getByDomain.queryOptions({
+      domain,
+    }),
+  ]);
 
   return (
-    <SubmissionClientPage
-      marathon={marathon}
-      topics={topics}
-      competitionClasses={competitionClasses}
-      deviceGroups={deviceGroups}
-      ruleConfigs={ruleConfigs}
-    />
+    <HydrateClient>
+      <SubmissionClientPage />
+    </HydrateClient>
   );
 }

@@ -16,7 +16,7 @@
     "@types/aws-lambda": "8.10.146",
     "prettier": "^3.5.3",
     "turbo": "^2.5.4",
-    "typescript": "5.5.4"
+    "typescript": "^5.7.2"
   },
   "engines": {
     "node": ">=18"
@@ -29,6 +29,9 @@
   ],
   "dependencies": {
     "@aws-sdk/lib-storage": "^3.828.0",
+    "@trpc/client": "^11.4.2",
+    "@trpc/server": "^11.4.2",
+    "@trpc/tanstack-react-query": "^11.4.2",
     "@types/archiver": "^6.0.3",
     "archiver": "^7.0.1",
     "sst": "^3.17.5"

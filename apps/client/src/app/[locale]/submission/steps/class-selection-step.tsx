@@ -65,7 +65,6 @@ export function ClassSelectionStep({
           variant="ghost"
           size="lg"
           onClick={onPrevStep}
-          disabled={!competitionClassId}
           className="w-[200px]"
         >
           Back

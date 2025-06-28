@@ -23,6 +23,10 @@ import {
 } from "@/lib/schemas/submission-query-client-schema";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { RuleConfig, RuleKey } from "@vimmer/validation/types";
+import { useSuspenseQueries } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
+import { useDomain } from "@/contexts/domain-context";
+import { mapDbRuleConfigsToValidationConfigs } from "@/lib/utils";
 
 interface ClientPageProps {
   marathon: Marathon;
@@ -32,20 +36,42 @@ interface ClientPageProps {
   ruleConfigs: RuleConfig<RuleKey>[];
 }
 
-export function SubmissionClientPage({
-  marathon,
-  topics,
-  competitionClasses,
-  deviceGroups,
-  ruleConfigs,
-}: ClientPageProps) {
+export function SubmissionClientPage() {
+  const trpc = useTRPC();
+  const router = useRouter();
   const [step, setStep] = useQueryState(
     "s",
     parseAsInteger.withDefault(1).withOptions({ history: "push" })
   );
-  const { submissionState } = useSubmissionQueryState();
   const [direction, setDirection] = useState(0);
-  const router = useRouter();
+  const { submissionState } = useSubmissionQueryState();
+
+  const { domain } = useDomain();
+
+  const [
+    { data: marathon },
+    { data: competitionClasses },
+    { data: deviceGroups },
+    { data: ruleConfigs },
+    { data: topics },
+  ] = useSuspenseQueries({
+    queries: [
+      trpc.marathons.getByDomain.queryOptions({ domain }),
+      trpc.competitionClasses.getByDomain.queryOptions({
+        domain,
+      }),
+      trpc.deviceGroups.getByDomain.queryOptions({
+        domain,
+      }),
+      trpc.rules.getByDomain.queryOptions({
+        domain,
+      }),
+      trpc.topics.getByDomain.queryOptions({
+        domain,
+      }),
+    ],
+  });
+
   const handleNextStep = () => {
     const nextStep = Math.min(step + 1, Object.keys(STEPS).length);
     setDirection(1);
@@ -80,9 +106,8 @@ export function SubmissionClientPage({
             direction={direction}
           >
             <ParticipantNumberStep
-              marathonId={marathon.id}
-              domain={marathon.domain}
               onNextStep={handleNextStep}
+              marathon={marathon}
             />
           </AnimatedStepWrapper>
         )}
@@ -92,8 +117,6 @@ export function SubmissionClientPage({
             direction={direction}
           >
             <ParticipantDetailsStep
-              marathonId={marathon.id}
-              domain={marathon.domain}
               onNextStep={handleNextStep}
               onPrevStep={handlePrevStep}
             />
@@ -131,7 +154,7 @@ export function SubmissionClientPage({
             <UploadSubmissionsStep
               competitionClasses={competitionClasses}
               topics={topics}
-              ruleConfigs={ruleConfigs}
+              ruleConfigs={mapDbRuleConfigsToValidationConfigs(ruleConfigs)}
               onPrevStep={handlePrevStep}
               onNextStep={handleNavigateToVerification}
             />

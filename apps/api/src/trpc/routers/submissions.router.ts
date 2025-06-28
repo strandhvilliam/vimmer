@@ -9,8 +9,9 @@ import {
   incrementUploadCounterMutation,
   createZippedSubmissionMutation,
   updateZippedSubmissionMutation,
-} from "@/db/queries/submissions.queries";
-import { createTRPCRouter, publicProcedure } from "../init";
+  getSubmissionsByParticipantIdQuery,
+} from "@api/db/queries/submissions.queries";
+import { createTRPCRouter, publicProcedure } from "..";
 import {
   getZippedSubmissionsByDomainSchema,
   getManySubmissionsByKeysSchema,
@@ -22,7 +23,8 @@ import {
   incrementUploadCounterSchema,
   createZippedSubmissionSchema,
   updateZippedSubmissionSchema,
-} from "@/schemas/submissions.schemas";
+  getSubmissionsByParticipantIdSchema,
+} from "@api/schemas/submissions.schemas";
 
 export const submissionsRouter = createTRPCRouter({
   getZippedSubmissionsByDomain: publicProcedure
@@ -33,7 +35,7 @@ export const submissionsRouter = createTRPCRouter({
       });
     }),
 
-  getManySubmissionsByKeys: publicProcedure
+  getByKeys: publicProcedure
     .input(getManySubmissionsByKeysSchema)
     .query(async ({ ctx, input }) => {
       return getManySubmissionsByKeysQuery(ctx.db, {
@@ -41,7 +43,15 @@ export const submissionsRouter = createTRPCRouter({
       });
     }),
 
-  getSubmissionsForJury: publicProcedure
+  getByParticipantId: publicProcedure
+    .input(getSubmissionsByParticipantIdSchema)
+    .query(async ({ ctx, input }) => {
+      return getSubmissionsByParticipantIdQuery(ctx.db, {
+        participantId: input.participantId,
+      });
+    }),
+
+  getForJury: publicProcedure
     .input(getSubmissionsForJurySchema)
     .query(async ({ ctx, input }) => {
       return getSubmissionsForJuryQuery(ctx.db, {
@@ -52,7 +62,7 @@ export const submissionsRouter = createTRPCRouter({
       });
     }),
 
-  createSubmission: publicProcedure
+  create: publicProcedure
     .input(createSubmissionSchema)
     .mutation(async ({ ctx, input }) => {
       return createSubmissionMutation(ctx.db, {
@@ -60,7 +70,7 @@ export const submissionsRouter = createTRPCRouter({
       });
     }),
 
-  createMultipleSubmissions: publicProcedure
+  createMultiple: publicProcedure
     .input(createMultipleSubmissionsSchema)
     .mutation(async ({ ctx, input }) => {
       return createMultipleSubmissionsMutation(ctx.db, {
@@ -68,7 +78,7 @@ export const submissionsRouter = createTRPCRouter({
       });
     }),
 
-  updateSubmissionByKey: publicProcedure
+  updateByKey: publicProcedure
     .input(updateSubmissionByKeySchema)
     .mutation(async ({ ctx, input }) => {
       return updateSubmissionByKeyMutation(ctx.db, {
@@ -77,7 +87,7 @@ export const submissionsRouter = createTRPCRouter({
       });
     }),
 
-  updateSubmissionById: publicProcedure
+  updateById: publicProcedure
     .input(updateSubmissionByIdSchema)
     .mutation(async ({ ctx, input }) => {
       return updateSubmissionByIdMutation(ctx.db, {
@@ -86,7 +96,7 @@ export const submissionsRouter = createTRPCRouter({
       });
     }),
 
-  incrementUploadCounter: publicProcedure
+  incrementUploadCounterMutation: publicProcedure
     .input(incrementUploadCounterSchema)
     .mutation(async ({ ctx, input }) => {
       return incrementUploadCounterMutation(ctx.supabase, {
@@ -95,7 +105,7 @@ export const submissionsRouter = createTRPCRouter({
       });
     }),
 
-  createZippedSubmission: publicProcedure
+  createZipped: publicProcedure
     .input(createZippedSubmissionSchema)
     .mutation(async ({ ctx, input }) => {
       return createZippedSubmissionMutation(ctx.db, {
@@ -103,7 +113,7 @@ export const submissionsRouter = createTRPCRouter({
       });
     }),
 
-  updateZippedSubmission: publicProcedure
+  updateZipped: publicProcedure
     .input(updateZippedSubmissionSchema)
     .mutation(async ({ ctx, input }) => {
       return updateZippedSubmissionMutation(ctx.db, {

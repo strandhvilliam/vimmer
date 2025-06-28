@@ -7,8 +7,8 @@ import {
   getRulesByMarathonIdQuery,
   updateRuleConfigMutation,
   updateRuleConfigByMarathonIdAndRuleKeyMutation,
-} from "@/db/queries/rules.queries";
-import { createTRPCRouter, publicProcedure } from "../init";
+} from "@api/db/queries/rules.queries";
+import { createTRPCRouter, publicProcedure } from "..";
 import {
   createRuleConfigSchema,
   deleteRuleConfigByMarathonIdAndRuleKeySchema,
@@ -18,10 +18,10 @@ import {
   getRulesByMarathonIdSchema,
   updateRuleConfigSchema,
   updateRuleConfigByMarathonIdAndRuleKeySchema,
-} from "@/schemas/rules.schemas";
+} from "@api/schemas/rules.schemas";
 
 export const rulesRouter = createTRPCRouter({
-  getRulesByMarathonId: publicProcedure
+  getByMarathonId: publicProcedure
     .input(getRulesByMarathonIdSchema)
     .query(async ({ ctx, input }) => {
       return getRulesByMarathonIdQuery(ctx.db, {
@@ -29,7 +29,7 @@ export const rulesRouter = createTRPCRouter({
       });
     }),
 
-  getRulesByDomain: publicProcedure
+  getByDomain: publicProcedure
     .input(getRulesByDomainSchema)
     .query(async ({ ctx, input }) => {
       return getRulesByDomainQuery(ctx.db, {
@@ -37,7 +37,7 @@ export const rulesRouter = createTRPCRouter({
       });
     }),
 
-  getRuleConfigByMarathonIdAndRuleKey: publicProcedure
+  getByMarathonIdAndRuleKey: publicProcedure
     .input(getRuleConfigByMarathonIdAndRuleKeySchema)
     .query(async ({ ctx, input }) => {
       return getRuleConfigByMarathonIdAndRuleKeyQuery(ctx.db, {
@@ -46,7 +46,7 @@ export const rulesRouter = createTRPCRouter({
       });
     }),
 
-  createRuleConfig: publicProcedure
+  create: publicProcedure
     .input(createRuleConfigSchema)
     .mutation(async ({ ctx, input }) => {
       return createRuleConfigMutation(ctx.db, {
@@ -54,7 +54,7 @@ export const rulesRouter = createTRPCRouter({
       });
     }),
 
-  updateRuleConfig: publicProcedure
+  update: publicProcedure
     .input(updateRuleConfigSchema)
     .mutation(async ({ ctx, input }) => {
       return updateRuleConfigMutation(ctx.db, {
@@ -63,7 +63,7 @@ export const rulesRouter = createTRPCRouter({
       });
     }),
 
-  updateRuleConfigByMarathonIdAndRuleKey: publicProcedure
+  updateByMarathonIdAndRuleKey: publicProcedure
     .input(updateRuleConfigByMarathonIdAndRuleKeySchema)
     .mutation(async ({ ctx, input }) => {
       return updateRuleConfigByMarathonIdAndRuleKeyMutation(ctx.db, {
@@ -73,7 +73,7 @@ export const rulesRouter = createTRPCRouter({
       });
     }),
 
-  deleteRuleConfig: publicProcedure
+  delete: publicProcedure
     .input(deleteRuleConfigSchema)
     .mutation(async ({ ctx, input }) => {
       return deleteRuleConfigMutation(ctx.db, {
@@ -81,7 +81,7 @@ export const rulesRouter = createTRPCRouter({
       });
     }),
 
-  deleteRuleConfigByMarathonIdAndRuleKey: publicProcedure
+  deleteByMarathonIdAndRuleKey: publicProcedure
     .input(deleteRuleConfigByMarathonIdAndRuleKeySchema)
     .mutation(async ({ ctx, input }) => {
       return deleteRuleConfigByMarathonIdAndRuleKeyMutation(ctx.db, {
