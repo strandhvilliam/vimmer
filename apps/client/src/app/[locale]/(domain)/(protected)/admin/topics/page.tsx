@@ -1,0 +1,74 @@
+import {
+  getMarathonByDomain,
+  getTopicsByDomain,
+  getTopicsWithSubmissionCount,
+  getCompetitionClassesByDomain,
+} from "@vimmer/supabase/cached-queries";
+import { Metadata } from "next";
+import { Suspense } from "react";
+import { TopicsClientWrapper } from "./_components/topics-client-wrapper";
+import { TopicsTableSkeleton } from "./_components/topics-table-skeleton";
+import { TopicsHeader } from "./_components/topics-header";
+import { notFound } from "next/navigation";
+import { connection } from "next/server";
+
+interface TopicsPageProps {
+  params: Promise<{
+    domain: string;
+  }>;
+}
+
+export const metadata: Metadata = {
+  title: "Topics Management",
+  description:
+    "Manage and organize your marathon topics, control their visibility and scheduling.",
+};
+
+export default async function TopicsPage({ params }: TopicsPageProps) {
+  await connection();
+  const { domain } = await params;
+
+  const [marathon, topics, competitionClasses] = await Promise.all([
+    getMarathonByDomain(domain),
+    getTopicsByDomain(domain),
+    getCompetitionClassesByDomain(domain),
+  ]);
+
+  if (!marathon || !topics) {
+    notFound();
+  }
+
+  const topicsWithSubmissionCount = await getTopicsWithSubmissionCount(
+    marathon.id
+  );
+
+  const sortedTopics = [...topics]
+    .map((topic) => ({
+      ...topic,
+      submissionCount:
+        topicsWithSubmissionCount.find((t) => t.id === topic.id)?.submissions[0]
+          ?.count ?? 0,
+    }))
+    .sort((a, b) => a.orderIndex - b.orderIndex);
+
+  return (
+    <div className="flex flex-col h-full">
+      <TopicsHeader marathonId={marathon.id} />
+      <div className="flex-1">
+        <div className="container h-full py-8">
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <Suspense fallback={<TopicsTableSkeleton />}>
+                <TopicsClientWrapper
+                  marathonId={marathon.id}
+                  initialTopics={sortedTopics}
+                  competitionClasses={competitionClasses}
+                />
+              </Suspense>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

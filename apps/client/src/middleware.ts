@@ -80,6 +80,10 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
+  if (hostDomain) {
+    response.headers.set("x-domain", hostDomain);
+  }
+
   // If Participante page but no hostdomain
   if (!hostDomain && request.nextUrl.pathname.includes("/participate")) {
     const url = new URL("/", request.url);
@@ -87,8 +91,7 @@ export function middleware(request: NextRequest) {
   }
 
   // if hostdomain but not participate page
-  if (hostDomain && !request.nextUrl.pathname.includes("/participate")) {
-    response.headers.set("x-domain", hostDomain);
+  if (hostDomain && request.nextUrl.pathname === "/") {
     const url = new URL("/participate", request.url);
     return NextResponse.redirect(url);
   }

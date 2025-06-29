@@ -17,7 +17,9 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   trustedOrigins: [
     "*.vimmer.photo",
+    "*.localhost:3000",
     "http://localhost:3000",
+    "vimmer.photo",
     `https://${Resource.ClientApp.url}`,
     "http://192.168.50.119:3000",
   ],

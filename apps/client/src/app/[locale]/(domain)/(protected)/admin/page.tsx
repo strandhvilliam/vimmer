@@ -1,3 +1,5 @@
-export default function AdminPage() {
-  return <div>Admin Page</div>;
+import { redirect } from "next/navigation";
+
+export default async function AdminIndexPage() {
+  redirect(`/admin/dashboard`);
 }
