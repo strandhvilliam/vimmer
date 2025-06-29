@@ -225,12 +225,12 @@ export default $config({
         submissionBucket,
         thumbnailBucket,
         previewBucket,
-        api,
         exportsBucket,
         submissionsRouter,
         thumbnailsRouter,
         previewsRouter,
         marathonSettingsRouter,
+        api,
       ],
       environment: {
         ...env,
