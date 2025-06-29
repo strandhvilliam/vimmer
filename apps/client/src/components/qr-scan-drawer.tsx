@@ -1,12 +1,10 @@
 import { Button } from "@vimmer/ui/components/button";
 import {
   Drawer,
-  DrawerTrigger,
   DrawerContent,
   DrawerTitle,
 } from "@vimmer/ui/components/drawer";
-import { QrCodeIcon, XIcon } from "lucide-react";
-import { useState } from "react";
+import { XIcon } from "lucide-react";
 import { QrDataArgs } from "@/lib/schemas/verification-data-schema";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";

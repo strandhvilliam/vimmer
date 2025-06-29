@@ -13,8 +13,8 @@ import {
   AlertDialogTrigger,
 } from "@vimmer/ui/components/alert-dialog";
 import { CheckCircle } from "lucide-react";
-import { updateInvitationStatusAction } from "../_actions/jury-actions";
-import { useAction } from "next-safe-action/hooks";
+import { useTRPC } from "@/trpc/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 interface CompleteReviewButtonProps {
@@ -24,24 +24,30 @@ interface CompleteReviewButtonProps {
 export default function CompleteReviewButton({
   invitationId,
 }: CompleteReviewButtonProps) {
-  const { execute: completeReview, isExecuting } = useAction(
-    updateInvitationStatusAction,
-    {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { mutate: completeReview, isPending: isCompleting } = useMutation(
+    trpc.jury.updateJuryInvitation.mutationOptions({
       onSuccess: () => {
         toast.success("Review completed successfully!");
       },
-      onError: ({ error }) => {
-        toast.error(
-          error.serverError || "Failed to complete review. Please try again."
-        );
+      onError: (error) => {
+        toast.error(error.message);
       },
-    }
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.jury.pathKey(),
+        });
+      },
+    })
   );
 
   const handleCompleteReview = () => {
     completeReview({
-      invitationId,
-      status: "completed",
+      id: invitationId,
+      data: {
+        status: "completed",
+      },
     });
   };
 
@@ -51,7 +57,7 @@ export default function CompleteReviewButton({
         <Button
           variant="outline"
           size="sm"
-          disabled={isExecuting}
+          disabled={isCompleting}
           className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
         >
           <CheckCircle className="h-4 w-4 mr-2" />
@@ -71,10 +77,10 @@ export default function CompleteReviewButton({
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleCompleteReview}
-            disabled={isExecuting}
+            disabled={isCompleting}
             className="bg-green-600 hover:bg-green-700"
           >
-            {isExecuting ? (
+            {isCompleting ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                 Completing...

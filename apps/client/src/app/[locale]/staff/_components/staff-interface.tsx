@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { QrCodeIcon, PenIcon, UsersIcon, LogOutIcon } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
@@ -15,32 +15,21 @@ import {
   DeviceGroup,
   CompetitionClass,
   Participant,
-  ParticipantVerification,
   ValidationResult,
-  Topic,
 } from "@vimmer/supabase/types";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { useSession } from "@/hooks/use-session";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
+import { useDomain } from "@/contexts/domain-context";
 
-interface StaffInterfaceProps {
-  staffName: string;
-  verifications: (ParticipantVerification & {
-    participant: Participant & {
-      validationResults: ValidationResult[];
-      competitionClass: CompetitionClass | null;
-      deviceGroup: DeviceGroup | null;
-    };
-  })[];
-  topics: Topic[];
-}
+export function StaffInterface() {
+  const trpc = useTRPC();
+  const { user } = useSession();
+  const { domain } = useDomain();
 
-export function StaffInterface({
-  staffName,
-  verifications,
-  topics,
-}: StaffInterfaceProps) {
-  const [participantDataIsOpen, setParticipantDataIsOpen] = useState(false);
   const [participantData, setParticipantData] = useState<
     | (Participant & {
         validationResults: ValidationResult[];
@@ -49,11 +38,31 @@ export function StaffInterface({
       })
     | null
   >(null);
-  const [qrScanOpen, setQrScanOpen] = useState(false);
-  const [manualEntryOpen, setManualEntryOpen] = useState(false);
-  const [verifiedListOpen, setVerifiedListOpen] = useState(false);
+
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
+
+  const [openSheet, setOpenSheet] = useState<
+    "participant-info" | "qr-scan" | "manual-entry" | "verified-list" | null
+  >(null);
+
   const router = useRouter();
+
+  const { data: verifications } = useSuspenseQuery(
+    trpc.validations.getParticipantVerificationsByStaffId.queryOptions(
+      {
+        staffId: user?.id ?? "",
+      },
+      {
+        enabled: !!user?.id,
+      }
+    )
+  );
+
+  const { data: topics } = useSuspenseQuery(
+    trpc.topics.getByDomain.queryOptions({
+      domain,
+    })
+  );
 
   const { execute: executeVerificationCode } = useAction(
     handleVerificationCode,
@@ -64,7 +73,8 @@ export function StaffInterface({
           return;
         }
         setParticipantData(data);
-        setParticipantDataIsOpen(true);
+        // setParticipantDataIsOpen(true);
+        setOpenSheet("participant-info");
       },
       onError: ({ error }) => {
         if (error.validationErrors?.reference) {
@@ -85,6 +95,7 @@ export function StaffInterface({
       await authClient.signOut();
       router.push("/staff/login");
     } catch (error) {
+      console.error(error);
       toast.error("Failed to logout");
     } finally {
       setIsLogoutLoading(false);
@@ -108,14 +119,14 @@ export function StaffInterface({
           </Button>
           <h1 className="text-4xl font-bold font-rocgrotesk">Verification</h1>
           <p className="text-muted-foreground text-lg font-rocgrotesk">
-            Staff: {staffName}
+            Staff: {user?.name}
           </p>
         </div>
 
         <div className="flex flex-col items-center justify-center gap-10">
           <div className="flex flex-col items-center gap-4">
             <PrimaryButton
-              onClick={() => setQrScanOpen(true)}
+              onClick={() => setOpenSheet("qr-scan")}
               className="w-48 h-48 rounded-full flex items-center justify-center !shadow-xl"
             >
               <QrCodeIcon className="w-28 h-28" />
@@ -130,7 +141,7 @@ export function StaffInterface({
           <div className="flex flex-col items-center gap-2">
             <Button
               variant="secondary"
-              onClick={() => setManualEntryOpen(true)}
+              onClick={() => setOpenSheet("manual-entry")}
               className="bg-white w-20 h-20 rounded-full shadow"
             >
               <PenIcon className="w-8 h-8 text-vimmer-primary" />
@@ -141,7 +152,7 @@ export function StaffInterface({
           <div className="flex flex-col items-center gap-2">
             <Button
               variant="ghost"
-              onClick={() => setVerifiedListOpen(true)}
+              onClick={() => setOpenSheet("verified-list")}
               className="bg-white w-20 h-20 rounded-full shadow"
             >
               <UsersIcon className="w-8 h-8 text-vimmer-primary" />
@@ -151,24 +162,24 @@ export function StaffInterface({
         </div>
       </div>
       <QrScanDrawer
-        open={qrScanOpen}
-        onOpenChange={setQrScanOpen}
+        open={openSheet === "qr-scan"}
+        onOpenChange={() => setOpenSheet(null)}
         onScanAction={executeVerificationCode}
       />
       <ManualEntrySheet
-        open={manualEntryOpen}
-        onOpenChange={setManualEntryOpen}
+        open={openSheet === "manual-entry"}
+        onOpenChange={() => setOpenSheet(null)}
         onEnterAction={executeVerificationCode}
       />
       <VerifiedParticipantsSheet
-        open={verifiedListOpen}
-        onOpenChange={setVerifiedListOpen}
+        open={openSheet === "verified-list"}
+        onOpenChange={() => setOpenSheet(null)}
         verifications={verifications}
         topics={topics}
       />
       <ParticipantInfoSheet
-        open={participantDataIsOpen}
-        onOpenChange={setParticipantDataIsOpen}
+        open={openSheet === "participant-info"}
+        onOpenChange={() => setOpenSheet(null)}
         participant={participantData}
         topics={topics}
       />

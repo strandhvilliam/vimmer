@@ -1,14 +1,8 @@
 "use client";
 
 import React from "react";
-import { CheckCircle, HammerIcon, XCircle, XIcon } from "lucide-react";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@vimmer/ui/components/sheet";
+import { CheckCircle, HammerIcon, XCircle } from "lucide-react";
+import { Sheet, SheetContent, SheetTitle } from "@vimmer/ui/components/sheet";
 import { Button } from "@vimmer/ui/components/button";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { Participant, Topic, ValidationResult } from "@vimmer/supabase/types";

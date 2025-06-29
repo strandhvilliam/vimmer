@@ -10,9 +10,9 @@ import {
 } from "@vimmer/ui/components/card";
 import { Button } from "@vimmer/ui/components/button";
 import { Mail, Clock, CheckCircle } from "lucide-react";
-import { updateInvitationStatusAction } from "../_actions/jury-actions";
-import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
+import { useTRPC } from "@/trpc/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function InitialView({
   invitation,
@@ -21,24 +21,30 @@ export default function InitialView({
   invitation: JuryInvitation;
   children: React.ReactNode;
 }) {
-  const { execute: updateStatus, isExecuting } = useAction(
-    updateInvitationStatusAction,
-    {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { mutate: updateStatus, isPending: isUpdating } = useMutation(
+    trpc.jury.updateJuryInvitation.mutationOptions({
       onSuccess: () => {
         toast.success("Welcome! You can now start reviewing submissions.");
       },
-      onError: ({ error }) => {
-        toast.error(
-          error.serverError || "Failed to get started. Please try again."
-        );
+      onError: (error) => {
+        toast.error(error.message);
       },
-    }
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.jury.pathKey(),
+        });
+      },
+    })
   );
 
   const handleGetStarted = () => {
     updateStatus({
-      invitationId: invitation.id,
-      status: "in_progress",
+      id: invitation.id,
+      data: {
+        status: "in_progress",
+      },
     });
   };
 
@@ -171,11 +177,11 @@ export default function InitialView({
               </p>
               <Button
                 onClick={handleGetStarted}
-                disabled={isExecuting}
+                disabled={isUpdating}
                 className="w-full"
                 size="lg"
               >
-                {isExecuting ? (
+                {isUpdating ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                     Getting Started...

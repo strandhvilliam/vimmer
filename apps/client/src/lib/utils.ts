@@ -1,4 +1,4 @@
-import { RuleConfig as DbRuleConfig } from "@api/db/types";
+import { RuleConfig as DbRuleConfig } from "@vimmer/api/db/types";
 import { RuleConfig, RuleKey } from "@vimmer/validation/types";
 import { createRule } from "@vimmer/validation/validator";
 import { format } from "date-fns";

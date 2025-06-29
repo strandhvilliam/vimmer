@@ -70,7 +70,7 @@ function FilterDisplay({
   );
 }
 
-const TokenPayloadSchema = z.object({
+const tokenPayloadSchema = z.object({
   domain: z.string(),
   invitationId: z.number(),
   iat: z.number(),
@@ -88,7 +88,7 @@ async function verifyJuryToken(token: string): Promise<TokenPayload | null> {
       new TextEncoder().encode(secret)
     );
 
-    const parsed = TokenPayloadSchema.safeParse(payload);
+    const parsed = tokenPayloadSchema.safeParse(payload);
     if (parsed.success) {
       return parsed.data;
     }

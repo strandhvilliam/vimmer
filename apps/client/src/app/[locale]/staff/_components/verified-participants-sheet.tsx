@@ -17,7 +17,7 @@ import {
   Participant,
   Topic,
 } from "@vimmer/supabase/types";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ValidationStatusBadge } from "@/components/validation-status-badge";
 
 interface ParticipantItemProps {
@@ -50,7 +50,7 @@ export function VerifiedParticipantsSheet({
   verifications,
   topics,
 }: VerifiedParticipantsSheetProps) {
-  const [searchTerm, setSearchTerm] = React.useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const filteredVerifications = useMemo(() => {
     if (!searchTerm) return verifications;
@@ -138,8 +138,7 @@ function getTopicNameFromFileName(fileName: string, topics: Topic[]) {
 }
 
 function ParticipantItem({ verification, topics }: ParticipantItemProps) {
-  const [expanded, setExpanded] = React.useState(false);
-  // Count validation issues (simplistic approach)
+  const [expanded, setExpanded] = useState(false);
   const issueCount = verification.participant.validationResults?.filter(
     (v) => v.outcome === "failed" && !v.overruled
   ).length;

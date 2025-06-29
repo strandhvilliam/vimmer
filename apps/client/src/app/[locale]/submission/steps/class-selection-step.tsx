@@ -28,7 +28,6 @@ export function ClassSelectionStep({
 }: Props) {
   const {
     submissionState: { competitionClassId },
-    setSubmissionState,
   } = useSubmissionQueryState();
 
   return (
@@ -48,7 +47,6 @@ export function ClassSelectionStep({
             key={cc.id}
             competitionClass={cc}
             isSelected={cc.id === competitionClassId}
-            onSelect={() => setSubmissionState({ competitionClassId: cc.id })}
           />
         ))}
       </CardContent>
@@ -77,12 +75,12 @@ export function ClassSelectionStep({
 export function CompetitionClassItem({
   competitionClass,
   isSelected,
-  onSelect,
 }: {
   competitionClass: CompetitionClass;
   isSelected: boolean;
-  onSelect: () => void;
 }) {
+  const { setSubmissionState } = useSubmissionQueryState();
+
   return (
     <motion.div
       key={competitionClass.id}
@@ -98,7 +96,9 @@ export function CompetitionClassItem({
           "relative cursor-pointer h-full overflow-hidden transition-all duration-200",
           isSelected && "ring-2 ring-primary/20 shadow-lg"
         )}
-        onClick={onSelect}
+        onClick={() =>
+          setSubmissionState({ competitionClassId: competitionClass.id })
+        }
       >
         <motion.div
           className="flex"
