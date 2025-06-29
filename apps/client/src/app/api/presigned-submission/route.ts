@@ -1,5 +1,4 @@
 import { S3Client } from "@aws-sdk/client-s3";
-import { AWS_CONFIG } from "@/config/aws";
 import { PresignedSubmissionService } from "./service";
 import { presignedSubmissionQuerySchema } from "./types";
 import { createServerApiClient } from "@/trpc/server";
@@ -23,7 +22,7 @@ export async function GET(request: Request) {
     }
 
     const client = createServerApiClient();
-    const s3 = new S3Client({ region: AWS_CONFIG.region });
+    const s3 = new S3Client({ region: "eu-north-1" });
 
     const service = new PresignedSubmissionService(client, s3);
 

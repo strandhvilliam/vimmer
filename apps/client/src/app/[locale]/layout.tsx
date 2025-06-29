@@ -24,11 +24,11 @@ export default async function RootLayout({
 }) {
   const { locale } = await params;
 
-  const domain = (await headers()).get("x-domain");
+  // const domain = (await headers()).get("x-domain");
 
-  if (!domain) {
-    return notFound();
-  }
+  // if (!domain) {
+  //   return notFound();
+  // }
 
   return (
     <html
@@ -39,9 +39,7 @@ export default async function RootLayout({
       <body className="bg-muted ">
         <DotPattern />
         <Toaster />
-        <Providers locale={locale} domain={domain}>
-          {children}
-        </Providers>
+        <Providers locale={locale}>{children}</Providers>
       </body>
     </html>
   );

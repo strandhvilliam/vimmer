@@ -14,6 +14,9 @@ import { toast } from "@vimmer/ui/hooks/use-toast";
 import { Marathon } from "@vimmer/supabase/types";
 import { useAction } from "next-safe-action/hooks";
 import { selectDomain } from "@/lib/actions/select-domain";
+import { useTRPC } from "@/trpc/client";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useSession } from "@/lib/hooks/use-session";
 
 interface DomainSelectProps {
   marathonsPromise: Promise<Marathon[]>;
@@ -21,8 +24,14 @@ interface DomainSelectProps {
 
 const ITEMS_PER_PAGE = 10;
 
-export function DomainSelect({ marathonsPromise }: DomainSelectProps) {
-  const marathons = use(marathonsPromise);
+export function DomainSelect() {
+  const trpc = useTRPC();
+  const { user } = useSession();
+  const { data: marathons } = useSuspenseQuery(
+    trpc.users.getMarathonsByUserId.queryOptions({
+      userId: user?.id,
+    })
+  );
   const [selectedDomainId, setSelectedDomainId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const startIndex = currentPage * ITEMS_PER_PAGE;

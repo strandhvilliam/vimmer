@@ -13,7 +13,7 @@ import {
 } from "@vimmer/ui/components/accordion";
 import { useRouter } from "next/navigation";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
-import TermsAndConditionsDialog from "../../../components/terms-and-conditions-dialog";
+import TermsAndConditionsDialog from "../../../../components/terms-and-conditions-dialog";
 import { cn } from "@vimmer/ui/lib/utils";
 import Link from "next/link";
 import { format } from "date-fns";

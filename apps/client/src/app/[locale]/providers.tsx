@@ -10,23 +10,16 @@ import { DomainProvider } from "@/contexts/domain-context";
 type ProviderProps = {
   locale: string;
   children: ReactNode;
-  domain: string;
 };
 
-export function Providers({ locale, children, domain }: ProviderProps) {
+export function Providers({ locale, children }: ProviderProps) {
   return (
     <I18nProviderClient locale={locale}>
       <PostHogProvider>
         <NuqsAdapter>
           <TRPCReactProvider>
-            {/* <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          > */}
-            <DomainProvider domain={domain}>{children}</DomainProvider>
-            {/* </ThemeProvider> */}
+            {children}
+            {/* <DomainProvider domain={domain}>{children}</DomainProvider> */}
           </TRPCReactProvider>
         </NuqsAdapter>
       </PostHogProvider>

@@ -258,9 +258,11 @@ export default $config({
         previewsRouter,
         marathonSettingsRouter,
         clientApp,
+        api,
       ],
       environment: {
         ...env,
+        NEXT_PUBLIC_API_URL: api.url,
         BETTER_AUTH_URL:
           process.env.NODE_ENV === "production"
             ? process.env.BETTER_AUTH_URL!

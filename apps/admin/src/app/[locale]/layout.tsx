@@ -2,17 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@vimmer/ui/globals.css";
 import { Providers } from "./providers";
-import { connection } from "next/server";
-
-const GeistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const GeistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { Toaster } from "@vimmer/ui/components/sonner";
+import { getSession } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -31,10 +22,16 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const { locale } = await params;
+
+  const sessionPromise = getSession();
+
   return (
     <html lang="en" className="font-neuehaasgrotesk" suppressHydrationWarning>
       <body className={`antialiased`}>
-        <Providers locale={locale}>{children}</Providers>
+        <Providers locale={locale} sessionPromise={sessionPromise}>
+          {children}
+        </Providers>
+        <Toaster />
       </body>
     </html>
   );

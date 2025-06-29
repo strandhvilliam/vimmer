@@ -4,6 +4,11 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
+      "@vimmer/api": ["../api/src/*"],
+      "@vimmer/ui": ["../../packages/ui/src/*"],
+      "@vimmer/validation": ["../../packages/validation/src/*"],
+      "@vimmer/supabase": ["../../packages/supabase/src/*"],
+      "@vimmer/email": ["../../packages/email/src/*"],
       "next-international/*": ["../../node_modules/next-international/*"]
     },
     "plugins": [
@@ -11,16 +16,18 @@
         "name": "next"
       }
     ],
-    "outDir": "dist",
-    "rootDir": "./",
+    // "outDir": "dist",
+    // "rootDir": "./",
     "strict": true
   },
   "include": [
-    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
-    "../client/src/instrumentation-client.ts"
+    "../../types",
+    "next-env.d.ts",
+    "next.config.js",
+    "tailwind.config.ts",
+    ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules, .next"]
 }

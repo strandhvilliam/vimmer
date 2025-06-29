@@ -22,7 +22,6 @@ export const onRequestError: Instrumentation.onRequestError = async (
       const postHogCookieMatch = cookieString.match(
         /ph_phc_.*?_posthog=([^;]+)/
       );
-      console.log("postHogCookieMatch", postHogCookieMatch);
 
       if (postHogCookieMatch && postHogCookieMatch[1]) {
         try {

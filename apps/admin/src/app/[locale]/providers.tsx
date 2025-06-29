@@ -1,31 +1,28 @@
 "use client";
 
-import { getSession } from "@/lib/auth";
-import { SessionProvider } from "@/lib/hooks/use-session";
 import { I18nProviderClient } from "@/locales/client";
-import { Toaster } from "@vimmer/ui/components/sonner";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { ThemeProvider } from "@/lib/contexts/theme-context";
 import type { ReactNode } from "react";
+import { TRPCReactProvider } from "@/trpc/client";
+import { Session } from "better-auth";
+import { User } from "better-auth";
+import { SessionProvider } from "@/lib/hooks/use-session";
 
 type ProviderProps = {
   locale: string;
   children: ReactNode;
+  sessionPromise: Promise<{ session: Session; user: User } | null>;
 };
 
-export function Providers({ locale, children }: ProviderProps) {
+export function Providers({ locale, children, sessionPromise }: ProviderProps) {
   return (
     <I18nProviderClient locale={locale}>
       <NuqsAdapter>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster />
-        </ThemeProvider>
+        <TRPCReactProvider>
+          <SessionProvider sessionPromise={sessionPromise}>
+            {children}
+          </SessionProvider>
+        </TRPCReactProvider>
       </NuqsAdapter>
     </I18nProviderClient>
   );
