@@ -1,49 +1,48 @@
-import React from "react";
-import {
-  getCompetitionClassesByDomain,
-  getDeviceGroupsByDomain,
-  getJuryInvitationById,
-  getTopicsByDomain,
-} from "@vimmer/supabase/cached-queries";
-import { InvitationDetailCard } from "../_components/invitation-detail-card";
-import { InvitationOptions } from "../_components/invitation-options";
+import React, { Suspense } from "react";
 import { InvitationNotFound } from "../_components/invitation-not-found";
+import { JuryInvitationDetails } from "../_components/jury-invitation-details";
+import { JuryInvitationDetailsSkeleton } from "../_components/jury-invitation-details-skeleton";
+import { batchPrefetch, getQueryClient, trpc } from "@/trpc/server";
+import { HydrateClient } from "@/trpc/server";
 
 export default async function JuryInvitationDetailsPage({
   params,
 }: {
-  params: Promise<{ domain: string; invitationId: string }>;
+  params: Promise<{ invitationId: string }>;
 }) {
-  const { domain, invitationId } = await params;
+  const { invitationId } = await params;
+  const queryClient = getQueryClient();
 
-  const [invitation, competitionClasses, topics, deviceGroups] =
-    await Promise.all([
-      getJuryInvitationById(Number(invitationId)),
-      getCompetitionClassesByDomain(domain),
-      getTopicsByDomain(domain),
-      getDeviceGroupsByDomain(domain),
-    ]);
+  batchPrefetch([
+    trpc.jury.getJuryInvitationById.queryOptions({
+      id: Number(invitationId),
+    }),
+    trpc.competitionClasses.getByDomain.queryOptions({
+      domain,
+    }),
+    trpc.topics.getByDomain.queryOptions({
+      domain,
+    }),
+    trpc.deviceGroups.getByDomain.queryOptions({
+      domain,
+    }),
+  ]);
+
+  const invitation = await queryClient.fetchQuery(
+    trpc.jury.getJuryInvitationById.queryOptions({
+      id: Number(invitationId),
+    })
+  );
 
   if (!invitation) {
     return <InvitationNotFound />;
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Jury Invitation</h1>
-        <InvitationOptions
-          invitationId={Number(invitationId)}
-          email={invitation.email}
-        />
-      </div>
-
-      <InvitationDetailCard
-        invitation={invitation}
-        competitionClasses={competitionClasses}
-        topics={topics}
-        deviceGroups={deviceGroups}
-      />
-    </div>
+    <HydrateClient>
+      <Suspense fallback={<JuryInvitationDetailsSkeleton />}>
+        <JuryInvitationDetails invitationId={Number(invitationId)} />
+      </Suspense>
+    </HydrateClient>
   );
 }

@@ -26,17 +26,22 @@ import {
   Users,
   RefreshCw,
 } from "lucide-react";
-import { use } from "react";
-import { useDashboardData } from "../dashboard-context";
-import { useParams } from "next/navigation";
 import { refreshParticipantsData } from "../_actions/refresh-participants";
 import { toast } from "sonner";
 import { useAction } from "next-safe-action/hooks";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useDomain } from "@/contexts/domain-context";
+import { useCurrentLocale } from "@/locales/client";
+import { useTRPC } from "@/trpc/client";
 
 export function RecentParticipantsTable() {
-  const { locale, domain } = useParams();
-  const { participantsPromise } = useDashboardData();
-  const participants = use(participantsPromise);
+  const trpc = useTRPC();
+  const { domain } = useDomain();
+  const locale = useCurrentLocale();
+
+  const { data: participants } = useSuspenseQuery(
+    trpc.participants.getByDomain.queryOptions({ domain })
+  );
 
   const { execute, isExecuting } = useAction(refreshParticipantsData, {
     onSuccess: () => {

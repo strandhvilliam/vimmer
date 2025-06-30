@@ -1,9 +1,9 @@
 import {
-  getCompetitionClassesByDomain,
-  getDeviceGroupsByDomain,
-  getTopicsByDomain,
-} from "@vimmer/supabase/cached-queries";
-import { Marathon } from "@vimmer/supabase/types";
+  CompetitionClass,
+  DeviceGroup,
+  Marathon,
+  Topic,
+} from "@vimmer/api/db/types";
 
 interface RequiredAction {
   action: string;
@@ -15,9 +15,17 @@ interface ConfigurationCheck {
   requiredActions: RequiredAction[];
 }
 
-export async function checkIfMarathonIsProperlyConfigured(
-  marathon: Marathon
-): Promise<ConfigurationCheck> {
+export function checkIfMarathonIsProperlyConfigured({
+  marathon,
+  deviceGroups,
+  competitionClasses,
+  topics,
+}: {
+  marathon: Marathon;
+  deviceGroups: DeviceGroup[];
+  competitionClasses: CompetitionClass[];
+  topics: Topic[];
+}): ConfigurationCheck {
   if (!marathon?.startDate || !marathon?.endDate) {
     return {
       isConfigured: false,
@@ -41,9 +49,6 @@ export async function checkIfMarathonIsProperlyConfigured(
       ],
     };
   }
-
-  const deviceGroups = await getDeviceGroupsByDomain(marathon.domain);
-
   if (deviceGroups.length === 0) {
     return {
       isConfigured: false,
@@ -55,10 +60,6 @@ export async function checkIfMarathonIsProperlyConfigured(
       ],
     };
   }
-
-  const competitionClasses = await getCompetitionClassesByDomain(
-    marathon.domain
-  );
 
   if (competitionClasses.length === 0) {
     return {
@@ -72,8 +73,6 @@ export async function checkIfMarathonIsProperlyConfigured(
     };
   }
 
-  const topics = await getTopicsByDomain(marathon.domain);
-
   if (topics.length === 0) {
     return {
       isConfigured: false,
@@ -86,11 +85,6 @@ export async function checkIfMarathonIsProperlyConfigured(
     };
   }
 
-  console.log(
-    "competitionClasses",
-    JSON.stringify(competitionClasses, null, 2)
-  );
-  console.log("topics", topics.length);
   if (
     competitionClasses.some(
       (competitionClass) => competitionClass.numberOfPhotos > topics.length

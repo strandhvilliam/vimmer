@@ -7,6 +7,7 @@ import {
   juryInvitations,
 } from "@vimmer/api/db/schema";
 import type { NewJuryInvitation } from "@vimmer/api/db/types";
+import { TRPCError } from "@trpc/server";
 
 export async function getJurySubmissionsQuery(
   db: Database,
@@ -88,6 +89,35 @@ export async function getJuryInvitationByIdQuery(
   return result ?? null;
 }
 
+export async function getJuryInvitationsByDomainQuery(
+  db: Database,
+  { domain }: { domain: string }
+) {
+  const marathon = await db
+    .select({ id: marathons.id })
+    .from(marathons)
+    .where(eq(marathons.domain, domain))
+    .limit(1);
+
+  if (!marathon.length) {
+    return [];
+  }
+
+  const marathonId = marathon[0]!.id;
+
+  const result = await db.query.juryInvitations.findMany({
+    where: eq(juryInvitations.marathonId, marathonId),
+    orderBy: [desc(juryInvitations.createdAt)],
+    with: {
+      competitionClass: true,
+      deviceGroup: true,
+      topic: true,
+    },
+  });
+
+  return result;
+}
+
 export async function createJuryInvitationMutation(
   db: Database,
   { data }: { data: NewJuryInvitation }
@@ -96,7 +126,15 @@ export async function createJuryInvitationMutation(
     .insert(juryInvitations)
     .values(data)
     .returning({ id: juryInvitations.id });
-  return result[0]?.id ?? null;
+
+  if (!result[0]?.id) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to create jury invitation",
+    });
+  }
+
+  return result[0].id;
 }
 
 export async function updateJuryInvitationMutation(

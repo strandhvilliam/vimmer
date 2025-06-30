@@ -11,10 +11,18 @@ import {
   SelectValue,
 } from "@vimmer/ui/components/select";
 import { toast } from "sonner";
-import { EXPORT_KEYS } from "@/lib/constants";
-import { useZipSaver } from "@/lib/hooks/use-zip-saver";
 import { useAction } from "next-safe-action/hooks";
 import { getPresignedPhotoArchivesAction } from "../_actions/get-presigned-photo-archives-action";
+import { useZipSaver } from "@/hooks/use-zip-saver";
+
+export const EXPORT_KEYS = {
+  ZIP_PREVIEWS: "zip_previews",
+  ZIP_THUMBNAILS: "zip_thumbnails",
+  ZIP_SUBMISSIONS: "zip_submissions",
+  EXIF: "exif",
+  XLSX_PARTICIPANTS: "xlsx_participants",
+  XLSX_SUBMISSIONS: "xlsx_submissions",
+} as const;
 
 interface ExportOptionsProps {
   domain: string;

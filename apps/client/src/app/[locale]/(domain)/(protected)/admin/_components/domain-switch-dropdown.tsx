@@ -52,6 +52,7 @@ export function DomainSwitchDropdown({
         >
           <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
             {activeMarathon?.logoUrl && !hasImageError ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={activeMarathon.logoUrl}
                 alt="Marathon logo"

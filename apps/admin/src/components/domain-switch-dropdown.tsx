@@ -1,23 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { ChevronsUpDown, Frame, Plus } from "lucide-react";
+import { ChevronsUpDown, Frame } from "lucide-react";
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@vimmer/ui/components/dropdown-menu";
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@vimmer/ui/components/sidebar";
+import { SidebarMenuButton, useSidebar } from "@vimmer/ui/components/sidebar";
 import { Marathon } from "@vimmer/supabase/types";
 import { useSession } from "@/lib/hooks/use-session";
 import { selectDomain } from "@/lib/actions/select-domain";

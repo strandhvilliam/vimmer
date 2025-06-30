@@ -6,29 +6,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@vimmer/ui/components/card";
-import {
-  Users,
-  UploadCloud,
-  AlertCircle,
-  Hourglass,
-  CheckCircle,
-} from "lucide-react";
-import {
-  Participant,
-  PARTICIPANT_STATUS,
-  ParticipantStatus,
-} from "@vimmer/supabase/types";
-import { useDashboardData } from "../dashboard-context";
-import { use } from "react";
+import { Users, UploadCloud, AlertCircle, Hourglass } from "lucide-react";
+import { Participant, PARTICIPANT_STATUS } from "@vimmer/supabase/types";
 import {
   SEVERITY_LEVELS,
   VALIDATION_OUTCOME,
 } from "@vimmer/validation/constants";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useDomain } from "@/contexts/domain-context";
+import { useTRPC } from "@/trpc/client";
 
 export function DashboardCards() {
-  const { participantsPromise } = useDashboardData();
+  const trpc = useTRPC();
+  const { domain } = useDomain();
 
-  const participants = use(participantsPromise);
+  const { data: participants } = useSuspenseQuery(
+    trpc.participants.getByDomain.queryOptions({ domain })
+  );
+
   const totalParticipants = participants.length;
   const totalUploads = participants.reduce(
     (acc: number, p: Participant) => acc + p.uploadCount,

@@ -11,12 +11,17 @@ export const getJuryInvitationsByMarathonIdSchema = z.object({
   id: z.number(),
 });
 
+export const getJuryInvitationsByDomainSchema = z.object({
+  domain: z.string(),
+});
+
 export const getJuryInvitationByIdSchema = z.object({
   id: z.number(),
 });
 
 export const createJuryInvitationSchema = z.object({
   data: z.object({
+    domain: z.string(),
     status: z.string().optional(),
     token: z.string(),
     expiresAt: z.string(),

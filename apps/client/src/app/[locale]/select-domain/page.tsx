@@ -11,7 +11,7 @@ export default async function DomainSelectPage() {
   const session = await getSession();
 
   if (!session) {
-    return redirect("/login");
+    return redirect("/auth/admin/login");
   }
 
   prefetch(
@@ -31,7 +31,7 @@ export default async function DomainSelectPage() {
       <SelectDomainTitle />
       <div className="w-full max-w-md relative z-10 mt-4 min-h-[500px]">
         <Suspense fallback={<DomainSelectSkeleton />}>
-          <DomainSelect />
+          <DomainSelect session={session} />
         </Suspense>
       </div>
     </div>

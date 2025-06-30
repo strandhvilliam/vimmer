@@ -8,7 +8,12 @@ const I18nMiddleware = createI18nMiddleware({
   defaultLocale: "en",
 });
 
-const authRoutes = ["/login", "/verify"];
+const authRoutes = [
+  "/auth/admin/login",
+  "/auth/admin/verify",
+  "/auth/staff/login",
+  "/auth/staff/verify",
+];
 
 const getHostDomain = (request: NextRequest) => {
   const hostDomain = request.headers.get("host")?.split(".").at(0);
@@ -24,10 +29,16 @@ export function middleware(request: NextRequest) {
   const hostDomain = getHostDomain(request);
   const cookieDomain = request.cookies.get("activeDomain")?.value;
 
+  const pathnameLocale = request.nextUrl.pathname.split("/", 2)?.[1];
+
+  const pathnameWithoutLocale = pathnameLocale
+    ? request.nextUrl.pathname.slice(pathnameLocale.length + 1)
+    : request.nextUrl.pathname;
+
   const session = getSessionCookie(request);
 
   // IF AUTH ROUTE
-  if (authRoutes.some((route) => request.nextUrl.pathname.includes(route))) {
+  if (authRoutes.some((route) => pathnameWithoutLocale.includes(route))) {
     // Clear domain to be picked again when re-auth
     // clear subdomain from host
     if (hostDomain || cookieDomain) {
@@ -39,10 +50,9 @@ export function middleware(request: NextRequest) {
 
   // IF ADMIN ROUTE
 
-  if (request.nextUrl.pathname.includes("/admin")) {
+  if (pathnameWithoutLocale.includes("/admin")) {
     if (!session) {
-      console.log(request);
-      const url = new URL("/login/admin", request.url);
+      const url = new URL("/auth/admin/login", request.url);
       return NextResponse.redirect(url);
     }
     // TODO: validate domainAccessToken so that the user can access this domain
@@ -57,13 +67,24 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
+    // redirect with subdomain if no subdomain
+    if (!hostDomain && cookieDomain) {
+      const newUrl = request.url
+        .replace("https://", `https://${cookieDomain}.`)
+        .replace("http://", `http://${cookieDomain}.`);
+
+      if (newUrl !== request.url) {
+        const url = new URL(newUrl, request.url);
+        return NextResponse.redirect(url);
+      }
+    }
     return response;
   }
 
   // IF STAFF ROUTE
-  if (request.nextUrl.pathname.includes("/staff")) {
+  if (pathnameWithoutLocale.includes("/staff")) {
     if (!session) {
-      const url = new URL("/login/staff", request.url);
+      const url = new URL("/auth/staff/login", request.url);
       return NextResponse.redirect(url);
     }
     // TODO: validate domainAccessToken so that the user can access this domain
@@ -77,6 +98,18 @@ export function middleware(request: NextRequest) {
       url.searchParams.set("type", "staff");
       return NextResponse.redirect(url);
     }
+
+    // redirect with subdomain if no subdomain
+    if (!hostDomain && cookieDomain) {
+      const newUrl = request.url
+        .replace("https://", `https://${cookieDomain}.`)
+        .replace("http://", `http://${cookieDomain}.`);
+
+      if (newUrl !== request.url) {
+        const url = new URL(newUrl, request.url);
+        return NextResponse.redirect(url);
+      }
+    }
     return response;
   }
 
@@ -85,13 +118,13 @@ export function middleware(request: NextRequest) {
   }
 
   // If Participante page but no hostdomain
-  if (!hostDomain && request.nextUrl.pathname.includes("/participate")) {
+  if (!hostDomain && pathnameWithoutLocale.includes("/participate")) {
     const url = new URL("/", request.url);
     return NextResponse.redirect(url);
   }
 
   // if hostdomain but not participate page
-  if (hostDomain && request.nextUrl.pathname === "/") {
+  if (hostDomain && pathnameWithoutLocale === "/") {
     const url = new URL("/participate", request.url);
     return NextResponse.redirect(url);
   }

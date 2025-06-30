@@ -1,4 +1,5 @@
-import { getMarathonByDomain } from "@vimmer/supabase/cached-queries";
+"use client";
+
 import { SidebarTriggerButton } from "./sidebar-trigger-button";
 import { MarathonStatusDisplay } from "./marathon-status-display";
 import { Button } from "@vimmer/ui/components/button";
@@ -6,19 +7,43 @@ import Link from "next/link";
 import { LinkIcon } from "lucide-react";
 import { Separator } from "@vimmer/ui/components/separator";
 import { checkIfMarathonIsProperlyConfigured } from "@/lib/check-marathon-configuration";
+import { useDomain } from "@/contexts/domain-context";
+import { useTRPC } from "@/trpc/client";
+import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@vimmer/ui/components/skeleton";
 
-interface AppHeaderProps {
-  domain: string;
-}
+export function AppHeader() {
+  const trpc = useTRPC();
+  const { domain } = useDomain();
 
-export async function AppHeader({ domain }: AppHeaderProps) {
-  const marathon = await getMarathonByDomain(domain);
+  const { data: marathon, isLoading: isMarathonLoading } = useQuery(
+    trpc.marathons.getByDomain.queryOptions({ domain })
+  );
+  const { data: deviceGroups, isLoading: isDeviceGroupsLoading } = useQuery(
+    trpc.deviceGroups.getByDomain.queryOptions({ domain })
+  );
+  const { data: competitionClasses, isLoading: isCompetitionClassesLoading } =
+    useQuery(trpc.competitionClasses.getByDomain.queryOptions({ domain }));
+  const { data: topics, isLoading: isTopicsLoading } = useQuery(
+    trpc.topics.getByDomain.queryOptions({ domain })
+  );
+
+  const isLoading =
+    isMarathonLoading ||
+    isDeviceGroupsLoading ||
+    isCompetitionClassesLoading ||
+    isTopicsLoading;
 
   let isSetupComplete = true;
   let requiredActions: Array<{ action: string; description: string }> = [];
 
-  if (marathon) {
-    const configCheck = await checkIfMarathonIsProperlyConfigured(marathon);
+  if (marathon && deviceGroups && competitionClasses && topics) {
+    const configCheck = checkIfMarathonIsProperlyConfigured({
+      marathon,
+      deviceGroups,
+      competitionClasses,
+      topics,
+    });
     isSetupComplete = configCheck.isConfigured;
     requiredActions = configCheck.requiredActions;
   }
@@ -45,12 +70,18 @@ export async function AppHeader({ domain }: AppHeaderProps) {
             </Link>
           </Button>
         </div>
-        <MarathonStatusDisplay
-          marathonStartDate={marathon?.startDate}
-          marathonEndDate={marathon?.endDate}
-          isSetupComplete={isSetupComplete}
-          requiredActions={requiredActions}
-        />
+        {isLoading ? (
+          <div className="flex items-center gap-2">
+            <Skeleton className="w-10 h-10" />
+          </div>
+        ) : (
+          <MarathonStatusDisplay
+            marathonStartDate={marathon?.startDate}
+            marathonEndDate={marathon?.endDate}
+            isSetupComplete={isSetupComplete}
+            requiredActions={requiredActions}
+          />
+        )}
       </div>
     </div>
   );

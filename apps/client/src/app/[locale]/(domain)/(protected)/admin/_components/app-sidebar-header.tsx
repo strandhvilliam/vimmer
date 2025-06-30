@@ -1,5 +1,5 @@
-import { getSession } from "@/lib/auth";
-import { getUserMarathons } from "@vimmer/supabase/cached-queries";
+"use client";
+
 import {
   SidebarHeader,
   SidebarMenu,
@@ -7,17 +7,22 @@ import {
 } from "@vimmer/ui/components/sidebar";
 import { DomainSwitchDropdown } from "./domain-switch-dropdown";
 import { Skeleton } from "@vimmer/ui/components/skeleton";
-import { cookies } from "next/headers";
+import { useSession } from "@/hooks/use-session";
+import { useDomain } from "@/contexts/domain-context";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
 
-export async function AppSidebarHeader() {
-  const session = await getSession();
-  const cookieStore = await cookies();
-  const domain = cookieStore.get("activeDomain")?.value;
-  if (!session) {
-    return null;
+export function AppSidebarHeader() {
+  const trpc = useTRPC();
+  const { user } = useSession();
+  const { domain } = useDomain();
+  const { data: marathons } = useSuspenseQuery(
+    trpc.users.getMarathonsByUserId.queryOptions({ userId: user?.id ?? "" })
+  );
+
+  if (!user) {
+    return <AppSidebarHeaderSkeleton />;
   }
-
-  const marathons = await getUserMarathons(session.user.id);
   return (
     <SidebarHeader>
       <SidebarMenu>
@@ -29,7 +34,7 @@ export async function AppSidebarHeader() {
   );
 }
 
-export async function AppSidebarHeaderSkeleton() {
+export function AppSidebarHeaderSkeleton() {
   return (
     <SidebarHeader>
       <Skeleton className="h-12 w-full" />

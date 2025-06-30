@@ -1,8 +1,9 @@
 import type { Database } from "@vimmer/api/db";
-import { marathons, topics } from "@vimmer/api/db/schema";
-import { eq } from "drizzle-orm";
+import { marathons, topics, submissions } from "@vimmer/api/db/schema";
+import { eq, sql, count } from "drizzle-orm";
 import type { NewTopic } from "@vimmer/api/db/types";
 import type { SupabaseClient } from "@vimmer/supabase/types";
+import { TRPCError } from "@trpc/server";
 
 export async function getTopicsByMarathonIdQuery(
   db: Database,
@@ -79,44 +80,64 @@ export async function createTopic(db: Database, { data }: { data: NewTopic }) {
   return { id: result[0]?.id ?? null };
 }
 
-export async function deleteTopic(db: Database, { id }: { id: number }) {
+export async function deleteTopic(
+  db: Database,
+  supabase: SupabaseClient,
+  { id, marathonId }: { id: number; marathonId: number }
+) {
+  const allTopics = await getTopicsByMarathonIdQuery(db, { id: marathonId });
+
+  if (!allTopics.find((topic) => topic.id === id)) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Topic not found",
+    });
+  }
+
   const result = await db.delete(topics).where(eq(topics.id, id)).returning({
     id: topics.id,
   });
+
+  const remainingTopics = allTopics.filter((topic) => topic.id !== id);
+
+  if (remainingTopics && remainingTopics.length > 0) {
+    const topicIds = remainingTopics
+      .sort((a, b) => a.orderIndex - b.orderIndex)
+      .map((topic) => topic.id);
+
+    await updateTopicsOrder(supabase, { topicIds, marathonId });
+  }
+
   return { id: result[0]?.id ?? null };
 }
 
 export async function getTopicsWithSubmissionCountQuery(
-  supabase: SupabaseClient,
-  { marathonId }: { marathonId: number }
-) {
-  const { data } = await supabase
-    .from("topics")
-    .select("id, submissions:submissions(count)", {
-      count: "exact",
+  db: Database,
+  { domain }: { domain: string }
+): Promise<{ id: number; count: number }[]> {
+  const data = await db
+    .select({
+      id: topics.id,
+      count: count(submissions.id),
     })
-    .eq("marathon_id", marathonId)
-    .throwOnError();
-
-  return (
-    data?.map((topic: any) => ({
-      id: topic.id,
-      submissions: topic.submissions,
-    })) ?? []
-  );
+    .from(topics)
+    .innerJoin(marathons, eq(topics.marathonId, marathons.id))
+    .leftJoin(submissions, eq(topics.id, submissions.topicId))
+    .where(eq(marathons.domain, domain))
+    .groupBy(topics.id);
+  return data;
 }
 
 export async function getTotalSubmissionCountQuery(
-  supabase: SupabaseClient,
+  db: Database,
   { marathonId }: { marathonId: number }
 ) {
-  const { count } = await supabase
-    .from("submissions")
-    .select("*", { count: "exact", head: true })
-    .eq("marathon_id", marathonId)
-    .throwOnError();
+  const result = await db
+    .select({ count: count(submissions.id) })
+    .from(submissions)
+    .where(eq(submissions.marathonId, marathonId));
 
-  return count ?? 0;
+  return result[0]?.count ?? 0;
 }
 
 export async function getScheduledTopicsQuery(db: Database) {

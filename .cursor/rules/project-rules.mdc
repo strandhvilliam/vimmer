@@ -42,16 +42,15 @@ You are an expert in TypeScript, Node.js, Next.js App Router, React, Shadcn UI, 
   Key Conventions
   - Use 'nuqs' for URL search parameter state management.
   - Optimize Web Vitals (LCP, CLS, FID).
-  - Limit 'use client':
-    - Favor server components and Next.js SSR.
-    - Use only for Web API access in small components.
-    - Avoid for data fetching or state management.
+  - Use TRPC for data fetching and mutations. The api queries should be defined in @vimmer/api
+  - Limit data fetching on the server, but instead prefetch on the server and use the trpc tanstack query implementation to fetch and mutate data in the client
+  - Server actions should be limited but may be used and can call the mutate and query trpc functions using server integration
+
   
   Follow Next.js docs for Data Fetching, Rendering, and Routing.
 
 
   Monorepo
   - Import ui components from @vimmer/ui
-  - Have all supabase related stuff in @vimmer/supabase
   - TSConfig in @vimmer/typescript-config
   - Use Bun for package manager

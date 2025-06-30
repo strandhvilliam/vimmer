@@ -1,16 +1,14 @@
-import {
-  getMarathonByDomain,
-  getTopicsByDomain,
-  getTopicsWithSubmissionCount,
-  getCompetitionClassesByDomain,
-} from "@vimmer/supabase/cached-queries";
 import { Metadata } from "next";
 import { Suspense } from "react";
 import { TopicsClientWrapper } from "./_components/topics-client-wrapper";
 import { TopicsTableSkeleton } from "./_components/topics-table-skeleton";
 import { TopicsHeader } from "./_components/topics-header";
-import { notFound } from "next/navigation";
-import { connection } from "next/server";
+import {
+  HydrateClient,
+  batchPrefetch,
+  trpc,
+  createServerApiClient,
+} from "@/trpc/server";
 
 interface TopicsPageProps {
   params: Promise<{
@@ -25,50 +23,41 @@ export const metadata: Metadata = {
 };
 
 export default async function TopicsPage({ params }: TopicsPageProps) {
-  await connection();
   const { domain } = await params;
 
-  const [marathon, topics, competitionClasses] = await Promise.all([
-    getMarathonByDomain(domain),
-    getTopicsByDomain(domain),
-    getCompetitionClassesByDomain(domain),
+  batchPrefetch([
+    trpc.marathons.getByDomain.queryOptions({
+      domain,
+    }),
+    trpc.topics.getByDomain.queryOptions({
+      domain,
+    }),
+    trpc.competitionClasses.getByDomain.queryOptions({
+      domain,
+    }),
+    trpc.topics.getWithSubmissionCount.queryOptions({
+      domain,
+    }),
   ]);
 
-  if (!marathon || !topics) {
-    notFound();
-  }
-
-  const topicsWithSubmissionCount = await getTopicsWithSubmissionCount(
-    marathon.id
-  );
-
-  const sortedTopics = [...topics]
-    .map((topic) => ({
-      ...topic,
-      submissionCount:
-        topicsWithSubmissionCount.find((t) => t.id === topic.id)?.submissions[0]
-          ?.count ?? 0,
-    }))
-    .sort((a, b) => a.orderIndex - b.orderIndex);
-
   return (
-    <div className="flex flex-col h-full">
-      <TopicsHeader marathonId={marathon.id} />
-      <div className="flex-1">
-        <div className="container h-full py-8">
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <Suspense fallback={<TopicsTableSkeleton />}>
-                <TopicsClientWrapper
-                  marathonId={marathon.id}
-                  initialTopics={sortedTopics}
-                  competitionClasses={competitionClasses}
-                />
-              </Suspense>
+    <HydrateClient>
+      <div className="flex flex-col h-full">
+        <Suspense fallback={<div>Loading...</div>}>
+          <TopicsHeader domain={domain} />
+        </Suspense>
+        <div className="flex-1">
+          <div className="container h-full py-8">
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <Suspense fallback={<TopicsTableSkeleton />}>
+                  <TopicsClientWrapper domain={domain} />
+                </Suspense>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </HydrateClient>
   );
 }

@@ -45,5 +45,9 @@ export const selectDomain = actionClient
       maxAge: 60 * 60 * 24, // 24 hours
     });
 
-    redirect(`/${domain}`);
+    if (process.env.NODE_ENV === "development") {
+      redirect(`http://${domain}.localhost:3000/admin`);
+    } else {
+      redirect(`https://${domain}.vimmer.photo/admin`);
+    }
   });

@@ -3,11 +3,11 @@ import { AppHeader } from "./_components/app-header";
 import { SidebarInset, SidebarProvider } from "@vimmer/ui/components/sidebar";
 import { getSession } from "@/lib/auth";
 import { Toaster } from "@vimmer/ui/components/sonner";
-import { getMarathonByDomain } from "@vimmer/supabase/cached-queries";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { DotPattern } from "@vimmer/ui/components/dot-pattern";
-import { connection } from "next/server";
 import { SessionProvider } from "@/hooks/use-session";
+import { createServerApiClient } from "@/trpc/server";
+import { getDomain } from "@/lib/get-domain";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -16,20 +16,15 @@ interface LayoutProps {
   }>;
 }
 
-export default async function DashboardLayout({
-  children,
-  params,
-}: LayoutProps) {
-  await connection();
-  const { domain } = await params;
-
+export default async function DashboardLayout({ children }: LayoutProps) {
+  const domain = await getDomain();
   const sessionPromise = getSession();
-  const marathon = await getMarathonByDomain(domain);
 
-  if (!marathon) {
-    return notFound();
-  }
-  if (!marathon.setupCompleted) {
+  const serverApi = createServerApiClient();
+
+  const data = await serverApi.marathons.getByDomain.query({ domain });
+
+  if (!data.setupCompleted) {
     return redirect(`/onboarding`);
   }
 
@@ -38,7 +33,7 @@ export default async function DashboardLayout({
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset className=" flex flex-1 flex-col max-h-screen overflow-hidden relative">
-          <AppHeader domain={domain} />
+          <AppHeader />
           <div className="border rounded-tl-2xl overflow-y-auto h-full overflow-hidden relative z-0">
             <DotPattern className="opacity-10" />
             {children}

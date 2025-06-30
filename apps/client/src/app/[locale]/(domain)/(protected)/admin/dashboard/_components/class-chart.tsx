@@ -13,8 +13,9 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@vimmer/ui/components/chart";
-import { useDashboardData } from "../dashboard-context";
-import { use } from "react";
+import { useDomain } from "@/contexts/domain-context";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
 
 const COLORS = [
   "#0088FE",
@@ -28,9 +29,14 @@ const COLORS = [
 ];
 
 export function ClassChart() {
-  const { competitionClassesPromise, participantsPromise } = useDashboardData();
-  const competitionClasses = use(competitionClassesPromise);
-  const participants = use(participantsPromise);
+  const trpc = useTRPC();
+  const { domain } = useDomain();
+  const { data: competitionClasses } = useSuspenseQuery(
+    trpc.competitionClasses.getByDomain.queryOptions({ domain })
+  );
+  const { data: participants } = useSuspenseQuery(
+    trpc.participants.getByDomain.queryOptions({ domain })
+  );
 
   const classStats = competitionClasses.map((cls) => ({
     name: cls.name,

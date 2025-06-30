@@ -5,8 +5,6 @@ import { headers } from "next/headers";
 import { resend } from "./resend";
 import { OTPEmail } from "@vimmer/email/otp-email";
 import { render } from "@react-email/render";
-import { AWS_CONFIG } from "@/config/aws";
-import { Resource } from "sst";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -20,7 +18,6 @@ export const auth = betterAuth({
     "*.localhost:3000",
     "http://localhost:3000",
     "vimmer.photo",
-    `https://${Resource.ClientApp.url}`,
     "http://192.168.50.119:3000",
   ],
   cookieCache: {

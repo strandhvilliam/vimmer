@@ -5,25 +5,28 @@ import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import { Card, CardTitle, CardDescription } from "@vimmer/ui/components/card";
 import { toast } from "@vimmer/ui/hooks/use-toast";
-import { Marathon } from "@vimmer/supabase/types";
 import { useAction } from "next-safe-action/hooks";
 import { useTRPC } from "@/trpc/client";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useSession } from "@/hooks/use-session";
-import { selectDomain } from "../../admin/_actions/select-domain";
+import { selectDomain } from "../../(domain)/(protected)/admin/_actions/select-domain";
+import { Session, User } from "better-auth";
+import router from "next/router";
 
 const ITEMS_PER_PAGE = 10;
 
-export function DomainSelect() {
+export function DomainSelect({
+  session,
+}: {
+  session: { user: User; session: Session };
+}) {
   const trpc = useTRPC();
-  const { user } = useSession();
   const { data: marathons } = useSuspenseQuery(
     trpc.users.getMarathonsByUserId.queryOptions(
       {
-        userId: user?.id ?? "",
+        userId: session.user.id,
       },
       {
-        enabled: !!user?.id,
+        enabled: !!session.user.id,
       }
     )
   );

@@ -72,23 +72,24 @@ export const topicsRouter = createTRPCRouter({
   delete: publicProcedure
     .input(deleteTopicSchema)
     .mutation(async ({ ctx, input }) => {
-      return deleteTopic(ctx.db, {
+      return deleteTopic(ctx.db, ctx.supabase, {
         id: input.id,
+        marathonId: input.marathonId,
       });
     }),
 
   getWithSubmissionCount: publicProcedure
     .input(getTopicsWithSubmissionCountSchema)
     .query(async ({ ctx, input }) => {
-      return getTopicsWithSubmissionCountQuery(ctx.supabase, {
-        marathonId: input.marathonId,
+      return getTopicsWithSubmissionCountQuery(ctx.db, {
+        domain: input.domain,
       });
     }),
 
   getTotalSubmissionCount: publicProcedure
     .input(getTotalSubmissionCountSchema)
     .query(async ({ ctx, input }) => {
-      return getTotalSubmissionCountQuery(ctx.supabase, {
+      return getTotalSubmissionCountQuery(ctx.db, {
         marathonId: input.marathonId,
       });
     }),

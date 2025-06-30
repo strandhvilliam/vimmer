@@ -17,19 +17,24 @@ import { toast } from "@vimmer/ui/hooks/use-toast";
 import { useParams, useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { deleteJuryInvitationAction } from "../_actions/jury-invitation-actions";
+import { useDomain } from "@/contexts/domain-context";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
 
 interface InvitationOptionsProps {
   invitationId: number;
-  email: string;
 }
 
-export function InvitationOptions({
-  invitationId,
-  email,
-}: InvitationOptionsProps) {
+export function InvitationOptions({ invitationId }: InvitationOptionsProps) {
+  const trpc = useTRPC();
   const router = useRouter();
-  const params = useParams();
-  const domain = params.domain as string;
+  const { domain } = useDomain();
+
+  const { data: invitation } = useSuspenseQuery(
+    trpc.jury.getJuryInvitationById.queryOptions({
+      id: invitationId,
+    })
+  );
 
   const { execute: deleteInvitation, isExecuting: isDeleting } = useAction(
     deleteJuryInvitationAction,
@@ -55,7 +60,7 @@ export function InvitationOptions({
   const handleResendInvitation = () => {
     toast({
       title: "Invitation resent",
-      description: `Jury invitation resent to ${email}`,
+      description: `Jury invitation resent to ${invitation?.email}`,
     });
   };
 
@@ -80,8 +85,8 @@ export function InvitationOptions({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Jury Invitation</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the jury invitation for {email}?
-              This action cannot be undone.
+              Are you sure you want to delete the jury invitation for{" "}
+              {invitation?.email}? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

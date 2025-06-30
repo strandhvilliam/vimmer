@@ -21,11 +21,11 @@ export const createServerApiClient = cache(() => {
         transformer: superjson,
         url: Resource.Api.url + "trpc",
       }),
-      loggerLink({
-        enabled: (opts) =>
-          process.env.NODE_ENV === "development" ||
-          (opts.direction === "down" && opts.result instanceof Error),
-      }),
+      // loggerLink({
+      //   enabled: (opts) =>
+      //     process.env.NODE_ENV === "development" ||
+      //     (opts.direction === "down" && opts.result instanceof Error),
+      // }),
     ],
   });
 });

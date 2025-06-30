@@ -12,7 +12,6 @@ const app = new Hono();
 app.use(secureHeaders());
 
 app.use((c, next) => {
-  console.log("request", c.req.raw.url);
   return next();
 });
 

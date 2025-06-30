@@ -1,5 +1,6 @@
 import {
   getJuryInvitationsByMarathonIdQuery,
+  getJuryInvitationsByDomainQuery,
   getJurySubmissionsQuery,
   getJuryInvitationByIdQuery,
   createJuryInvitationMutation,
@@ -9,12 +10,14 @@ import {
 import { createTRPCRouter, publicProcedure } from "..";
 import {
   getJuryInvitationsByMarathonIdSchema,
+  getJuryInvitationsByDomainSchema,
   getJurySubmissionsSchema,
   getJuryInvitationByIdSchema,
   createJuryInvitationSchema,
   updateJuryInvitationSchema,
   deleteJuryInvitationSchema,
 } from "@vimmer/api/schemas/jury.schemas";
+import { generateJuryToken } from "@vimmer/api/utils/generate-jury-token";
 
 export const juryRouter = createTRPCRouter({
   getJurySubmissions: publicProcedure
@@ -29,6 +32,12 @@ export const juryRouter = createTRPCRouter({
       return getJuryInvitationsByMarathonIdQuery(ctx.db, input);
     }),
 
+  getJuryInvitationsByDomain: publicProcedure
+    .input(getJuryInvitationsByDomainSchema)
+    .query(async ({ ctx, input }) => {
+      return getJuryInvitationsByDomainQuery(ctx.db, input);
+    }),
+
   getJuryInvitationById: publicProcedure
     .input(getJuryInvitationByIdSchema)
     .query(async ({ ctx, input }) => {
@@ -38,9 +47,17 @@ export const juryRouter = createTRPCRouter({
   createJuryInvitation: publicProcedure
     .input(createJuryInvitationSchema)
     .mutation(async ({ ctx, input }) => {
-      return createJuryInvitationMutation(ctx.db, {
+      const id = await createJuryInvitationMutation(ctx.db, {
         data: input.data,
       });
+      const token = await generateJuryToken(input.data.domain, id);
+      await updateJuryInvitationMutation(ctx.db, {
+        id,
+        data: {
+          token,
+        },
+      });
+      return getJuryInvitationByIdQuery(ctx.db, { id });
     }),
 
   updateJuryInvitation: publicProcedure

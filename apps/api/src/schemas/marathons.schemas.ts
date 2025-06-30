@@ -51,3 +51,7 @@ export const updateMarathonByDomainSchema = z.object({
 export const deleteMarathonSchema = z.object({
   id: z.number(),
 });
+
+export const isConfiguredSchema = z.object({
+  domain: z.string(),
+});

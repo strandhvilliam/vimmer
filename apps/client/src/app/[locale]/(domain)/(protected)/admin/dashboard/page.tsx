@@ -1,15 +1,9 @@
 import { DashboardCards } from "./_components/dashboard-cards";
 import { RecentParticipantsTable } from "./_components/recent-participants-table";
-import {
-  getCompetitionClassesByDomain,
-  getDeviceGroupsByDomain,
-  getParticipantsByDomain,
-} from "@vimmer/supabase/cached-queries";
 import { TimeSeriesChart } from "./_components/time-series-chart";
 import { GpsMapChart } from "./_components/gps-map-chart";
 import { DeviceGroupChart } from "./_components/device-group-chart";
 import { ClassChart } from "./_components/class-chart";
-import { DashboardProvider } from "./dashboard-context";
 import { Suspense } from "react";
 import {
   DashboardCardsSkeleton,
@@ -19,28 +13,21 @@ import {
   GpsMapChartSkeleton,
   RecentParticipantsTableSkeleton,
 } from "./_components/loading-skeletons";
-import { connection } from "next/server";
+import { getDomain } from "@/lib/get-domain";
+import { batchPrefetch, HydrateClient, trpc } from "@/trpc/server";
 
-interface PageProps {
-  params: Promise<{
-    domain: string;
-  }>;
-}
+export default async function DashboardPage() {
+  const domain = await getDomain();
 
-export default async function DashboardPage({ params }: PageProps) {
-  await connection();
-  const { domain } = await params;
-
-  const deviceGroupsPromise = getDeviceGroupsByDomain(domain);
-  const competitionClassesPromise = getCompetitionClassesByDomain(domain);
-  const participantsPromise = getParticipantsByDomain(domain);
+  batchPrefetch([
+    trpc.marathons.getByDomain.queryOptions({ domain }),
+    trpc.competitionClasses.getByDomain.queryOptions({ domain }),
+    trpc.deviceGroups.getByDomain.queryOptions({ domain }),
+    trpc.participants.getByDomain.queryOptions({ domain }),
+  ]);
 
   return (
-    <DashboardProvider
-      competitionClassesPromise={competitionClassesPromise}
-      deviceGroupsPromise={deviceGroupsPromise}
-      participantsPromise={participantsPromise}
-    >
+    <HydrateClient>
       <div className="container mx-auto p-6 space-y-6 ">
         <Suspense fallback={<DashboardCardsSkeleton />}>
           <DashboardCards />
@@ -69,6 +56,6 @@ export default async function DashboardPage({ params }: PageProps) {
           <RecentParticipantsTable />
         </Suspense>
       </div>
-    </DashboardProvider>
+    </HydrateClient>
   );
 }

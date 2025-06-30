@@ -14,8 +14,9 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@vimmer/ui/components/chart";
-import { useDashboardData } from "../dashboard-context";
-import { use } from "react";
+import { useDomain } from "@/contexts/domain-context";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
 
 const timeSeriesConfig = {
   count: {
@@ -25,8 +26,11 @@ const timeSeriesConfig = {
 };
 
 export function TimeSeriesChart() {
-  const { participantsPromise } = useDashboardData();
-  const participants = use(participantsPromise);
+  const { domain } = useDomain();
+  const trpc = useTRPC();
+  const { data: participants } = useSuspenseQuery(
+    trpc.participants.getByDomain.queryOptions({ domain })
+  );
 
   const participantsByDate = participants.reduce(
     (acc, p) => {

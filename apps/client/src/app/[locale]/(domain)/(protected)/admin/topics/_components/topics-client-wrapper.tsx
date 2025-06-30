@@ -1,15 +1,16 @@
 "use client";
 
-import { Topic, CompetitionClass } from "@vimmer/supabase/types";
-import { updateTopicOrderAction } from "../_actions/topics-update-order-action";
-import { editTopicAction } from "../_actions/topics-edit-action";
-import { deleteTopicAction } from "../_actions/topics-delete-action";
+import { Topic } from "@vimmer/supabase/types";
 import { toast } from "sonner";
-import { useAction } from "next-safe-action/hooks";
-import { useEffect, useState } from "react";
-import { EditTopicInput } from "../_actions/topics-edit-action";
+import { useEffect, useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { TopicsTableSkeleton } from "./topics-table-skeleton";
+import { useTRPC } from "@/trpc/client";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 
 // Dynamically import the DnD-dependent component
 const TopicsTable = dynamic(
@@ -20,74 +21,123 @@ const TopicsTable = dynamic(
   }
 );
 
+type TopicWithSubmissionCount = Topic & {
+  submissionCount: number;
+};
+
 interface TopicsClientWrapperProps {
-  marathonId: number;
-  initialTopics: Topic[];
-  competitionClasses: CompetitionClass[];
+  domain: string;
 }
 
-export function TopicsClientWrapper({
-  marathonId,
-  initialTopics,
-  competitionClasses,
-}: TopicsClientWrapperProps) {
-  const [topics, setTopics] = useState<Topic[]>(initialTopics);
+export function TopicsClientWrapper({ domain }: TopicsClientWrapperProps) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  const { data: marathon } = useSuspenseQuery(
+    trpc.marathons.getByDomain.queryOptions({
+      domain,
+    })
+  );
+
+  const { data: rawTopics } = useSuspenseQuery(
+    trpc.topics.getByDomain.queryOptions({
+      domain,
+    })
+  );
+
+  const { data: competitionClasses } = useSuspenseQuery(
+    trpc.competitionClasses.getByDomain.queryOptions({
+      domain,
+    })
+  );
+
+  const { data: topicsWithSubmissionCount } = useSuspenseQuery(
+    trpc.topics.getWithSubmissionCount.queryOptions({
+      domain,
+    })
+  );
+
+  const initialTopics = useMemo((): TopicWithSubmissionCount[] => {
+    if (!rawTopics || !topicsWithSubmissionCount) return [];
+
+    return [...rawTopics]
+      .map((topic) => ({
+        ...topic,
+        submissionCount:
+          topicsWithSubmissionCount.find((t) => t.id === topic.id)?.count ?? 0,
+      }))
+      .sort((a, b) => a.orderIndex - b.orderIndex);
+  }, [rawTopics, topicsWithSubmissionCount]);
+
+  const [topics, setTopics] = useState<TopicWithSubmissionCount[]>([]);
 
   useEffect(() => {
-    if (initialTopics) {
+    if (initialTopics.length > 0) {
       setTopics(initialTopics);
     }
   }, [initialTopics]);
 
-  const { execute: updateTopicOrder, isExecuting: isUpdatingOrder } = useAction(
-    updateTopicOrderAction,
-    {
+  const { mutate: updateTopicOrder, isPending: isUpdatingOrder } = useMutation(
+    trpc.topics.updateOrder.mutationOptions({
       onError: (error) => {
         toast.error("Failed to update topics", {
-          description: error.error.serverError,
+          description: error.message,
         });
         setTopics(initialTopics);
       },
       onSuccess: () => {
         toast.success("Topics updated");
       },
-    }
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.topics.pathKey(),
+        });
+      },
+    })
   );
 
-  const { execute: updateTopic, isExecuting: isUpdatingTopic } = useAction(
-    editTopicAction,
-    {
+  const { mutate: updateTopic, isPending: isUpdatingTopic } = useMutation(
+    trpc.topics.update.mutationOptions({
       onError: (error) => {
         toast.error("Failed to update topic", {
-          description: error.error.serverError,
+          description: error.message,
         });
         setTopics(initialTopics);
       },
       onSuccess: () => {
         toast.success("Topic updated");
       },
-    }
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.topics.pathKey(),
+        });
+      },
+    })
   );
 
-  const { execute: deleteTopic, isExecuting: isDeletingTopic } = useAction(
-    deleteTopicAction,
-    {
+  const { mutate: deleteTopic, isPending: isDeletingTopic } = useMutation(
+    trpc.topics.delete.mutationOptions({
       onError: (error) => {
         toast.error("Failed to delete topic", {
-          description: error.error.serverError,
+          description: error.message,
         });
         setTopics(initialTopics);
       },
       onSuccess: () => {
         toast.success("Topic deleted");
       },
-    }
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.topics.pathKey(),
+        });
+      },
+    })
   );
 
   const handleUpdateTopicsOrder = (newOrdering: number[]) => {
     const optimisticTopics = newOrdering
       .map((topicId) => topics.find((topic) => topic.id === topicId))
-      .filter((topic): topic is Topic => topic !== undefined)
+      .filter((topic): topic is TopicWithSubmissionCount => topic !== undefined)
       .map((topic, index) => ({
         ...topic,
         orderIndex: index,
@@ -96,13 +146,17 @@ export function TopicsClientWrapper({
     setTopics(optimisticTopics);
 
     updateTopicOrder({
-      marathonId,
+      marathonId: marathon.id,
       topicIds: newOrdering,
     });
   };
 
-  const handleUpdateTopic = (topic: EditTopicInput) => {
-    // Optimistic update
+  const handleUpdateTopic = (topic: {
+    id: number;
+    name: string;
+    visibility: string;
+    scheduledStart: string | null;
+  }) => {
     setTopics((currentTopics) =>
       currentTopics.map((t) =>
         t.id === topic.id
@@ -116,14 +170,19 @@ export function TopicsClientWrapper({
       )
     );
 
-    updateTopic(topic);
+    updateTopic({
+      id: topic.id,
+      data: {
+        name: topic.name,
+        visibility: topic.visibility,
+        scheduledStart: topic.scheduledStart ?? undefined,
+      },
+    });
   };
 
   const handleDeleteTopic = (topicId: number) => {
-    // Optimistic update
     setTopics((currentTopics) => currentTopics.filter((t) => t.id !== topicId));
-
-    deleteTopic({ marathonId, topicId });
+    deleteTopic({ marathonId: marathon.id, id: topicId });
   };
 
   const isLoading = isUpdatingOrder || isUpdatingTopic || isDeletingTopic;

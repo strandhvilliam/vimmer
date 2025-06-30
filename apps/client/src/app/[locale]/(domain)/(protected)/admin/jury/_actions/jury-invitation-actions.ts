@@ -1,172 +1,55 @@
 "use server";
 
-import { createClient } from "@vimmer/supabase/server";
 import { actionClient } from "@/lib/actions/safe-action";
 import { z } from "zod";
-import { cookies } from "next/headers";
-import { revalidatePath, revalidateTag } from "next/cache";
-import { getMarathonByDomain } from "@vimmer/supabase/cached-queries";
-import {
-  createJuryInvitation,
-  deleteJuryInvitation,
-} from "@vimmer/supabase/mutations";
-import { SignJWT } from "jose";
 import { resend } from "@/lib/resend";
 import { JuryReviewEmail } from "@vimmer/email";
-import { getTopicByIdQuery } from "@vimmer/supabase/queries";
-import { getCompetitionClassByIdQuery } from "@vimmer/supabase/queries";
-import { juryInvitationsByDomainTag } from "@vimmer/supabase/cache-tags";
 
-const MAX_EXPIRY_DAYS = 90;
-
-const getClientUrl = (domain: string) => {
-  if (process.env.NODE_ENV === "development") {
-    return "http://localhost:3000";
-  }
-  return `https://${domain}.vimmer.photo`;
-};
-
-const createJuryInvitationSchema = z.object({
-  displayName: z.string(),
+const sendInvitationEmailSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
-  notes: z.string().optional(),
-  competitionClassId: z.number().nullable().optional(),
-  deviceGroupId: z.number().nullable().optional(),
-  topicId: z.number().nullable().optional(),
-  expiryDays: z.number().min(1).max(90).default(14),
+  token: z.string(),
+  domain: z.string(),
+  invitationId: z.number(),
+  marathonName: z.string(),
+  competitionClass: z.string(),
+  topic: z.string(),
+  expiresAt: z.date(),
+  displayName: z.string(),
 });
 
-export type CreateJuryInvitationInput = z.infer<
-  typeof createJuryInvitationSchema
+export type SendInvitationEmailInput = z.infer<
+  typeof sendInvitationEmailSchema
 >;
 
-async function generateJuryToken(
-  domain: string,
-  invitationId: number
-): Promise<string> {
-  const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-  const iat = Math.floor(Date.now() / 1000);
-  const exp = iat + 60 * 60 * 24 * MAX_EXPIRY_DAYS; // 90 days max expiry
-
-  const payload = {
-    domain,
-    invitationId,
-    iat,
-    exp,
-  };
-
-  return await new SignJWT(payload)
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt(iat)
-    .setExpirationTime(exp)
-    .sign(secret);
-}
-
-export const createJuryInvitationAction = actionClient
-  .schema(createJuryInvitationSchema)
+export const sendInvitationEmailAction = actionClient
+  .schema(sendInvitationEmailSchema)
   .action(async ({ parsedInput }) => {
-    const cookieStore = await cookies();
-    const domain = cookieStore.get("activeDomain")?.value;
-
-    if (!domain) {
-      throw new Error("No domain found");
-    }
-    const baseUrl = getClientUrl(domain);
-
-    const marathon = await getMarathonByDomain(domain);
-
-    if (!marathon) {
-      throw new Error("Marathon not found");
-    }
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + parsedInput.expiryDays);
-
-    const supabase = await createClient();
-    const displayName = parsedInput.displayName;
-
-    const createdInvitation = await createJuryInvitation(supabase, {
-      marathonId: marathon.id,
-      email: parsedInput.email,
-      displayName: displayName,
-      token: "", // Will be updated after token generation
-      expiresAt: expiresAt.toISOString(),
-      status: "pending",
-      competitionClassId: parsedInput.competitionClassId ?? null,
-      deviceGroupId: parsedInput.deviceGroupId ?? null,
-      topicId: parsedInput.topicId ?? null,
-    });
-
-    // Generate token with invitation ID
-    const token = await generateJuryToken(domain, createdInvitation.id);
-
-    // Update invitation with the generated token
-    const { error: updateError } = await supabase
-      .from("jury_invitations")
-      .update({ token })
-      .eq("id", createdInvitation.id);
-
-    if (updateError) {
-      throw new Error("Failed to update invitation with token");
-    }
-
-    const competitionClass = parsedInput.competitionClassId
-      ? await getCompetitionClassByIdQuery(
-          supabase,
-          parsedInput.competitionClassId
-        )
-      : null;
-    const topic = parsedInput.topicId
-      ? await getTopicByIdQuery(supabase, parsedInput.topicId)
-      : null;
+    const getClientUrl = (domain: string) => {
+      if (process.env.NODE_ENV === "development") {
+        return `http://${domain}.localhost:3000`;
+      }
+      return `https://${domain}.vimmer.photo`;
+    };
 
     const { data, error } = await resend.emails.send({
       from: "Vimmer Support <support@vimmer.photo>",
       to: [parsedInput.email],
-      subject: `Invitation to review ${marathon.name} submissions`,
+      subject: `Invitation to review ${parsedInput.marathonName} submissions`,
       react: JuryReviewEmail({
-        juryName: displayName,
-        competitionName: marathon.name,
-        reviewDeadline: expiresAt.toISOString(),
-        reviewUrl: `${baseUrl}/jury?token=${token}`,
+        juryName: parsedInput.displayName,
+        competitionName: parsedInput.marathonName,
+        reviewDeadline: parsedInput.expiresAt.toISOString(),
+        reviewUrl: `${getClientUrl(parsedInput.domain)}/jury?token=${parsedInput.token}`,
         description: "",
-        specificTopic: topic?.name ?? "",
-        competitionGroup: competitionClass?.name ?? "",
+        specificTopic: parsedInput.topic,
+        competitionGroup: parsedInput.competitionClass,
       }),
     });
 
-    console.log({ data, error });
-
-    revalidateTag(juryInvitationsByDomainTag({ domain }));
-    revalidatePath(`/${domain}/jury`);
-
-    return { ...createdInvitation, token };
-  });
-
-const deleteJuryInvitationSchema = z.object({
-  invitationId: z.number(),
-});
-
-export type DeleteJuryInvitationInput = z.infer<
-  typeof deleteJuryInvitationSchema
->;
-
-export const deleteJuryInvitationAction = actionClient
-  .schema(deleteJuryInvitationSchema)
-  .action(async ({ parsedInput }) => {
-    const cookieStore = await cookies();
-    const domain = cookieStore.get("activeDomain")?.value;
-
-    if (!domain) {
-      throw new Error("No domain found");
+    if (error) {
+      throw new Error(error.message);
     }
-
-    const supabase = await createClient();
-
-    await deleteJuryInvitation(supabase, parsedInput.invitationId);
-
-    revalidateTag(juryInvitationsByDomainTag({ domain }));
-    revalidatePath(`/${domain}/jury`);
+    console.log(data);
 
     return { success: true };
   });

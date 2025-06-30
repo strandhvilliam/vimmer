@@ -16,6 +16,7 @@ export default $config({
       NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
       REVALIDATE_SECRET: process.env.REVALIDATE_SECRET!,
       DATABASE_URL: process.env.DATABASE_URL!,
+      JURY_JWT_SECRET: process.env.JURY_JWT_SECRET!,
     };
 
     const allowOrigins =

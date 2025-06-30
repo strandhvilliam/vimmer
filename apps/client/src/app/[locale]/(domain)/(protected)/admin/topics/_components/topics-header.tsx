@@ -7,13 +7,23 @@ import { createTopicAction } from "../_actions/topics-create-action";
 import { toast } from "sonner";
 import { useAction } from "next-safe-action/hooks";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { useTRPC } from "@/trpc/client";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 
 interface TopicsHeaderProps {
-  marathonId: number;
+  domain: string;
 }
 
-export function TopicsHeader({ marathonId }: TopicsHeaderProps) {
+export function TopicsHeader({ domain }: TopicsHeaderProps) {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const trpc = useTRPC();
+
+  const { data: marathon } = useSuspenseQuery(
+    trpc.marathons.getByDomain.queryOptions({
+      domain,
+    })
+  );
 
   const { execute: createTopic, isExecuting: isCreatingTopic } = useAction(
     createTopicAction,
@@ -27,6 +37,11 @@ export function TopicsHeader({ marathonId }: TopicsHeaderProps) {
       },
       onSuccess: () => {
         toast.success("Topic created");
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.topics.pathKey(),
+        });
       },
     }
   );
@@ -57,7 +72,7 @@ export function TopicsHeader({ marathonId }: TopicsHeaderProps) {
       </div>
 
       <TopicsCreateDialog
-        marathonId={marathonId}
+        marathonId={marathon.id}
         isOpen={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onSave={createTopic}
