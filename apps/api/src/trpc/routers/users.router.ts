@@ -64,7 +64,7 @@ export const usersRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return getStaffMemberByIdQuery(ctx.db, {
         staffId: input.staffId,
-        marathonId: input.marathonId,
+        domain: input.domain,
       });
     }),
 

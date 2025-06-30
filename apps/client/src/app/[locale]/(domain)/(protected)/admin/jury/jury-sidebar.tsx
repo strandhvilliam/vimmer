@@ -82,7 +82,7 @@ export function JurySidebar() {
               {filteredInvitations.map((invitation) => (
                 <Link
                   key={invitation.id}
-                  href={`/${domain}/jury/${invitation.id}`}
+                  href={`/admin/jury/${invitation.id}`}
                   className={`block w-full p-2 text-left transition-colors rounded-md ${
                     String(invitationId) === String(invitation.id)
                       ? "bg-gray-100"

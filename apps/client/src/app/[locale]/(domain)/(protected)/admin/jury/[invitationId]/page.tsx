@@ -4,6 +4,7 @@ import { JuryInvitationDetails } from "../_components/jury-invitation-details";
 import { JuryInvitationDetailsSkeleton } from "../_components/jury-invitation-details-skeleton";
 import { batchPrefetch, getQueryClient, trpc } from "@/trpc/server";
 import { HydrateClient } from "@/trpc/server";
+import { getDomain } from "@/lib/get-domain";
 
 export default async function JuryInvitationDetailsPage({
   params,
@@ -11,6 +12,7 @@ export default async function JuryInvitationDetailsPage({
   params: Promise<{ invitationId: string }>;
 }) {
   const { invitationId } = await params;
+  const domain = await getDomain();
   const queryClient = getQueryClient();
 
   batchPrefetch([

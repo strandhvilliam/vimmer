@@ -1,5 +1,9 @@
 import { useTRPC } from "@/trpc/client";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import {
   Select,
@@ -53,6 +57,7 @@ export function CreateInvitationSheet({
 }: CreateInvitationSheetProps) {
   const { domain } = useDomain();
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
   const { data: competitionClasses } = useSuspenseQuery(
     trpc.competitionClasses.getByDomain.queryOptions({
@@ -111,6 +116,11 @@ export function CreateInvitationSheet({
         onError: (error) => {
           console.error(error);
           toast.error("Failed to send jury invitation");
+        },
+        onSettled: () => {
+          queryClient.invalidateQueries({
+            queryKey: trpc.jury.pathKey(),
+          });
         },
       })
     );

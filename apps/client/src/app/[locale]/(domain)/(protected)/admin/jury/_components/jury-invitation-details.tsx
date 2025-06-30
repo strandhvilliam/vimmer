@@ -29,13 +29,15 @@ import {
   TableRow,
 } from "@vimmer/ui/components/table";
 import { toast } from "@vimmer/ui/hooks/use-toast";
-import { useRouter } from "next/navigation";
-import { useAction } from "next-safe-action/hooks";
-import { deleteJuryInvitationAction } from "../_actions/jury-invitation-actions";
 import { useDomain } from "@/contexts/domain-context";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { StatusBadge } from "./status-badge";
+import { InvitationNotFound } from "./invitation-not-found";
 
 interface JuryInvitationDetailsProps {
   invitationId: number;
@@ -45,7 +47,7 @@ export function JuryInvitationDetails({
   invitationId,
 }: JuryInvitationDetailsProps) {
   const trpc = useTRPC();
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const { domain } = useDomain();
 
   const { data: invitation } = useSuspenseQuery(
@@ -53,64 +55,68 @@ export function JuryInvitationDetails({
       id: invitationId,
     })
   );
-
   const { data: competitionClasses } = useSuspenseQuery(
     trpc.competitionClasses.getByDomain.queryOptions({
       domain,
     })
   );
-
   const { data: topics } = useSuspenseQuery(
     trpc.topics.getByDomain.queryOptions({
       domain,
     })
   );
-
   const { data: deviceGroups } = useSuspenseQuery(
     trpc.deviceGroups.getByDomain.queryOptions({
       domain,
     })
   );
 
-  const { execute: deleteInvitation, isExecuting: isDeleting } = useAction(
-    deleteJuryInvitationAction,
-    {
+  const { mutate: deleteInvitation, isPending: isDeleting } = useMutation(
+    trpc.jury.deleteJuryInvitation.mutationOptions({
       onSuccess: () => {
         toast({
           title: "Invitation deleted",
           description: "Jury invitation has been deleted successfully",
         });
-        router.push(`/${domain}/jury`);
       },
       onError: (error) => {
         console.log("error", error);
         toast({
           title: "Error",
-          description: error.error.serverError || "Failed to delete invitation",
+          description: error.message || "Failed to delete invitation",
           variant: "destructive",
         });
       },
-    }
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.jury.pathKey(),
+        });
+      },
+    })
   );
 
   const handleResendInvitation = () => {
     toast({
-      title: "Invitation resent",
-      description: `Jury invitation resent to ${invitation?.email}`,
+      title: "Not implemented",
+      description: `Jury invitation resend is not implemented yet`,
     });
   };
 
   const handleDeleteInvitation = () => {
-    deleteInvitation({ invitationId });
+    deleteInvitation({ id: invitationId });
   };
 
   const className = competitionClasses.find(
-    (c) => c.id === invitation.competitionClassId
+    (c) => c.id === invitation?.competitionClassId
   );
   const deviceGroup = deviceGroups.find(
-    (g) => g.id === invitation.deviceGroupId
+    (g) => g.id === invitation?.deviceGroupId
   );
-  const topic = topics.find((t) => t.id === invitation.topicId);
+  const topic = topics.find((t) => t.id === invitation?.topicId);
+
+  if (!invitation) {
+    return <InvitationNotFound />;
+  }
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -133,7 +139,7 @@ export function JuryInvitationDetails({
                 <AlertDialogTitle>Delete Jury Invitation</AlertDialogTitle>
                 <AlertDialogDescription>
                   Are you sure you want to delete the jury invitation for{" "}
-                  {invitation?.email}? This action cannot be undone.
+                  {invitation.email}? This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

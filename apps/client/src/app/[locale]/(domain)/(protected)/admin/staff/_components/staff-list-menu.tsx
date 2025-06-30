@@ -3,22 +3,25 @@
 import { Search, User2Icon } from "lucide-react";
 import { Avatar, AvatarFallback } from "@vimmer/ui/components/avatar";
 import { ScrollArea } from "@vimmer/ui/components/scroll-area";
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Input } from "@vimmer/ui/components/input";
 import { Badge } from "@vimmer/ui/components/badge";
 import { User, UserMarathonRelation } from "@vimmer/supabase/types";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
+import { useDomain } from "@/contexts/domain-context";
 
-export function StaffListMenu({
-  domain,
-  staffMembersPromise,
-}: {
-  domain: string;
-  staffMembersPromise: Promise<(UserMarathonRelation & { user: User })[]>;
-}) {
+export function StaffListMenu() {
   const { staffId } = useParams<{ staffId: string }>();
-  const staffMembers = use(staffMembersPromise);
+  const trpc = useTRPC();
+  const { domain } = useDomain();
+  const { data: staffMembers } = useSuspenseQuery(
+    trpc.users.getStaffMembersByDomain.queryOptions({
+      domain,
+    })
+  );
 
   const [search, setSearch] = useState("");
   const [filteredStaff, setFilteredStaff] =
@@ -30,8 +33,6 @@ export function StaffListMenu({
     );
     setFilteredStaff(filteredStaff);
   }, [search, staffMembers]);
-
-  console.log({ staffMembers });
 
   return (
     <>
@@ -49,7 +50,7 @@ export function StaffListMenu({
           {filteredStaff.map((staff) => (
             <Link
               key={staff.userId}
-              href={`/${domain}/staff/${staff.userId}`}
+              href={`/admin/staff/${staff.userId}`}
               className={`block w-full p-2 text-left  transition-colors rounded-md ${
                 staffId === staff.userId ? "bg-gray-100" : ""
               }`}

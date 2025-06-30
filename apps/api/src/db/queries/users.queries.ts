@@ -1,6 +1,11 @@
 import { eq, and } from "drizzle-orm";
 import type { Database } from "@vimmer/api/db";
-import { user, userMarathons, marathons } from "@vimmer/api/db/schema";
+import {
+  user,
+  userMarathons,
+  marathons,
+  participantVerifications,
+} from "@vimmer/api/db/schema";
 import type { NewUser, NewUserMarathonRelation } from "@vimmer/api/db/types";
 
 export async function getUserWithMarathonsQuery(
@@ -69,23 +74,47 @@ export async function getStaffMembersByDomainQuery(
 
 export async function getStaffMemberByIdQuery(
   db: Database,
-  { staffId, marathonId }: { staffId: string; marathonId: number }
+  { staffId, domain }: { staffId: string; domain: string }
 ) {
-  const result = await db.query.userMarathons.findFirst({
-    where: and(
-      eq(userMarathons.userId, staffId),
-      eq(userMarathons.marathonId, marathonId)
-    ),
+  const marathon = await db.query.marathons.findFirst({
+    where: eq(marathons.domain, domain),
+    columns: { id: true },
+  });
+
+  if (!marathon) {
+    return null;
+  }
+
+  const result = await db.query.user.findFirst({
+    where: eq(user.id, staffId),
     with: {
-      user: {
+      userMarathons: {
+        where: eq(userMarathons.marathonId, marathon.id),
+      },
+      participantVerifications: {
         with: {
-          participantVerifications: true,
+          participant: true,
         },
       },
     },
   });
 
-  return result ?? null;
+  if (!result?.userMarathons[0]) {
+    return null;
+  }
+
+  const filteredParticipantVerifications =
+    result.participantVerifications.filter(
+      (pv) => pv.participant.marathonId === marathon.id
+    );
+
+  return {
+    ...result.userMarathons[0],
+    user: {
+      ...result,
+      participantVerifications: filteredParticipantVerifications,
+    },
+  };
 }
 
 export async function createUserMutation(

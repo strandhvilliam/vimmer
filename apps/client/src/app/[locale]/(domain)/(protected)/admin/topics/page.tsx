@@ -9,12 +9,7 @@ import {
   trpc,
   createServerApiClient,
 } from "@/trpc/server";
-
-interface TopicsPageProps {
-  params: Promise<{
-    domain: string;
-  }>;
-}
+import { getDomain } from "@/lib/get-domain";
 
 export const metadata: Metadata = {
   title: "Topics Management",
@@ -22,9 +17,8 @@ export const metadata: Metadata = {
     "Manage and organize your marathon topics, control their visibility and scheduling.",
 };
 
-export default async function TopicsPage({ params }: TopicsPageProps) {
-  const { domain } = await params;
-
+export default async function TopicsPage() {
+  const domain = await getDomain();
   batchPrefetch([
     trpc.marathons.getByDomain.queryOptions({
       domain,

@@ -18,7 +18,7 @@ export const getStaffMembersByDomainSchema = z.object({
 
 export const getStaffMemberByIdSchema = z.object({
   staffId: z.string(),
-  marathonId: z.number(),
+  domain: z.string(),
 });
 
 export const createUserSchema = z.object({

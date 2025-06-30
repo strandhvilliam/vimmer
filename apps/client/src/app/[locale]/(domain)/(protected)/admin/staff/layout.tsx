@@ -2,57 +2,21 @@ import React, { Suspense } from "react";
 import { AddStaffDialog } from "./_components/add-staff-dialog";
 import { StaffListMenu } from "./_components/staff-list-menu";
 import { StaffListSkeleton } from "./_components/staff-list-skeleton";
-import {
-  getMarathonByDomain,
-  getStaffMembersByDomain,
-} from "@vimmer/supabase/cached-queries";
-import { notFound } from "next/navigation";
-
-const staffMembers = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john.doe@example.com",
-    lastLogin: "2024-03-17",
-    role: "admin" as const,
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    lastLogin: "2024-03-15",
-    role: "user" as const,
-  },
-  {
-    id: 3,
-    name: "Mike Johnson",
-    email: "mike.johnson@example.com",
-    lastLogin: "2024-03-14",
-    role: "user" as const,
-  },
-];
-
-async function demoGetStaffMembers(domain: string) {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  return staffMembers;
-}
+import { getDomain } from "@/lib/get-domain";
+import { batchPrefetch, trpc } from "@/trpc/server";
 
 export default async function StaffLayout({
   children,
-  params,
 }: {
   children: React.ReactNode;
-  params: Promise<{
-    domain: string;
-    staffId: number;
-  }>;
 }) {
-  const { domain } = await params;
-  const marathon = await getMarathonByDomain(domain);
-  if (!marathon) {
-    notFound();
-  }
-  const staffMembersPromise = getStaffMembersByDomain(domain);
+  const domain = await getDomain();
+
+  batchPrefetch([
+    trpc.users.getStaffMembersByDomain.queryOptions({
+      domain,
+    }),
+  ]);
 
   return (
     <div className="flex overflow-hidden h-full  mx-auto">
@@ -63,10 +27,7 @@ export default async function StaffLayout({
             <AddStaffDialog />
           </div>
           <Suspense fallback={<StaffListSkeleton />}>
-            <StaffListMenu
-              domain={domain}
-              staffMembersPromise={staffMembersPromise}
-            />
+            <StaffListMenu />
           </Suspense>
         </div>
       </div>
