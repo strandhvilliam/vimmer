@@ -6,9 +6,6 @@ import { Button } from "@vimmer/ui/components/button";
 import { Mail, Trash2, User2Icon, RefreshCw } from "lucide-react";
 import { Badge } from "@vimmer/ui/components/badge";
 import { useState } from "react";
-import { useAction } from "next-safe-action/hooks";
-import { removeStaffMemberAction } from "../_actions/remove-staff-member";
-import { refreshStaffData } from "../_actions/refresh-staff-data";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import {

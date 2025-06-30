@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { Button } from "@vimmer/ui/components/button";
@@ -76,7 +75,9 @@ export function DeviceGroupEditDialog({
         toast.success("Device group updated successfully");
       },
       onError: (error) => {
-        toast.error(error.error.serverError || "Something went wrong");
+        toast.error(
+          (error.error.serverError as string) || "Something went wrong"
+        );
       },
     });
 

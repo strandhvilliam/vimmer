@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -29,8 +28,6 @@ import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { toast } from "sonner";
 import { getOnboardingLogoUploadAction } from "../../_actions/logo-upload-action";
 import { useAction } from "next-safe-action/hooks";
-import { AWS_CONFIG } from "@/lib/constants";
-// import { Resource } from "sst";
 
 const marathonConfigSchema = z.object({
   name: z.string().min(1, "Marathon name is required"),
@@ -48,8 +45,6 @@ interface MarathonConfigStepProps {
   canGoBack: boolean;
   isLastStep: boolean;
 }
-
-const MARATHON_SETTINGS_CDN_URL = AWS_CONFIG.routers.settings;
 
 interface LogoUploadState {
   previewUrl: string | null;

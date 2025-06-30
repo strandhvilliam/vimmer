@@ -10,6 +10,7 @@ import {
   createUserMarathonRelationMutation,
   updateUserMarathonRelationMutation,
   deleteUserMarathonRelationMutation,
+  getUserByIdQuery,
 } from "@vimmer/api/db/queries/users.queries";
 import { createTRPCRouter, publicProcedure } from "..";
 import {
@@ -24,7 +25,10 @@ import {
   createUserMarathonRelationSchema,
   updateUserMarathonRelationSchema,
   deleteUserMarathonRelationSchema,
+  createStaffMemberSchema,
 } from "@vimmer/api/schemas/users.schemas";
+import crypto from "crypto";
+import { TRPCError } from "@trpc/server";
 
 export const usersRouter = createTRPCRouter({
   getUserWithMarathons: publicProcedure
@@ -74,6 +78,56 @@ export const usersRouter = createTRPCRouter({
       return createUserMutation(ctx.db, {
         data: input.data,
       });
+    }),
+
+  createStaffMember: publicProcedure
+    .input(createStaffMemberSchema)
+    .mutation(async ({ ctx, input }) => {
+      let user = await getUserByEmailWithMarathonsQuery(ctx.db, {
+        email: input.data.email,
+      });
+
+      if (!user) {
+        const { id } = await createUserMutation(ctx.db, {
+          data: {
+            id: crypto.randomUUID(),
+            email: input.data.email,
+            name: input.data.name,
+            emailVerified: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        });
+
+        if (!id) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create user",
+          });
+        }
+
+        const newUser = await getUserByIdQuery(ctx.db, {
+          id,
+        });
+
+        if (!newUser) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to get user",
+          });
+        }
+
+        user = { ...newUser, userMarathons: [] };
+      }
+
+      await createUserMarathonRelationMutation(ctx.db, {
+        data: {
+          userId: user.id,
+          marathonId: input.data.marathonId,
+        },
+      });
+
+      return user;
     }),
 
   updateUser: publicProcedure

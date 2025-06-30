@@ -8,6 +8,13 @@ import {
 } from "@vimmer/api/db/schema";
 import type { NewUser, NewUserMarathonRelation } from "@vimmer/api/db/types";
 
+export async function getUserByIdQuery(db: Database, { id }: { id: string }) {
+  const result = await db.query.user.findFirst({
+    where: eq(user.id, id),
+  });
+  return result ?? null;
+}
+
 export async function getUserWithMarathonsQuery(
   db: Database,
   { userId }: { userId: string }

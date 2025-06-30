@@ -1,10 +1,8 @@
-// @ts-nocheck
 import { Topic } from "@vimmer/supabase/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format } from "date-fns";
-import { Calendar, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import {
   Dialog,
@@ -17,11 +15,6 @@ import {
 import { useEffect } from "react";
 import { Input } from "@vimmer/ui/components/input";
 import { Checkbox } from "@vimmer/ui/components/checkbox";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@vimmer/ui/components/popover";
 import { Form, FormControl } from "@vimmer/ui/components/form";
 import { FormField } from "@vimmer/ui/components/form";
 import { FormItem } from "@vimmer/ui/components/form";

@@ -21,14 +21,23 @@ export const getStaffMemberByIdSchema = z.object({
   domain: z.string(),
 });
 
+export const createStaffMemberSchema = z.object({
+  data: z.object({
+    marathonId: z.number(),
+    name: z.string(),
+    email: z.email(),
+    role: z.enum(["staff", "admin"]),
+  }),
+});
+
 export const createUserSchema = z.object({
   data: z.object({
     id: z.string(),
     name: z.string(),
-    email: z.string().email(),
-    emailVerified: z.boolean(),
-    createdAt: z.string(),
-    updatedAt: z.string(),
+    email: z.email(),
+    emailVerified: z.boolean().default(false),
+    createdAt: z.string().default(new Date().toISOString()),
+    updatedAt: z.string().default(new Date().toISOString()),
     image: z.string().optional(),
     banned: z.boolean().optional(),
     banReason: z.string().optional(),
