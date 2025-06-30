@@ -1,6 +1,4 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useForm } from "@tanstack/react-form";
 import { X } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import {
@@ -13,26 +11,12 @@ import {
 } from "@vimmer/ui/components/dialog";
 import { Input } from "@vimmer/ui/components/input";
 import { Checkbox } from "@vimmer/ui/components/checkbox";
-import { Form, FormControl } from "@vimmer/ui/components/form";
-import { FormField } from "@vimmer/ui/components/form";
-import { FormItem } from "@vimmer/ui/components/form";
-import { FormLabel } from "@vimmer/ui/components/form";
-import { FormDescription } from "@vimmer/ui/components/form";
 import { cn } from "@vimmer/ui/lib/utils";
 import { DateTimePicker } from "@vimmer/ui/components/date-time-picker";
 import { CreateTopicInput } from "../_actions/topics-create-action";
 import { useEffect } from "react";
 import { RadioGroup, RadioGroupItem } from "@vimmer/ui/components/radio-group";
-
-const CreateTopicFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  visibility: z.boolean(),
-  scheduledStart: z.date().nullable(),
-  positionType: z.enum(["beginning", "end", "custom"]),
-  customPosition: z.number().min(1).optional(),
-});
-
-type CreateTopicFormValues = z.infer<typeof CreateTopicFormSchema>;
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 
 interface CreateTopicDialogProps {
   marathonId: number;
@@ -47,61 +31,48 @@ export function TopicsCreateDialog({
   onOpenChange,
   onSave,
 }: CreateTopicDialogProps) {
-  const form = useForm<CreateTopicFormValues>({
-    resolver: zodResolver(CreateTopicFormSchema),
+  const form = useForm({
     defaultValues: {
       name: "",
       visibility: true,
-      scheduledStart: null,
-      positionType: "end",
+      scheduledStart: null as Date | null,
+      positionType: "end" as "beginning" | "end" | "custom",
       customPosition: 1,
+    },
+    onSubmit: async ({ value }) => {
+      let visibility = "private";
+      if (value.visibility) visibility = "public";
+      if (value.scheduledStart) visibility = "scheduled";
+
+      let orderIndex = -1;
+
+      if (value.positionType === "beginning") {
+        orderIndex = 0;
+      } else if (value.positionType === "custom" && value.customPosition) {
+        orderIndex = Math.max(0, value.customPosition - 1);
+      }
+
+      const newTopic: CreateTopicInput = {
+        marathonId,
+        name: value.name,
+        visibility: visibility as "public" | "private" | "scheduled",
+        scheduledStart: value.scheduledStart
+          ? value.scheduledStart.toISOString()
+          : null,
+        orderIndex,
+      };
+
+      onSave(newTopic);
+      form.reset();
+      onOpenChange(false);
     },
   });
 
   useEffect(() => {
     if (isOpen) {
-      form.reset({
-        name: "",
-        visibility: true,
-        scheduledStart: null,
-        positionType: "end",
-        customPosition: 1,
-      });
+      form.reset();
     }
   }, [isOpen, form]);
-
-  const positionType = form.watch("positionType");
-  const isCustomPosition = positionType === "custom";
-
-  const handleSave = (data: CreateTopicFormValues) => {
-    let visibility = "private";
-    if (data.visibility) visibility = "public";
-    if (data.scheduledStart) visibility = "scheduled";
-
-    let orderIndex = -1;
-
-    if (data.positionType === "beginning") {
-      orderIndex = 0;
-    } else if (data.positionType === "custom" && data.customPosition) {
-      orderIndex = Math.max(0, data.customPosition - 1);
-    }
-
-    const newTopic: CreateTopicInput = {
-      marathonId,
-      name: data.name,
-      visibility: visibility as "public" | "private" | "scheduled",
-      scheduledStart: data.scheduledStart
-        ? data.scheduledStart.toISOString()
-        : null,
-      orderIndex,
-    };
-
-    onSave(newTopic);
-    form.reset();
-    onOpenChange(false);
-  };
-
-  const isScheduled = form.watch("scheduledStart") !== null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -112,163 +83,206 @@ export function TopicsCreateDialog({
             Add a new topic to your marathon. Fill in the details below.
           </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Enter topic name" />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="positionType"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Position</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex flex-col space-y-1"
-                    >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="end" />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          At the end
-                        </FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="beginning" />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          At the beginning
-                        </FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="custom" />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          At specific position
-                        </FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            {isCustomPosition && (
-              <FormField
-                control={form.control}
-                name="customPosition"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Position Number</FormLabel>
-                    <FormControl>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            form.handleSubmit();
+          }}
+          className="space-y-4"
+        >
+          <form.Field
+            name="name"
+            validators={{
+              onChange: ({ value }) => {
+                if (!value || value.length < 1) {
+                  return "Name is required";
+                }
+                return undefined;
+              },
+            }}
+            children={(field) => (
+              <div className="space-y-2">
+                <label
+                  htmlFor={field.name}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Name
+                </label>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder="Enter topic name"
+                />
+                {field.state.meta.isTouched &&
+                field.state.meta.errors.length ? (
+                  <p className="text-sm text-destructive mt-1">
+                    {field.state.meta.errors.join(", ")}
+                  </p>
+                ) : null}
+              </div>
+            )}
+          />
+
+          <form.Field
+            name="positionType"
+            children={(field) => (
+              <div className="space-y-3">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Position
+                </label>
+                <RadioGroup
+                  onValueChange={(value) =>
+                    field.handleChange(value as "beginning" | "end" | "custom")
+                  }
+                  value={field.state.value}
+                  className="flex flex-col space-y-1"
+                >
+                  <div className="flex items-center space-x-3 space-y-0">
+                    <RadioGroupItem value="end" />
+                    <label className="text-sm font-normal">At the end</label>
+                  </div>
+                  <div className="flex items-center space-x-3 space-y-0">
+                    <RadioGroupItem value="beginning" />
+                    <label className="text-sm font-normal">
+                      At the beginning
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-3 space-y-0">
+                    <RadioGroupItem value="custom" />
+                    <label className="text-sm font-normal">
+                      At specific position
+                    </label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
+          />
+
+          <form.Subscribe
+            selector={(state) => [state.values.positionType]}
+            children={([positionType]) =>
+              positionType === "custom" ? (
+                <form.Field
+                  name="customPosition"
+                  children={(field) => (
+                    <div className="space-y-2">
+                      <label
+                        htmlFor={field.name}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Position Number
+                      </label>
                       <Input
+                        id={field.name}
+                        name={field.name}
                         type="number"
                         min={1}
-                        {...field}
+                        value={field.state.value || 1}
                         onChange={(e) => {
                           const value = parseInt(e.target.value);
-                          field.onChange(isNaN(value) ? 1 : value);
+                          field.handleChange(isNaN(value) ? 1 : value);
                         }}
-                        value={field.value || 1}
+                        onBlur={field.handleBlur}
                       />
-                    </FormControl>
-                    <FormDescription>
-                      Enter a position. The topic will be inserted at this
-                      position or at the end if the position is greater than the
-                      number of topics.
-                    </FormDescription>
-                  </FormItem>
-                )}
-              />
-            )}
-            <FormField
-              control={form.control}
-              name="visibility"
-              render={({ field }) => {
-                return (
-                  <FormItem
+                      <p className="text-sm text-muted-foreground">
+                        Enter a position. The topic will be inserted at this
+                        position or at the end if the position is greater than
+                        the number of topics.
+                      </p>
+                    </div>
+                  )}
+                />
+              ) : null
+            }
+          />
+
+          <form.Subscribe
+            selector={(state) => [state.values.scheduledStart]}
+            children={([scheduledStart]) => (
+              <form.Field
+                name="visibility"
+                children={(field) => (
+                  <div
                     className={cn(
                       "flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm",
-                      isScheduled && "opacity-50"
+                      scheduledStart && "opacity-50"
                     )}
                   >
                     <div className="space-y-0.5">
-                      <FormLabel>Visibility</FormLabel>
-                      <FormDescription>
-                        {isScheduled
+                      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Visibility
+                      </label>
+                      <p className="text-sm text-muted-foreground">
+                        {scheduledStart
                           ? "Visibility will be controlled by schedule"
                           : "Make topic visible to participants"}
-                      </FormDescription>
+                      </p>
                     </div>
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        disabled={isScheduled}
-                      />
-                    </FormControl>
-                  </FormItem>
-                );
-              }}
-            />
-            <FormField
-              control={form.control}
-              name="scheduledStart"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Schedule Start</FormLabel>
-                  <div className="flex gap-2">
-                    <DateTimePicker
-                      date={field.value || undefined}
-                      setDate={(date) => field.onChange(date)}
+                    <Checkbox
+                      checked={field.state.value}
+                      onCheckedChange={(checked) =>
+                        field.handleChange(!!checked)
+                      }
+                      disabled={!!scheduledStart}
                     />
-                    {field.value && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => field.onChange(null)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
                   </div>
-                  <FormDescription>
-                    If set, the topic will only be visible after this date and
-                    time. Leave empty for immediate visibility.
-                  </FormDescription>
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                type="button"
-                size="sm"
-              >
-                Cancel
-              </Button>
-              <Button type="submit" size="sm">
-                Create Topic
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+                )}
+              />
+            )}
+          />
+
+          <form.Field
+            name="scheduledStart"
+            children={(field) => (
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Schedule Start
+                </label>
+                <div className="flex gap-2">
+                  <DateTimePicker
+                    date={field.state.value || undefined}
+                    setDate={(date) => {
+                      const newDate = date || null;
+                      field.handleChange(newDate);
+                    }}
+                  />
+                  {field.state.value && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        field.handleChange(null);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  If set, the topic will only be visible after this date and
+                  time. Leave empty for immediate visibility.
+                </p>
+              </div>
+            )}
+          />
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              type="button"
+              size="sm"
+            >
+              Cancel
+            </Button>
+            <PrimaryButton type="submit">Create Topic</PrimaryButton>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

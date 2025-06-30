@@ -1,27 +1,22 @@
+"use client";
 import { useEffect } from "react";
-import { useSortable } from "@dnd-kit/sortable";
 import { useState } from "react";
 import { GripVertical } from "lucide-react";
-import { UniqueIdentifier } from "@dnd-kit/core";
 import NumberFlow from "@number-flow/react";
-import { Row } from "@tanstack/react-table";
-import { Topic } from "@vimmer/supabase/types";
+import { useSortableRowContext } from "./topics-sortable-row";
 
 interface DragHandleProps {
-  row: Row<Topic>;
+  id: number;
+  orderIndex: number;
 }
 
-export function TopicsDragHandle({ row }: DragHandleProps) {
-  const { attributes, listeners } = useSortable({
-    id: row.original.id,
-  });
-  const [localIndex, setLocalIndex] = useState(
-    (row.original.orderIndex + 1) * 2
-  );
+export function TopicsDragHandle({ orderIndex }: DragHandleProps) {
+  const { attributes, listeners } = useSortableRowContext();
+  const [localIndex, setLocalIndex] = useState((orderIndex + 1) * 2);
 
   useEffect(() => {
-    setLocalIndex(row.original.orderIndex + 1);
-  }, [row.original.orderIndex]);
+    setLocalIndex(orderIndex + 1);
+  }, [orderIndex]);
 
   return (
     <div className="flex items-center gap-2">

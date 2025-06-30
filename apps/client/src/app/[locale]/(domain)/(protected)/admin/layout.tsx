@@ -39,7 +39,6 @@ export default async function DashboardLayout({ children }: LayoutProps) {
             {children}
           </div>
         </SidebarInset>
-        <Toaster />
       </SidebarProvider>
     </SessionProvider>
   );

@@ -1,7 +1,5 @@
 import { Topic } from "@vimmer/supabase/types";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useForm } from "@tanstack/react-form";
 import { X } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import {
@@ -15,22 +13,10 @@ import {
 import { useEffect } from "react";
 import { Input } from "@vimmer/ui/components/input";
 import { Checkbox } from "@vimmer/ui/components/checkbox";
-import { Form, FormControl } from "@vimmer/ui/components/form";
-import { FormField } from "@vimmer/ui/components/form";
-import { FormItem } from "@vimmer/ui/components/form";
-import { FormLabel } from "@vimmer/ui/components/form";
-import { FormDescription } from "@vimmer/ui/components/form";
 import { cn } from "@vimmer/ui/lib/utils";
 import { DateTimePicker } from "@vimmer/ui/components/date-time-picker";
 import { EditTopicInput } from "../_actions/topics-edit-action";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
-const EditTopicFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  visibility: z.boolean(),
-  scheduledStart: z.date().nullable(),
-});
-
-type EditTopicFormValues = z.infer<typeof EditTopicFormSchema>;
 
 interface EditTopicDialogProps {
   topic: Topic | null;
@@ -45,50 +31,47 @@ export function TopicsEditDialog({
   onOpenChange,
   onSave,
 }: EditTopicDialogProps) {
-  const form = useForm<EditTopicFormValues>({
-    resolver: zodResolver(EditTopicFormSchema),
+  const form = useForm({
     defaultValues: {
       name: topic?.name || "",
       visibility: topic?.visibility === "public",
       scheduledStart: topic?.scheduledStart
         ? new Date(topic.scheduledStart)
-        : null,
+        : (null as Date | null),
+    },
+    onSubmit: async ({ value }) => {
+      if (!topic) return;
+
+      let visibility = "private";
+      if (value.visibility) visibility = "public";
+      if (value.scheduledStart) visibility = "scheduled";
+
+      const updatedTopic: EditTopicInput = {
+        id: topic.id,
+        name: value.name,
+        visibility: visibility as "public" | "private" | "scheduled",
+        scheduledStart: value.scheduledStart
+          ? value.scheduledStart.toISOString()
+          : null,
+      };
+
+      onSave(updatedTopic);
+      onOpenChange(false);
     },
   });
 
+  // Reset form when topic changes
   useEffect(() => {
     if (topic) {
-      form.reset({
-        name: topic.name,
-        visibility: topic.visibility === "public",
-        scheduledStart: topic.scheduledStart
-          ? new Date(topic.scheduledStart)
-          : null,
-      });
+      const newScheduledStart = topic.scheduledStart
+        ? new Date(topic.scheduledStart)
+        : null;
+
+      form.setFieldValue("name", topic.name);
+      form.setFieldValue("visibility", topic.visibility === "public");
+      form.setFieldValue("scheduledStart", newScheduledStart);
     }
   }, [topic, form]);
-
-  const handleSave = (data: EditTopicFormValues) => {
-    if (!topic) return;
-
-    let visibility = "private";
-    if (data.visibility) visibility = "public";
-    if (data.scheduledStart) visibility = "scheduled";
-
-    const updatedTopic: EditTopicInput = {
-      id: topic.id,
-      name: data.name,
-      visibility: visibility as "public" | "private" | "scheduled",
-      scheduledStart: data.scheduledStart
-        ? data.scheduledStart.toISOString()
-        : null,
-    };
-
-    onSave(updatedTopic);
-    onOpenChange(false);
-  };
-
-  const isScheduled = form.watch("scheduledStart") !== null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -99,92 +82,134 @@ export function TopicsEditDialog({
             Make changes to the topic details here. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="visibility"
-              render={({ field }) => {
-                return (
-                  <FormItem
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            form.handleSubmit();
+          }}
+          className="space-y-4"
+        >
+          <form.Field
+            name="name"
+            validators={{
+              onChange: ({ value }) => {
+                if (!value || value.length < 1) {
+                  return "Name is required";
+                }
+                return undefined;
+              },
+            }}
+            children={(field) => (
+              <div className="space-y-2">
+                <label
+                  htmlFor={field.name}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Name
+                </label>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                />
+                <>
+                  {field.state.meta.isTouched &&
+                  field.state.meta.errors.length ? (
+                    <p className="text-sm text-destructive mt-1">
+                      {field.state.meta.errors.join(", ")}
+                    </p>
+                  ) : null}
+                </>
+              </div>
+            )}
+          />
+
+          <form.Subscribe
+            selector={(state) => [state.values.scheduledStart]}
+            children={([scheduledStart]) => (
+              <form.Field
+                name="visibility"
+                children={(field) => (
+                  <div
                     className={cn(
                       "flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm",
-                      isScheduled && "opacity-50"
+                      scheduledStart && "opacity-50"
                     )}
                   >
                     <div className="space-y-0.5">
-                      <FormLabel>Visibility</FormLabel>
-                      <FormDescription>
-                        {isScheduled
+                      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Visibility
+                      </label>
+                      <p className="text-sm text-muted-foreground">
+                        {scheduledStart
                           ? "Visibility will be controlled by schedule"
                           : "Make topic visible to participants"}
-                      </FormDescription>
+                      </p>
                     </div>
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        disabled={isScheduled}
-                      />
-                    </FormControl>
-                  </FormItem>
-                );
-              }}
-            />
-            <FormField
-              control={form.control}
-              name="scheduledStart"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Schedule Start</FormLabel>
-                  <div className="flex gap-2">
-                    <DateTimePicker
-                      date={field.value || undefined}
-                      setDate={(date) => field.onChange(date)}
+                    <Checkbox
+                      checked={field.state.value}
+                      onCheckedChange={(checked) =>
+                        field.handleChange(!!checked)
+                      }
+                      disabled={!!scheduledStart}
                     />
-                    {field.value && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => field.onChange(null)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
                   </div>
-                  <FormDescription>
-                    If set, the topic will only be visible after this date and
-                    time. Leave empty for immediate visibility.
-                  </FormDescription>
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                type="button"
-                size="sm"
-              >
-                Cancel
-              </Button>
-              <PrimaryButton type="submit">Save changes</PrimaryButton>
-            </DialogFooter>
-          </form>
-        </Form>
+                )}
+              />
+            )}
+          />
+
+          <form.Field
+            name="scheduledStart"
+            children={(field) => (
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Schedule Start
+                </label>
+                <div className="flex gap-2">
+                  <DateTimePicker
+                    date={field.state.value || undefined}
+                    setDate={(date) => {
+                      const newDate = date || null;
+                      field.handleChange(newDate);
+                    }}
+                  />
+                  {field.state.value && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        field.handleChange(null);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  If set, the topic will only be visible after this date and
+                  time. Leave empty for immediate visibility.
+                </p>
+              </div>
+            )}
+          />
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              type="button"
+              size="sm"
+            >
+              Cancel
+            </Button>
+            <PrimaryButton type="submit">Save changes</PrimaryButton>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

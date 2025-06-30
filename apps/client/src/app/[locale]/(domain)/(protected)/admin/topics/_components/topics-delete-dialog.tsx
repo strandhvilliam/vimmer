@@ -7,7 +7,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from "@vimmer/ui/components/dialog";
 import { Input } from "@vimmer/ui/components/input";

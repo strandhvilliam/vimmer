@@ -1,4 +1,5 @@
 "use client";
+"use no memo";
 
 import { Topic, CompetitionClass } from "@vimmer/supabase/types";
 import {
@@ -31,7 +32,7 @@ import {
   arrayMove,
   SortableContext,
 } from "@dnd-kit/sortable";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Badge } from "@vimmer/ui/components/badge";
 import { TopicsEditDialog } from "./topics-edit-dialog";
 import { DeleteTopicDialog } from "./topics-delete-dialog";
@@ -92,78 +93,92 @@ export function TopicsTable({
     setSelectedTopic(null);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) {
-      return;
-    }
-    const oldIndex = dataIds.indexOf(active.id);
-    const newIndex = dataIds.indexOf(over.id);
-    const newData = arrayMove(topics, oldIndex, newIndex);
-    onUpdateTopicsOrder(newData.map((t) => t.id));
-  };
+  const dataIds: UniqueIdentifier[] = useMemo(
+    () => topics.map((t) => t.id),
+    [topics]
+  );
+  const tableKey = useMemo(() => `${dataIds.join("-")}`, [dataIds]);
 
-  const dataIds: UniqueIdentifier[] = topics.map((t) => t.id);
-  const tableKey = `${dataIds.join("-")}-${topics.map((t) => t.orderIndex).join("-")}`;
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) {
+        return;
+      }
+      const oldIndex = dataIds.indexOf(active.id);
+      const newIndex = dataIds.indexOf(over.id);
+      const newData = arrayMove(topics, oldIndex, newIndex);
+      onUpdateTopicsOrder(newData.map((t) => t.id));
+    },
+    [dataIds, topics, onUpdateTopicsOrder]
+  );
 
-  const columns: ColumnDef<Topic>[] = [
-    {
-      id: "order",
-      header: "Order",
-      cell: ({ row }) => {
-        return <TopicsDragHandle row={row} />;
+  const columns: ColumnDef<Topic>[] = useMemo(
+    () => [
+      {
+        id: "order",
+        header: "Order",
+        cell: ({ row }) => {
+          return (
+            <TopicsDragHandle
+              id={row.original.id}
+              orderIndex={row.original.orderIndex}
+            />
+          );
+        },
       },
-    },
-    {
-      accessorKey: "name",
-      header: "Topic",
-      cell: ({ row }) => {
-        const topic = row.original;
-        return <div className="font-medium">{topic.name}</div>;
+      {
+        accessorKey: "name",
+        header: "Topic",
+        cell: ({ row }) => {
+          const topic = row.original;
+          return <div className="font-medium">{topic.name}</div>;
+        },
       },
-    },
-    {
-      id: "competitionClasses",
-      header: "Competition Classes",
-      cell: ({ row }) => (
-        <TopicsCompetitionClassesCell
-          row={row}
-          competitionClasses={competitionClasses}
-        />
-      ),
-    },
-    {
-      id: "status",
-      header: "Status",
-      cell: ({ row }) => {
-        const VISIBILITY_LABELS = {
-          public: "Public",
-          scheduled: "Scheduled",
-          private: "Private",
-        } as const;
-        const visibility = row.original
-          .visibility as keyof typeof VISIBILITY_LABELS;
-
-        const label = VISIBILITY_LABELS[visibility];
-
-        return (
-          <Badge variant={label === "Public" ? "default" : "secondary"}>
-            {label}
-          </Badge>
-        );
+      {
+        id: "competitionClasses",
+        header: "Competition Classes",
+        cell: ({ row }) => (
+          <TopicsCompetitionClassesCell
+            row={row}
+            competitionClasses={competitionClasses}
+          />
+        ),
       },
-    },
-    {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }) => (
-        <TopicsActionCell
-          onEditClick={() => handleEditClick(row.original)}
-          onDeleteClick={() => handleDeleteClick(row.original)}
-        />
-      ),
-    },
-  ];
+      {
+        id: "status",
+        header: "Status",
+        cell: ({ row }) => {
+          const VISIBILITY_LABELS = {
+            public: "Public",
+            scheduled: "Scheduled",
+            private: "Private",
+          } as const;
+          const visibility = row.original
+            .visibility as keyof typeof VISIBILITY_LABELS;
+
+          const label = VISIBILITY_LABELS[visibility];
+
+          return (
+            <Badge variant={label === "Public" ? "default" : "secondary"}>
+              {label}
+            </Badge>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => (
+          <TopicsActionCell
+            onEditClick={() => handleEditClick(row.original)}
+            onDeleteClick={() => handleDeleteClick(row.original)}
+          />
+        ),
+      },
+    ],
+    [competitionClasses]
+  );
 
   const table = useReactTable({
     data: topics,
