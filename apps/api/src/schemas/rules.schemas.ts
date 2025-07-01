@@ -1,16 +1,7 @@
 import { z } from "zod/v4";
 
-export const getRulesByMarathonIdSchema = z.object({
-  marathonId: z.number(),
-});
-
 export const getRulesByDomainSchema = z.object({
   domain: z.string(),
-});
-
-export const getRuleConfigByMarathonIdAndRuleKeySchema = z.object({
-  marathonId: z.number(),
-  ruleKey: z.string(),
 });
 
 export const createRuleConfigSchema = z.object({
@@ -36,16 +27,14 @@ export const deleteRuleConfigSchema = z.object({
   id: z.number(),
 });
 
-export const updateRuleConfigByMarathonIdAndRuleKeySchema = z.object({
-  marathonId: z.number(),
-  ruleKey: z.string(),
-  data: z.object({
-    params: z.any().optional(),
-    severity: z.string().optional(),
-  }),
-});
-
-export const deleteRuleConfigByMarathonIdAndRuleKeySchema = z.object({
-  marathonId: z.number(),
-  ruleKey: z.string(),
+export const updateMultipleRuleConfigSchema = z.object({
+  domain: z.string(),
+  data: z.array(
+    z.object({
+      ruleKey: z.string(),
+      params: z.any().optional(),
+      severity: z.string().optional(),
+      enabled: z.boolean().optional(),
+    })
+  ),
 });

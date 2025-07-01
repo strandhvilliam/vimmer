@@ -1,20 +1,21 @@
 "use client";
 
 import React from "react";
-import RuleToggle from "./rule-toggle";
-import { useFormContext } from "react-hook-form";
-import { RulesFormValues } from "../_lib/schemas";
+import { RuleCard } from "./rule-card";
+import { AnyFieldApi } from "@tanstack/react-form";
 
-export default function NoModificationsRule() {
-  const { control } = useFormContext<RulesFormValues>();
+const title = "No Digital Modifications";
+const description =
+  "Detect if photos show signs of editing in software like Photoshop, Lightroom, etc.";
+const recommendedSeverity = "warning";
 
+export default function NoModificationsRule({ field }: { field: AnyFieldApi }) {
   return (
-    <RuleToggle
-      title="No Digital Modifications"
-      description="Detect if photos show signs of editing in software like Photoshop, Lightroom, etc."
-      name="modified"
-      control={control}
-      recommendedSeverity="warning"
+    <RuleCard
+      title={title}
+      description={description}
+      recommendedSeverity={recommendedSeverity}
+      field={field}
     />
   );
 }

@@ -1,6 +1,6 @@
 import { Skeleton } from "@vimmer/ui/components/skeleton";
 
-export default function SettingsLoading() {
+export function SettingsSkeleton() {
   return (
     <div className="container max-w-[1400px] mx-auto py-8">
       <div className="flex flex-col mb-8 gap-1">

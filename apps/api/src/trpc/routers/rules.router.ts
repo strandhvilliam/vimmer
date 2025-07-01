@@ -1,48 +1,26 @@
 import {
   createRuleConfigMutation,
-  deleteRuleConfigByMarathonIdAndRuleKeyMutation,
   deleteRuleConfigMutation,
-  getRuleConfigByMarathonIdAndRuleKeyQuery,
   getRulesByDomainQuery,
-  getRulesByMarathonIdQuery,
+  updateMultipleRuleConfigMutation,
   updateRuleConfigMutation,
-  updateRuleConfigByMarathonIdAndRuleKeyMutation,
 } from "@vimmer/api/db/queries/rules.queries";
 import { createTRPCRouter, publicProcedure } from "..";
 import {
   createRuleConfigSchema,
-  deleteRuleConfigByMarathonIdAndRuleKeySchema,
   deleteRuleConfigSchema,
-  getRuleConfigByMarathonIdAndRuleKeySchema,
   getRulesByDomainSchema,
-  getRulesByMarathonIdSchema,
   updateRuleConfigSchema,
-  updateRuleConfigByMarathonIdAndRuleKeySchema,
+  updateMultipleRuleConfigSchema,
 } from "@vimmer/api/schemas/rules.schemas";
+import type { NewRuleConfig } from "@vimmer/api/db/types";
 
 export const rulesRouter = createTRPCRouter({
-  getByMarathonId: publicProcedure
-    .input(getRulesByMarathonIdSchema)
-    .query(async ({ ctx, input }) => {
-      return getRulesByMarathonIdQuery(ctx.db, {
-        marathonId: input.marathonId,
-      });
-    }),
-
   getByDomain: publicProcedure
     .input(getRulesByDomainSchema)
     .query(async ({ ctx, input }) => {
       return getRulesByDomainQuery(ctx.db, {
         domain: input.domain,
-      });
-    }),
-
-  getByMarathonIdAndRuleKey: publicProcedure
-    .input(getRuleConfigByMarathonIdAndRuleKeySchema)
-    .query(async ({ ctx, input }) => {
-      return getRuleConfigByMarathonIdAndRuleKeyQuery(ctx.db, {
-        marathonId: input.marathonId,
-        ruleKey: input.ruleKey,
       });
     }),
 
@@ -63,13 +41,28 @@ export const rulesRouter = createTRPCRouter({
       });
     }),
 
-  updateByMarathonIdAndRuleKey: publicProcedure
-    .input(updateRuleConfigByMarathonIdAndRuleKeySchema)
+  updateMultiple: publicProcedure
+    .input(updateMultipleRuleConfigSchema)
     .mutation(async ({ ctx, input }) => {
-      return updateRuleConfigByMarathonIdAndRuleKeyMutation(ctx.db, {
-        marathonId: input.marathonId,
-        ruleKey: input.ruleKey,
-        data: input.data,
+      const rules = await getRulesByDomainQuery(ctx.db, {
+        domain: input.domain,
+      });
+
+      const rulesToUpdate = rules.reduce((acc, rule) => {
+        const ruleToUpdate = input.data.find(
+          (item) => item.ruleKey === rule.ruleKey
+        );
+        if (ruleToUpdate) {
+          acc.push({
+            ...rule,
+            ...ruleToUpdate,
+          });
+        }
+        return acc;
+      }, [] as NewRuleConfig[]);
+
+      return updateMultipleRuleConfigMutation(ctx.db, {
+        data: rulesToUpdate,
       });
     }),
 
@@ -78,15 +71,6 @@ export const rulesRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return deleteRuleConfigMutation(ctx.db, {
         id: input.id,
-      });
-    }),
-
-  deleteByMarathonIdAndRuleKey: publicProcedure
-    .input(deleteRuleConfigByMarathonIdAndRuleKeySchema)
-    .mutation(async ({ ctx, input }) => {
-      return deleteRuleConfigByMarathonIdAndRuleKeyMutation(ctx.db, {
-        marathonId: input.marathonId,
-        ruleKey: input.ruleKey,
       });
     }),
 });

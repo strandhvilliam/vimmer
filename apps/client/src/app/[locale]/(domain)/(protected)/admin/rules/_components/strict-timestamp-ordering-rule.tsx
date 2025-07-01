@@ -1,20 +1,25 @@
 "use client";
 
 import React from "react";
-import RuleToggle from "./rule-toggle";
-import { useFormContext } from "react-hook-form";
-import { RulesFormValues } from "../_lib/schemas";
+import { RuleCard } from "./rule-card";
+import { AnyFieldApi } from "@tanstack/react-form";
 
-export default function StrictTimestampOrderingRule() {
-  const { control } = useFormContext<RulesFormValues>();
+const title = "Strict Timestamp Ordering";
+const description =
+  "Ensure photo timestamps align chronologically with the theme submission order.";
+const recommendedSeverity = "warning";
 
+export default function StrictTimestampOrderingRule({
+  field,
+}: {
+  field: AnyFieldApi;
+}) {
   return (
-    <RuleToggle
-      title="Strict Timestamp Ordering"
-      description="Ensure photo timestamps align chronologically with the theme submission order."
-      name="strict_timestamp_ordering"
-      control={control}
-      recommendedSeverity="warning"
+    <RuleCard
+      title={title}
+      description={description}
+      recommendedSeverity={recommendedSeverity}
+      field={field}
     />
   );
 }

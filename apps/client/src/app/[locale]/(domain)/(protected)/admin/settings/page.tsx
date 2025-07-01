@@ -2,6 +2,7 @@ import SettingsForm from "./_components/settings-form";
 import { Suspense } from "react";
 import { getDomain } from "@/lib/get-domain";
 import { prefetch, trpc } from "@/trpc/server";
+import { SettingsSkeleton } from "./_components/settings-skeleton";
 
 export default async function SettingsPage() {
   const domain = await getDomain();
@@ -21,7 +22,7 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<SettingsSkeleton />}>
         <SettingsForm />
       </Suspense>
     </div>

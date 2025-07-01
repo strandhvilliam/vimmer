@@ -1,20 +1,21 @@
 "use client";
 
 import React from "react";
-import RuleToggle from "./rule-toggle";
-import { useFormContext } from "react-hook-form";
-import { RulesFormValues } from "../_lib/schemas";
+import { RuleCard } from "./rule-card";
+import { AnyFieldApi } from "@tanstack/react-form";
 
-export default function SameDeviceRule() {
-  const { control } = useFormContext<RulesFormValues>();
+const title = "Same Device";
+const description =
+  "Require all photos in a single submission to originate from the same camera/device.";
+const recommendedSeverity = "warning";
 
+export default function SameDeviceRule({ field }: { field: AnyFieldApi }) {
   return (
-    <RuleToggle
-      title="Same Device"
-      description="Require all photos in a single submission to originate from the same camera/device."
-      name="same_device"
-      control={control}
-      recommendedSeverity="warning"
+    <RuleCard
+      title={title}
+      description={description}
+      recommendedSeverity={recommendedSeverity}
+      field={field}
     />
   );
 }
