@@ -2,7 +2,7 @@
 
 import React from "react";
 import { format } from "date-fns";
-import { ChevronRight, Info, Moon, Sun } from "lucide-react";
+import { ChevronRight, Info } from "lucide-react";
 import { Marathon } from "@vimmer/supabase/types";
 import { Button } from "@vimmer/ui/components/button";
 import { Checkbox } from "@vimmer/ui/components/checkbox";

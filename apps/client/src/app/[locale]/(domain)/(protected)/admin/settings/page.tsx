@@ -1,23 +1,16 @@
-import { notFound } from "next/navigation";
-import { getMarathonByDomain } from "@vimmer/supabase/cached-queries";
 import SettingsForm from "./_components/settings-form";
-import { connection } from "next/server";
+import { Suspense } from "react";
+import { getDomain } from "@/lib/get-domain";
+import { prefetch, trpc } from "@/trpc/server";
 
-interface SettingsPageProps {
-  params: Promise<{
-    domain: string;
-    locale: string;
-  }>;
-}
+export default async function SettingsPage() {
+  const domain = await getDomain();
 
-export default async function SettingsPage({ params }: SettingsPageProps) {
-  await connection();
-  const { domain } = await params;
-  const marathonData = await getMarathonByDomain(domain);
-
-  if (!marathonData) {
-    notFound();
-  }
+  prefetch(
+    trpc.marathons.getByDomain.queryOptions({
+      domain,
+    })
+  );
 
   return (
     <div className="container max-w-[1400px] mx-auto py-8">
@@ -28,7 +21,9 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
         </p>
       </div>
 
-      <SettingsForm domain={domain} initialData={marathonData} />
+      <Suspense fallback={<div>Loading...</div>}>
+        <SettingsForm />
+      </Suspense>
     </div>
   );
 }

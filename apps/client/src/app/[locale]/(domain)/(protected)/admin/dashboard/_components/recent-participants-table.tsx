@@ -1,6 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
 import Link from "next/link";
 import {
   Table,
@@ -26,34 +25,22 @@ import {
   Users,
   RefreshCw,
 } from "lucide-react";
-import { refreshParticipantsData } from "../_actions/refresh-participants";
-import { toast } from "sonner";
-import { useAction } from "next-safe-action/hooks";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useDomain } from "@/contexts/domain-context";
 import { useCurrentLocale } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
+import { useTransition } from "react";
 
 export function RecentParticipantsTable() {
   const trpc = useTRPC();
   const { domain } = useDomain();
   const locale = useCurrentLocale();
+  const queryClient = useQueryClient();
+  const [isPending, startTransition] = useTransition();
 
   const { data: participants } = useSuspenseQuery(
     trpc.participants.getByDomain.queryOptions({ domain })
   );
-
-  const { execute, isExecuting } = useAction(refreshParticipantsData, {
-    onSuccess: () => {
-      toast.success("Participants data refreshed successfully");
-      // Refresh the page to get the updated data
-      window.location.reload();
-    },
-    onError: (error) => {
-      toast.error("Failed to refresh participants data");
-      console.error("Refresh error:", error);
-    },
-  });
 
   const recentParticipants = participants
     .sort(
@@ -63,7 +50,11 @@ export function RecentParticipantsTable() {
     .slice(0, 10);
 
   const handleRefresh = () => {
-    execute({ domain: domain as string });
+    startTransition(async () => {
+      await queryClient.invalidateQueries({
+        queryKey: trpc.participants.pathKey(),
+      });
+    });
   };
 
   return (
@@ -80,13 +71,13 @@ export function RecentParticipantsTable() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleRefresh}
-            disabled={isExecuting}
+            disabled={isPending}
             className="p-2 hover:bg-muted rounded-md transition-colors disabled:opacity-50"
             title="Refresh participants data"
           >
             <RefreshCw
               className={`h-4 w-4 text-muted-foreground ${
-                isExecuting ? "animate-spin" : ""
+                isPending ? "animate-spin" : ""
               }`}
             />
           </button>
