@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FieldApi, useForm } from "@tanstack/react-form";
-import { Plus, AlertTriangle } from "lucide-react";
+import { Plus, AlertTriangle, HardHat, Shield, Check } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import {
   Dialog,
@@ -12,13 +12,6 @@ import {
   DialogTrigger,
 } from "@vimmer/ui/components/dialog";
 import { Input } from "@vimmer/ui/components/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@vimmer/ui/components/select";
 import { Alert, AlertDescription } from "@vimmer/ui/components/alert";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { sendStaffInviteEmail } from "../_actions/send-staff-invite-email";
@@ -31,6 +24,21 @@ import {
 import { toast } from "sonner";
 import { useDomain } from "@/contexts/domain-context";
 import { useSession } from "@/hooks/use-session";
+import { cn } from "@vimmer/ui/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
+
+const roleTypes = [
+  {
+    value: "staff",
+    label: "Staff",
+    icon: HardHat,
+  },
+  {
+    value: "admin",
+    label: "Admin",
+    icon: Shield,
+  },
+] as const;
 
 export function AddStaffDialog() {
   const trpc = useTRPC();
@@ -55,7 +63,6 @@ export function AddStaffDialog() {
     },
     onSubmit: async ({ value }) => {
       setErrorMessage(null);
-      // Transform the form data to match the expected schema
       const staffData = {
         data: {
           marathonId: marathon?.id || 0,
@@ -230,18 +237,54 @@ export function AddStaffDialog() {
                 >
                   Role
                 </label>
-                <Select
-                  value={field.state.value}
-                  onValueChange={(value) => field.handleChange(value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="staff">Staff</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-3 mt-2">
+                  {roleTypes.map((role) => (
+                    <Button
+                      key={role.value}
+                      type="button"
+                      variant="outline"
+                      className={cn(
+                        "h-40 w-40 p-0 relative overflow-hidden",
+                        field.state.value === role.value &&
+                          "ring-2 ring-primary ring-offset-2"
+                      )}
+                      onClick={() => field.handleChange(role.value)}
+                    >
+                      <motion.div
+                        animate={{
+                          scale: field.state.value === role.value ? 1.1 : 1,
+                        }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 20,
+                        }}
+                        className="flex flex-col items-center gap-2"
+                      >
+                        <role.icon className="h-12 w-12" />
+                        <span className="text-sm font-medium">
+                          {role.label}
+                        </span>
+                      </motion.div>
+                      <AnimatePresence>
+                        {field.state.value === role.value && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.5 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.5 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute top-1 right-1 bg-primary rounded-full p-0.5"
+                          >
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </Button>
+                  ))}
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Select the role for this staff member.
+                </p>
                 {field.state.meta.isTouched &&
                   field.state.meta.errors.length > 0 && (
                     <em className="text-sm text-red-600">

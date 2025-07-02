@@ -21,7 +21,7 @@ export default async function StaffLayout({
   return (
     <div className="flex overflow-hidden h-full  mx-auto">
       <div className="w-80 border-r flex flex-col ">
-        <div className="pt-4 space-y-4  bg-background">
+        <div className="pt-4 space-y-4  bg-background h-full">
           <div className="flex items-center justify-between px-4">
             <h2 className="text-lg font-semibold font-rocgrotesk">Staff</h2>
             <AddStaffDialog />
