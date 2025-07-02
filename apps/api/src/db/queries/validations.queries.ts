@@ -3,11 +3,13 @@ import type { Database } from "@vimmer/api/db";
 import {
   validationResults,
   participantVerifications,
+  participants,
 } from "@vimmer/api/db/schema";
 import type {
   NewValidationResult,
   NewParticipantVerification,
 } from "@vimmer/api/db/types";
+import { TRPCError } from "@trpc/server";
 
 export async function getValidationResultsByParticipantIdQuery(
   db: Database,
@@ -85,5 +87,13 @@ export async function createParticipantVerificationMutation(
     .insert(participantVerifications)
     .values(data)
     .returning({ id: participantVerifications.id });
-  return { id: result[0]?.id ?? null };
+
+  if (!result[0]?.id) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to create participant verification",
+    });
+  }
+
+  return { id: result[0].id };
 }

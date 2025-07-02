@@ -11,12 +11,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@vimmer/ui/components/tooltip";
-import { Blurhash } from "react-blurhash";
-import { useState } from "react";
-import { Submission, ValidationResult, Topic } from "@vimmer/supabase/types";
+import type { Submission, ValidationResult, Topic } from "@vimmer/api/db/types";
 import { cn } from "@vimmer/ui/lib/utils";
 import { useParams } from "next/navigation";
-// import { Resource } from "sst";
 
 interface PhotoSubmissionCardProps {
   submission: Submission;
@@ -24,8 +21,6 @@ interface PhotoSubmissionCardProps {
   validationResults?: ValidationResult[];
   imageUrl: string;
 }
-
-const PLACEHOLDER_HASH = "LLI5Y-%M?bxuWBxu-;of~q%MWBt7";
 
 export function PhotoSubmissionCard({
   submission,
@@ -54,7 +49,7 @@ export function PhotoSubmissionCard({
   const allPassed = submissionValidations.length > 0 && !hasFailedValidations;
 
   return (
-    <Link href={`/${domain}/submissions/${participantRef}/${submission.id}`}>
+    <Link href={`/admin/submissions/${participantRef}/${submission.id}`}>
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}

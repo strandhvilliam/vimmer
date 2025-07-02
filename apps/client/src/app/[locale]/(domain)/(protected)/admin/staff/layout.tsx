@@ -2,6 +2,7 @@ import React, { Suspense } from "react";
 import { AddStaffDialog } from "./_components/add-staff-dialog";
 import { StaffListMenu } from "./_components/staff-list-menu";
 import { StaffListSkeleton } from "./_components/staff-list-skeleton";
+import { StaffDetailsSkeleton } from "./_components/staff-details-skeleton";
 import { getDomain } from "@/lib/get-domain";
 import { batchPrefetch, trpc } from "@/trpc/server";
 
@@ -32,7 +33,7 @@ export default async function StaffLayout({
         </div>
       </div>
       <div className="flex-1 flex flex-col h-full">
-        <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+        <Suspense fallback={<StaffDetailsSkeleton />}>{children}</Suspense>
       </div>
     </div>
   );

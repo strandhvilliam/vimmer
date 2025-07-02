@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, CheckCircle, XCircle } from "lucide-react";
-import { ValidationResult } from "@vimmer/supabase/types";
+import type { ValidationResult } from "@vimmer/api/db/types";
 import {
   Table,
   TableBody,

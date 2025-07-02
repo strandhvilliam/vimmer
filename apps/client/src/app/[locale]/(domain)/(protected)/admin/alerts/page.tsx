@@ -1,46 +1,21 @@
-import React from "react";
-import { getParticipantsByDomain } from "@vimmer/supabase/cached-queries";
-import { Participant, ValidationResult } from "@vimmer/supabase/types";
+import React, { Suspense } from "react";
 import { AlertsTable } from "./_components/alerts-table";
+import { getDomain } from "@/lib/get-domain";
+import { trpc, batchPrefetch } from "@/trpc/server";
 
-interface ParticipantWithValidation extends Participant {
-  validationResults: ValidationResult[];
-}
+export default async function AlertsPage() {
+  const domain = await getDomain();
 
-export default async function AlertsPage({
-  params,
-}: {
-  params: Promise<{ domain: string }>;
-}) {
-  const { domain } = await params;
-  const participants = await getParticipantsByDomain(domain);
-
-  const participantsWithIssues = participants.filter((participant) => {
-    const validationResults = participant.validationResults || [];
-    return validationResults.some(
-      (result) =>
-        result.outcome === "failed" &&
-        (result.severity === "warning" || result.severity === "error")
-    );
-  }) as ParticipantWithValidation[];
-
-  const allValidationIssues = participantsWithIssues.flatMap((participant) => {
-    return (participant.validationResults || [])
-      .filter(
-        (result) =>
-          result.outcome === "failed" &&
-          (result.severity === "warning" || result.severity === "error")
-      )
-      .map((result) => ({
-        ...result,
-        participantName: `${participant.firstname} ${participant.lastname}`,
-        participantReference: participant.reference,
-      }));
-  });
+  batchPrefetch([
+    trpc.marathons.getByDomain.queryOptions({ domain }),
+    trpc.competitionClasses.getByDomain.queryOptions({ domain }),
+    trpc.deviceGroups.getByDomain.queryOptions({ domain }),
+    trpc.participants.getByDomain.queryOptions({ domain }),
+  ]);
 
   return (
     <div className="space-y-4 container py-6">
-      <div className="flex justify-between  flex-col">
+      <div className="flex justify-between flex-col">
         <h1 className="text-2xl font-semibold font-rocgrotesk">
           Validation Alerts
         </h1>
@@ -48,7 +23,15 @@ export default async function AlertsPage({
           Showing all validation issues for the marathon.
         </p>
       </div>
-      <AlertsTable alerts={allValidationIssues} />
+      <Suspense
+        fallback={
+          <div className="text-center py-8 text-muted-foreground">
+            Loading alerts...
+          </div>
+        }
+      >
+        <AlertsTable />
+      </Suspense>
     </div>
   );
 }

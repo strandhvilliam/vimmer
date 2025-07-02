@@ -2,13 +2,8 @@
 
 import { z } from "zod";
 import { actionClient, ActionError } from "@/lib/actions/safe-action";
-import { updateParticipant } from "@vimmer/supabase/mutations";
-import { createClient } from "@vimmer/supabase/server";
+import { createServerApiClient } from "@/trpc/server";
 import { revalidateTag } from "next/cache";
-import {
-  participantByReferenceTag,
-  participantsByDomainTag,
-} from "@vimmer/supabase/cache-tags";
 
 const verifyParticipantSchema = z.object({
   participantId: z.number().int().positive(),
@@ -19,24 +14,23 @@ const verifyParticipantSchema = z.object({
 export const verifyParticipant = actionClient
   .schema(verifyParticipantSchema)
   .action(async ({ parsedInput: { participantId, domain, reference } }) => {
-    const supabase = await createClient();
+    const trpc = createServerApiClient();
 
     try {
-      const updatedParticipant = await updateParticipant(
-        supabase,
-        participantId,
-        {
+      const updatedParticipant = await trpc.participants.update.mutate({
+        id: participantId,
+        data: {
           status: "verified",
-        }
-      );
+        },
+      });
 
       if (!updatedParticipant) {
         throw new ActionError("Failed to verify participant");
       }
 
       // Revalidate the participant data in cache
-      revalidateTag(participantByReferenceTag({ domain, reference }));
-      revalidateTag(participantsByDomainTag({ domain }));
+      revalidateTag(`participants-by-reference-${domain}-${reference}`);
+      revalidateTag(`participants-by-domain-${domain}`);
 
       return updatedParticipant;
     } catch (error) {

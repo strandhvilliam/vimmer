@@ -15,6 +15,7 @@ import {
   updateValidationResultSchema,
   createParticipantVerificationSchema,
 } from "@vimmer/api/schemas/validations.schemas";
+import { updateParticipantMutation } from "@vimmer/api/db/queries/participants.queries";
 
 export const validationsRouter = createTRPCRouter({
   getValidationResultsByParticipantId: publicProcedure
@@ -61,8 +62,17 @@ export const validationsRouter = createTRPCRouter({
   createParticipantVerification: publicProcedure
     .input(createParticipantVerificationSchema)
     .mutation(async ({ ctx, input }) => {
-      return createParticipantVerificationMutation(ctx.db, {
+      const { id } = await createParticipantVerificationMutation(ctx.db, {
         data: input.data,
       });
+
+      await updateParticipantMutation(ctx.db, {
+        id: input.data.participantId,
+        data: {
+          status: "verified",
+        },
+      });
+
+      return { id };
     }),
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, CheckCircle, XCircle } from "lucide-react";
+import { AlertTriangle, XCircle } from "lucide-react";
 import { ValidationResult } from "@vimmer/supabase/types";
 import { useRouter } from "next/navigation";
 import {
@@ -23,25 +23,65 @@ import {
   type ColumnFiltersState,
   getFilteredRowModel,
 } from "@tanstack/react-table";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
+import { useDomain } from "@/contexts/domain-context";
+import type { RouterOutputs } from "@vimmer/api/trpc/routers/_app";
 
 interface ValidationAlertWithParticipant extends ValidationResult {
   participantName: string;
   participantReference: string;
 }
 
-interface AlertsTableProps {
-  alerts: ValidationAlertWithParticipant[];
-}
+type ParticipantWithValidation =
+  RouterOutputs["participants"]["getByDomain"][0];
 
 const columnHelper = createColumnHelper<ValidationAlertWithParticipant>();
 
-export function AlertsTable({ alerts }: AlertsTableProps) {
+export function AlertsTable() {
   const router = useRouter();
+  const trpc = useTRPC();
+  const { domain } = useDomain();
   const [sorting, setSorting] = useState<SortingState>([
     { id: "severity", desc: true },
   ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
+  // Fetch participants with validation results using tRPC
+  const { data: participants } = useSuspenseQuery(
+    trpc.participants.getByDomain.queryOptions({ domain })
+  );
+
+  // Process the data to extract validation alerts
+  const alerts = useMemo(() => {
+    const participantsWithIssues = participants.filter(
+      (participant: ParticipantWithValidation) => {
+        const validationResults = participant.validationResults || [];
+        return validationResults.some(
+          (result) =>
+            result.outcome === "failed" &&
+            (result.severity === "warning" || result.severity === "error")
+        );
+      }
+    );
+
+    return participantsWithIssues.flatMap(
+      (participant: ParticipantWithValidation) => {
+        return (participant.validationResults || [])
+          .filter(
+            (result) =>
+              result.outcome === "failed" &&
+              (result.severity === "warning" || result.severity === "error")
+          )
+          .map((result) => ({
+            ...result,
+            participantName: `${participant.firstname} ${participant.lastname}`,
+            participantReference: participant.reference,
+          }));
+      }
+    ) as ValidationAlertWithParticipant[];
+  }, [participants]);
 
   const columns = [
     columnHelper.accessor("severity", {

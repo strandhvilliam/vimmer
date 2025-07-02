@@ -3,9 +3,9 @@ import { withPostHogConfig } from "@posthog/nextjs-config";
 
 const nextConfig: NextConfig = {
   experimental: {
-    dynamicIO: true,
+    // dynamicIO: true,
     reactCompiler: true,
-    ppr: true,
+    // ppr: true,
     // useCache: true,
   },
 };

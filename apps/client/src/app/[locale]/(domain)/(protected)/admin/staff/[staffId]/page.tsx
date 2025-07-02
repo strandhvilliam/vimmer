@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { StaffDetailsClient } from "./staff-details-client";
 import { getDomain } from "@/lib/get-domain";
 import { HydrateClient, batchPrefetch, trpc } from "@/trpc/server";
+import { StaffDetailsSkeleton } from "../_components/staff-details-skeleton";
 
 interface PageProps {
   params: Promise<{
@@ -13,7 +14,6 @@ export default async function StaffDetailsPage({ params }: PageProps) {
   const domain = await getDomain();
   const { staffId } = await params;
 
-  // Prefetch all the data that the client component will need
   batchPrefetch([
     trpc.users.getStaffMemberById.queryOptions({
       staffId,
@@ -29,7 +29,7 @@ export default async function StaffDetailsPage({ params }: PageProps) {
 
   return (
     <HydrateClient>
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<StaffDetailsSkeleton />}>
         <StaffDetailsClient staffId={staffId} />
       </Suspense>
     </HydrateClient>

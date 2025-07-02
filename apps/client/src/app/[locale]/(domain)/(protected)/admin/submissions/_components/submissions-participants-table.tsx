@@ -1,4 +1,5 @@
 "use client";
+"use no memo";
 
 import { useRouter } from "next/navigation";
 import {
@@ -51,10 +52,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@vimmer/ui/components/dropdown-menu";
-import { Participant } from "@vimmer/supabase/types";
 import { useState } from "react";
 import { format } from "date-fns";
-import { refreshParticipantsData } from "../_actions/refresh-participants-data";
+import { useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
 import {
   Pagination,
   PaginationContent,
@@ -64,31 +65,21 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@vimmer/ui/components/pagination";
+import { useDomain } from "@/contexts/domain-context";
+import {
+  CompetitionClass,
+  DeviceGroup,
+  Participant,
+  ValidationResult,
+} from "@vimmer/api/db/types";
 
-interface ValidationResult {
-  id: number;
-  participantId: number;
-  ruleKey: string;
-  severity: string;
-  message: string;
-  outcome: string;
-  fileName?: string | null;
-  createdAt: string;
-}
-
-type ParticipantWithValidationResults = Participant & {
+type TableRowParticipant = Participant & {
   validationResults: ValidationResult[];
-  competitionClass?: {
-    id: number;
-    name: string;
-  } | null;
-  deviceGroup?: {
-    id: number;
-    name: string;
-  } | null;
+  competitionClass?: CompetitionClass | null;
+  deviceGroup?: DeviceGroup | null;
 };
 
-const columnHelper = createColumnHelper<ParticipantWithValidationResults>();
+const columnHelper = createColumnHelper<TableRowParticipant>();
 
 const columnInfoMap: Record<string, { label: string; icon: LucideIcon }> = {
   reference: { label: "Participant", icon: Hash },
@@ -182,12 +173,10 @@ const columns = [
       const validationResults = info.getValue();
       if (!validationResults.length) return null;
 
-      // Filter only failed validation results
       const failedResults = validationResults.filter(
         (result) => result.outcome === "failed"
       );
 
-      // If no failed results, don't display anything
       if (failedResults.length === 0) {
         return null;
       }
@@ -311,15 +300,17 @@ const columns = [
 ];
 
 interface SubmissionsParticipantsTableProps {
-  participants: ParticipantWithValidationResults[];
-  domain: string;
+  participants: TableRowParticipant[];
 }
 
 export function SubmissionsParticipantsTable({
   participants,
-  domain,
 }: SubmissionsParticipantsTableProps) {
+  const { domain } = useDomain();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const trpc = useTRPC();
+
   const [sorting, setSorting] = useState<SortingState>([
     { id: "createdAt", desc: true },
   ]);
@@ -332,8 +323,10 @@ export function SubmissionsParticipantsTable({
 
     setIsRefreshing(true);
     try {
-      await refreshParticipantsData();
-      router.refresh();
+      await queryClient.invalidateQueries({
+        queryKey: trpc.participants.getByDomain.queryOptions({ domain })
+          .queryKey,
+      });
     } catch (error) {
       console.error("Error refreshing participants data:", error);
     } finally {
@@ -374,8 +367,8 @@ export function SubmissionsParticipantsTable({
     return columnInfo ? <columnInfo.icon className="h-3.5 w-3.5" /> : null;
   };
 
-  const handleRowClick = (row: ParticipantWithValidationResults) => {
-    router.push(`/${domain}/submissions/${row.reference}`);
+  const handleRowClick = (row: TableRowParticipant) => {
+    router.push(`/admin/submissions/${row.reference}`);
   };
 
   return (

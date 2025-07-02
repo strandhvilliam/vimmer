@@ -3,7 +3,7 @@ import { Skeleton } from "@vimmer/ui/components/skeleton";
 
 export function SubmissionsParticipantsTabSkeleton() {
   return (
-    <div className="space-y-2">
+    <div className="container mx-auto py-8 space-y-8">
       <div className="flex items-center justify-between">
         <Skeleton className="h-9 w-72 rounded-lg" />
         <div className="flex items-center gap-2">
