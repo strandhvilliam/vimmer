@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { Button } from "@vimmer/ui/components/button";
@@ -9,64 +8,78 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@vimmer/ui/components/dialog";
-import { useState } from "react";
-import { z } from "zod";
-import { Form } from "@vimmer/ui/components/form";
-import {
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@vimmer/ui/components/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "@tanstack/react-form";
 import { Input } from "@vimmer/ui/components/input";
 import NumberFlow from "@number-flow/react";
-import { useAction } from "next-safe-action/hooks";
-import {
-  createCompetitionClassSchema,
-  CreateCompetitionClassInput,
-} from "@/lib/schemas";
+import { createCompetitionClassSchema } from "@/lib/schemas";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
-import { Card } from "@vimmer/ui/components/card";
-import { createCompetitionClassAction } from "../_actions/competition-class-create-action";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
+import { toast } from "sonner";
+import { useDomain } from "@/contexts/domain-context";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
-export function CompetitionClassCreateDialog() {
-  const [isOpen, setIsOpen] = useState(false);
+export function CompetitionClassCreateDialog({
+  isOpen,
+  onOpenChange,
+}: {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { domain } = useDomain();
 
-  const { execute: createCompetitionClass, isExecuting: isCreatingClass } =
-    useAction(createCompetitionClassAction, {
-      onSuccess: () => {
-        setIsOpen(false);
-      },
-    });
+  const { data: marathon } = useSuspenseQuery(
+    trpc.marathons.getByDomain.queryOptions({ domain })
+  );
 
-  const form = useForm<CreateCompetitionClassInput>({
-    resolver: zodResolver(createCompetitionClassSchema),
+  const { mutate: createCompetitionClass, isPending: isCreatingClass } =
+    useMutation(
+      trpc.competitionClasses.create.mutationOptions({
+        onSuccess: () => {
+          toast.success("Competition class created successfully");
+          onOpenChange(false);
+          form.reset();
+        },
+        onError: (error) => {
+          toast.error(error.message || "Something went wrong");
+        },
+        onSettled: () => {
+          queryClient.invalidateQueries({
+            queryKey: trpc.competitionClasses.pathKey(),
+          });
+        },
+      })
+    );
+
+  const form = useForm({
     defaultValues: {
       name: "",
       description: "",
       numberOfPhotos: 24,
     },
+    onSubmit: async ({ value }) => {
+      if (!marathon?.id) {
+        toast.error("Marathon not found");
+        return;
+      }
+
+      createCompetitionClass({
+        data: {
+          name: value.name,
+          description: value.description,
+          numberOfPhotos: value.numberOfPhotos,
+          marathonId: marathon.id,
+          topicStartIndex: 0,
+        },
+      });
+    },
   });
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Card className="flex items-center justify-center bg-muted/50">
-          <Button
-            variant="ghost"
-            className="w-full transition duration-200 h-full flex flex-col items-center justify-center py-10 text-muted-foreground"
-          >
-            <Plus className="h-8 w-8" />
-            <span>Add Class</span>
-          </Button>
-        </Card>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add New Competition Class</DialogTitle>
@@ -75,111 +88,183 @@ export function CompetitionClassCreateDialog() {
             participants to choose from.
           </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(createCompetitionClass)}
-            className="space-y-6"
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            form.handleSubmit();
+          }}
+          className="space-y-6"
+        >
+          <form.Field
+            name="name"
+            validators={{
+              onChange: ({ value }) => {
+                const result =
+                  createCompetitionClassSchema.shape.name.safeParse(value);
+                return result.success
+                  ? undefined
+                  : result.error.issues[0]?.message;
+              },
+            }}
           >
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Marathon" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    The name of the competition class.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {(field) => (
+              <div>
+                <label
+                  htmlFor={field.name}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Name
+                </label>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder="Marathon"
+                  className="mt-2"
+                />
+                <p className="text-sm text-muted-foreground mt-2">
+                  The name of the competition class.
+                </p>
+                {field.state.meta.isTouched &&
+                  field.state.meta.errors.length > 0 && (
+                    <p className="text-sm font-medium text-destructive mt-2">
+                      {field.state.meta.errors.join(", ")}
+                    </p>
+                  )}
+              </div>
+            )}
+          </form.Field>
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Full day challenge with photos"
-                      {...field}
+          <form.Field
+            name="description"
+            validators={{
+              onChange: ({ value }) => {
+                const result =
+                  createCompetitionClassSchema.shape.description.safeParse(
+                    value
+                  );
+                return result.success
+                  ? undefined
+                  : result.error.issues[0]?.message;
+              },
+            }}
+          >
+            {(field) => (
+              <div>
+                <label
+                  htmlFor={field.name}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Description
+                </label>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder="Full day challenge with photos"
+                  className="mt-2"
+                />
+                <p className="text-sm text-muted-foreground mt-2">
+                  A brief description of the competition class.
+                </p>
+                {field.state.meta.isTouched &&
+                  field.state.meta.errors.length > 0 && (
+                    <p className="text-sm font-medium text-destructive mt-2">
+                      {field.state.meta.errors.join(", ")}
+                    </p>
+                  )}
+              </div>
+            )}
+          </form.Field>
+
+          <form.Field
+            name="numberOfPhotos"
+            validators={{
+              onChange: ({ value }) => {
+                const result =
+                  createCompetitionClassSchema.shape.numberOfPhotos.safeParse(
+                    value
+                  );
+                return result.success
+                  ? undefined
+                  : result.error.issues[0]?.message;
+              },
+            }}
+          >
+            {(field) => (
+              <div>
+                <label
+                  htmlFor={field.name}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Number of Photos
+                </label>
+                <div className="flex items-center gap-2 mt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10 shrink-0"
+                    onClick={() => {
+                      const newValue = Math.max(
+                        1,
+                        Number(field.state.value) - 1
+                      );
+                      field.handleChange(newValue);
+                    }}
+                  >
+                    <Minus className="h-6 w-6" />
+                  </Button>
+                  <div className="flex justify-center items-center gap-3 px-4">
+                    <NumberFlow
+                      value={field.state.value}
+                      className="text-center !text-2xl !font-mono"
                     />
-                  </FormControl>
-                  <FormDescription>
-                    A brief description of the competition class.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10 shrink-0"
+                    onClick={() => {
+                      const newValue = Math.min(
+                        50,
+                        Number(field.state.value) + 1
+                      );
+                      field.handleChange(newValue);
+                    }}
+                  >
+                    <Plus className="h-6 w-6" />
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  How many photos participants need to take.
+                </p>
+                {field.state.meta.isTouched &&
+                  field.state.meta.errors.length > 0 && (
+                    <p className="text-sm font-medium text-destructive mt-2">
+                      {field.state.meta.errors.join(", ")}
+                    </p>
+                  )}
+              </div>
+            )}
+          </form.Field>
 
-            <FormField
-              control={form.control}
-              name="numberOfPhotos"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Number of Photos</FormLabel>
-                  <FormControl>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-10 w-10 shrink-0"
-                        onClick={() => {
-                          const newValue = Math.max(1, Number(field.value) - 1);
-                          field.onChange(newValue);
-                        }}
-                      >
-                        <Minus className="h-6 w-6" />
-                      </Button>
-                      <div className="flex justify-center items-center gap-3 px-4">
-                        <NumberFlow
-                          value={field.value}
-                          onChange={field.onChange}
-                          className="text-center !text-2xl  !font-mono"
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-10 w-10 shrink-0"
-                        onClick={() => {
-                          const newValue = Math.min(
-                            50,
-                            Number(field.value) + 1
-                          );
-                          field.onChange(newValue);
-                        }}
-                      >
-                        <Plus className="h-6 w-6" />
-                      </Button>
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    How many photos participants need to take.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
+          <div className="flex justify-end gap-3">
+            <PrimaryButton type="submit" disabled={isCreatingClass}>
+              {isCreatingClass ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Create"
               )}
-            />
-
-            <div className="flex justify-end gap-3">
-              <PrimaryButton type="submit" disabled={isCreatingClass}>
-                {isCreatingClass ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Create"
-                )}
-              </PrimaryButton>
-            </div>
-          </form>
-        </Form>
+            </PrimaryButton>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

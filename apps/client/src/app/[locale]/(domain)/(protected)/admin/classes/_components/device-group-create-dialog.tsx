@@ -1,16 +1,7 @@
-// @ts-nocheck
 "use client";
 
 import { Button } from "@vimmer/ui/components/button";
-import {
-  Camera,
-  Check,
-  Loader2,
-  Plus,
-  Smartphone,
-  SwitchCamera,
-  Tablet,
-} from "lucide-react";
+import { Camera, Check, Loader2, Plus, Smartphone, Zap } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +11,6 @@ import {
   DialogTrigger,
 } from "@vimmer/ui/components/dialog";
 import { useState } from "react";
-import { z } from "zod";
 import { Form } from "@vimmer/ui/components/form";
 import {
   FormControl,
@@ -35,14 +25,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@vimmer/ui/components/input";
 import { cn } from "@vimmer/ui/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAction } from "next-safe-action/hooks";
 import { CreateDeviceGroupInput, createDeviceGroupSchema } from "@/lib/schemas";
 import { toast } from "sonner";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { Card } from "@vimmer/ui/components/card";
-import { createDeviceGroupAction } from "../_actions/device-group-create-action";
+import { useTRPC } from "@/trpc/client";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
+import { useDomain } from "@/contexts/domain-context";
 
-const deviceTypes = [
+const deviceIcons = [
   {
     value: "camera",
     icon: Camera,
@@ -52,23 +47,39 @@ const deviceTypes = [
     icon: Smartphone,
   },
   {
-    value: "analogue",
-    icon: SwitchCamera,
+    value: "action-camera",
+    icon: Zap,
   },
 ] as const;
 
 export function DeviceGroupCreateDialog() {
   const [isOpen, setIsOpen] = useState(false);
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { domain } = useDomain();
 
-  const { execute: createDeviceGroup, isExecuting: isCreatingDeviceGroup } =
-    useAction(createDeviceGroupAction, {
-      onSuccess: () => {
-        setIsOpen(false);
-      },
-      onError: (error) => {
-        toast.error(error.error.serverError || "Something went wrong");
-      },
-    });
+  const { data: marathon } = useSuspenseQuery(
+    trpc.marathons.getByDomain.queryOptions({ domain })
+  );
+
+  const { mutate: createDeviceGroup, isPending: isCreatingDeviceGroup } =
+    useMutation(
+      trpc.deviceGroups.create.mutationOptions({
+        onSuccess: () => {
+          setIsOpen(false);
+          toast.success("Device group created successfully");
+          form.reset();
+        },
+        onError: (error) => {
+          toast.error(error.message || "Something went wrong");
+        },
+        onSettled: () => {
+          queryClient.invalidateQueries({
+            queryKey: trpc.deviceGroups.pathKey(),
+          });
+        },
+      })
+    );
 
   const form = useForm<CreateDeviceGroupInput>({
     resolver: zodResolver(createDeviceGroupSchema),
@@ -78,6 +89,22 @@ export function DeviceGroupCreateDialog() {
       icon: "camera",
     },
   });
+
+  const handleSubmit = (data: CreateDeviceGroupInput) => {
+    if (!marathon?.id) {
+      toast.error("Marathon not found");
+      return;
+    }
+
+    createDeviceGroup({
+      data: {
+        name: data.name,
+        description: data.description,
+        icon: data.icon,
+        marathonId: marathon.id,
+      },
+    });
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -102,7 +129,7 @@ export function DeviceGroupCreateDialog() {
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(createDeviceGroup)}
+            onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-6"
           >
             <FormField
@@ -147,10 +174,10 @@ export function DeviceGroupCreateDialog() {
               name="icon"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Device Type</FormLabel>
+                  <FormLabel>Device Icon</FormLabel>
                   <FormControl>
                     <div className="flex gap-3">
-                      {deviceTypes.map((type) => (
+                      {deviceIcons.map((type) => (
                         <Button
                           key={type.value}
                           type="button"
@@ -192,7 +219,7 @@ export function DeviceGroupCreateDialog() {
                     </div>
                   </FormControl>
                   <FormDescription>
-                    Select the type of devices in this group.
+                    Select the icon for the device group.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
