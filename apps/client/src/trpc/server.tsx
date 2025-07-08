@@ -7,7 +7,7 @@ import {
 } from "@trpc/tanstack-react-query";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { AppRouter } from "@vimmer/api/trpc/routers/_app";
-import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
+import { createTRPCProxyClient, httpBatchLink } from "@trpc/client";
 
 import { Resource } from "sst";
 import superjson from "superjson";

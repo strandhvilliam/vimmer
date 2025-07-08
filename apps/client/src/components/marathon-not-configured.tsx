@@ -2,7 +2,7 @@
 
 import { AlertTriangle, Mail, ChevronRight } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
-import { Marathon } from "@vimmer/supabase/types";
+import { Marathon } from "@vimmer/api/db/types";
 import Link from "next/link";
 
 interface RequiredAction {
@@ -11,7 +11,7 @@ interface RequiredAction {
 }
 
 interface MarathonNotConfiguredProps {
-  marathon: Marathon;
+  marathon: Marathon | null;
   requiredActions: RequiredAction[];
 }
 
@@ -43,7 +43,7 @@ export function MarathonNotConfigured({
               <img src={LOGO} alt="Logo" width={96} height={96} />
             </div>
             <h1 className="text-3xl font-rocgrotesk font-extrabold text-gray-900 text-center">
-              {marathon.name || "Photo Marathon"}
+              {marathon?.name || "Photo Marathon"}
             </h1>
           </div>
 

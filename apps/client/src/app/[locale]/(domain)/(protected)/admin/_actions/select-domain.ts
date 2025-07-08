@@ -22,9 +22,6 @@ export const selectDomain = actionClient
 
     const cookieStore = await cookies();
 
-    cookieStore.delete("activeDomain");
-    cookieStore.delete("domainAccessToken");
-
     cookieStore.set({
       name: "activeDomain",
       value: domain,
@@ -46,8 +43,8 @@ export const selectDomain = actionClient
     });
 
     if (process.env.NODE_ENV === "development") {
-      redirect(`http://${domain}.localhost:3000/admin`);
+      redirect(`http://${domain}.localhost:3000/admin/dashboard`);
     } else {
-      redirect(`https://${domain}.vimmer.photo/admin`);
+      redirect(`https://${domain}.vimmer.photo/admin/dashboard`);
     }
   });

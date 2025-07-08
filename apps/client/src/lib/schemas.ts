@@ -28,6 +28,12 @@ export const createCompetitionClassSchema = z.object({
     .max(50, {
       message: "Cannot exceed 50 photos.",
     }),
+  topicStartIndex: z.coerce
+    .number()
+    .min(0, {
+      message: "Topic start index must be 0 or greater.",
+    })
+    .default(0),
 });
 
 export const editCompetitionClassSchema = z.object({
@@ -46,6 +52,12 @@ export const editCompetitionClassSchema = z.object({
     .max(50, {
       message: "Cannot exceed 50 photos.",
     }),
+  topicStartIndex: z.coerce
+    .number()
+    .min(0, {
+      message: "Topic start index must be 0 or greater.",
+    })
+    .default(0),
 });
 
 export const updateMarathonSettingsSchema = z.object({

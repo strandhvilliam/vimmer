@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { resend } from "./resend";
 import { OTPEmail } from "@vimmer/email/otp-email";
 import { render } from "@react-email/render";
+import { nextCookies } from "better-auth/next-js";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -25,6 +26,7 @@ export const auth = betterAuth({
     maxAge: 5 * 60,
   },
   plugins: [
+    nextCookies(),
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
         switch (type) {

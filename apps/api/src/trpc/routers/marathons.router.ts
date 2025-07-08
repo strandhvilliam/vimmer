@@ -6,7 +6,6 @@ import {
   getMarathonByDomainSchema,
   updateMarathonSchema,
   updateMarathonByDomainSchema,
-  isConfiguredSchema,
 } from "@vimmer/api/schemas/marathons.schemas";
 import {
   createMarathonMutation,

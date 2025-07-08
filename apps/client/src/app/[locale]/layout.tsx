@@ -16,13 +16,13 @@ export const generateStaticParams = async () => {
 };
 
 export default async function RootLayout({
-  params,
+  // params,
   children,
 }: {
-  params: Promise<{ locale: string }>;
+  // params: Promise<{ locale: string }>;
   children: React.ReactNode;
 }) {
-  const { locale } = await params;
+  // const { locale } = await params;
 
   // const domain = (await headers()).get("x-domain");
 
@@ -39,7 +39,7 @@ export default async function RootLayout({
       <body className="bg-muted ">
         <DotPattern />
         <Toaster />
-        <Providers locale={locale}>{children}</Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

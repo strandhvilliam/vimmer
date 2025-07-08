@@ -1,9 +1,9 @@
 "use server";
 
-import { AWS_CONFIG } from "@/lib/constants";
 import { actionClient } from "@/lib/safe-action";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { Resource } from "sst";
 import { z } from "zod";
 
 const getOnboardingLogoUploadUrlSchema = z.object({
@@ -11,7 +11,7 @@ const getOnboardingLogoUploadUrlSchema = z.object({
   currentKey: z.string().nullable(),
 });
 
-const bucket = AWS_CONFIG.buckets.marathonSettings;
+const bucket = Resource.MarathonSettingsBucket.name;
 
 export const getOnboardingLogoUploadAction = actionClient
   .schema(getOnboardingLogoUploadUrlSchema)

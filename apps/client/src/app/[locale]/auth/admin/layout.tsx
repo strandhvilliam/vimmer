@@ -5,11 +5,11 @@ const ImageGrid = dynamic(() => import("../../../../components/image-grid"), {
   ssr: false,
 });
 
-interface AuthLayoutProps {
+interface AdminAuthLayoutProps {
   children: React.ReactNode;
 }
 
-export default function AuthLayout({ children }: AuthLayoutProps) {
+export default function AdminAuthLayout({ children }: AdminAuthLayoutProps) {
   return (
     <div className="min-h-screen flex bg-white dark:bg-black relative overflow-hidden">
       <div className="absolute z-0 inset-0 pointer-events-none opacity-70 dark:opacity-0 bg-dot-pattern-light" />

@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useState } from "react";
@@ -23,7 +22,6 @@ import {
 } from "@vimmer/ui/components/form";
 import { Input } from "@vimmer/ui/components/input";
 import { Textarea } from "@vimmer/ui/components/textarea";
-import { Badge } from "@vimmer/ui/components/badge";
 import { Trophy, Plus, X, Camera } from "lucide-react";
 import { useOnboarding } from "../onboarding-context";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";

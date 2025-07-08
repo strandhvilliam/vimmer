@@ -243,32 +243,32 @@ export default $config({
       },
     });
 
-    const adminApp = new sst.aws.Nextjs("AdminApp", {
-      path: "./apps/admin",
-      dev: {
-        command: "bun run dev --port 3001",
-      },
-      link: [
-        submissionBucket,
-        thumbnailBucket,
-        previewBucket,
-        exportsBucket,
-        marathonSettingsBucket,
-        submissionsRouter,
-        thumbnailsRouter,
-        previewsRouter,
-        marathonSettingsRouter,
-        clientApp,
-        api,
-      ],
-      environment: {
-        ...env,
-        NEXT_PUBLIC_API_URL: api.url,
-        BETTER_AUTH_URL:
-          process.env.NODE_ENV === "production"
-            ? process.env.BETTER_AUTH_URL!
-            : "http://localhost:3001",
-      },
-    });
+    // const adminApp = new sst.aws.Nextjs("AdminApp", {
+    //   path: "./apps/admin",
+    //   dev: {
+    //     command: "bun run dev --port 3001",
+    //   },
+    //   link: [
+    //     submissionBucket,
+    //     thumbnailBucket,
+    //     previewBucket,
+    //     exportsBucket,
+    //     marathonSettingsBucket,
+    //     submissionsRouter,
+    //     thumbnailsRouter,
+    //     previewsRouter,
+    //     marathonSettingsRouter,
+    //     clientApp,
+    //     api,
+    //   ],
+    //   environment: {
+    //     ...env,
+    //     NEXT_PUBLIC_API_URL: api.url,
+    //     BETTER_AUTH_URL:
+    //       process.env.NODE_ENV === "production"
+    //         ? process.env.BETTER_AUTH_URL!
+    //         : "http://localhost:3001",
+    //   },
+    // });
   },
 });

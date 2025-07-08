@@ -5,12 +5,12 @@ import { CheckCircle, HammerIcon, XCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@vimmer/ui/components/sheet";
 import { Button } from "@vimmer/ui/components/button";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
-import { Participant, Topic, ValidationResult } from "@vimmer/supabase/types";
 import { useAction } from "next-safe-action/hooks";
 import { verifyParticipant } from "@/lib/actions/verify-participant";
 import { toast } from "sonner";
 import { ValidationStatusBadge } from "@/components/validation-status-badge";
 import { overruleValidation } from "../_actions/overrule-validation";
+import { Participant, Topic, ValidationResult } from "@vimmer/api/db/types";
 
 interface ParticipantInfoSheetProps {
   open: boolean;

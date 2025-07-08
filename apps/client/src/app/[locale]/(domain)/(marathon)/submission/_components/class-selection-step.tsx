@@ -2,7 +2,6 @@
 
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { StepNavigationHandlers } from "@/lib/types";
-import { CompetitionClass } from "@vimmer/supabase/types";
 import { Button } from "@vimmer/ui/components/button";
 import { motion } from "motion/react";
 import {
@@ -16,6 +15,7 @@ import {
 import { CheckCircle2 } from "lucide-react";
 import { cn } from "@vimmer/ui/lib/utils";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { CompetitionClass } from "@vimmer/api/db/types";
 
 interface Props extends StepNavigationHandlers {
   competitionClasses: CompetitionClass[];

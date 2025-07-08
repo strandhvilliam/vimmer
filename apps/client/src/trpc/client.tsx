@@ -4,7 +4,7 @@ import { createQueryClient } from "./query-client";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
 import { AppRouter } from "@vimmer/api/trpc/routers/_app";
 import { useState } from "react";
-import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
+import { createTRPCProxyClient, httpBatchLink } from "@trpc/client";
 import superjson from "superjson";
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;

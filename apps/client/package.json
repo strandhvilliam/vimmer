@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack -p 3000",
+    "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -42,7 +42,7 @@
     "posthog-js": "^1.255.0",
     "posthog-node": "^5.1.1",
     "qrcode.react": "^4.2.0",
-    "react": "^19.2.0-canary-d92056ef-20250627",
+    "react": "19.1.0",
     "react-confetti": "^6.4.0",
     "react-country-flag": "^3.1.0",
     "react-dom": "19.1.0",

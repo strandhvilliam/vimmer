@@ -5,7 +5,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from "@vimmer/ui/components/sidebar";
-import { DomainSwitchDropdown } from "./domain-switch-dropdown";
+import { DomainSwitchDropdown } from "./sidebar-header-dropdown";
 import { Skeleton } from "@vimmer/ui/components/skeleton";
 import { useSession } from "@/hooks/use-session";
 import { useDomain } from "@/contexts/domain-context";

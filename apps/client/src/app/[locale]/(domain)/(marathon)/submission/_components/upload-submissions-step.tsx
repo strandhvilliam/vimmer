@@ -1,6 +1,5 @@
 "use client";
 
-import { CompetitionClass, Topic } from "@vimmer/supabase/types";
 import { Button } from "@vimmer/ui/components/button";
 import {
   CardContent,
@@ -20,6 +19,7 @@ import { combinePhotos } from "@/lib/combine-photos";
 import UploadErrorFallback from "@/components/upload-error-fallback";
 import UploadSection from "@/components/upload-section";
 import { useFileUpload } from "@/hooks/use-file-upload";
+import { CompetitionClass, Topic } from "@vimmer/api/db/types";
 
 interface Props extends StepNavigationHandlers {
   competitionClasses: CompetitionClass[];

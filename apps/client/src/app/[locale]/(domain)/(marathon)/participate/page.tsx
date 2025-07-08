@@ -1,11 +1,18 @@
 import { ParticipateClientPage } from "./client-page";
 import { getDomain } from "@/lib/get-domain";
-import { HydrateClient, batchPrefetch, trpc } from "@/trpc/server";
+import {
+  HydrateClient,
+  batchPrefetch,
+  getQueryClient,
+  trpc,
+} from "@/trpc/server";
+import { notFound } from "next/navigation";
 
 export default async function ParticipatePage() {
+  const queryClient = getQueryClient();
   const domain = await getDomain();
 
-  void batchPrefetch([
+  batchPrefetch([
     trpc.marathons.getByDomain.queryOptions({
       domain,
     }),
@@ -19,6 +26,16 @@ export default async function ParticipatePage() {
       domain,
     }),
   ]);
+
+  try {
+    await queryClient.fetchQuery(
+      trpc.marathons.getByDomain.queryOptions({
+        domain,
+      })
+    );
+  } catch (error: any) {
+    notFound();
+  }
 
   return (
     <HydrateClient>

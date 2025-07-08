@@ -30,7 +30,7 @@ export default async function DashboardLayout({
     return notFound();
   }
   if (!marathon.setupCompleted) {
-    return redirect(`/onboarding`);
+    return redirect(`/admin/onboarding`);
   }
 
   return (

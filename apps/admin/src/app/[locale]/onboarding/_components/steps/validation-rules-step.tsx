@@ -158,7 +158,7 @@ export function ValidationRulesStep({
     allowedFileTypes: {
       enabled: true,
       severity: "error",
-      params: { allowedFileTypes: ["image/jpeg", "image/png"] },
+      params: { allowedFileTypes: ["jpg", "png"] },
     },
     withinTimerange: {
       enabled: false,

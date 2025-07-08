@@ -1,7 +1,6 @@
 "use client";
 
 import { StepNavigationHandlers } from "@/lib/types";
-import { DeviceGroup } from "@vimmer/supabase/types";
 import { Button } from "@vimmer/ui/components/button";
 import {
   Card,
@@ -20,6 +19,7 @@ import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { useTRPC } from "@/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDomain } from "@/contexts/domain-context";
+import { DeviceGroup } from "@vimmer/api/db/types";
 
 interface Props extends StepNavigationHandlers {
   deviceGroups: DeviceGroup[];
