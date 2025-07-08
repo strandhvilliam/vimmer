@@ -19,7 +19,10 @@ const getQueryClient = () => {
 
 export const { useTRPC, TRPCProvider } = createTRPCContext<AppRouter>();
 
-export function TRPCReactProvider(props: { children: React.ReactNode }) {
+export function TRPCReactProvider(props: {
+  children: React.ReactNode;
+  domain: string | null;
+}) {
   const queryClient = getQueryClient();
 
   const [trpcClient] = useState(() =>
@@ -36,6 +39,9 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
           async headers() {
             const headers = new Headers();
             headers.set("x-trpc-source", "nextjs-react");
+            if (props.domain) {
+              headers.set("x-domain", props.domain);
+            }
             return headers;
           },
         }),

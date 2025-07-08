@@ -66,6 +66,11 @@ declare module "sst" {
       "type": "sst.aws.Queue"
       "url": string
     }
+    "Realtime": {
+      "authorizer": string
+      "endpoint": string
+      "type": "sst.aws.Realtime"
+    }
     "SubmissionBucket": {
       "name": string
       "type": "sst.aws.Bucket"

@@ -13,7 +13,6 @@ import { Input } from "@vimmer/ui/components/input";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { initializeParticipantSchema } from "@/lib/schemas/initialize-participant-schema";
 import { Button } from "@vimmer/ui/components/button";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

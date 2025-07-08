@@ -5,6 +5,8 @@ import { DotPattern } from "@vimmer/ui/components/dot-pattern";
 import { Toaster } from "@vimmer/ui/components/sonner";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { getDomain } from "@/lib/get-domain";
+import { Resource } from "sst";
 
 export const metadata: Metadata = {
   title: "Vimmer",
@@ -26,9 +28,22 @@ export default async function RootLayout({
 
   // const domain = (await headers()).get("x-domain");
 
+  let domain: string | null = null;
+  try {
+    domain = await getDomain();
+  } catch (e) {
+    // expected error
+  }
+
   // if (!domain) {
   //   return notFound();
   // }
+
+  const realtimeConfig = {
+    endpoint: Resource.Realtime.endpoint,
+    authorizer: Resource.Realtime.authorizer,
+    topic: `${Resource.App.name}/${Resource.App.stage}/revalidate`,
+  };
 
   return (
     <html
@@ -39,7 +54,9 @@ export default async function RootLayout({
       <body className="bg-muted ">
         <DotPattern />
         <Toaster />
-        <Providers>{children}</Providers>
+        <Providers domain={domain} realtimeConfig={realtimeConfig}>
+          {children}
+        </Providers>
       </body>
     </html>
   );

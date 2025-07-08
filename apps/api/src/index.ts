@@ -6,13 +6,43 @@ import { createTRPCContext } from "./trpc";
 import { env } from "hono/adapter";
 import { PostHog } from "posthog-node";
 import { secureHeaders } from "hono/secure-headers";
+import {
+  IoTDataPlaneClient,
+  PublishCommand,
+} from "@aws-sdk/client-iot-data-plane";
+import { Resource } from "sst";
+
+const data = new IoTDataPlaneClient({});
 
 const app = new Hono();
 
 app.use(secureHeaders());
 
-app.use((c, next) => {
-  return next();
+app.use(async (c, next) => {
+  await next();
+  try {
+    const method = c.req.method;
+
+    if (method === "POST") {
+      const domain = c.req.header("x-domain");
+      const procedureName = c.req.path.split("/").pop();
+      const [query, action] = procedureName?.split(".") ?? [];
+      await data.send(
+        new PublishCommand({
+          payload: Buffer.from(
+            JSON.stringify({
+              domain,
+              query,
+              action,
+            })
+          ),
+          topic: `${Resource.App.name}/${Resource.App.stage}/revalidate`,
+        })
+      );
+    }
+  } catch (e) {
+    console.error(e);
+  }
 });
 
 app.onError((err, c) => {

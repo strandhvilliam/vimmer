@@ -61,14 +61,6 @@ export function middleware(request: NextRequest) {
     return handleStaffRoute(request, response);
   }
 
-  if (pathnameWithoutLocale.includes("/select-domain")) {
-    console.log("select-domain");
-    const hostDomain = getHostDomain(request);
-    const cookieDomain = request.cookies.get("activeDomain")?.value;
-    const domainAccessToken = request.cookies.get("domainAccessToken")?.value;
-    console.log({ hostDomain, cookieDomain, domainAccessToken });
-  }
-
   return handlePublicRoute(request, response);
 }
 

@@ -43,6 +43,10 @@ export default $config({
       }
     );
 
+    const realtime = new sst.aws.Realtime("Realtime", {
+      authorizer: "services/authorizer/index.handler",
+    });
+
     const exportsBucket = new sst.aws.Bucket("ExportsBucket", {
       access: "public",
     });
@@ -90,6 +94,7 @@ export default $config({
         POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
         ...env,
       },
+      link: [realtime],
     });
 
     const vpc = new sst.aws.Vpc("VimmerVPC");
@@ -232,6 +237,7 @@ export default $config({
         previewsRouter,
         marathonSettingsRouter,
         api,
+        realtime,
       ],
       environment: {
         ...env,

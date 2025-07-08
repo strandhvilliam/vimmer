@@ -11,6 +11,8 @@ import { createTRPCProxyClient, httpBatchLink } from "@trpc/client";
 
 import { Resource } from "sst";
 import superjson from "superjson";
+import { getDomain } from "@/lib/get-domain";
+import { headers } from "next/headers";
 
 export const getQueryClient = cache(createQueryClient);
 
@@ -20,6 +22,9 @@ export const createServerApiClient = cache(() => {
       httpBatchLink({
         transformer: superjson,
         url: Resource.Api.url + "trpc",
+        async headers() {
+          return headers();
+        },
       }),
       // loggerLink({
       //   enabled: (opts) =>
