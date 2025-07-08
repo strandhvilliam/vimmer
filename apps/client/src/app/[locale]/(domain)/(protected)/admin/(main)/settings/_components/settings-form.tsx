@@ -11,6 +11,7 @@ import {
   Globe,
   Calendar as CalendarIcon,
   Clock,
+  AlertTriangle,
 } from "lucide-react";
 import {
   Tabs,
@@ -24,13 +25,7 @@ import { toast } from "sonner";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { PhonePreview } from "./phone-preview";
 import { useForm } from "@tanstack/react-form";
-import { getLogoUploadAction } from "../_actions/logo-presigned-url-action";
-import { updateMarathonSettingsAction } from "../_actions/update-marathon-settings-action";
-import { useAction } from "next-safe-action/hooks";
-import {
-  updateMarathonSettingsSchema,
-  UpdateSettingsInput,
-} from "@/lib/schemas";
+import { getLogoUploadAction } from "@/lib/actions/logo-presigned-url-action";
 import {
   Command,
   CommandEmpty,
@@ -44,11 +39,44 @@ import {
   PopoverTrigger,
 } from "@vimmer/ui/components/popover";
 import { Button } from "@vimmer/ui/components/button";
-import { cn } from "@vimmer/ui/lib/utils";
 import { format } from "date-fns";
 import { useDomain } from "@/contexts/domain-context";
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  useQueryClient,
+  useSuspenseQuery,
+  useMutation,
+} from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@vimmer/ui/components/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTrigger,
+  AlertDialogTitle,
+} from "@vimmer/ui/components/alert-dialog";
+import { useRouter } from "next/navigation";
+import { z } from "zod/v4";
+import { useAction } from "next-safe-action/hooks";
+import { cn } from "@vimmer/ui/lib/utils";
+import { parseAsStringEnum, useQueryState } from "nuqs";
+
+const updateMarathonSettingsSchema = z.object({
+  name: z.string().optional(),
+  startDate: z.date().nullable().optional(),
+  endDate: z.date().nullable().optional(),
+  description: z.string().optional(),
+  logoUrl: z.string().optional(),
+  languages: z.array(z.string()).optional(),
+});
+type UpdateSettingsInput = z.infer<typeof updateMarathonSettingsSchema>;
 
 const MARATHON_SETTINGS_CDN_URL = "d1irn00yzrui1x.cloudfront.net";
 
@@ -91,6 +119,17 @@ export default function SettingsForm() {
   const { domain } = useDomain();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
+  const [resetConfirmationText, setResetConfirmationText] = useState("");
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useQueryState(
+    "tab",
+    parseAsStringEnum([
+      "general",
+      "date-time",
+      "languages",
+      "danger",
+    ]).withDefault("general")
+  );
 
   const { data: initialData } = useSuspenseQuery(
     trpc.marathons.getByDomain.queryOptions({
@@ -110,7 +149,6 @@ export default function SettingsForm() {
 
   const form = useForm({
     defaultValues: {
-      domain,
       name: initialData.name,
       logoUrl: initialData.logoUrl || "",
       startDate: initialData.startDate ? new Date(initialData.startDate) : null,
@@ -133,7 +171,19 @@ export default function SettingsForm() {
         }
       }
 
-      updateMarathonSettings(value);
+      updateMarathonSettings({
+        id: initialData.id,
+        domain,
+        data: {
+          name: value.name,
+          description: value.description,
+          startDate: value.startDate
+            ? value.startDate.toISOString()
+            : undefined,
+          endDate: value.endDate ? value.endDate.toISOString() : undefined,
+          logoUrl: value.logoUrl,
+        },
+      });
     },
   });
 
@@ -154,28 +204,61 @@ export default function SettingsForm() {
       : initialData.languages,
   };
 
-  const { execute: updateMarathonSettings, isExecuting: isUpdatingMarathon } =
-    useAction(updateMarathonSettingsAction, {
-      onSuccess: () => {
-        toast.success("Marathon settings updated successfully");
-      },
-      onError: (error) => {
-        toast.error(error.error.serverError || "Something went wrong");
-      },
-      onSettled: () => {
-        queryClient.invalidateQueries({
-          queryKey: trpc.marathons.pathKey(),
-        });
-        queryClient.invalidateQueries({
-          queryKey: trpc.rules.pathKey(),
-        });
-      },
-    });
+  const { mutate: updateMarathonSettings, isPending: isUpdatingMarathon } =
+    useMutation(
+      trpc.marathons.update.mutationOptions({
+        onSuccess: () => {
+          toast.success("Marathon settings updated successfully");
+        },
+        onError: (error) => {
+          toast.error(error.message || "Something went wrong");
+        },
+        onSettled: () => {
+          queryClient.invalidateQueries({
+            queryKey: trpc.marathons.pathKey(),
+          });
+          queryClient.invalidateQueries({
+            queryKey: trpc.rules.pathKey(),
+          });
+        },
+      })
+    );
 
   const {
     executeAsync: generateLogoPresignedUrl,
     isExecuting: isGeneratingLogoPresignedUrl,
   } = useAction(getLogoUploadAction);
+
+  const { mutate: resetMarathon, isPending: isResettingMarathon } = useMutation(
+    trpc.marathons.reset.mutationOptions({
+      onSuccess: () => {
+        toast.success("Marathon reset successfully");
+        setResetConfirmationText("");
+        queryClient.invalidateQueries({
+          queryKey: trpc.marathons.pathKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.participants.pathKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.submissions.pathKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.topics.pathKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.competitionClasses.pathKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.deviceGroups.pathKey(),
+        });
+        router.refresh();
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to reset marathon");
+      },
+    })
+  );
 
   useEffect(() => {
     const fileInput = fileInputRef.current;
@@ -278,11 +361,14 @@ export default function SettingsForm() {
     }
   };
 
-  const isFormSubmitDisabled =
-    isUpdatingMarathon ||
-    isGeneratingLogoPresignedUrl ||
-    logoState.isUploading ||
-    (!form.state.isDirty && !logoState.hasChanged);
+  const handleResetMarathon = () => {
+    if (resetConfirmationText === initialData.name) {
+      resetMarathon({ id: initialData.id });
+    }
+  };
+
+  const isResetDisabled =
+    resetConfirmationText !== initialData.name || isResettingMarathon;
 
   return (
     <form
@@ -294,7 +380,15 @@ export default function SettingsForm() {
     >
       <div className="grid grid-cols-2 gap-12">
         <div>
-          <Tabs defaultValue="general" className="space-y-6">
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) =>
+              setActiveTab(
+                value as "general" | "date-time" | "languages" | "danger"
+              )
+            }
+            className="space-y-6"
+          >
             <TabsList className="bg-background rounded-none p-0 h-auto border-b border-muted-foreground/25 w-full flex justify-start">
               <TabsTrigger
                 value="general"
@@ -313,6 +407,12 @@ export default function SettingsForm() {
                 className="px-4 py-2 bg-background rounded-none data-[state=active]:shadow-none data-[state=active]:border-primary border-b-2 border-transparent"
               >
                 Languages
+              </TabsTrigger>
+              <TabsTrigger
+                value="danger"
+                className="px-4 py-2 bg-background rounded-none data-[state=active]:shadow-none data-[state=active]:border-primary border-b-2 border-transparent"
+              >
+                Danger Zone
               </TabsTrigger>
             </TabsList>
 
@@ -894,15 +994,105 @@ export default function SettingsForm() {
                 </div>
               </div>
             </TabsContent>
+
+            {/* Danger Zone Tab */}
+            <TabsContent value="danger" className="space-y-6">
+              <div className="mt-0 bg-white">
+                <Alert variant="destructive" className="bg-destructive/10">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle className="font-rocgrotesk">
+                    Danger Zone
+                  </AlertTitle>
+                  <AlertDescription>
+                    <div className="space-y-4">
+                      <p>
+                        Reset this marathon to clear all participants,
+                        submissions, topics, competition classes, and device
+                        groups. This action cannot be undone.
+                      </p>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm">
+                            Reset Marathon
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="font-rocgrotesk">
+                              Are you absolutely sure?
+                            </AlertDialogTitle>
+                            <div className="space-y-2 text-sm text-muted-foreground bg-muted/50 border border-muted p-4 rounded-lg">
+                              This action cannot be undone. This will
+                              permanently delete all:
+                              <div className="list-disc list-inside mt-2 space-y-1">
+                                <li>Participants and their submissions</li>
+                                <li>Topics and their content</li>
+                                <li>Competition classes and device groups</li>
+                                <li>Jury invitations and validation results</li>
+                                <li>All related data and configurations</li>
+                              </div>
+                            </div>
+                          </AlertDialogHeader>
+                          <div className="space-y-2">
+                            <Label htmlFor="reset-confirmation">
+                              Type <strong>{initialData.name}</strong> to
+                              confirm:
+                            </Label>
+                            <Input
+                              id="reset-confirmation"
+                              value={resetConfirmationText}
+                              onChange={(e) =>
+                                setResetConfirmationText(e.target.value)
+                              }
+                              placeholder={initialData.name}
+                              className="font-mono"
+                            />
+                          </div>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel
+                              onClick={() => setResetConfirmationText("")}
+                            >
+                              Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={handleResetMarathon}
+                              disabled={isResetDisabled}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              {isResettingMarathon
+                                ? "Resetting..."
+                                : "Reset Marathon"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              </div>
+            </TabsContent>
           </Tabs>
 
-          <div className="flex mt-6">
-            <PrimaryButton type="submit" disabled={isFormSubmitDisabled}>
-              {isUpdatingMarathon || logoState.isUploading
-                ? "Saving..."
-                : "Save Changes"}
-            </PrimaryButton>
-          </div>
+          <form.Subscribe
+            selector={(state) => [state.isSubmitting, state.canSubmit]}
+            children={([isSubmitting, canSubmit]) => (
+              <>
+                {activeTab !== "danger" && (
+                  <div className="flex mt-6">
+                    <PrimaryButton
+                      type="submit"
+                      disabled={isSubmitting || !canSubmit}
+                    >
+                      {isSubmitting ? "Saving..." : "Save Changes"}
+                    </PrimaryButton>
+                  </div>
+                )}
+              </>
+            )}
+          />
+
+          {/* Danger Zone */}
+          {/* Removed from here, now in its own tab */}
         </div>
 
         <div className="relative w-fit">

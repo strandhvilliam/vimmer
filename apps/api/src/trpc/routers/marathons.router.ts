@@ -4,6 +4,7 @@ import {
   deleteMarathonSchema,
   getMarathonByIdSchema,
   getMarathonByDomainSchema,
+  resetMarathonSchema,
   updateMarathonSchema,
   updateMarathonByDomainSchema,
 } from "@vimmer/api/schemas/marathons.schemas";
@@ -12,9 +13,16 @@ import {
   deleteMarathonMutation,
   getMarathonByIdQuery,
   getMarathonByDomainQuery,
+  resetMarathonMutation,
   updateMarathonMutation,
   updateMarathonByDomainMutation,
 } from "@vimmer/api/db/queries/marathons.queries";
+import { updateRuleConfigSchema } from "@vimmer/api/schemas/rules.schemas";
+import {
+  getRulesByDomainQuery,
+  updateRuleConfigMutation,
+} from "@vimmer/api/db/queries/rules.queries";
+import { RULE_KEYS } from "@vimmer/validation/constants";
 
 export const marathonsRouter = createTRPCRouter({
   getById: publicProcedure
@@ -42,10 +50,34 @@ export const marathonsRouter = createTRPCRouter({
   update: publicProcedure
     .input(updateMarathonSchema)
     .mutation(async ({ ctx, input }) => {
-      return updateMarathonMutation(ctx.db, {
+      const result = await updateMarathonMutation(ctx.db, {
         id: input.id,
         data: input.data,
       });
+
+      if (input.data.startDate || input.data.endDate) {
+        const rules = await getRulesByDomainQuery(ctx.db, {
+          domain: input.domain,
+        });
+
+        const withinTimerangeRule = rules.find(
+          (rule) => rule.ruleKey === RULE_KEYS.WITHIN_TIMERANGE
+        );
+
+        if (withinTimerangeRule) {
+          await updateRuleConfigMutation(ctx.db, {
+            id: withinTimerangeRule.id,
+            data: {
+              params: {
+                start: input.data.startDate,
+                end: input.data.endDate,
+              },
+            },
+          });
+        }
+      }
+
+      return result;
     }),
 
   updateByDomain: publicProcedure
@@ -60,6 +92,13 @@ export const marathonsRouter = createTRPCRouter({
     .input(deleteMarathonSchema)
     .mutation(async ({ ctx, input }) => {
       return deleteMarathonMutation(ctx.db, {
+        id: input.id,
+      });
+    }),
+  reset: publicProcedure
+    .input(resetMarathonSchema)
+    .mutation(async ({ ctx, input }) => {
+      return resetMarathonMutation(ctx.db, {
         id: input.id,
       });
     }),

@@ -1,7 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
 
-const ImageGrid = dynamic(() => import("../../../../components/image-grid"), {
+const ImageGrid = dynamic(() => import("@/components/image-grid"), {
   ssr: false,
 });
 

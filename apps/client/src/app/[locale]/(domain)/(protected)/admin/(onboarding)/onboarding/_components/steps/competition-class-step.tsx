@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
 import { Button } from "@vimmer/ui/components/button";
 import {
@@ -12,14 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@vimmer/ui/components/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@vimmer/ui/components/form";
+import { Label } from "@vimmer/ui/components/label";
 import { Input } from "@vimmer/ui/components/input";
 import { Textarea } from "@vimmer/ui/components/textarea";
 import { Trophy, Plus, X, Camera } from "lucide-react";
@@ -32,6 +24,13 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@vimmer/ui/components/select";
 
 const competitionClassSchema = z.object({
   name: z.string().min(1, "Class name is required"),
@@ -45,6 +44,27 @@ const competitionClassSchema = z.object({
 
 type CompetitionClassForm = z.infer<typeof competitionClassSchema>;
 
+const PREDEFINED_CLASSES: CompetitionClassForm[] = [
+  {
+    name: "8 hours",
+    description: "Morning start time for 8 hour competition",
+    numberOfPhotos: 8,
+    topicStartIndex: 0,
+  },
+  {
+    name: "24 hours",
+    description: "All day competition with 24 photos",
+    numberOfPhotos: 24,
+    topicStartIndex: 0,
+  },
+  {
+    name: "8 hours (Afternoon start)",
+    description: "Afternoon start time for 8 hour competition",
+    numberOfPhotos: 8,
+    topicStartIndex: 8,
+  },
+];
+
 interface CompetitionClassStepProps {
   onNext: () => void;
   onPrev: () => void;
@@ -53,12 +73,12 @@ interface CompetitionClassStepProps {
 }
 
 type LocalCompetitionClass = {
-  id: number | string; // Use string for temporary IDs
+  id: number | string;
   name: string;
   description?: string;
   numberOfPhotos: number;
   topicStartIndex: number;
-  isNew?: boolean; // Flag to identify new classes
+  isNew?: boolean;
 };
 
 export function CompetitionClassStep({
@@ -80,6 +100,11 @@ export function CompetitionClassStep({
 
   const { data: competitionClasses } = useSuspenseQuery(
     trpc.competitionClasses.getByDomain.queryOptions({ domain })
+  );
+
+  // Fetch topics for topicStartIndex dropdown
+  const { data: topics = [] } = useSuspenseQuery(
+    trpc.topics.getByDomain.queryOptions({ domain })
   );
 
   // Initialize local state with existing classes
@@ -174,19 +199,27 @@ export function CompetitionClassStep({
     },
   });
 
-  const form = useForm<CompetitionClassForm>({
-    resolver: zodResolver(competitionClassSchema),
+  const form = useForm({
     defaultValues: {
       name: "",
       description: "",
       numberOfPhotos: 24,
       topicStartIndex: 0,
     },
+    onSubmit: async ({ value }) => {
+      handleAddClass(value);
+    },
   });
 
   const handleAddClass = (formData: CompetitionClassForm) => {
+    const result = competitionClassSchema.safeParse(formData);
+
+    if (!result.success) {
+      toast.error(result.error.message);
+      return;
+    }
     const newClass: LocalCompetitionClass = {
-      id: `temp-${Date.now()}`, // Temporary ID
+      id: `temp-${Date.now()}`,
       name: formData.name,
       description: formData.description,
       numberOfPhotos: formData.numberOfPhotos,
@@ -203,7 +236,6 @@ export function CompetitionClassStep({
   const handleRemoveClass = (classId: number | string) => {
     setLocalClasses((prev) => prev.filter((cc) => cc.id !== classId));
 
-    // If it's an existing class (not new), add to deleted list
     if (typeof classId === "number") {
       setDeletedClassIds((prev) => [...prev, classId]);
     }
@@ -217,7 +249,6 @@ export function CompetitionClassStep({
       return;
     }
 
-    // Check if there are any changes to save
     const hasNewClasses = localClasses.some((cc) => cc.isNew);
     const hasDeletedClasses = deletedClassIds.length > 0;
 
@@ -228,30 +259,14 @@ export function CompetitionClassStep({
     }
   };
 
-  const predefinedClasses = [
-    {
-      name: "8 hours",
-      description: "Morning start time for 8 hour competition",
-      numberOfPhotos: 8,
-      topicStartIndex: 0,
-    },
-    {
-      name: "24 hours",
-      description: "All day competition with 24 photos",
-      numberOfPhotos: 24,
-      topicStartIndex: 0,
-    },
-    {
-      name: "8 hours (Afternoon start)",
-      description: "Afternoon start time for 8 hour competition",
-      numberOfPhotos: 8,
-      topicStartIndex: 8,
-    },
-  ];
+  const addPredefinedClass = (predefinedClass: CompetitionClassForm) => {
+    const result = competitionClassSchema.safeParse(predefinedClass);
 
-  const addPredefinedClass = (
-    predefinedClass: (typeof predefinedClasses)[0]
-  ) => {
+    if (!result.success) {
+      toast.error(result.error.message);
+      return;
+    }
+
     const newClass: LocalCompetitionClass = {
       id: `temp-${Date.now()}`,
       name: predefinedClass.name,
@@ -264,9 +279,6 @@ export function CompetitionClassStep({
     setLocalClasses((prev) => [...prev, newClass]);
   };
 
-  const hasChanges =
-    localClasses.some((cc) => cc.isNew) || deletedClassIds.length > 0;
-
   return (
     <div className="max-w-4xl mx-auto">
       <Card className="border-muted shadow-lg backdrop-blur-sm rounded-2xl ">
@@ -275,7 +287,10 @@ export function CompetitionClassStep({
             Competition Classes
           </CardTitle>
           <CardDescription className="">
-            Create different categories for participants to compete in
+            Set up the different classes or categories that participants can
+            join in your competition. For example, you might have an "8 hours"
+            or "24 hours" class. Add at least one class to continue. You can use
+            the quick add buttons or create your own custom class below.
           </CardDescription>
         </CardHeader>
 
@@ -302,6 +317,20 @@ export function CompetitionClassStep({
                         {competitionClass.description && (
                           <p className="text-sm text-muted-foreground mt-1">
                             {competitionClass.description}
+                          </p>
+                        )}
+                        {competitionClass.topicStartIndex !== undefined && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Start from topic:{" "}
+                            {competitionClass.topicStartIndex + 1}
+                          </p>
+                        )}
+                        {/* Warning if not enough topics for this class */}
+                        {topics.length - competitionClass.topicStartIndex <
+                          competitionClass.numberOfPhotos && (
+                          <p className="text-sm text-red-600 mt-1">
+                            Not enough topics for this class. Add more topics or
+                            reduce the number of required photos.
                           </p>
                         )}
                       </div>
@@ -331,16 +360,10 @@ export function CompetitionClassStep({
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Quick Add Common Classes</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {predefinedClasses.map((predefinedClass, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  onClick={() => addPredefinedClass(predefinedClass)}
-                  className="justify-start h-auto p-4 text-left"
-                  disabled={
-                    isSaving ||
-                    localClasses.some((cc) => cc.name === predefinedClass.name)
-                  }
+              {PREDEFINED_CLASSES.map((predefinedClass) => (
+                <div
+                  key={predefinedClass.name}
+                  className="flex items-center justify-between p-3 border rounded-lg transition-colors"
                 >
                   <div>
                     <div className="font-semibold">{predefinedClass.name}</div>
@@ -351,7 +374,20 @@ export function CompetitionClassStep({
                       {predefinedClass.numberOfPhotos} photos
                     </div>
                   </div>
-                </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addPredefinedClass(predefinedClass)}
+                    disabled={
+                      isSaving ||
+                      localClasses.some(
+                        (cc) => cc.name === predefinedClass.name
+                      )
+                    }
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
               ))}
             </div>
           </div>
@@ -375,113 +411,163 @@ export function CompetitionClassStep({
                 <CardTitle className="text-lg">Add Custom Class</CardTitle>
               </CardHeader>
               <CardContent>
-                <Form {...form}>
-                  <form
-                    onSubmit={form.handleSubmit(handleAddClass)}
-                    className="space-y-4"
-                  >
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Class Name</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Professional Category"
-                              disabled={isSaving}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    form.handleSubmit();
+                  }}
+                  className="space-y-4"
+                >
+                  <form.Field
+                    name="name"
+                    validators={{
+                      onChange: ({ value }) =>
+                        !value ? "Class name is required" : undefined,
+                    }}
+                    children={(field) => (
+                      <div>
+                        <Label htmlFor={field.name}>Class Name</Label>
+                        <Input
+                          id={field.name}
+                          name={field.name}
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          placeholder="Professional Category"
+                          disabled={isSaving}
+                        />
+                        {field.state.meta.isTouched &&
+                        field.state.meta.errors.length ? (
+                          <p className="text-sm text-red-600 mt-1">
+                            {field.state.meta.errors.join(", ")}
+                          </p>
+                        ) : null}
+                      </div>
+                    )}
+                  />
+
+                  <form.Field
+                    name="description"
+                    children={(field) => (
+                      <div>
+                        <Label htmlFor={field.name}>
+                          Description (Optional)
+                        </Label>
+                        <Textarea
+                          id={field.name}
+                          name={field.name}
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          placeholder="For experienced photographers..."
+                          rows={3}
+                          disabled={isSaving}
+                        />
+                      </div>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <form.Field
+                      name="numberOfPhotos"
+                      validators={{
+                        onChange: ({ value }) => {
+                          if (value < 1) return "Must require at least 1 photo";
+                          if (value > 100) return "Cannot exceed 100 photos";
+                          return undefined;
+                        },
+                      }}
+                      children={(field) => (
+                        <div>
+                          <Label htmlFor={field.name}>Number of Photos</Label>
+                          <Input
+                            id={field.name}
+                            name={field.name}
+                            type="number"
+                            min="1"
+                            max="100"
+                            value={field.state.value}
+                            onBlur={field.handleBlur}
+                            onChange={(e) =>
+                              field.handleChange(Number(e.target.value))
+                            }
+                            disabled={isSaving}
+                          />
+                          {field.state.meta.isTouched &&
+                          field.state.meta.errors.length ? (
+                            <p className="text-sm text-red-600 mt-1">
+                              {field.state.meta.errors.join(", ")}
+                            </p>
+                          ) : null}
+                        </div>
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description (Optional)</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="For experienced photographers..."
-                              rows={3}
-                              disabled={isSaving}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                    <form.Field
+                      name="topicStartIndex"
+                      validators={{
+                        onChange: ({ value }) =>
+                          value < 0
+                            ? "Start index cannot be negative"
+                            : undefined,
+                      }}
+                      children={(field) => (
+                        <div>
+                          <Label htmlFor={field.name}>Topic Start Index</Label>
+                          <Select
+                            value={
+                              topics[field.state.value]
+                                ? String(field.state.value)
+                                : topics[0]
+                                  ? "0"
+                                  : ""
+                            }
+                            onValueChange={(val) => {
+                              const idx = Number(val);
+                              field.handleChange(idx);
+                            }}
+                            disabled={isSaving || topics.length === 0}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select topic start" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {topics.map((topic, idx) => (
+                                <SelectItem key={topic.id} value={String(idx)}>
+                                  {`${topic.orderIndex + 1}. ${topic.name}`}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {field.state.meta.isTouched &&
+                          field.state.meta.errors.length ? (
+                            <p className="text-sm text-red-600 mt-1">
+                              {field.state.meta.errors.join(", ")}
+                            </p>
+                          ) : null}
+                        </div>
                       )}
                     />
+                  </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="numberOfPhotos"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Number of Photos</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min="1"
-                                max="100"
-                                disabled={isSaving}
-                                {...field}
-                                onChange={(e) =>
-                                  field.onChange(Number(e.target.value))
-                                }
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="topicStartIndex"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Topic Start Index</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min="0"
-                                disabled={isSaving}
-                                {...field}
-                                onChange={(e) =>
-                                  field.onChange(Number(e.target.value))
-                                }
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="flex gap-2 pt-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          setIsAddingClass(false);
-                          form.reset();
-                        }}
-                        disabled={isSaving}
-                      >
-                        Cancel
-                      </Button>
-                      <PrimaryButton type="submit" disabled={isSaving}>
-                        Add Class
-                      </PrimaryButton>
-                    </div>
-                  </form>
-                </Form>
+                  <div className="flex gap-2 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setIsAddingClass(false);
+                        form.reset();
+                      }}
+                      disabled={isSaving}
+                    >
+                      Cancel
+                    </Button>
+                    <PrimaryButton type="submit" disabled={isSaving}>
+                      Add Class
+                    </PrimaryButton>
+                  </div>
+                </form>
               </CardContent>
             </Card>
           )}

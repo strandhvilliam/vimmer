@@ -21,9 +21,9 @@ const STEPS = {
   WelcomeStep: 1,
   MarathonConfigStep: 2,
   ValidationRulesStep: 3,
-  CompetitionClassStep: 4,
-  DeviceGroupStep: 5,
-  TopicsStep: 6,
+  TopicsStep: 4,
+  CompetitionClassStep: 5,
+  DeviceGroupStep: 6,
   SummaryStep: 7,
 } as const;
 
@@ -33,9 +33,9 @@ const STEP_LABELS: Record<StepNumber, string> = {
   [STEPS.WelcomeStep]: "Welcome",
   [STEPS.MarathonConfigStep]: "Configuration",
   [STEPS.ValidationRulesStep]: "Rules",
+  [STEPS.TopicsStep]: "Topics",
   [STEPS.CompetitionClassStep]: "Classes",
   [STEPS.DeviceGroupStep]: "Devices",
-  [STEPS.TopicsStep]: "Topics",
   [STEPS.SummaryStep]: "Summary",
 } as const;
 
@@ -52,6 +52,10 @@ const STEP_COMPONENTS: Record<
     component: ValidationRulesStep,
     title: "Validation Rules",
   },
+  [STEPS.TopicsStep]: {
+    component: TopicsStep,
+    title: "Topics",
+  },
   [STEPS.CompetitionClassStep]: {
     component: CompetitionClassStep,
     title: "Competition Classes",
@@ -59,10 +63,6 @@ const STEP_COMPONENTS: Record<
   [STEPS.DeviceGroupStep]: {
     component: DeviceGroupStep,
     title: "Device Groups",
-  },
-  [STEPS.TopicsStep]: {
-    component: TopicsStep,
-    title: "Topics",
   },
   [STEPS.SummaryStep]: { component: SummaryStep, title: "Summary" },
 } as const;

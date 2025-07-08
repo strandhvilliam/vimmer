@@ -12,7 +12,7 @@ import {
 } from "@vimmer/ui/components/select";
 import { toast } from "sonner";
 import { useAction } from "next-safe-action/hooks";
-import { getPresignedPhotoArchivesAction } from "../_actions/get-presigned-photo-archives-action";
+import { getPresignedPhotoArchivesAction } from "../../../../../../../../lib/actions/get-presigned-photo-archives-action";
 import { useZipSaver } from "@/hooks/use-zip-saver";
 
 export const EXPORT_KEYS = {

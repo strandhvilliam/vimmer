@@ -60,16 +60,6 @@ export const editCompetitionClassSchema = z.object({
     .default(0),
 });
 
-export const updateMarathonSettingsSchema = z.object({
-  domain: z.string(),
-  name: z.string().optional(),
-  startDate: z.date().nullable().optional(),
-  endDate: z.date().nullable().optional(),
-  description: z.string().optional(),
-  logoUrl: z.string().optional(),
-  languages: z.array(z.string()).optional(),
-});
-
 export type CreateDeviceGroupInput = z.infer<typeof createDeviceGroupSchema>;
 export type EditDeviceGroupInput = z.infer<typeof editDeviceGroupSchema>;
 export type CreateCompetitionClassInput = z.infer<
@@ -78,5 +68,3 @@ export type CreateCompetitionClassInput = z.infer<
 export type EditCompetitionClassInput = z.infer<
   typeof editCompetitionClassSchema
 >;
-
-export type UpdateSettingsInput = z.infer<typeof updateMarathonSettingsSchema>;

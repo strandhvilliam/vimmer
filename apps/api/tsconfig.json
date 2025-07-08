@@ -20,7 +20,8 @@
     "jsxImportSource": "react",
     "baseUrl": ".",
     "paths": {
-      "@vimmer/api/*": ["src/*"]
+      "@vimmer/api/*": ["src/*"],
+      "@vimmer/validation/*": ["../../packages/validation/src/*"]
     },
     "types": ["bun-types"]
   },

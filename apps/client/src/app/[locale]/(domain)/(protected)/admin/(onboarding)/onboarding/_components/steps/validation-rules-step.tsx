@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from "@vimmer/ui/components/card";
 import { Switch } from "@vimmer/ui/components/switch";
-import { Input } from "@vimmer/ui/components/input";
 import { Label } from "@vimmer/ui/components/label";
 import { Slider } from "@vimmer/ui/components/slider";
 import {

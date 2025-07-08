@@ -16,7 +16,7 @@ import {
 import { toast } from "@vimmer/ui/hooks/use-toast";
 import { useParams, useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
-import { deleteJuryInvitationAction } from "../_actions/jury-invitation-actions";
+import { deleteJuryInvitationAction } from "../../../../../../../../lib/actions/send-jury-invitation-email";
 import { useDomain } from "@/contexts/domain-context";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";

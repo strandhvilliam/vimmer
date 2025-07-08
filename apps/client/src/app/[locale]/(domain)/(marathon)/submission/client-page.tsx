@@ -1,11 +1,11 @@
 "use client";
 import { AnimatedStepWrapper } from "@/components/animated-step-wrapper";
-import { ClassSelectionStep } from "@/app/[locale]/_old/submission/steps/class-selection-step";
-import { DeviceSelectionStep } from "@/app/[locale]/_old/submission/steps/device-selection-step";
-import { ParticipantNumberStep } from "@/app/[locale]/_old/submission/steps/participant-number-step";
-import { ParticipantDetailsStep } from "@/app/[locale]/_old/submission/steps/participant-details-step";
+import { ClassSelectionStep } from "./_components/class-selection-step";
+import { DeviceSelectionStep } from "./_components/device-selection-step";
+import { ParticipantNumberStep } from "./_components/participant-number-step";
+import { ParticipantDetailsStep } from "./_components/participant-details-step";
 import { StepNavigator } from "@/components/step-navigator";
-import { UploadSubmissionsStep } from "@/app/[locale]/_old/submission/steps/upload-submissions-step";
+import { UploadSubmissionsStep } from "./_components/upload-submissions-step";
 import { STEPS } from "@/lib/constants";
 import { AnimatePresence } from "motion/react";
 import { useRouter } from "next/navigation";

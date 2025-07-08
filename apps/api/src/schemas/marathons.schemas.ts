@@ -23,8 +23,8 @@ export const createMarathonSchema = z.object({
 
 export const updateMarathonSchema = z.object({
   id: z.number(),
+  domain: z.string(),
   data: z.object({
-    domain: z.string().optional(),
     name: z.string().optional(),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
@@ -49,6 +49,10 @@ export const updateMarathonByDomainSchema = z.object({
 });
 
 export const deleteMarathonSchema = z.object({
+  id: z.number(),
+});
+
+export const resetMarathonSchema = z.object({
   id: z.number(),
 });
 

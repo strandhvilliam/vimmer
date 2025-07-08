@@ -20,6 +20,21 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { Marathon } from "@vimmer/api/db/types";
 import { useDomain } from "@/contexts/domain-context";
+import { z } from "zod/v4";
+
+export const initializeParticipantSchema = z.object({
+  participantRef: z
+    .string()
+    .nonempty({ message: "Participant reference is required." })
+    .refine((val) => /^\d+$/.test(val), {
+      message: "Only numbers are allowed.",
+    }),
+  domain: z.string().min(1, "Invalid domain"),
+});
+
+export type InitializeParticipantSchema = z.infer<
+  typeof initializeParticipantSchema
+>;
 
 interface Props extends StepNavigationHandlers {
   marathon: Marathon;
@@ -43,7 +58,7 @@ export function ParticipantNumberStep({ onNextStep, marathon }: Props) {
       createParticipant({
         data: {
           ...value,
-          reference: value.participantRef,
+          reference: value.participantRef.padStart(4, "0"),
           marathonId: marathon.id,
         },
       });
