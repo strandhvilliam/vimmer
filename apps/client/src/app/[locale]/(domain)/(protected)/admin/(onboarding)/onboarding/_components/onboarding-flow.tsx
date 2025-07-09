@@ -16,6 +16,7 @@ import { useTRPC } from "@/trpc/client";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useDomain } from "@/contexts/domain-context";
 import { Resource } from "sst";
+import { createParser, parseAsInteger, useQueryState } from "nuqs";
 
 const STEPS = {
   WelcomeStep: 1,
@@ -28,6 +29,20 @@ const STEPS = {
 } as const;
 
 type StepNumber = (typeof STEPS)[keyof typeof STEPS];
+
+const parseAsStep = createParser<StepNumber>({
+  parse(queryValue) {
+    const num = Number(queryValue);
+    const validSteps = Object.values(STEPS) as number[];
+    if (validSteps.includes(num)) {
+      return num as StepNumber;
+    }
+    return null;
+  },
+  serialize(value) {
+    return String(value);
+  },
+});
 
 const STEP_LABELS: Record<StepNumber, string> = {
   [STEPS.WelcomeStep]: "Welcome",
@@ -73,7 +88,10 @@ export function OnboardingFlow({
   marathonSettingsRouterUrl: string;
 }) {
   const { domain } = useDomain();
-  const [currentStep, setCurrentStep] = useState<StepNumber>(STEPS.WelcomeStep);
+  const [currentStep, setCurrentStep] = useQueryState<StepNumber>(
+    "step",
+    parseAsStep.withDefault(STEPS.WelcomeStep)
+  );
   const trpc = useTRPC();
 
   const { data: marathon } = useSuspenseQuery(

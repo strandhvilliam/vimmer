@@ -35,7 +35,7 @@ import {
 import { toast } from "sonner";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { cn } from "@vimmer/ui/lib/utils";
-import { Topic } from "@vimmer/supabase/types";
+import { Topic } from "@vimmer/api/db/types";
 import {
   DndContext,
   closestCenter,

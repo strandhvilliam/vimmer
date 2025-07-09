@@ -54,3 +54,15 @@ export const createParticipantVerificationSchema = z.object({
     notes: z.string().optional(),
   }),
 });
+
+export const runValidationsSchema = z.object({
+  participantId: z.number(),
+});
+
+export const verifyParticipantSchema = z.object({
+  data: z.object({
+    staffId: z.string(),
+    participantId: z.number(),
+    notes: z.string().optional(),
+  }),
+});

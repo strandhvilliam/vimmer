@@ -8,36 +8,38 @@ import { DotPattern } from "@vimmer/ui/components/dot-pattern";
 import QrScanDrawer from "@/components/qr-scan-drawer";
 import { ManualEntrySheet } from "@/components/manual-entry-overlay";
 import { VerifiedParticipantsSheet } from "./verified-participants-sheet";
-import { useAction } from "next-safe-action/hooks";
-import { handleVerificationCode } from "@/lib/actions/handle-verification-code";
 import { ParticipantInfoSheet } from "./participant-info-sheet";
-import {
-  DeviceGroup,
-  CompetitionClass,
-  Participant,
-  ValidationResult,
-} from "@vimmer/api/db/types";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/hooks/use-session";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { useDomain } from "@/contexts/domain-context";
 
-export function StaffInterface() {
+export function StaffInterface({
+  baseThumbnailUrl,
+}: {
+  baseThumbnailUrl: string;
+}) {
   const trpc = useTRPC();
   const { user } = useSession();
   const { domain } = useDomain();
-
-  const [participantData, setParticipantData] = useState<
-    | (Participant & {
-        validationResults: ValidationResult[];
-        competitionClass: CompetitionClass | null;
-        deviceGroup: DeviceGroup | null;
-      })
-    | null
+  const [activeParticipantReference, setActiveParticipantReference] = useState<
+    string | null
   >(null);
+
+  const { data: participantData } = useQuery(
+    trpc.participants.getByReference.queryOptions(
+      {
+        reference: activeParticipantReference ?? "",
+        domain,
+      },
+      {
+        enabled: !!activeParticipantReference,
+      }
+    )
+  );
 
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
 
@@ -62,31 +64,6 @@ export function StaffInterface() {
     trpc.topics.getByDomain.queryOptions({
       domain,
     })
-  );
-
-  const { execute: executeVerificationCode } = useAction(
-    handleVerificationCode,
-    {
-      onSuccess: async ({ data }) => {
-        if (!data) {
-          toast.error("Failed to verify participant");
-          return;
-        }
-        setParticipantData(data);
-        // setParticipantDataIsOpen(true);
-        setOpenSheet("participant-info");
-      },
-      onError: ({ error }) => {
-        if (error.validationErrors?.reference) {
-          toast.error(
-            error.validationErrors.reference._errors?.at(0) ??
-              "Failed to find participant"
-          );
-        } else {
-          toast.error("Could not find participant");
-        }
-      },
-    }
   );
 
   const handleLogout = async () => {
@@ -164,24 +141,31 @@ export function StaffInterface() {
       <QrScanDrawer
         open={openSheet === "qr-scan"}
         onOpenChange={() => setOpenSheet(null)}
-        onScanAction={executeVerificationCode}
+        onScanAction={(qrCode) => {
+          setActiveParticipantReference(qrCode.reference);
+        }}
       />
       <ManualEntrySheet
         open={openSheet === "manual-entry"}
         onOpenChange={() => setOpenSheet(null)}
-        onEnterAction={executeVerificationCode}
+        onEnterAction={(args) => {
+          setActiveParticipantReference(args.reference);
+          setOpenSheet("participant-info");
+        }}
       />
       <VerifiedParticipantsSheet
         open={openSheet === "verified-list"}
         onOpenChange={() => setOpenSheet(null)}
         verifications={verifications}
         topics={topics}
+        baseThumbnailUrl={baseThumbnailUrl}
       />
       <ParticipantInfoSheet
         open={openSheet === "participant-info"}
         onOpenChange={() => setOpenSheet(null)}
-        participant={participantData}
+        participant={participantData ?? null}
         topics={topics}
+        baseThumbnailUrl={baseThumbnailUrl}
       />
     </>
   );

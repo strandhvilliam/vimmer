@@ -28,7 +28,7 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import type { Marathon } from "@vimmer/supabase/types";
+import type { Marathon } from "@vimmer/api/db/types";
 
 interface SummaryStepProps {
   marathon: Marathon;

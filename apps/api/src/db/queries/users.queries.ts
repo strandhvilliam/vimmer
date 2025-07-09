@@ -1,11 +1,6 @@
 import { eq, and } from "drizzle-orm";
 import type { Database } from "@vimmer/api/db";
-import {
-  user,
-  userMarathons,
-  marathons,
-  participantVerifications,
-} from "@vimmer/api/db/schema";
+import { user, userMarathons, marathons } from "@vimmer/api/db/schema";
 import type { NewUser, NewUserMarathonRelation } from "@vimmer/api/db/types";
 
 export async function getUserByIdQuery(db: Database, { id }: { id: string }) {

@@ -1,9 +1,9 @@
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, notInArray } from "drizzle-orm";
 import type { Database } from "@vimmer/api/db";
 import {
   validationResults,
   participantVerifications,
-  participants,
+  ruleConfigs,
 } from "@vimmer/api/db/schema";
 import type {
   NewValidationResult,
@@ -34,6 +34,7 @@ export async function getParticipantVerificationsByStaffIdQuery(
           competitionClass: true,
           deviceGroup: true,
           validationResults: true,
+          submissions: true,
         },
       },
     },
@@ -60,10 +61,63 @@ export async function createMultipleValidationResultsMutation(
   db: Database,
   { data }: { data: NewValidationResult[] }
 ) {
-  const result = await db
-    .insert(validationResults)
-    .values(data)
-    .returning({ id: validationResults.id });
+  const existingValidationResults = await db.query.validationResults.findMany({
+    where: inArray(
+      validationResults.participantId,
+      data.map((d) => d.participantId)
+    ),
+  });
+
+  const existingValidationResultsMap = new Map(
+    existingValidationResults.map((r) => [
+      r.fileName
+        ? `${r.participantId}-${r.fileName}-${r.ruleKey}`
+        : `${r.participantId}-${r.ruleKey}`,
+      r,
+    ])
+  );
+
+  const { toCreate, toUpdate } = data.reduce(
+    (acc, d) => {
+      const key = d.fileName
+        ? `${d.participantId}-${d.fileName}-${d.ruleKey}`
+        : `${d.participantId}-${d.ruleKey}`;
+      if (existingValidationResultsMap.has(key)) {
+        acc.toUpdate.push({
+          ...d,
+          id: existingValidationResultsMap.get(key)?.id,
+        });
+      } else {
+        acc.toCreate.push(d);
+      }
+      return acc;
+    },
+    {
+      toCreate: [] as NewValidationResult[],
+      toUpdate: [] as NewValidationResult[],
+    }
+  );
+
+  const result: { id: number | null }[] = [];
+  if (toCreate.length > 0) {
+    const created = await db
+      .insert(validationResults)
+      .values(toCreate)
+      .returning({ id: validationResults.id });
+    result.push(...created);
+  }
+
+  for (const r of toUpdate.filter((r) => r.id)) {
+    if (!r.id) {
+      continue;
+    }
+    const updated = await updateValidationResultMutation(db, {
+      id: r.id,
+      data: r,
+    });
+    result.push(updated);
+  }
+
   return result.map((r) => ({ id: r.id }));
 }
 
@@ -96,4 +150,18 @@ export async function createParticipantVerificationMutation(
   }
 
   return { id: result[0].id };
+}
+
+export async function clearNonEnabledRuleResultsMutation(
+  db: Database,
+  { participantId, ruleKeys }: { participantId: number; ruleKeys: string[] }
+) {
+  await db
+    .delete(validationResults)
+    .where(
+      and(
+        eq(validationResults.participantId, participantId),
+        notInArray(validationResults.ruleKey, ruleKeys)
+      )
+    );
 }

@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import type { Database } from "@vimmer/api/db";
 import { ruleConfigs, marathons } from "@vimmer/api/db/schema";
 

@@ -10,8 +10,10 @@ import {
   Loader,
   Mail,
   MoreHorizontal,
+  RefreshCcw,
   Shield,
   Smartphone,
+  Trash,
   Upload,
   XCircle,
   Zap,
@@ -156,10 +158,6 @@ export function ParticipantHeader({
     (result) => result.severity === "error" && result.outcome === "failed"
   );
 
-  const hasWarnings = globalValidations.some(
-    (result) => result.severity === "warning" && result.outcome === "failed"
-  );
-
   const allPassed = globalValidations.length > 0 && !hasFailedValidations;
 
   const statusConfig = getStatusConfig(participant.status);
@@ -184,6 +182,27 @@ export function ParticipantHeader({
       },
     })
   );
+
+  const { mutate: runValidations, isPending: isRunningValidations } =
+    useMutation(
+      trpc.validations.runValidations.mutationOptions({
+        onSuccess: () => {
+          toast.success("Validations run successfully");
+        },
+        onError: (error) => {
+          console.error(error);
+          toast.error("Failed to run validations");
+        },
+        onSettled: () => {
+          queryClient.invalidateQueries({
+            queryKey: trpc.validations.pathKey(),
+          });
+          queryClient.invalidateQueries({
+            queryKey: trpc.participants.pathKey(),
+          });
+        },
+      })
+    );
 
   const handleVerifyParticipant = () => {
     if (!user?.id) {
@@ -321,7 +340,25 @@ export function ParticipantHeader({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Delete participant</DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        runValidations({ participantId: participant.id })
+                      }
+                      disabled={isRunningValidations}
+                    >
+                      <RefreshCcw className="h-4 w-4 mr-2" />
+                      <span>
+                        {isRunningValidations
+                          ? "Running..."
+                          : "Run Validations"}
+                      </span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Trash className="h-4 w-4 mr-2 text-destructive" />
+                      <span className="text-destructive">
+                        Delete Participant
+                      </span>
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TooltipTrigger>

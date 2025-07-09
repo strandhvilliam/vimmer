@@ -98,7 +98,10 @@ export function ParticipantSubmissionClientPage({
         </TabsContent>
 
         <TabsContent value="validation" className="mt-6">
-          <ValidationResultsTable validationResults={validationResults} />
+          <ValidationResultsTable
+            validationResults={validationResults}
+            topics={topics}
+          />
         </TabsContent>
       </Tabs>
     </div>

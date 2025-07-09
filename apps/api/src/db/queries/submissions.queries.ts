@@ -4,19 +4,8 @@ import {
   submissions,
   zippedSubmissions,
   marathons,
-  participants,
 } from "@vimmer/api/db/schema";
-import type {
-  Submission,
-  ZippedSubmission,
-  NewSubmission,
-  NewZippedSubmission,
-  Participant,
-  CompetitionClass,
-  DeviceGroup,
-  Topic,
-} from "@vimmer/api/db/types";
-import type { SupabaseClient } from "@vimmer/supabase/types";
+import type { NewSubmission, NewZippedSubmission } from "@vimmer/api/db/types";
 
 // interface SubmissionForJuryResponse extends Submission {
 //   participant: Participant & {

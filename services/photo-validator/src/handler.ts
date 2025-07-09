@@ -66,13 +66,22 @@ export const handler = async (event: SQSEvent): Promise<void> => {
       throw new Error(`Participant with id ${participantId} not found`);
     }
 
+    const marathon = await apiClient.marathons.getById.query({
+      id: participant.marathonId,
+    });
+
+    if (!marathon) {
+      //TODO: Add error NOT ABLE TO VALIDATE
+      throw new Error(`Marathon with id ${participant.marathonId} not found`);
+    }
+
     if (participant.status === "verified") {
       console.log("Participant is already verified, skipping");
       continue;
     }
 
-    const dbRuleConfigs = await apiClient.rules.getByMarathonId.query({
-      marathonId: participant.marathonId,
+    const dbRuleConfigs = await apiClient.rules.getByDomain.query({
+      domain: marathon.domain,
     });
 
     const ruleConfigs = mapDbRuleConfigsToValidationConfigs(dbRuleConfigs);
@@ -104,8 +113,10 @@ export const handler = async (event: SQSEvent): Promise<void> => {
       participantId,
     }));
 
-    await apiClient.validations.createMultipleValidationResults.mutate({
-      data: validationResults,
-    });
+    if (validationResults.length > 0) {
+      await apiClient.validations.createMultipleValidationResults.mutate({
+        data: validationResults,
+      });
+    }
   }
 };
