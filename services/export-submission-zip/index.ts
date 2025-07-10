@@ -242,19 +242,6 @@ export async function exportSubmissionsToZip({
       }
 
       if (hasSubmissions) {
-        // Add manifest for this participant
-        const manifest = {
-          participantId: participant.id,
-          reference: participant.reference,
-          marathonId: marathon.id,
-          domain,
-          timestamp: new Date().toISOString(),
-          submissionCount: participant.submissions.length,
-        };
-
-        participantZip.file("manifest.json", JSON.stringify(manifest, null, 2));
-
-        // Generate and save the zip file to S3
         const zipBuffer = await participantZip.generateAsync({
           type: "nodebuffer",
           compression: "DEFLATE",

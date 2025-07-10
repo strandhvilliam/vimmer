@@ -94,7 +94,7 @@ export default $config({
         POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
         ...env,
       },
-      link: [realtime],
+      link: [realtime, submissionBucket],
     });
 
     const vpc = new sst.aws.Vpc("VimmerVPC");
@@ -129,9 +129,9 @@ export default $config({
       "GenerateParticipantZipTask",
       {
         cluster,
-        architecture: "arm64",
+        // architecture: "arm64",
         image: {
-          dockerfile: "./services/generate-participant-zip/Dockerfile",
+          dockerfile: "/services/generate-participant-zip/Dockerfile",
         },
         environment: env,
         link: [
@@ -148,7 +148,7 @@ export default $config({
           },
         ],
         dev: {
-          command: "bun start",
+          command: "bun run services/generate-participant-zip/index.ts",
         },
       }
     );
@@ -167,9 +167,17 @@ export default $config({
       link: [exportsBucket],
     });
 
-    const processSubmissionQueue = new sst.aws.Queue("ProcessPhotoQueue");
+    const processSubmissionDlq = new sst.aws.Queue("ProcessSubmissionDlq");
+    const validateSubmissionDlq = new sst.aws.Queue("ValidateSubmissionDlq");
+
+    const processSubmissionQueue = new sst.aws.Queue("ProcessPhotoQueue", {
+      dlq: processSubmissionDlq.arn,
+    });
     const validateSubmissionQueue = new sst.aws.Queue(
-      "ValidateSubmissionQueue"
+      "ValidateSubmissionQueue",
+      {
+        dlq: validateSubmissionDlq.arn,
+      }
     );
 
     validateSubmissionQueue.subscribe({
@@ -238,6 +246,8 @@ export default $config({
         marathonSettingsRouter,
         api,
         realtime,
+        exportSubmissionsTask,
+        generateParticipantZipTask,
       ],
       environment: {
         ...env,

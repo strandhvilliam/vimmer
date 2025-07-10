@@ -4,6 +4,7 @@ import {
   submissions,
   zippedSubmissions,
   marathons,
+  participants,
 } from "@vimmer/api/db/schema";
 import type { NewSubmission, NewZippedSubmission } from "@vimmer/api/db/types";
 
@@ -191,4 +192,25 @@ export async function updateZippedSubmissionMutation(
     .where(eq(zippedSubmissions.id, id))
     .returning({ id: zippedSubmissions.id });
   return { id: result[0]?.id ?? null };
+}
+
+export async function getZippedSubmissionsByParticipantRefQuery(
+  db: Database,
+  { domain, participantRef }: { domain: string; participantRef: string }
+) {
+  const participant = await db.query.participants.findFirst({
+    where: and(
+      eq(participants.domain, domain),
+      eq(participants.reference, participantRef)
+    ),
+    with: {
+      zippedSubmissions: true,
+    },
+  });
+
+  if (!participant || participant.zippedSubmissions.length === 0) {
+    return null;
+  }
+
+  return participant.zippedSubmissions.at(-1);
 }

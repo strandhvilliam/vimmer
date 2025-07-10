@@ -199,14 +199,19 @@ async function triggerZipGenerationTask(
       DOMAIN: domain,
       EXPORT_TYPE: exportType,
     });
+    console.log("Zip generation task triggered with params", {
+      domain,
+      participantReference,
+      exportType,
+    });
   } catch (error) {
     console.error("Error triggering zip generation task:", error);
   }
 }
 
 async function triggerValidationQueue(participantId: number) {
-  const sqs = new SQSClient();
-  await sqs.send(
+  const sqs = new SQSClient({ region: "eu-north-1" });
+  const result = await sqs.send(
     new SendMessageCommand({
       QueueUrl: Resource.ValidateSubmissionQueue.url,
       MessageBody: JSON.stringify({
@@ -214,6 +219,7 @@ async function triggerValidationQueue(participantId: number) {
       }),
     })
   );
+  console.log("Validation queue triggered with result", result);
 }
 
 async function handleProcessingError(

@@ -3,28 +3,19 @@ import {
   GetObjectCommand,
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
-import { createClient } from "@vimmer/supabase/lambda";
 import { Readable } from "stream";
 import JSZip from "jszip";
 import path from "path";
 import { Resource } from "sst";
+import superjson from "superjson";
 import type {
   CompetitionClass,
   Participant,
   Submission,
-  SupabaseClient,
   Topic,
-} from "@vimmer/supabase/types";
-import {
-  getMarathonByDomainQuery,
-  getParticipantByReferenceQuery,
-  getTopicsByDomainQuery,
-} from "@vimmer/supabase/queries";
-import type { SQSEvent } from "aws-lambda";
-import {
-  createZippedSubmission,
-  updateZippedSubmission,
-} from "@vimmer/supabase/mutations";
+} from "@vimmer/api/db/types";
+import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
+import { AppRouter } from "@vimmer/api/trpc/routers/_app";
 
 const ZIP_EXPORT_TYPES = {
   ZIP_SUBMISSIONS: "zip_submissions",
@@ -63,7 +54,7 @@ interface ExportParticipantConfig extends ExportConfig {
 }
 
 interface ProcessSubmissionParams {
-  supabase: SupabaseClient;
+  apiClient: TRPCProxyClient;
   submission: Submission;
   exportType: ZipExportType;
   topics: Topic[];
@@ -79,6 +70,23 @@ interface SubmissionResult {
   progress: ProgressInfo;
   participantZip: JSZip;
 }
+
+const createApiClient = () =>
+  createTRPCProxyClient<AppRouter>({
+    links: [
+      loggerLink({
+        enabled: (op) =>
+          process.env.NODE_ENV === "development" ||
+          (op.direction === "down" && op.result instanceof Error),
+      }),
+      httpBatchLink({
+        url: Resource.Api.url + "trpc",
+        transformer: superjson,
+      }),
+    ],
+  });
+
+type TRPCProxyClient = ReturnType<typeof createApiClient>;
 
 function getKeyFromSubmission(
   submission: Partial<Submission>,
@@ -100,7 +108,7 @@ function getKeyFromSubmission(
 }
 
 async function updateProgress(
-  supabase: SupabaseClient,
+  apiClient: TRPCProxyClient,
   progress: ProgressInfo
 ): Promise<void> {
   if (
@@ -114,13 +122,15 @@ async function updateProgress(
     (progress.processedSubmissions / progress.totalSubmissions) * 100
   );
 
-  await updateZippedSubmission(supabase, progress.zippedSubmissionId, {
-    marathonId: progress.marathonId,
-    progress: percentProgress,
-    updatedAt: new Date().toISOString(),
-    status: progress.status,
-    errors: progress.submissionErrors,
-    zipKey: progress.zipKey || undefined,
+  await apiClient.submissions.updateZipped.mutate({
+    id: progress.zippedSubmissionId,
+    data: {
+      marathonId: progress.marathonId,
+      progress: percentProgress,
+      status: progress.status,
+      errors: progress.submissionErrors,
+      zipKey: progress.zipKey || undefined,
+    },
   });
 }
 
@@ -186,7 +196,7 @@ async function fetchFileFromS3(
 }
 
 async function processSubmission({
-  supabase,
+  apiClient,
   submission,
   exportType,
   topics,
@@ -252,7 +262,7 @@ async function processSubmission({
     updatedProgress.processedSubmissions =
       updatedProgress.processedSubmissions + 1;
 
-    await updateProgress(supabase, updatedProgress);
+    await updateProgress(apiClient, updatedProgress);
 
     return {
       progress: updatedProgress,
@@ -303,7 +313,7 @@ async function exportParticipantSubmissionsToZip({
   participantReference,
 }: ExportParticipantConfig): Promise<string | null> {
   const s3Client = new S3Client();
-  const supabase = await createClient();
+  const apiClient = createApiClient();
 
   let progress: ProgressInfo = {
     marathonId: 0,
@@ -317,28 +327,37 @@ async function exportParticipantSubmissionsToZip({
   };
 
   try {
-    const marathon = await getMarathonByDomainQuery(supabase, domain);
+    const marathon = await apiClient.marathons.getByDomain.query({
+      domain,
+    });
     if (!marathon) {
       throw new Error(`Marathon with domain ${domain} not found`);
     }
 
-    const participantData = await getParticipantByReferenceQuery(supabase, {
+    const participantData = await apiClient.participants.getByReference.query({
       reference: participantReference,
       domain,
     });
+    if (!participantData) {
+      throw new Error(
+        `Participant with reference ${participantReference} not found`
+      );
+    }
 
     const participant = validateParticipant(
       participantData,
       participantReference
     );
 
-    const zippedSubmission = await createZippedSubmission(supabase, {
-      marathonId: marathon.id,
-      exportType,
-      participantId: participant.id,
+    const zippedSubmission = await apiClient.submissions.createZipped.mutate({
+      data: {
+        marathonId: marathon.id,
+        exportType,
+        participantId: participant.id,
+      },
     });
 
-    if (!zippedSubmission) {
+    if (!zippedSubmission.id) {
       console.error("Failed to create zipped submission");
       throw new Error("Failed to create zipped submission");
     }
@@ -348,9 +367,11 @@ async function exportParticipantSubmissionsToZip({
     progress.totalSubmissions = participant.submissions.length;
     progress.status = "processing";
 
-    await updateProgress(supabase, progress);
+    await updateProgress(apiClient, progress);
 
-    const topics = await getTopicsByDomainQuery(supabase, domain);
+    const topics = await apiClient.topics.getByDomain.query({
+      domain,
+    });
     if (!topics) {
       throw new Error("No topics found for this marathon");
     }
@@ -361,7 +382,7 @@ async function exportParticipantSubmissionsToZip({
     const zipFileName = `${domain}/${date}-${time}/${participant.reference}.zip`;
 
     const result = await processAllSubmissions(participant.submissions, {
-      supabase,
+      apiClient,
       exportType,
       topics,
       s3Client,
@@ -375,22 +396,6 @@ async function exportParticipantSubmissionsToZip({
     progress.submissionErrors = result.progress.submissionErrors;
     progress.processedSubmissions = result.progress.processedSubmissions;
     progress.status = "completed";
-
-    result.participantZip.file(
-      "manifest.json",
-      JSON.stringify(
-        {
-          participantId: participant.id,
-          reference: participant.reference,
-          marathonId: marathon.id,
-          domain,
-          timestamp: new Date().toISOString(),
-          submissionCount: participant.submissions.length,
-        },
-        null,
-        2
-      )
-    );
 
     const zipBuffer = await result.participantZip.generateAsync({
       type: "nodebuffer",
@@ -408,12 +413,12 @@ async function exportParticipantSubmissionsToZip({
 
     progress.zipKey = zipFileName;
 
-    await updateProgress(supabase, progress);
+    await updateProgress(apiClient, progress);
 
     return zipFileName;
   } catch (error) {
     const errorProgress = { ...progress, status: "error" as const };
-    await updateProgress(supabase, errorProgress);
+    await updateProgress(apiClient, errorProgress);
     throw error;
   }
 }
@@ -453,6 +458,7 @@ function validateEventPayload(payload: EventPayload): ExportParticipantConfig {
 }
 
 async function main() {
+  console.log("Starting generate-participant-zip");
   try {
     const domain = process.env.DOMAIN;
     const exportType = process.env.EXPORT_TYPE as
@@ -461,6 +467,12 @@ async function main() {
       | "zip_previews"
       | undefined;
     const participantReference = process.env.PARTICIPANT_REFERENCE;
+
+    if (!domain || !exportType || !participantReference) {
+      throw new Error(
+        `Missing required environment variables: domain=${domain}, exportType=${exportType}, participantReference=${participantReference}`
+      );
+    }
 
     const config = validateEventPayload({
       domain,
@@ -475,4 +487,5 @@ async function main() {
   }
 }
 
+console.log("Starting generate-participant-zip");
 main();

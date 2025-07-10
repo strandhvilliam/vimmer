@@ -1,6 +1,12 @@
 import { eq, and } from "drizzle-orm";
 import type { Database } from "@vimmer/api/db";
-import { participants } from "@vimmer/api/db/schema";
+import {
+  participants,
+  participantVerifications,
+  submissions,
+  validationResults,
+  zippedSubmissions,
+} from "@vimmer/api/db/schema";
 import type { NewParticipant } from "@vimmer/api/db/types";
 import { TRPCError } from "@trpc/server";
 import type { SupabaseClient } from "@vimmer/supabase/types";
@@ -138,19 +144,22 @@ export async function deleteParticipantMutation(
   db: Database,
   { id }: { id: number }
 ): Promise<{ id: number }> {
-  const result = await db
-    .delete(participants)
-    .where(eq(participants.id, id))
-    .returning({ id: participants.id });
+  await db
+    .delete(validationResults)
+    .where(eq(validationResults.participantId, id));
 
-  if (!result[0]) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to delete participant",
-    });
-  }
+  await db
+    .delete(participantVerifications)
+    .where(eq(participantVerifications.participantId, id));
 
-  return { id: result[0].id };
+  await db.delete(submissions).where(eq(submissions.participantId, id));
+  await db
+    .delete(zippedSubmissions)
+    .where(eq(zippedSubmissions.participantId, id));
+
+  await db.delete(participants).where(eq(participants.id, id));
+
+  return { id };
 }
 
 export async function incrementUploadCounterMutation(
@@ -160,16 +169,22 @@ export async function incrementUploadCounterMutation(
     totalExpected,
   }: { participantId: number; totalExpected: number }
 ) {
-  const { data } = await supabase
+  const resp = await supabase
     .rpc("increment_upload_counter", {
       participant_id: participantId,
       total_expected: totalExpected,
     })
     .throwOnError();
 
-  return data as {
-    uploadCount: number;
+  const data = resp.data as {
+    upload_count: number;
     status: string;
-    isComplete: boolean;
+    is_complete: boolean;
+  };
+
+  return {
+    uploadCount: data.upload_count,
+    status: data.status,
+    isComplete: data.is_complete,
   };
 }

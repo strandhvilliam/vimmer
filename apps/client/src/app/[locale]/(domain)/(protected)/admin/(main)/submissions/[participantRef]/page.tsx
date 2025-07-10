@@ -23,6 +23,10 @@ export default async function ParticipantSubmissionPage({ params }: PageProps) {
     trpc.topics.getByDomain.queryOptions({
       domain,
     }),
+    trpc.submissions.getZippedSubmissionsByParticipantRef.queryOptions({
+      domain,
+      participantRef,
+    }),
   ]);
 
   return (

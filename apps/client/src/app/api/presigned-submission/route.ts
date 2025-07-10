@@ -35,6 +35,9 @@ export async function GET(request: Request) {
 
     return Response.json(presignedSubmissions);
   } catch (error) {
+    const e = error instanceof Error ? error : new Error(String(error));
+
+    console.error("API Route Error:", e);
     console.error("Submission initialization error:", error);
     return Response.json(
       {

@@ -2,6 +2,7 @@ import { PresignedSubmission } from "@/lib/types";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useSubmissionQueryState } from "./use-submission-query-state";
 import { useDomain } from "@/contexts/domain-context";
+import { useTRPC } from "@/trpc/client";
 
 const fetcher = (url: string) =>
   fetch(url).then((res) => {
@@ -16,41 +17,33 @@ export function usePresignedSubmissions({
 }: {
   onError?: (err: Error) => void;
 } = {}) {
+  const trpc = useTRPC();
   const { domain } = useDomain();
   const {
     submissionState: { participantRef, participantId, competitionClassId },
   } = useSubmissionQueryState();
 
-  const queryKey = [
-    "presigned-submissions",
-    domain,
-    participantRef,
-    participantId,
-    competitionClassId,
-  ];
-
-  const enabled = !!(
-    domain &&
-    participantRef &&
-    participantId &&
-    competitionClassId
-  );
-
-  return useQuery<PresignedSubmission[]>({
-    queryKey,
-    queryFn: () => {
-      if (!enabled) {
-        return [];
+  return useQuery(
+    trpc.presignedUrls.generatePresignedSubmissions.queryOptions(
+      {
+        domain: domain ?? "",
+        participantRef: participantRef ?? "",
+        participantId: participantId ?? 0,
+        competitionClassId: competitionClassId ?? 0,
+      },
+      {
+        enabled: !!(
+          domain &&
+          participantRef &&
+          participantId &&
+          competitionClassId
+        ),
+        retry: (failureCount, error) => {
+          onError?.(error as unknown as Error);
+          console.error(error);
+          return failureCount < 3;
+        },
       }
-      const url = `/api/presigned-submission?domain=${domain}&participantRef=${participantRef}&participantId=${participantId}&competitionClassId=${competitionClassId}`;
-      return fetcher(url);
-    },
-    refetchOnWindowFocus: false,
-    staleTime: 5000,
-    retry: (failureCount, error) => {
-      onError?.(error as Error);
-      console.error(error);
-      return failureCount < 3;
-    },
-  });
+    )
+  );
 }

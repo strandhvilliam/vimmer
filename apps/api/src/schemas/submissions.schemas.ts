@@ -114,3 +114,8 @@ export const updateZippedSubmissionSchema = z.object({
     errors: z.any().optional(),
   }),
 });
+
+export const getZippedSubmissionsByParticipantRefSchema = z.object({
+  domain: z.string(),
+  participantRef: z.string(),
+});

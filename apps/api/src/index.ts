@@ -50,6 +50,7 @@ app.onError((err, c) => {
     POSTHOG_API_KEY: string;
     POSTHOG_HOST: string;
   }>(c);
+  console.log("Error happend:", err);
   const posthog = new PostHog(POSTHOG_API_KEY, {
     host: POSTHOG_HOST,
   });
@@ -73,6 +74,9 @@ app.use(
   trpcServer({
     router: appRouter,
     createContext: createTRPCContext,
+    onError: ({ error }) => {
+      console.error(error);
+    },
   })
 );
 

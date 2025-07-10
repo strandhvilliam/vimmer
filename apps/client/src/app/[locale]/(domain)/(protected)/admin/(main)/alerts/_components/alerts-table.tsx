@@ -48,12 +48,10 @@ export function AlertsTable() {
   ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
-  // Fetch participants with validation results using tRPC
   const { data: participants } = useSuspenseQuery(
     trpc.participants.getByDomain.queryOptions({ domain })
   );
 
-  // Process the data to extract validation alerts
   const alerts = useMemo(() => {
     const participantsWithIssues = participants.filter(
       (participant: ParticipantWithValidation) => {
@@ -61,7 +59,8 @@ export function AlertsTable() {
         return validationResults.some(
           (result) =>
             result.outcome === "failed" &&
-            (result.severity === "warning" || result.severity === "error")
+            (result.severity === "warning" || result.severity === "error") &&
+            !result.overruled
         );
       }
     );
@@ -199,7 +198,7 @@ export function AlertsTable() {
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="cursor-pointer"
+                  className="cursor-pointer bg-white"
                   onClick={() =>
                     router.push(
                       `submissions/${row.original.participantReference}`

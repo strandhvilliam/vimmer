@@ -66,6 +66,10 @@ declare module "sst" {
       "type": "sst.aws.Queue"
       "url": string
     }
+    "ProcessSubmissionDlq": {
+      "type": "sst.aws.Queue"
+      "url": string
+    }
     "Realtime": {
       "authorizer": string
       "endpoint": string
@@ -85,6 +89,10 @@ declare module "sst" {
     }
     "ThumbnailsRouter": {
       "type": "sst.aws.Router"
+      "url": string
+    }
+    "ValidateSubmissionDlq": {
+      "type": "sst.aws.Queue"
       "url": string
     }
     "ValidateSubmissionQueue": {

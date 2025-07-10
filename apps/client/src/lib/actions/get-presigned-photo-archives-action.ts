@@ -53,3 +53,20 @@ export const getPresignedPhotoArchivesAction = actionClient
       return { presignedUrls };
     }
   );
+
+const getPresignedExportUrlSchema = z.object({
+  zipKey: z.string(),
+});
+
+export const getPresignedExportUrlAction = actionClient
+  .schema(getPresignedExportUrlSchema)
+  .action(async ({ parsedInput: { zipKey } }) => {
+    const exportsBucket = Resource.ExportsBucket.name;
+    const s3Client = new S3Client({ region: "eu-north-1" });
+    const command = new GetObjectCommand({
+      Bucket: exportsBucket,
+      Key: zipKey,
+    });
+    const url = await getSignedUrl(s3Client, command, { expiresIn: 60 * 10 });
+    return { url };
+  });

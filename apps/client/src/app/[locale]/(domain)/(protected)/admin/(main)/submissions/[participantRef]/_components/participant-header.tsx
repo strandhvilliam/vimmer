@@ -54,10 +54,17 @@ import {
 } from "@vimmer/ui/components/alert-dialog";
 import { cn } from "@vimmer/ui/lib/utils";
 import { toast } from "sonner";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { useSession } from "@/hooks/use-session";
 import { useState } from "react";
+import { runZipGenerationAction } from "@/lib/actions/run-zip-generation";
+import { useAction } from "next-safe-action/hooks";
+import { getPresignedExportUrlAction } from "@/lib/actions/get-presigned-photo-archives-action";
 
 interface ParticipantHeaderProps {
   participant: Participant & {
@@ -204,6 +211,49 @@ export function ParticipantHeader({
       })
     );
 
+  const { data: zippedSubmissions } = useSuspenseQuery(
+    trpc.submissions.getZippedSubmissionsByParticipantRef.queryOptions({
+      domain: participant.domain,
+      participantRef: participant.reference,
+    })
+  );
+
+  const { execute: runZipGeneration } = useAction(runZipGenerationAction, {
+    onSuccess: () => {
+      toast.success("Zip generation started");
+    },
+    onError: () => {
+      toast.error("Failed to start zip generation");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: trpc.submissions.pathKey(),
+      });
+    },
+  });
+
+  const { execute: getPresignedExportUrl, status: exportStatus } = useAction(
+    getPresignedExportUrlAction,
+    {
+      onSuccess: ({ data }) => {
+        if (!data?.url) {
+          toast.error("No download URL returned");
+          return;
+        }
+        // Create a temporary link and trigger download
+        const link = document.createElement("a");
+        link.href = data.url;
+        link.download = "submission.zip";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      },
+      onError: () => {
+        toast.error("Failed to get download URL");
+      },
+    }
+  );
+
   const handleVerifyParticipant = () => {
     if (!user?.id) {
       toast.error("Unable to determine logged in user");
@@ -322,14 +372,38 @@ export function ParticipantHeader({
               </AlertDialogContent>
             </AlertDialog>
           )}
-          <Button
-            size="sm"
-            variant="default"
-            onClick={() => toast.error("Not implemented")}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
+          {zippedSubmissions ? (
+            <Button
+              size="sm"
+              variant="default"
+              disabled={exportStatus === "executing"}
+              onClick={() => {
+                if (!zippedSubmissions.zipKey) {
+                  toast.error("No zip file available");
+                  return;
+                }
+                getPresignedExportUrl({ zipKey: zippedSubmissions.zipKey });
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {exportStatus === "executing" ? "Exporting..." : "Export"}
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="default"
+              onClick={() =>
+                runZipGeneration({
+                  participantReference: participant.reference,
+                  domain: participant.domain,
+                  exportType: "zip_submissions",
+                })
+              }
+            >
+              <Loader className="h-4 w-4 mr-2" />
+              Generate
+            </Button>
+          )}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
