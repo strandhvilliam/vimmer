@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import { withPostHogConfig } from "@posthog/nextjs-config";
 import path from "path";
 
 const nextConfig: NextConfig = {

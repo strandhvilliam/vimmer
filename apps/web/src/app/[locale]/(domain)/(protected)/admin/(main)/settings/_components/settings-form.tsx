@@ -220,6 +220,9 @@ export default function SettingsForm() {
           queryClient.invalidateQueries({
             queryKey: trpc.rules.pathKey(),
           });
+          queryClient.invalidateQueries({
+            queryKey: trpc.validations.pathKey(),
+          });
         },
       })
     );

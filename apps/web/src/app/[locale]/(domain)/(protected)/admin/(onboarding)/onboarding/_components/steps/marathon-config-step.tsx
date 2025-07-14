@@ -77,6 +77,10 @@ export function MarathonConfigStep({
         }
       }
 
+      if (logoUrl === "pending-upload") {
+        logoUrl = marathon.logoUrl ?? "";
+      }
+
       updateMarathon({
         domain: marathon.domain,
         data: {
@@ -172,6 +176,9 @@ export function MarathonConfigStep({
       await fetch(url, {
         method: "PUT",
         body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
       });
 
       const logoUrl = `${marathonSettingsRouterUrl}/${key}`;

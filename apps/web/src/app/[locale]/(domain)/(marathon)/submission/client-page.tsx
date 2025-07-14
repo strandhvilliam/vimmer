@@ -134,6 +134,7 @@ export function SubmissionClientPage() {
             direction={direction}
           >
             <UploadSubmissionsStep
+              marathon={marathon}
               competitionClasses={competitionClasses}
               topics={topics}
               ruleConfigs={mapDbRuleConfigsToValidationConfigs(ruleConfigs)}

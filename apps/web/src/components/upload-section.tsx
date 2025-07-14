@@ -9,9 +9,10 @@ import React from "react";
 import { UploadZone } from "./upload-zone";
 import { usePhotoStore } from "@/lib/stores/photo-store";
 import { usePresignedSubmissions } from "@/hooks/use-presigned-submissions";
-import { Topic } from "@vimmer/supabase/types";
+import { Marathon, Topic } from "@vimmer/api/db/types";
 import { RuleConfig, RuleKey } from "@vimmer/validation/types";
 import {
+  RULE_KEYS,
   SEVERITY_LEVELS,
   VALIDATION_OUTCOME,
 } from "@vimmer/validation/constants";
@@ -21,6 +22,7 @@ interface UploadSectionProps {
   onUpload: () => void;
   ruleConfigs: RuleConfig<RuleKey>[];
   topics: Topic[];
+  marathon: Marathon;
 }
 
 export default function UploadSection({
@@ -28,6 +30,7 @@ export default function UploadSection({
   onUpload,
   ruleConfigs,
   topics,
+  marathon,
 }: UploadSectionProps) {
   const { photos, validateAndAddPhotos, validationResults } = usePhotoStore();
   const { data: presignedSubmissions = [] } = usePresignedSubmissions();
@@ -188,7 +191,19 @@ export default function UploadSection({
             onDrop={(acceptedFiles) =>
               validateAndAddPhotos({
                 files: acceptedFiles,
-                ruleConfigs,
+                ruleConfigs: ruleConfigs.map((rule) => {
+                  if (rule.key === RULE_KEYS.WITHIN_TIMERANGE) {
+                    return {
+                      ...rule,
+                      params: {
+                        ...rule.params,
+                        start: marathon.startDate,
+                        end: marathon.endDate,
+                      },
+                    };
+                  }
+                  return rule;
+                }),
                 orderIndexes: topics.map((topic) => topic.orderIndex),
                 maxPhotos,
               })

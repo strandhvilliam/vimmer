@@ -40,6 +40,11 @@ export default $config({
       "MarathonSettingsBucket",
       {
         access: "cloudfront",
+        cors: {
+          allowOrigins,
+          allowMethods: ["PUT", "GET"],
+          allowHeaders: ["*"],
+        },
       }
     );
 
@@ -240,6 +245,7 @@ export default $config({
         thumbnailBucket,
         previewBucket,
         exportsBucket,
+        marathonSettingsBucket,
         submissionsRouter,
         thumbnailsRouter,
         previewsRouter,

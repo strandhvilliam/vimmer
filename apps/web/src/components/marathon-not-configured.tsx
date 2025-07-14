@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Mail, ChevronRight } from "lucide-react";
+import { AlertTriangle, Mail, ChevronRight, ImageIcon } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import { Marathon } from "@vimmer/api/db/types";
 import Link from "next/link";
@@ -40,7 +40,13 @@ export function MarathonNotConfigured({
         <main className="flex-1 px-6 pb-6 max-w-md mx-auto w-full flex flex-col justify-center">
           <div className="flex flex-col items-center mb-8">
             <div className="w-24 h-24 rounded-full flex items-center justify-center mb-4">
-              <img src={LOGO} alt="Logo" width={96} height={96} />
+              {marathon?.logoUrl ? (
+                <img src={marathon.logoUrl} alt="Logo" width={96} height={96} />
+              ) : (
+                <div className="w-24 h-24 rounded-full flex items-center justify-center bg-gray-200">
+                  <ImageIcon className="w-12 h-12" />
+                </div>
+              )}
             </div>
             <h1 className="text-3xl font-rocgrotesk font-extrabold text-gray-900 text-center">
               {marathon?.name || "Photo Marathon"}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, Info } from "lucide-react";
+import { ChevronRight, Image, ImageIcon, Info } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import { Checkbox } from "@vimmer/ui/components/checkbox";
 import ReactCountryFlag from "react-country-flag";
@@ -23,8 +23,8 @@ import { useMarathonIsConfigured } from "@/hooks/use-marathon-is-configured";
 import { MarathonNotConfigured } from "@/components/marathon-not-configured";
 import TermsAndConditionsDialog from "@/components/terms-and-conditions-dialog";
 
-const LOGO =
-  "https://www.stockholmfotomaraton.se/wp-content/uploads/2022/11/Logga-22-png-1024x1024-1.png";
+// const LOGO =
+//   "https://www.stockholmfotomaraton.se/wp-content/uploads/2022/11/Logga-22-png-1024x1024-1.png";
 
 export function ParticipateClientPage() {
   const router = useRouter();
@@ -74,7 +74,13 @@ export function ParticipateClientPage() {
         <main className="flex-1 px-6 pb-6 max-w-md mx-auto w-full flex flex-col justify-end">
           <div className="flex flex-col items-center pb-12">
             <div className="w-24 h-24 rounded-full flex items-center justify-center mb-3">
-              <img src={LOGO} alt="Logo" width={96} height={96} />
+              {marathon.logoUrl ? (
+                <img src={marathon.logoUrl} alt="Logo" width={96} height={96} />
+              ) : (
+                <div className="w-24 h-24 rounded-full flex items-center justify-center bg-gray-200">
+                  <ImageIcon className="w-12 h-12" />
+                </div>
+              )}
             </div>
             <h1 className="text-3xl font-rocgrotesk font-extrabold text-gray-900 text-center mt-2">
               {marathon.name}

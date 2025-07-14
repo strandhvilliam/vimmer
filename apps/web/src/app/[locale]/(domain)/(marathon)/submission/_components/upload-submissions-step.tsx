@@ -19,18 +19,20 @@ import { combinePhotos } from "@/lib/combine-photos";
 import UploadErrorFallback from "@/components/upload-error-fallback";
 import UploadSection from "@/components/upload-section";
 import { useFileUpload } from "@/hooks/use-file-upload";
-import { CompetitionClass, Topic } from "@vimmer/api/db/types";
+import { CompetitionClass, Marathon, Topic } from "@vimmer/api/db/types";
 
 interface Props extends StepNavigationHandlers {
   competitionClasses: CompetitionClass[];
   topics: Topic[];
   ruleConfigs: RuleConfig<RuleKey>[];
+  marathon: Marathon;
 }
 
 export function UploadSubmissionsStep({
   onPrevStep,
   onNextStep,
   topics,
+  marathon,
   competitionClasses,
   ruleConfigs,
 }: Props) {
@@ -78,6 +80,7 @@ export function UploadSubmissionsStep({
         </CardHeader>
         <CardContent className="space-y-6">
           <UploadSection
+            marathon={marathon}
             maxPhotos={competitionClass.numberOfPhotos}
             onUpload={() => executeUpload(combinedPhotos)}
             ruleConfigs={ruleConfigs}

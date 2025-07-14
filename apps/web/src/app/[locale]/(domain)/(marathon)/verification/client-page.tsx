@@ -14,6 +14,9 @@ import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { useTRPC } from "@/trpc/client";
 import { useQuery } from "@tanstack/react-query";
 import { useDomain } from "@/contexts/domain-context";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { RefreshCcw } from "lucide-react";
+import { cn } from "@vimmer/ui/lib/utils";
 
 export function ClientVerificationPage() {
   const trpc = useTRPC();
@@ -21,7 +24,11 @@ export function ClientVerificationPage() {
   const { submissionState } = useSubmissionQueryState();
   const router = useRouter();
 
-  const { data: participant } = useQuery(
+  const {
+    data: participant,
+    refetch,
+    isFetching,
+  } = useQuery(
     trpc.participants.getByReference.queryOptions(
       {
         domain,
@@ -44,23 +51,20 @@ export function ClientVerificationPage() {
     }
   }, [participant, router, submissionState]);
 
-  const [isFlipped, setIsFlipped] = useState(false);
+  const [refreshTimeout, setRefreshTimeout] = useState(0);
   useEffect(() => {
-    const style = document.createElement("style");
-    style.textContent = `
-      .qr-perspective {
-        perspective: 1000px;
-      }
-      .qr-backface-hidden {
-        backface-visibility: hidden;
-      }
-    `;
-    document.head.appendChild(style);
-
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
+    if (refreshTimeout === 0) return;
+    const timer = setInterval(() => {
+      setRefreshTimeout((t) => {
+        if (t <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [refreshTimeout]);
 
   const qrCodeValue = `${domain}-${participant?.id}-${participant?.reference}`;
 
@@ -89,64 +93,57 @@ export function ClientVerificationPage() {
         >
           <div className="relative qr-perspective">
             <motion.div
-              className="shadow-xl p-8 rounded-xl bg-white cursor-pointer relative qr-backface-hidden"
+              className="shadow-lg p-12 md:p-20 rounded-xl bg-white cursor-pointer relative qr-backface-hidden w-full max-w-xs md:max-w-lg lg:max-w-2xl min-h-[420px] md:min-h-[520px] flex flex-col items-center justify-center"
               animate={{
-                rotateY: isFlipped ? 180 : 0,
+                rotateY: 0,
               }}
               transition={{
                 type: "spring",
                 stiffness: 300,
                 damping: 20,
               }}
-              onClick={() => setIsFlipped(!isFlipped)}
               style={{
                 transformStyle: "preserve-3d",
               }}
             >
               {qrCodeValue && (
-                <QrCodeGenerator value={qrCodeValue} size={256} />
+                <>
+                  <QrCodeGenerator value={qrCodeValue} size={212} />
+                  {participant?.reference && (
+                    <div className="flex flex-col items-center mt-8">
+                      <span className="text-xl md:text-2xl font-rocgrotesk font-semibold text-gray-700">
+                        Participant
+                      </span>
+                      <span
+                        className="font-mono font-bold text-4xl md:text-5xl text-gray-900 select-all tracking-wider mt-2"
+                        style={{
+                          fontFamily:
+                            'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                        }}
+                      >
+                        {participant.reference}
+                      </span>
+                    </div>
+                  )}
+                </>
               )}
-            </motion.div>
-
-            <motion.div
-              className="shadow-xl p-8 rounded-xl bg-white cursor-pointer absolute inset-0 flex items-center justify-center qr-backface-hidden"
-              initial={{ rotateY: -180 }}
-              animate={{
-                rotateY: isFlipped ? 0 : -180,
-              }}
-              transition={{
-                type: "spring",
-                stiffness: 300,
-                damping: 20,
-              }}
-              onClick={() => setIsFlipped(!isFlipped)}
-              style={{
-                transformStyle: "preserve-3d",
-              }}
-            >
-              <div className="text-center">
-                <p className="text-lg font-medium mb-2">Verification Code</p>
-                <p className="font-mono text-xl select-all">{qrCodeValue}</p>
-              </div>
             </motion.div>
           </div>
         </motion.div>
-
-        <motion.p
-          className="text-sm text-muted-foreground text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          QR code not working?{" "}
-          <button
-            onClick={() => setIsFlipped(true)}
-            className="text-primary hover:underline"
-          >
-            Click to reveal code
-          </button>
-        </motion.p>
       </div>
+      <PrimaryButton
+        className="mt-4 py-3 w-full max-w-xs md:max-w-lg lg:max-w-2xl"
+        onClick={async () => {
+          await refetch();
+          setRefreshTimeout(5);
+        }}
+        disabled={refreshTimeout > 0}
+      >
+        <RefreshCcw className={cn("h-4 w-4")} />
+        {refreshTimeout > 0
+          ? `Refresh available in ${refreshTimeout}s`
+          : "Refresh"}
+      </PrimaryButton>
     </div>
   );
 }

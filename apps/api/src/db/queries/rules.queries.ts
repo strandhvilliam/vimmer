@@ -5,7 +5,10 @@ import { ruleConfigs, marathons } from "@vimmer/api/db/schema";
 import type { NewRuleConfig, RuleConfig } from "@vimmer/api/db/types";
 import { TRPCError } from "@trpc/server";
 
-function getDefaultRuleConfigs(marathonId: number): NewRuleConfig[] {
+function getDefaultRuleConfigs(
+  marathonId: number,
+  { startDate, endDate }: { startDate: string | null; endDate: string | null }
+): NewRuleConfig[] {
   return [
     {
       ruleKey: "max_file_size",
@@ -31,8 +34,8 @@ function getDefaultRuleConfigs(marathonId: number): NewRuleConfig[] {
       enabled: false,
       severity: "error",
       params: {
-        start: "",
-        end: "",
+        start: startDate ?? "",
+        end: endDate ?? "",
       },
     },
     {
@@ -73,7 +76,12 @@ export async function getRulesByDomainQuery(
   const rules = result?.ruleConfigs ?? [];
 
   if (rules.length === 0 && result?.id) {
-    await db.insert(ruleConfigs).values(getDefaultRuleConfigs(result.id));
+    await db.insert(ruleConfigs).values(
+      getDefaultRuleConfigs(result.id, {
+        startDate: result.startDate,
+        endDate: result.endDate,
+      })
+    );
     const newResult = await db.query.marathons.findFirst({
       where: eq(marathons.id, result.id),
       with: {

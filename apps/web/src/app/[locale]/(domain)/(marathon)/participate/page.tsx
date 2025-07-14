@@ -34,6 +34,7 @@ export default async function ParticipatePage() {
       })
     );
   } catch (error: any) {
+    console.error(error);
     notFound();
   }
 
