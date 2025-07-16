@@ -66,6 +66,7 @@ export function middleware(request: NextRequest) {
 
 function handlePublicRoute(request: NextRequest, response: NextResponse) {
   const hostDomain = getHostDomain(request);
+  console.log("hostDomain", hostDomain);
   const pathnameWithoutLocale = getPathnameWithoutLocale(request);
 
   if (hostDomain) {
@@ -209,9 +210,20 @@ async function handleStaffRoute(request: NextRequest, response: NextResponse) {
 }
 
 function getHostDomain(request: NextRequest) {
-  const hostDomain = request.headers.get("host")?.split(".").at(0);
-  if (hostDomain?.startsWith("localhost")) return undefined;
-  if (hostDomain?.startsWith("www")) return undefined;
+  const host = request.headers.get("host");
+  const hostDomain = host?.slice(0, host.indexOf(":")).split(".").at(0);
+  if (!hostDomain) return null;
+  const routeToApex = [
+    "vimmer",
+    "www",
+    "localhost",
+    "blog",
+    "api",
+    "docs",
+    "assets",
+    "m",
+  ];
+  if (routeToApex.includes(hostDomain)) return null;
   return hostDomain;
 }
 

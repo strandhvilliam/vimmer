@@ -10,10 +10,6 @@ declare module "sst" {
       "type": "sst.aws.Function"
       "url": string
     }
-    "ClientApp": {
-      "type": "sst.aws.Nextjs"
-      "url": string
-    }
     "DownloadPresignedFunction": {
       "name": string
       "type": "sst.aws.Function"
@@ -101,6 +97,10 @@ declare module "sst" {
     }
     "VimmerVPC": {
       "type": "sst.aws.Vpc"
+    }
+    "WebApp": {
+      "type": "sst.aws.Nextjs"
+      "url": string
     }
   }
 }
