@@ -73,15 +73,15 @@ export function ParticipateClientPage() {
         </header>
         <main className="flex-1 px-6 pb-6 max-w-md mx-auto w-full flex flex-col justify-end">
           <div className="flex flex-col items-center pb-12">
-            <div className="w-24 h-24 rounded-full flex items-center justify-center mb-3">
-              {marathon.logoUrl ? (
+            {marathon.logoUrl ? (
+              <div className="w-24 h-24 rounded-full flex items-center justify-center mb-3 overflow-hidden shadow border">
                 <img src={marathon.logoUrl} alt="Logo" width={96} height={96} />
-              ) : (
-                <div className="w-24 h-24 rounded-full flex items-center justify-center bg-gray-200">
-                  <ImageIcon className="w-12 h-12" />
-                </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="w-24 h-24 rounded-full flex items-center justify-center bg-gray-200">
+                <ImageIcon className="w-12 h-12" />
+              </div>
+            )}
             <h1 className="text-3xl font-rocgrotesk font-extrabold text-gray-900 text-center mt-2">
               {marathon.name}
             </h1>

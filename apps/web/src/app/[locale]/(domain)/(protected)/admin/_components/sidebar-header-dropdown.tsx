@@ -13,6 +13,7 @@ import { Button } from "@vimmer/ui/components/button";
 import { SidebarMenuButton, useSidebar } from "@vimmer/ui/components/sidebar";
 import { useSession } from "@/hooks/use-session";
 import { Marathon } from "@vimmer/api/db/types";
+import { format } from "date-fns";
 
 interface DomainSwitcherProps {
   marathons: Marathon[];
@@ -49,15 +50,15 @@ export function DomainSwitchDropdown({
       <PopoverTrigger asChild>
         <SidebarMenuButton
           size="lg"
-          className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+          className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground bg-muted border border-border"
         >
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+          <div className="flex aspect-square size-8 overflow-hidden items-center justify-center rounded-lg bg-muted border-border border-2">
             {activeMarathon?.logoUrl && !hasImageError ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={activeMarathon.logoUrl}
                 alt="Marathon logo"
-                className="size-4"
+                className="object-cover"
                 onError={handleImageError}
                 onLoad={handleImageLoad}
               />
@@ -69,7 +70,11 @@ export function DomainSwitchDropdown({
             <span className="truncate font-semibold">
               {activeMarathon?.name}
             </span>
-            <span className="truncate text-xs">{user?.email}</span>
+            <span className="truncate text-xs">
+              {activeMarathon?.startDate
+                ? format(activeMarathon.startDate, "d MMMM yyyy")
+                : "Date not set"}
+            </span>
           </div>
           <ChevronsUpDown className="ml-auto" />
         </SidebarMenuButton>
@@ -83,13 +88,13 @@ export function DomainSwitchDropdown({
         {activeMarathon ? (
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="flex size-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <div className="flex size-12 items-center justify-center rounded-lg bg-muted border-border overflow-hidden border-2 ">
                 {activeMarathon.logoUrl && !hasImageError ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={activeMarathon.logoUrl}
                     alt="Marathon logo"
-                    className="size-8"
+                    className="object-cover"
                     onError={handleImageError}
                     onLoad={handleImageLoad}
                   />
@@ -129,7 +134,12 @@ export function DomainSwitchDropdown({
               </div>
             </div>
 
-            <Button onClick={handleSwitchMarathon} className="w-full">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleSwitchMarathon}
+              className="w-full"
+            >
               Switch Marathon
             </Button>
           </div>

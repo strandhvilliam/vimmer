@@ -42,10 +42,8 @@ export default $config({
         access: "cloudfront",
         cors: {
           allowOrigins,
-          allowMethods: ["PUT", "GET"],
-          allowHeaders: ["*"],
         },
-      }
+      },
     );
 
     const realtime = new sst.aws.Realtime("Realtime", {
@@ -88,7 +86,7 @@ export default $config({
             bucket: marathonSettingsBucket,
           },
         },
-      }
+      },
     );
 
     const api = new sst.aws.Function("Api", {
@@ -155,7 +153,7 @@ export default $config({
         dev: {
           command: "bun run services/generate-participant-zip/index.ts",
         },
-      }
+      },
     );
 
     new sst.aws.Function("ExportCaller", {
@@ -182,7 +180,7 @@ export default $config({
       "ValidateSubmissionQueue",
       {
         dlq: validateSubmissionDlq.arn,
-      }
+      },
     );
 
     validateSubmissionQueue.subscribe({

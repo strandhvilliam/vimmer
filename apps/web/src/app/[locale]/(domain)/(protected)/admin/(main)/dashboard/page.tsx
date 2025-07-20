@@ -15,7 +15,6 @@ import {
 } from "./_components/loading-skeletons";
 import { getDomain } from "@/lib/get-domain";
 import { batchPrefetch, HydrateClient, trpc } from "@/trpc/server";
-import { useDomain } from "@/contexts/domain-context";
 
 export default async function DashboardPage() {
   const domain = await getDomain();

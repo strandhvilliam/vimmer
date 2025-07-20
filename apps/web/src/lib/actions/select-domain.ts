@@ -8,11 +8,12 @@ import { z } from "zod";
 
 const selectDomainSchema = z.object({
   domain: z.string().min(1, "Domain is required"),
+  type: z.enum(["admin", "staff"]).optional().default("admin"),
 });
 
 export const selectDomain = actionClient
   .schema(selectDomainSchema)
-  .action(async ({ parsedInput: { domain } }) => {
+  .action(async ({ parsedInput: { domain, type } }) => {
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     const token = await new SignJWT({ domain })
       .setProtectedHeader({ alg: "HS256" })
@@ -43,8 +44,8 @@ export const selectDomain = actionClient
     });
 
     if (process.env.NODE_ENV === "development") {
-      redirect(`http://${domain}.localhost:3000/admin/dashboard`);
+      redirect(`http://${domain}.localhost:3000/${type}`);
     } else {
-      redirect(`https://${domain}.vimmer.photo/admin/dashboard`);
+      redirect(`https://${domain}.vimmer.photo/${type}`);
     }
   });

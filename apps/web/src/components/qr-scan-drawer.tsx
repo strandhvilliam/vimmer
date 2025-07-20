@@ -26,7 +26,11 @@ export default function QrScanDrawer({
   onScanAction,
 }: QrScanDrawerProps) {
   const handleScan = async (data: string | null) => {
-    if (!data) return;
+    if (!data) {
+      toast.error("Invalid QR code");
+      return;
+    }
+    onOpenChange(false);
 
     const [domain, _, participantReference] = data.split("-");
     if (!domain || !participantReference) {
@@ -39,7 +43,6 @@ export default function QrScanDrawer({
       return;
     }
     onScanAction({ domain, reference: participantReference });
-    onOpenChange(false);
   };
 
   return (

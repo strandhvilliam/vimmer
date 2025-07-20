@@ -78,8 +78,6 @@ const updateMarathonSettingsSchema = z.object({
 });
 type UpdateSettingsInput = z.infer<typeof updateMarathonSettingsSchema>;
 
-const MARATHON_SETTINGS_CDN_URL = "d1irn00yzrui1x.cloudfront.net";
-
 const AVAILABLE_LANGUAGES = [
   { code: "en", name: "English" },
   { code: "sv", name: "Swedish" },
@@ -114,7 +112,11 @@ function arrayEquals(a: string[], b: string[]): boolean {
   );
 }
 
-export default function SettingsForm() {
+export default function SettingsForm({
+  marathonSettingsRouterUrl,
+}: {
+  marathonSettingsRouterUrl: string;
+}) {
   const trpc = useTRPC();
   const { domain } = useDomain();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -169,6 +171,10 @@ export default function SettingsForm() {
         if (logoUrl) {
           value.logoUrl = logoUrl;
         }
+      }
+
+      if (value.logoUrl === "pending-upload") {
+        value.logoUrl = initialData.logoUrl ?? undefined;
       }
 
       updateMarathonSettings({
@@ -320,7 +326,7 @@ export default function SettingsForm() {
         body: file,
       });
 
-      const logoUrl = `https://${MARATHON_SETTINGS_CDN_URL}/${key}`;
+      const logoUrl = `${marathonSettingsRouterUrl}/${encodeURIComponent(key)}`;
       form.setFieldValue("logoUrl", logoUrl);
       return logoUrl;
     } catch (error) {

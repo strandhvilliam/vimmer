@@ -5,13 +5,25 @@ import { getSession } from "@/lib/auth";
 import { SelectDomainTitle } from "./_components/select-domain-title";
 import { DomainSelectSkeleton } from "./_components/domain-select-skeleton";
 import { redirect } from "next/navigation";
-import { prefetch, trpc } from "@/trpc/server";
+import { getQueryClient, prefetch, trpc } from "@/trpc/server";
+import { z } from "zod";
 
-export default async function DomainSelectPage() {
+type PageProps = {
+  searchParams: Promise<{
+    type: string;
+  }>;
+};
+
+const searchParamsSchema = z.object({
+  type: z.enum(["admin", "staff"]).optional().default("admin"),
+});
+
+export default async function DomainSelectPage({ searchParams }: PageProps) {
+  const { type } = searchParamsSchema.parse(await searchParams);
   const session = await getSession();
 
   if (!session) {
-    return redirect("/auth/admin/login");
+    return redirect(`/auth/${type}/login`);
   }
 
   prefetch(
@@ -19,6 +31,7 @@ export default async function DomainSelectPage() {
       userId: session.user.id,
     })
   );
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-black relative overflow-hidden flex-col gap-4">
       <div className="absolute z-0 inset-0 pointer-events-none opacity-70 dark:opacity-0 bg-dot-pattern-light" />

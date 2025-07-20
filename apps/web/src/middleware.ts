@@ -1,10 +1,5 @@
 import { createI18nMiddleware } from "next-international/middleware";
-import {
-  NextFetchEvent,
-  NextMiddleware,
-  NextRequest,
-  NextResponse,
-} from "next/server";
+import { NextMiddleware, NextRequest, NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 import { jwtVerify } from "jose";
 
@@ -66,7 +61,6 @@ export function middleware(request: NextRequest) {
 
 function handlePublicRoute(request: NextRequest, response: NextResponse) {
   const hostDomain = getHostDomain(request);
-  console.log("hostDomain", hostDomain);
   const pathnameWithoutLocale = getPathnameWithoutLocale(request);
 
   if (hostDomain) {
@@ -89,16 +83,15 @@ function handlePublicRoute(request: NextRequest, response: NextResponse) {
 function handleAuthRoute(request: NextRequest, response: NextResponse) {
   const hostDomain = getHostDomain(request);
   const cookieDomain = request.cookies.get("activeDomain")?.value;
-  const pathnameWithoutLocale = getPathnameWithoutLocale(request);
 
-  if (cookieDomain) {
-    response.cookies.delete("activeDomain");
-    response.cookies.delete("domainAccessToken");
-  }
+  // if (cookieDomain) {
+  //   response.cookies.delete("activeDomain");
+  //   response.cookies.delete("domainAccessToken");
+  // }
 
-  if (hostDomain) {
-    response.headers.delete("x-domain");
-  }
+  // if (hostDomain) {
+  //   response.headers.delete("x-domain");
+  // }
 
   return response;
 }
@@ -119,21 +112,16 @@ async function handleAdminRoute(request: NextRequest, response: NextResponse) {
     if (hostDomain) response.cookies.set("activeDomain", hostDomain);
     if (cookieDomain) response.headers.set("x-domain", cookieDomain);
 
-    // won't happen just for type safety
-    if (!hostDomain || !cookieDomain) {
-      return NextResponse.redirect(new URL("/select-domain", request.url));
-    }
-
     if (
       !domainAccessToken ||
       !(await verifyDomainAccessToken(
         domainAccessToken,
-        hostDomain || cookieDomain
+        hostDomain || cookieDomain || ""
       ))
     ) {
-      const response = NextResponse.redirect(
-        new URL("/select-domain", request.url)
-      );
+      const url = new URL("/select-domain", request.url);
+      url.searchParams.set("type", "admin");
+      const response = NextResponse.redirect(url);
       return response;
     }
   } else {
@@ -171,21 +159,16 @@ async function handleStaffRoute(request: NextRequest, response: NextResponse) {
     if (hostDomain) response.cookies.set("activeDomain", hostDomain);
     if (cookieDomain) response.headers.set("x-domain", cookieDomain);
 
-    // won't happen just for type safety
-    if (!hostDomain || !cookieDomain) {
-      return NextResponse.redirect(new URL("/select-domain", request.url));
-    }
-
     if (
       !domainAccessToken ||
       !(await verifyDomainAccessToken(
         domainAccessToken,
-        hostDomain || cookieDomain
+        hostDomain || cookieDomain || ""
       ))
     ) {
-      const response = NextResponse.redirect(
-        new URL("/select-domain", request.url)
-      );
+      const url = new URL("/select-domain", request.url);
+      url.searchParams.set("type", "staff");
+      const response = NextResponse.redirect(url);
       response.cookies.delete("activeDomain");
       response.cookies.delete("domainAccessToken");
       return response;

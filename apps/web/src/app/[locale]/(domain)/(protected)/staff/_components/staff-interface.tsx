@@ -70,7 +70,7 @@ export function StaffInterface({
     try {
       setIsLogoutLoading(true);
       await authClient.signOut();
-      router.push("/staff/login");
+      router.push("/auth/staff/login");
     } catch (error) {
       console.error(error);
       toast.error("Failed to logout");
@@ -142,7 +142,9 @@ export function StaffInterface({
         open={openSheet === "qr-scan"}
         onOpenChange={() => setOpenSheet(null)}
         onScanAction={(qrCode) => {
+          toast.info("Data: " + JSON.stringify(qrCode));
           setActiveParticipantReference(qrCode.reference);
+          setOpenSheet("participant-info");
         }}
       />
       <ManualEntrySheet

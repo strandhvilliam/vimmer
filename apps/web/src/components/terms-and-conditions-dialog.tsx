@@ -59,9 +59,8 @@ export default function TermsAndConditionsDialog({
                     file size of 10MB per photo
                   </li>
                   <li>
-                    Basic editing (exposure, contrast, color correction) is
-                    allowed, but heavy manipulation or compositing is not
-                    permitted
+                    No type of editing is allowed, you can only submit the
+                    original photo as is.
                   </li>
                   <li>
                     Photos must be taken in the order of the themes as they are

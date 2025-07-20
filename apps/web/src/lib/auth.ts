@@ -19,7 +19,7 @@ export const auth = betterAuth({
     "*.localhost:3000",
     "http://localhost:3000",
     "vimmer.photo",
-    "http://192.168.50.119:3000",
+    "http://192.168.50.186:3000",
   ],
   cookieCache: {
     enabled: true,

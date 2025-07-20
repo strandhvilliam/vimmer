@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { getDomain } from "@/lib/get-domain";
 import { prefetch, trpc } from "@/trpc/server";
 import { SettingsSkeleton } from "./_components/settings-skeleton";
+import { Resource } from "sst";
 
 export default async function SettingsPage() {
   const domain = await getDomain();
@@ -23,7 +24,9 @@ export default async function SettingsPage() {
       </div>
 
       <Suspense fallback={<SettingsSkeleton />}>
-        <SettingsForm />
+        <SettingsForm
+          marathonSettingsRouterUrl={Resource.MarathonSettingsRouter.url}
+        />
       </Suspense>
     </div>
   );

@@ -12,7 +12,7 @@ export default async function StaffPage() {
   const domain = await getDomain();
 
   if (!session) {
-    redirect("/login/staff");
+    redirect("/auth/login/staff");
   }
 
   batchPrefetch([

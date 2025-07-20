@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import { Card, CardTitle, CardDescription } from "@vimmer/ui/components/card";
@@ -8,11 +8,16 @@ import { toast } from "@vimmer/ui/hooks/use-toast";
 import { useAction } from "next-safe-action/hooks";
 import { useTRPC } from "@/trpc/client";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { selectDomain } from "../../../../lib/actions/select-domain";
+import { selectDomain } from "@/lib/actions/select-domain";
 import { Session, User } from "better-auth";
-import router from "next/router";
+import { useSearchParams } from "next/navigation";
+import { z } from "zod";
 
 const ITEMS_PER_PAGE = 10;
+
+const searchParamsSchema = z.object({
+  type: z.enum(["admin", "staff"]).optional().default("admin"),
+});
 
 export function DomainSelect({
   session,
@@ -20,6 +25,7 @@ export function DomainSelect({
   session: { user: User; session: Session };
 }) {
   const trpc = useTRPC();
+  const searchParams = useSearchParams();
   const { data: marathons } = useSuspenseQuery(
     trpc.users.getMarathonsByUserId.queryOptions(
       {
@@ -36,23 +42,40 @@ export function DomainSelect({
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const currentMarathons = marathons.slice(startIndex, endIndex);
   const totalPages = Math.ceil(marathons.length / ITEMS_PER_PAGE);
+  const [isSelecting, setIsSelecting] = useState(false);
 
   const { execute, isExecuting } = useAction(selectDomain);
 
-  async function handleDomainSelect(domain: string) {
-    setSelectedDomainId(domain);
+  const handleDomainSelect = useCallback(
+    async (domain: string) => {
+      setIsSelecting(true);
+      setSelectedDomainId(domain);
 
-    try {
-      execute({ domain });
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: "Error",
-        description: "Failed to select domain. Please try again.",
-        variant: "destructive",
-      });
+      try {
+        const { type } = searchParamsSchema.parse(
+          Object.fromEntries(searchParams)
+        );
+        execute({ domain, type });
+      } catch (error) {
+        console.error(error);
+        toast({
+          title: "Error",
+          description: "Failed to select domain. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSelecting(false);
+      }
+    },
+    [execute, searchParams]
+  );
+
+  useEffect(() => {
+    if (isSelecting) return;
+    if (marathons.length === 1 && marathons[0]) {
+      handleDomainSelect(marathons[0].domain);
     }
-  }
+  }, [marathons, handleDomainSelect, isSelecting]);
 
   if (marathons.length === 0) {
     return (

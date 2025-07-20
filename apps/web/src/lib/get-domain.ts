@@ -7,6 +7,6 @@ export async function getDomain() {
   const headersList = await headers();
   const domain = headersList.get("x-domain");
   if (!domain) throw new Error("Domain not found");
-  if (domain === "localhost") return DEV_DOMAIN;
+  if (domain === "localhost" || domain.startsWith("192")) return DEV_DOMAIN;
   return domain;
 }

@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useForm } from "@tanstack/react-form";
-import { z } from "zod";
 import { Button } from "@vimmer/ui/components/button";
 import {
   Card,
@@ -16,7 +15,7 @@ import { Textarea } from "@vimmer/ui/components/textarea";
 import { Upload, Calendar, FileText, Image, PencilIcon, X } from "lucide-react";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { toast } from "sonner";
-import { getOnboardingLogoUploadAction } from "../../_actions/logo-upload-action";
+import { getLogoUploadAction } from "@/lib/actions/logo-presigned-url-action";
 import { useAction } from "next-safe-action/hooks";
 import { useTRPC } from "@/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -117,9 +116,8 @@ export function MarathonConfigStep({
     })
   );
 
-  const { executeAsync: generateLogoPresignedUrl } = useAction(
-    getOnboardingLogoUploadAction
-  );
+  const { executeAsync: generateLogoPresignedUrl } =
+    useAction(getLogoUploadAction);
 
   useEffect(() => {
     const fileInput = fileInputRef.current;
@@ -181,7 +179,7 @@ export function MarathonConfigStep({
         },
       });
 
-      const logoUrl = `${marathonSettingsRouterUrl}/${key}`;
+      const logoUrl = `${marathonSettingsRouterUrl}/${encodeURIComponent(key)}`;
       form.setFieldValue("logoUrl", logoUrl);
       return logoUrl;
     } catch (error) {

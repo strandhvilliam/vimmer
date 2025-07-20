@@ -50,6 +50,10 @@ export function RealtimeProvider({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   useEffect(() => {
+    if (!window.crypto.randomUUID) {
+      return;
+    }
+
     const connection = createConnection(
       realtimeConfig.endpoint,
       realtimeConfig.authorizer
