@@ -23,6 +23,7 @@ import {
   updateRuleConfigMutation,
 } from "@vimmer/api/db/queries/rules.queries";
 import { RULE_KEYS } from "@vimmer/validation/constants";
+import { TRPCError } from "@trpc/server";
 
 export const marathonsRouter = createTRPCRouter({
   getById: publicProcedure
@@ -38,6 +39,14 @@ export const marathonsRouter = createTRPCRouter({
       const data = await getMarathonByDomainQuery(ctx.db, {
         domain: input.domain,
       });
+
+      if (!data) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Marathon not found for domain ${input.domain}`,
+        });
+      }
+
       return data;
     }),
   create: publicProcedure
@@ -61,7 +70,7 @@ export const marathonsRouter = createTRPCRouter({
         });
 
         const withinTimerangeRule = rules.find(
-          (rule) => rule.ruleKey === RULE_KEYS.WITHIN_TIMERANGE
+          (rule) => rule.ruleKey === RULE_KEYS.WITHIN_TIMERANGE,
         );
 
         if (withinTimerangeRule) {

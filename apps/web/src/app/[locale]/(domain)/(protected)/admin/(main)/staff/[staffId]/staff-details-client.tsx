@@ -83,7 +83,7 @@ const columns = [
       id: "participantName",
       header: "Participant",
       cell: (info) => info.getValue(),
-    }
+    },
   ),
   columnHelper.accessor("participant.reference", {
     header: "Number",
@@ -143,23 +143,23 @@ export function StaffDetailsClient({ staffId }: StaffDetailsClientProps) {
     trpc.users.getStaffMemberById.queryOptions({
       staffId,
       domain,
-    })
+    }),
   );
 
   const { data: marathon } = useSuspenseQuery(
     trpc.marathons.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
 
   const { data: verifications } = useSuspenseQuery(
     trpc.validations.getParticipantVerificationsByStaffId.queryOptions({
       staffId,
-    })
+    }),
   );
 
   const sortedVerifications = verifications.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 
   const handleRefresh = async () => {
@@ -194,10 +194,14 @@ export function StaffDetailsClient({ staffId }: StaffDetailsClientProps) {
       onSettled: () => {
         handleRefresh();
       },
-    })
+    }),
   );
 
   const handleRemove = () => {
+    if (!marathon) {
+      console.error("Marathon not found");
+      return;
+    }
     executeRemove({ userId: staffId, marathonId: marathon.id });
   };
 
@@ -281,7 +285,7 @@ export function StaffDetailsClient({ staffId }: StaffDetailsClientProps) {
                     <TableHead key={header.id}>
                       {flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                     </TableHead>
                   ))}
@@ -295,7 +299,7 @@ export function StaffDetailsClient({ staffId }: StaffDetailsClientProps) {
                         <TableCell key={cell.id}>
                           {flexRender(
                             cell.column.columnDef.cell,
-                            cell.getContext()
+                            cell.getContext(),
                           )}
                         </TableCell>
                       ))}

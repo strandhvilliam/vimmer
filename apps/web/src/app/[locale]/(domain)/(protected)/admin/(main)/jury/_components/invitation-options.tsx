@@ -14,11 +14,8 @@ import {
   AlertDialogTrigger,
 } from "@vimmer/ui/components/alert-dialog";
 import { toast } from "@vimmer/ui/hooks/use-toast";
-import { useParams, useRouter } from "next/navigation";
-import { useAction } from "next-safe-action/hooks";
-import { deleteJuryInvitationAction } from "../../../../../../../../lib/actions/send-jury-invitation-email";
-import { useDomain } from "@/contexts/domain-context";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 
 interface InvitationOptionsProps {
@@ -28,33 +25,25 @@ interface InvitationOptionsProps {
 export function InvitationOptions({ invitationId }: InvitationOptionsProps) {
   const trpc = useTRPC();
   const router = useRouter();
-  const { domain } = useDomain();
 
   const { data: invitation } = useSuspenseQuery(
     trpc.jury.getJuryInvitationById.queryOptions({
       id: invitationId,
-    })
+    }),
   );
 
-  const { execute: deleteInvitation, isExecuting: isDeleting } = useAction(
-    deleteJuryInvitationAction,
-    {
-      onSuccess: () => {
-        toast({
-          title: "Invitation deleted",
-          description: "Jury invitation has been deleted successfully",
-        });
-        router.push(`/${domain}/jury`);
-      },
-      onError: (error) => {
-        console.log("error", error);
+  const { mutate: deleteInvitation, isPending: isDeleting } = useMutation(
+    trpc.jury.deleteJuryInvitation.mutationOptions({
+      onError: () => {
         toast({
           title: "Error",
-          description: error.error.serverError || "Failed to delete invitation",
-          variant: "destructive",
+          description: "Failed to delete jury invitation",
         });
       },
-    }
+      onSuccess: () => {
+        router.refresh();
+      },
+    }),
   );
 
   const handleResendInvitation = () => {
@@ -62,10 +51,6 @@ export function InvitationOptions({ invitationId }: InvitationOptionsProps) {
       title: "Invitation resent",
       description: `Jury invitation resent to ${invitation?.email}`,
     });
-  };
-
-  const handleDeleteInvitation = () => {
-    deleteInvitation({ invitationId });
   };
 
   return (
@@ -92,7 +77,7 @@ export function InvitationOptions({ invitationId }: InvitationOptionsProps) {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteInvitation}
+              onClick={() => deleteInvitation({ id: invitationId })}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete

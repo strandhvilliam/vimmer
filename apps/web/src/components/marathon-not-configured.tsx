@@ -15,9 +15,6 @@ interface MarathonNotConfiguredProps {
   requiredActions: RequiredAction[];
 }
 
-const LOGO =
-  "https://www.stockholmfotomaraton.se/wp-content/uploads/2022/11/Logga-22-png-1024x1024-1.png";
-
 export function MarathonNotConfigured({
   marathon,
   requiredActions,

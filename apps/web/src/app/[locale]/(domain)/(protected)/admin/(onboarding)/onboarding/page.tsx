@@ -11,14 +11,12 @@ import {
 import { Suspense } from "react";
 import { getDomain } from "@/lib/get-domain";
 import { Resource } from "sst";
+import { notFound } from "next/navigation";
 
 export default async function OnboardingPage() {
   const queryClient = getQueryClient();
   const session = await getSession();
 
-  if (!session) {
-    return redirect("/auth/admin/login");
-  }
   const domain = await getDomain();
 
   batchPrefetch([
@@ -42,8 +40,16 @@ export default async function OnboardingPage() {
   const marathon = await queryClient.fetchQuery(
     trpc.marathons.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
+
+  if (!session) {
+    return redirect("/auth/admin/login");
+  }
+
+  if (!marathon) {
+    notFound();
+  }
 
   if (marathon.setupCompleted) {
     redirect(`/admin/dashboard`);

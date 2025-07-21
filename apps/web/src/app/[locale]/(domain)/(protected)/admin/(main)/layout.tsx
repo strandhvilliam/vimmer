@@ -3,20 +3,26 @@ import { AppHeader } from "../_components/app-header";
 import { SidebarInset, SidebarProvider } from "@vimmer/ui/components/sidebar";
 import { DotPattern } from "@vimmer/ui/components/dot-pattern";
 import { getDomain } from "@/lib/get-domain";
-import { createServerApiClient } from "@/trpc/server";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getQueryClient } from "@/trpc/server";
+import { trpc } from "@/trpc/server";
 
 interface LayoutProps {
   children: React.ReactNode;
-  params: Promise<{
-    domain: string;
-  }>;
 }
 
 export default async function DashboardLayout({ children }: LayoutProps) {
   const domain = await getDomain();
-  const serverApi = createServerApiClient();
-  const data = await serverApi.marathons.getByDomain.query({ domain });
+  const queryClient = getQueryClient();
+  const data = await queryClient.fetchQuery(
+    trpc.marathons.getByDomain.queryOptions({
+      domain,
+    }),
+  );
+
+  if (!data) {
+    notFound();
+  }
 
   if (!data.setupCompleted) {
     redirect(`/admin/onboarding`);

@@ -17,7 +17,7 @@ export function TopicsHeader() {
   const { data: marathon } = useSuspenseQuery(
     trpc.marathons.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
 
   // const { execute: createTopic, isExecuting: isCreatingTopic } = useAction(
@@ -40,6 +40,10 @@ export function TopicsHeader() {
   //     },
   //   }
   // );
+
+  if (!marathon) {
+    return null;
+  }
 
   return (
     <div className="w-full">

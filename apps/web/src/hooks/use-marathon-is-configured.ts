@@ -35,7 +35,7 @@ const VALIDATION_MESSAGES = {
 } as const;
 
 function createRequiredAction(
-  action: keyof typeof VALIDATION_ACTIONS
+  action: keyof typeof VALIDATION_ACTIONS,
 ): RequiredAction {
   return {
     action: VALIDATION_ACTIONS[action],
@@ -97,7 +97,7 @@ export function useMarathonIsConfigured(): MarathonIsConfiguredResponse {
   }
 
   const maxPhotosRequired = Math.max(
-    ...competitionClasses.map((cc) => cc.numberOfPhotos)
+    ...competitionClasses.map((cc) => cc.numberOfPhotos),
   );
   if (maxPhotosRequired > topics.length) {
     return {

@@ -25,8 +25,12 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
   const { domain } = useDomain();
 
   const { data: marathon } = useSuspenseQuery(
-    trpc.marathons.getByDomain.queryOptions({ domain })
+    trpc.marathons.getByDomain.queryOptions({ domain }),
   );
+
+  if (!marathon) {
+    return null;
+  }
 
   return (
     <div className="max-w-3xl mx-auto">

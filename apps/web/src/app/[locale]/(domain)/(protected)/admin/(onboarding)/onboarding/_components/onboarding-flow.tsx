@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { WelcomeStep } from "./steps/welcome-step";
 import { MarathonConfigStep } from "./steps/marathon-config-step";
 import { ValidationRulesStep } from "./steps/validation-rules-step";
@@ -15,8 +14,7 @@ import { DotPattern } from "@vimmer/ui/components/dot-pattern";
 import { useTRPC } from "@/trpc/client";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useDomain } from "@/contexts/domain-context";
-import { Resource } from "sst";
-import { createParser, parseAsInteger, useQueryState } from "nuqs";
+import { createParser, useQueryState } from "nuqs";
 
 const STEPS = {
   WelcomeStep: 1,
@@ -54,58 +52,27 @@ const STEP_LABELS: Record<StepNumber, string> = {
   [STEPS.SummaryStep]: "Summary",
 } as const;
 
-const STEP_COMPONENTS: Record<
-  StepNumber,
-  { component: React.ComponentType<any>; title: string }
-> = {
-  [STEPS.WelcomeStep]: { component: WelcomeStep, title: "Welcome" },
-  [STEPS.MarathonConfigStep]: {
-    component: MarathonConfigStep,
-    title: "Marathon Configuration",
-  },
-  [STEPS.ValidationRulesStep]: {
-    component: ValidationRulesStep,
-    title: "Validation Rules",
-  },
-  [STEPS.TopicsStep]: {
-    component: TopicsStep,
-    title: "Topics",
-  },
-  [STEPS.CompetitionClassStep]: {
-    component: CompetitionClassStep,
-    title: "Competition Classes",
-  },
-  [STEPS.DeviceGroupStep]: {
-    component: DeviceGroupStep,
-    title: "Device Groups",
-  },
-  [STEPS.SummaryStep]: { component: SummaryStep, title: "Summary" },
-} as const;
+interface OnboardingFlowProps {
+  marathonSettingsRouterUrl: string;
+}
 
 export function OnboardingFlow({
   marathonSettingsRouterUrl,
-}: {
-  marathonSettingsRouterUrl: string;
-}) {
+}: OnboardingFlowProps) {
   const { domain } = useDomain();
   const [currentStep, setCurrentStep] = useQueryState<StepNumber>(
     "step",
-    parseAsStep.withDefault(STEPS.WelcomeStep)
+    parseAsStep.withDefault(STEPS.WelcomeStep),
   );
   const trpc = useTRPC();
 
   const { data: marathon } = useSuspenseQuery(
     trpc.marathons.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
 
-  if (!marathon) {
-    throw new Error("Marathon not found");
-  }
-
   const stepNumbers = Object.values(STEPS) as StepNumber[];
-  const currentStepComponent = STEP_COMPONENTS[currentStep];
 
   const nextStep = () => {
     const currentIndex = stepNumbers.indexOf(currentStep);
@@ -148,7 +115,7 @@ export function OnboardingFlow({
                   key={step}
                   className={cn(
                     "flex flex-col",
-                    step !== STEPS.SummaryStep && "flex-1"
+                    step !== STEPS.SummaryStep && "flex-1",
                   )}
                 >
                   <div className="flex items-center w-full">
@@ -176,7 +143,7 @@ export function OnboardingFlow({
                         step <= currentStep ? "shadow-lg" : "",
                         step <= currentStep
                           ? "hover:shadow-xl"
-                          : "hover:shadow-md"
+                          : "hover:shadow-md",
                       )}
                       transition={{ duration: 0.2 }}
                       disabled={step > currentStep}
@@ -222,7 +189,7 @@ export function OnboardingFlow({
                           : "-translate-x-2",
                         step <= currentStep
                           ? "text-foreground"
-                          : "text-muted-foreground"
+                          : "text-muted-foreground",
                       )}
                     >
                       {STEP_LABELS[step]}
@@ -240,14 +207,63 @@ export function OnboardingFlow({
             transition={{ duration: 0.3 }}
             className="max-w-4xl mx-auto"
           >
-            {currentStepComponent && (
-              <currentStepComponent.component
+            {currentStep === STEPS.WelcomeStep && (
+              <WelcomeStep
+                onNext={nextStep}
+                onPrev={prevStep}
+                canGoBack={canGoBack}
+                isLastStep={isLastStep}
+              />
+            )}
+            {currentStep === STEPS.MarathonConfigStep && (
+              <MarathonConfigStep
                 marathon={marathon}
                 onNext={nextStep}
                 onPrev={prevStep}
                 canGoBack={canGoBack}
                 isLastStep={isLastStep}
                 marathonSettingsRouterUrl={marathonSettingsRouterUrl}
+              />
+            )}
+            {currentStep === STEPS.ValidationRulesStep && (
+              <ValidationRulesStep
+                onNext={nextStep}
+                onPrev={prevStep}
+                canGoBack={canGoBack}
+                isLastStep={isLastStep}
+              />
+            )}
+            {currentStep === STEPS.TopicsStep && (
+              <TopicsStep
+                onNext={nextStep}
+                onPrev={prevStep}
+                canGoBack={canGoBack}
+                isLastStep={isLastStep}
+              />
+            )}
+            {currentStep === STEPS.CompetitionClassStep && (
+              <CompetitionClassStep
+                onNext={nextStep}
+                onPrev={prevStep}
+                canGoBack={canGoBack}
+                isLastStep={isLastStep}
+              />
+            )}
+            {currentStep === STEPS.DeviceGroupStep && (
+              <DeviceGroupStep
+                onNext={nextStep}
+                onPrev={prevStep}
+                canGoBack={canGoBack}
+                isLastStep={isLastStep}
+              />
+            )}
+            {currentStep === STEPS.SummaryStep && (
+              <SummaryStep
+                marathon={marathon}
+                onNext={nextStep}
+                onPrev={prevStep}
+                canGoBack={canGoBack}
+                isLastStep={isLastStep}
               />
             )}
           </motion.div>

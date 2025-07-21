@@ -67,6 +67,7 @@ import { z } from "zod/v4";
 import { useAction } from "next-safe-action/hooks";
 import { cn } from "@vimmer/ui/lib/utils";
 import { parseAsStringEnum, useQueryState } from "nuqs";
+import { Marathon } from "@vimmer/api/db/types";
 
 const updateMarathonSettingsSchema = z.object({
   name: z.string().optional(),
@@ -95,7 +96,7 @@ const AVAILABLE_LANGUAGES = [
 
 function isDateDifferent(
   date1: Date | null | undefined,
-  date2: string | null | undefined
+  date2: string | null | undefined,
 ): boolean {
   if (!date1 && !date2) return false;
   if (!date1 || !date2) return true;
@@ -112,9 +113,37 @@ function arrayEquals(a: string[], b: string[]): boolean {
   );
 }
 
-export default function SettingsForm({
+export default function SettingsFormWrapper({
   marathonSettingsRouterUrl,
 }: {
+  marathonSettingsRouterUrl: string;
+}) {
+  const trpc = useTRPC();
+  const { domain } = useDomain();
+
+  const { data: marathon } = useSuspenseQuery(
+    trpc.marathons.getByDomain.queryOptions({
+      domain,
+    }),
+  );
+
+  if (!marathon) {
+    return <div>ERROR: Unable to load marathon</div>;
+  }
+
+  return (
+    <SettingsForm
+      initialData={marathon}
+      marathonSettingsRouterUrl={marathonSettingsRouterUrl}
+    />
+  );
+}
+
+function SettingsForm({
+  initialData,
+  marathonSettingsRouterUrl,
+}: {
+  initialData: Marathon;
   marathonSettingsRouterUrl: string;
 }) {
   const trpc = useTRPC();
@@ -130,13 +159,7 @@ export default function SettingsForm({
       "date-time",
       "languages",
       "danger",
-    ]).withDefault("general")
-  );
-
-  const { data: initialData } = useSuspenseQuery(
-    trpc.marathons.getByDomain.queryOptions({
-      domain,
-    })
+    ]).withDefault("general"),
   );
 
   const [logoState, setLogoState] = useState<{
@@ -230,7 +253,7 @@ export default function SettingsForm({
             queryKey: trpc.validations.pathKey(),
           });
         },
-      })
+      }),
     );
 
   const {
@@ -266,7 +289,7 @@ export default function SettingsForm({
       onError: (error) => {
         toast.error(error.message || "Failed to reset marathon");
       },
-    })
+    }),
   );
 
   useEffect(() => {
@@ -362,7 +385,7 @@ export default function SettingsForm({
       isDateDifferent(formValues.endDate, initialData.endDate) ||
       !arrayEquals(
         formValues.languages || [],
-        initialData.languages ? initialData.languages.split(",") : ["en"]
+        initialData.languages ? initialData.languages.split(",") : ["en"],
       );
 
     if (!isDirtyExceptLogo) {
@@ -393,7 +416,7 @@ export default function SettingsForm({
             value={activeTab}
             onValueChange={(value) =>
               setActiveTab(
-                value as "general" | "date-time" | "languages" | "danger"
+                value as "general" | "date-time" | "languages" | "danger",
               )
             }
             className="space-y-6"
@@ -556,7 +579,7 @@ export default function SettingsForm({
                                 variant="outline"
                                 className={cn(
                                   "w-full pl-3 text-left font-normal",
-                                  !field.state.value && "text-muted-foreground"
+                                  !field.state.value && "text-muted-foreground",
                                 )}
                               >
                                 {field.state.value ? (
@@ -580,10 +603,10 @@ export default function SettingsForm({
                                     const newDate = new Date(date);
                                     if (field.state.value) {
                                       newDate.setHours(
-                                        field.state.value.getHours()
+                                        field.state.value.getHours(),
                                       );
                                       newDate.setMinutes(
-                                        field.state.value.getMinutes()
+                                        field.state.value.getMinutes(),
                                       );
                                     } else {
                                       newDate.setHours(12);
@@ -596,14 +619,14 @@ export default function SettingsForm({
                                     if (endDate && endDate < newDate) {
                                       // Clone the new date and add 1 hour for end time
                                       const suggestedEndDate = new Date(
-                                        newDate
+                                        newDate,
                                       );
                                       suggestedEndDate.setHours(
-                                        suggestedEndDate.getHours() + 1
+                                        suggestedEndDate.getHours() + 1,
                                       );
                                       form.setFieldValue(
                                         "endDate",
-                                        suggestedEndDate
+                                        suggestedEndDate,
                                       );
                                     }
                                   }
@@ -633,7 +656,7 @@ export default function SettingsForm({
                                 variant="outline"
                                 className={cn(
                                   "w-full pl-3 text-left font-normal",
-                                  !field.state.value && "text-muted-foreground"
+                                  !field.state.value && "text-muted-foreground",
                                 )}
                               >
                                 {field.state.value ? (
@@ -656,10 +679,10 @@ export default function SettingsForm({
                                     const newDate = new Date(date);
                                     if (field.state.value) {
                                       newDate.setHours(
-                                        field.state.value.getHours()
+                                        field.state.value.getHours(),
                                       );
                                       newDate.setMinutes(
-                                        field.state.value.getMinutes()
+                                        field.state.value.getMinutes(),
                                       );
                                     } else {
                                       newDate.setHours(13);
@@ -678,10 +701,10 @@ export default function SettingsForm({
                                     ) {
                                       if (newDate <= startDate) {
                                         newDate.setHours(
-                                          startDate.getHours() + 1
+                                          startDate.getHours() + 1,
                                         );
                                         newDate.setMinutes(
-                                          startDate.getMinutes()
+                                          startDate.getMinutes(),
                                         );
                                       }
                                     }
@@ -698,7 +721,7 @@ export default function SettingsForm({
                                     new Date(
                                       startDate.getFullYear(),
                                       startDate.getMonth(),
-                                      startDate.getDate()
+                                      startDate.getDate(),
                                     )
                                   );
                                 }}
@@ -732,7 +755,7 @@ export default function SettingsForm({
                                   setDate={(date) => {
                                     if (date && field.state.value) {
                                       const newDate = new Date(
-                                        field.state.value
+                                        field.state.value,
                                       );
                                       newDate.setHours(date.getHours());
                                       newDate.setMinutes(date.getMinutes());
@@ -749,14 +772,14 @@ export default function SettingsForm({
                                         newDate >= endDate
                                       ) {
                                         const updatedEndDate = new Date(
-                                          newDate
+                                          newDate,
                                         );
                                         updatedEndDate.setHours(
-                                          updatedEndDate.getHours() + 1
+                                          updatedEndDate.getHours() + 1,
                                         );
                                         form.setFieldValue(
                                           "endDate",
-                                          updatedEndDate
+                                          updatedEndDate,
                                         );
                                       }
 
@@ -772,7 +795,7 @@ export default function SettingsForm({
                                   setDate={(date) => {
                                     if (date && field.state.value) {
                                       const newDate = new Date(
-                                        field.state.value
+                                        field.state.value,
                                       );
                                       newDate.setHours(date.getHours());
                                       newDate.setMinutes(date.getMinutes());
@@ -789,14 +812,14 @@ export default function SettingsForm({
                                         newDate >= endDate
                                       ) {
                                         const updatedEndDate = new Date(
-                                          newDate
+                                          newDate,
                                         );
                                         updatedEndDate.setHours(
-                                          updatedEndDate.getHours() + 1
+                                          updatedEndDate.getHours() + 1,
                                         );
                                         form.setFieldValue(
                                           "endDate",
-                                          updatedEndDate
+                                          updatedEndDate,
                                         );
                                       }
 
@@ -833,7 +856,7 @@ export default function SettingsForm({
                                   setDate={(date) => {
                                     if (date && field.state.value) {
                                       const newDate = new Date(
-                                        field.state.value
+                                        field.state.value,
                                       );
                                       newDate.setHours(date.getHours());
                                       newDate.setMinutes(date.getMinutes());
@@ -865,7 +888,7 @@ export default function SettingsForm({
                                   setDate={(date) => {
                                     if (date && field.state.value) {
                                       const newDate = new Date(
-                                        field.state.value
+                                        field.state.value,
                                       );
                                       newDate.setHours(date.getHours());
                                       newDate.setMinutes(date.getMinutes());
@@ -974,7 +997,7 @@ export default function SettingsForm({
                                 >
                                   <div className="flex items-center justify-center rounded-sm size-5 border mr-2">
                                     {field.state.value?.includes(
-                                      language.code
+                                      language.code,
                                     ) && (
                                       <Check className="h-4 w-4 text-primary" />
                                     )}

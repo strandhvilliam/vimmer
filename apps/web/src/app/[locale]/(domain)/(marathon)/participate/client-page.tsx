@@ -17,25 +17,23 @@ import { cn } from "@vimmer/ui/lib/utils";
 import Link from "next/link";
 import { format } from "date-fns";
 import { useTRPC } from "@/trpc/client";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useDomain } from "@/contexts/domain-context";
 import { useMarathonIsConfigured } from "@/hooks/use-marathon-is-configured";
 import { MarathonNotConfigured } from "@/components/marathon-not-configured";
 import TermsAndConditionsDialog from "@/components/terms-and-conditions-dialog";
-
-// const LOGO =
-//   "https://www.stockholmfotomaraton.se/wp-content/uploads/2022/11/Logga-22-png-1024x1024-1.png";
 
 export function ParticipateClientPage() {
   const router = useRouter();
   const trpc = useTRPC();
   const { domain } = useDomain();
 
-  const { data: marathon } = useSuspenseQuery(
+  const { data: marathon } = useQuery(
     trpc.marathons.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
+
   const { isConfigured, requiredActions } = useMarathonIsConfigured();
 
   const [language, setLanguage] = useState<string>("en");
@@ -47,6 +45,10 @@ export function ParticipateClientPage() {
       router.push("/submission");
     }
   };
+
+  if (!marathon) {
+    return null;
+  }
 
   if (!isConfigured) {
     return (
@@ -110,7 +112,7 @@ export function ParticipateClientPage() {
                   variant="outline"
                   className={cn(
                     "flex-1 flex items-center justify-center gap-2 py-4 border-2",
-                    language === "en" && "border-foreground"
+                    language === "en" && "border-foreground",
                   )}
                   onClick={() => setLanguage("en")}
                 >
@@ -121,7 +123,7 @@ export function ParticipateClientPage() {
                   variant="outline"
                   className={cn(
                     "flex-1 flex items-center justify-center gap-2 py-4 border-2",
-                    language === "sv" && "border-foreground"
+                    language === "sv" && "border-foreground",
                   )}
                   onClick={() => setLanguage("sv")}
                 >

@@ -23,7 +23,7 @@ export function SubmissionClientPage() {
   const router = useRouter();
   const [step, setStep] = useQueryState(
     "s",
-    parseAsInteger.withDefault(1).withOptions({ history: "push" })
+    parseAsInteger.withDefault(1).withOptions({ history: "push" }),
   );
   const [direction, setDirection] = useState(0);
   const { submissionState } = useSubmissionQueryState();
@@ -75,6 +75,10 @@ export function SubmissionClientPage() {
     setDirection(newStep > step ? 1 : -1);
     setStep(newStep);
   };
+
+  if (!marathon) {
+    return null;
+  }
 
   return (
     <div className="max-w-2xl mx-auto py-4">

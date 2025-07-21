@@ -31,7 +31,7 @@ export default async function ParticipatePage() {
     await queryClient.fetchQuery(
       trpc.marathons.getByDomain.queryOptions({
         domain,
-      })
+      }),
     );
   } catch (error: any) {
     console.error(error);

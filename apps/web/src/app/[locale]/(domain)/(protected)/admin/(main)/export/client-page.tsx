@@ -14,7 +14,7 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@vimmer/ui/components/alert";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { useDomain } from "@/contexts/domain-context";
 
@@ -34,25 +34,32 @@ export function ExportClientPage() {
   const { data: marathon } = useSuspenseQuery(
     trpc.marathons.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
 
   const { data: participants } = useSuspenseQuery(
     trpc.participants.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
 
-  const { data: zippedSubmissions } = useSuspenseQuery(
-    trpc.submissions.getZippedSubmissionsByDomain.queryOptions({
-      marathonId: marathon.id,
-    })
+  const { data: zippedSubmissions } = useQuery(
+    trpc.submissions.getZippedSubmissionsByDomain.queryOptions(
+      {
+        marathonId: marathon!.id,
+      },
+      { enabled: !!marathon?.id },
+    ),
   );
 
   const participantCount = participants.length;
-  const zippedSubmissionsCount = zippedSubmissions.length;
+  const zippedSubmissionsCount = zippedSubmissions?.length;
   const canDownloadZippedSubmissions =
     participantCount > 0 && participantCount === zippedSubmissionsCount;
+
+  if (!marathon) {
+    return null;
+  }
 
   return (
     <div className="container mx-auto py-8 space-y-8">

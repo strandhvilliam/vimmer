@@ -124,7 +124,7 @@ function AllowedFileTypesRule({ field }: { field: AnyFieldApi }) {
                   "border flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 outline-none",
                   isSelected
                     ? "bg-primary text-primary-foreground border-transparent shadow-sm hover:bg-primary/90"
-                    : "bg-secondary/60 hover:bg-secondary text-secondary-foreground border-border/50"
+                    : "bg-secondary/60 hover:bg-secondary text-secondary-foreground border-border/50",
                 )}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
@@ -233,12 +233,12 @@ export function RulesClientPage() {
   const { data: dbRules } = useSuspenseQuery(
     trpc.rules.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
   const { data: marathon } = useSuspenseQuery(
     trpc.marathons.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
 
   const { mutate: updateRules } = useMutation(
@@ -254,17 +254,21 @@ export function RulesClientPage() {
           queryKey: trpc.rules.pathKey(),
         });
       },
-    })
+    }),
   );
 
   const rules = parseRules(dbRules, {
-    startDate: marathon.startDate ?? undefined,
-    endDate: marathon.endDate ?? undefined,
+    startDate: marathon?.startDate ?? undefined,
+    endDate: marathon?.endDate ?? undefined,
   });
 
   const form = useForm({
     defaultValues: rules,
     onSubmit: ({ value }) => {
+      if (!marathon) {
+        toast.error("Failed to update rules");
+        return;
+      }
       updateRules({
         domain,
         data: mapRulesToDbRules(value, marathon.id),

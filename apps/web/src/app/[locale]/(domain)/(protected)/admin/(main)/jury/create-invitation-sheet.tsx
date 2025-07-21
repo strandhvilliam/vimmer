@@ -22,7 +22,7 @@ import {
 } from "@vimmer/ui/components/sheet";
 import { Textarea } from "@vimmer/ui/components/textarea";
 import { toast } from "sonner";
-import { sendInvitationEmailAction } from "../../../../../../../lib/actions/send-jury-invitation-email";
+import { sendInvitationEmailAction } from "@/lib/actions/send-jury-invitation-email";
 import { useDomain } from "@/contexts/domain-context";
 import { z } from "zod/v4";
 import { Input } from "@vimmer/ui/components/input";
@@ -37,7 +37,7 @@ interface CreateInvitationSheetProps {
 
 const formSchema = z.object({
   displayName: z.string(),
-  email: z.string().email({ message: "Invalid email address." }),
+  email: z.email({ message: "Invalid email address." }),
   notes: z.string().optional(),
   competitionClassId: z.string().optional(),
   deviceGroupId: z.string().optional(),
@@ -62,25 +62,25 @@ export function CreateInvitationSheet({
   const { data: competitionClasses } = useSuspenseQuery(
     trpc.competitionClasses.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
 
   const { data: topics } = useSuspenseQuery(
     trpc.topics.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
 
   const { data: marathon } = useSuspenseQuery(
     trpc.marathons.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
 
   const { data: deviceGroups } = useSuspenseQuery(
     trpc.deviceGroups.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
 
   const { mutate: createJuryInvitation, isPending: isCreatingJuryInvitation } =
@@ -88,14 +88,19 @@ export function CreateInvitationSheet({
       trpc.jury.createJuryInvitation.mutationOptions({
         onSuccess: async (invitationData) => {
           if (!invitationData) {
-            throw new Error("Cannot send invitation email");
+            toast.error("Failed to send jury invitation");
+            return;
+          }
+          if (!marathon) {
+            toast.error("Failed to send jury invitation");
+            return;
           }
 
           const competitionClass = competitionClasses.find(
-            (cls) => cls.id === invitationData.competitionClassId
+            (cls) => cls.id === invitationData.competitionClassId,
           );
           const topic = topics.find(
-            (topic) => topic.id === invitationData.topicId
+            (topic) => topic.id === invitationData.topicId,
           );
 
           await sendInvitationEmailAction({
@@ -122,7 +127,7 @@ export function CreateInvitationSheet({
             queryKey: trpc.jury.pathKey(),
           });
         },
-      })
+      }),
     );
 
   const form = useForm({
@@ -136,6 +141,11 @@ export function CreateInvitationSheet({
       expiryDays: 14,
     } as FormValues,
     onSubmit: async ({ value }) => {
+      if (!marathon) {
+        toast.error("Failed to send jury invitation");
+        return;
+      }
+
       const parsedCompetitionClassId = value.competitionClassId
         ? parseInt(value.competitionClassId)
         : null;

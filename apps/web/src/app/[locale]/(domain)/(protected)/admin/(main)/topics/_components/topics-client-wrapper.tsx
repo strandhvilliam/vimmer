@@ -18,7 +18,7 @@ const TopicsTable = dynamic(
   {
     ssr: false,
     loading: () => <TopicsTableSkeleton />,
-  }
+  },
 );
 
 type TopicWithSubmissionCount = Topic & {
@@ -33,25 +33,25 @@ export function TopicsClientWrapper() {
   const { data: marathon } = useSuspenseQuery(
     trpc.marathons.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
 
   const { data: rawTopics } = useSuspenseQuery(
     trpc.topics.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
 
   const { data: competitionClasses } = useSuspenseQuery(
     trpc.competitionClasses.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
 
   const { data: topicsWithSubmissionCount } = useSuspenseQuery(
     trpc.topics.getWithSubmissionCount.queryOptions({
       domain,
-    })
+    }),
   );
 
   const initialTopics = useMemo((): TopicWithSubmissionCount[] => {
@@ -90,7 +90,7 @@ export function TopicsClientWrapper() {
           queryKey: trpc.topics.pathKey(),
         });
       },
-    })
+    }),
   );
 
   const { mutate: updateTopic, isPending: isUpdatingTopic } = useMutation(
@@ -109,7 +109,7 @@ export function TopicsClientWrapper() {
           queryKey: trpc.topics.pathKey(),
         });
       },
-    })
+    }),
   );
 
   const { mutate: deleteTopic, isPending: isDeletingTopic } = useMutation(
@@ -128,10 +128,15 @@ export function TopicsClientWrapper() {
           queryKey: trpc.topics.pathKey(),
         });
       },
-    })
+    }),
   );
 
   const handleUpdateTopicsOrder = (newOrdering: number[]) => {
+    if (!marathon) {
+      console.error("Marathon not found");
+      return;
+    }
+
     const optimisticTopics = newOrdering
       .map((topicId) => topics.find((topic) => topic.id === topicId))
       .filter((topic): topic is TopicWithSubmissionCount => topic !== undefined)
@@ -149,6 +154,10 @@ export function TopicsClientWrapper() {
   };
 
   const handleDeleteTopic = (topicId: number) => {
+    if (!marathon) {
+      console.error("Marathon not found");
+      return;
+    }
     setTopics((currentTopics) => currentTopics.filter((t) => t.id !== topicId));
     deleteTopic({ marathonId: marathon.id, id: topicId });
   };

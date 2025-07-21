@@ -13,22 +13,69 @@ import {
 import dynamic from "next/dynamic";
 import { ConfirmationDetailsDialog } from "@/components/confirmation-details-dialog";
 import { ConfirmationData } from "@/lib/types";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
+import { useDomain } from "@/contexts/domain-context";
+import { Resource } from "sst";
 
 interface ConfirmationClientProps {
-  images: ConfirmationData[];
+  participantRef: string;
 }
 
 const Confetti = dynamic(
   () => import("react-confetti").then((mod) => mod.default),
   {
     ssr: false,
-  }
+  },
 );
 
-export function ConfirmationClient({ images }: ConfirmationClientProps) {
+export function ConfirmationClient({
+  participantRef,
+}: ConfirmationClientProps) {
+  const { domain } = useDomain();
+  const trpc = useTRPC();
   const [selectedImage, setSelectedImage] = useState<ConfirmationData | null>(
-    null
+    null,
   );
+
+  const { data: participant } = useSuspenseQuery(
+    trpc.participants.getByReference.queryOptions({
+      reference: participantRef,
+      domain,
+    }),
+  );
+
+  const { data: topics } = useSuspenseQuery(
+    trpc.topics.getByDomain.queryOptions({
+      domain,
+    }),
+  );
+
+  const submissionsWithTopic =
+    participant?.submissions.map((submission) => ({
+      ...submission,
+      topic: topics.find((topic) => topic.id === submission.topicId),
+    })) ?? [];
+
+  const images: ConfirmationData[] = submissionsWithTopic
+    .filter((submission) => submission.status === "uploaded")
+    .sort((a, b) => (a.topic?.orderIndex ?? 0) - (b.topic?.orderIndex ?? 0))
+    .map((submission) => ({
+      id: submission.id.toString(),
+      thumbnailUrl: submission.thumbnailKey
+        ? `${Resource.ThumbnailsRouter.url}/${submission.thumbnailKey}`
+        : undefined,
+      previewUrl: submission.previewKey
+        ? `${Resource.PreviewsRouter.url}/${submission.previewKey}`
+        : undefined,
+      name: submission.topic?.name || `Photo ${submission.id}`,
+      orderIndex: submission.topic?.orderIndex ?? 0,
+      exif: submission.exif as Record<string, unknown>,
+    }));
+
+  if (!participant) {
+    return null;
+  }
 
   return (
     <>
