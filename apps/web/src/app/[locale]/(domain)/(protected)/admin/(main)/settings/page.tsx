@@ -1,8 +1,8 @@
-import SettingsForm from "./_components/settings-form";
+import SettingsForm from "@/components/admin/settings-form";
 import { Suspense } from "react";
 import { getDomain } from "@/lib/get-domain";
 import { prefetch, trpc } from "@/trpc/server";
-import { SettingsSkeleton } from "./_components/settings-skeleton";
+import { SettingsSkeleton } from "@/components/admin/settings-skeleton";
 import { Resource } from "sst";
 
 export default async function SettingsPage() {
@@ -11,7 +11,7 @@ export default async function SettingsPage() {
   prefetch(
     trpc.marathons.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
 
   return (

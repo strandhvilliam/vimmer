@@ -3,8 +3,6 @@ import type { Metadata } from "next";
 import { Providers } from "./providers";
 import { DotPattern } from "@vimmer/ui/components/dot-pattern";
 import { Toaster } from "@vimmer/ui/components/sonner";
-import { headers } from "next/headers";
-import { notFound } from "next/navigation";
 import { getDomain } from "@/lib/get-domain";
 import { Resource } from "sst";
 

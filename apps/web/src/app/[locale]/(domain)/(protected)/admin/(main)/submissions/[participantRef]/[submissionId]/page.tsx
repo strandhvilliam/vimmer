@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { batchPrefetch, trpc, HydrateClient } from "@/trpc/server";
-import { SubmissionDetailClient } from "./_components/submission-detail-client";
-import { SubmissionDetailSkeleton } from "./_components/submission-detail-skeleton";
+import { SubmissionDetailClient } from "@/components/admin/submission-detail-client";
+import { SubmissionDetailSkeleton } from "@/components/admin/submission-detail-skeleton";
 import { Resource } from "sst";
 import { getDomain } from "@/lib/get-domain";
 

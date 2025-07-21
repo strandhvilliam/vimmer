@@ -2,7 +2,7 @@ import React, { Suspense } from "react";
 import { getDomain } from "@/lib/get-domain";
 import { batchPrefetch, HydrateClient, trpc } from "@/trpc/server";
 import { SubmissionsClientPage } from "./client-page";
-import { SubmissionsParticipantsTabSkeleton } from "./_components/submissions-participants-skeleton";
+import { SubmissionsParticipantsTabSkeleton } from "@/components/admin/submissions-participants-skeleton";
 
 export default async function SubmissionsPage() {
   const domain = await getDomain();

@@ -8,7 +8,7 @@ import {
   AlertTriangle,
   CheckCircle2,
 } from "lucide-react";
-import { ExportOptions } from "./_components/export-options";
+import { ExportOptions } from "@/components/admin/export-options";
 import {
   Alert,
   AlertDescription,

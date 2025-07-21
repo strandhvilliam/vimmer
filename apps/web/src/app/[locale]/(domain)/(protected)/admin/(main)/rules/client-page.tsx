@@ -15,7 +15,7 @@ import { Button } from "@vimmer/ui/components/button";
 import { RefreshCcw, Save, AlertCircle, CheckCircle } from "lucide-react";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { toast } from "sonner";
-import { RuleCard } from "./_components/rule-card";
+import { RuleCard } from "@/components/admin/rule-card";
 import { Label } from "@vimmer/ui/components/label";
 import { Slider } from "@vimmer/ui/components/slider";
 import { motion } from "motion/react";
@@ -24,7 +24,6 @@ import { cn } from "@vimmer/ui/lib/utils";
 import Link from "next/link";
 import { format } from "date-fns";
 
-// Rule component definitions
 function MaxFileSizeRule({ field }: { field: AnyFieldApi }) {
   const getMbValue = (bytes: number) => Math.round(bytes / (1024 * 1024));
 

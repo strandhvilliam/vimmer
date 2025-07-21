@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { AdminVerifyForm } from "./admin-verify-form";
+import { AdminVerifyForm } from "@/components/auth/admin-verify-form";
 
 interface PageProps {
   searchParams: Promise<{ email?: string }>;

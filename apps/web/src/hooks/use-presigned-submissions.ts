@@ -1,16 +1,7 @@
-import { PresignedSubmission } from "@/lib/types";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useSubmissionQueryState } from "./use-submission-query-state";
 import { useDomain } from "@/contexts/domain-context";
 import { useTRPC } from "@/trpc/client";
-
-const fetcher = (url: string) =>
-  fetch(url).then((res) => {
-    if (!res.ok) {
-      throw new Error("Failed to fetch submissions");
-    }
-    return res.json();
-  });
 
 export function usePresignedSubmissions({
   onError,
@@ -43,7 +34,7 @@ export function usePresignedSubmissions({
           console.error(error);
           return failureCount < 3;
         },
-      }
-    )
+      },
+    ),
   );
 }

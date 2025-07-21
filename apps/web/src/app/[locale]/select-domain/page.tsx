@@ -1,11 +1,11 @@
 import { Suspense } from "react";
-import { DomainSelect } from "./_components/domain-select";
+import { DomainSelect } from "@/components/domain-select";
 import { LanguageToggle } from "@/components/language-toggle";
 import { getSession } from "@/lib/auth";
-import { SelectDomainTitle } from "./_components/select-domain-title";
-import { DomainSelectSkeleton } from "./_components/domain-select-skeleton";
+import { SelectDomainTitle } from "@/components/select-domain-title";
+import { DomainSelectSkeleton } from "@/components/domain-select-skeleton";
 import { redirect } from "next/navigation";
-import { getQueryClient, prefetch, trpc } from "@/trpc/server";
+import { prefetch, trpc } from "@/trpc/server";
 import { z } from "zod";
 
 type PageProps = {
@@ -29,7 +29,7 @@ export default async function DomainSelectPage({ searchParams }: PageProps) {
   prefetch(
     trpc.users.getMarathonsByUserId.queryOptions({
       userId: session.user.id,
-    })
+    }),
   );
 
   return (

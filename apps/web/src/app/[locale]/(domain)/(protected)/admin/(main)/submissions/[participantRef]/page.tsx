@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { getDomain } from "@/lib/get-domain";
 import { batchPrefetch, HydrateClient, trpc } from "@/trpc/server";
 import { ParticipantSubmissionClientPage } from "./client-page";
-import { ParticipantSubmissionsSkeleton } from "./_components/participant-submissions-skeleton";
+import { ParticipantSubmissionsSkeleton } from "@/components/admin/participant-submissions-skeleton";
 import { Resource } from "sst";
 
 interface PageProps {

@@ -1,6 +1,6 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { StaffInterface } from "./_components/staff-interface";
+import { StaffClientPage } from "./client-page";
 import { getDomain } from "@/lib/get-domain";
 import { batchPrefetch, HydrateClient } from "@/trpc/server";
 import { trpc } from "@/trpc/server";
@@ -27,7 +27,7 @@ export default async function StaffPage() {
   return (
     <HydrateClient>
       <Suspense fallback={<div>Loading...</div>}>
-        <StaffInterface baseThumbnailUrl={Resource.ThumbnailsRouter.url} />
+        <StaffClientPage baseThumbnailUrl={Resource.ThumbnailsRouter.url} />
       </Suspense>
     </HydrateClient>
   );

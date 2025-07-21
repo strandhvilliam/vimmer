@@ -1,10 +1,7 @@
 import { SearchParams } from "nuqs/server";
 import { ConfirmationClient } from "./client-page";
-import {
-  loadSubmissionQueryServerParams,
-  submissionQueryServerParamSerializer,
-} from "@/lib/schemas/submission-query-server-schema";
-import { notFound, redirect } from "next/navigation";
+import { loadSubmissionQueryServerParams } from "@/lib/schemas/submission-query-server-schema";
+import { notFound } from "next/navigation";
 import { getDomain } from "@/lib/get-domain";
 import { batchPrefetch, HydrateClient, trpc } from "@/trpc/server";
 import { Suspense } from "react";

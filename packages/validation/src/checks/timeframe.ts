@@ -6,10 +6,11 @@ import type {
   ValidationResult,
 } from "../types";
 import { attachFileName, createValidationResult } from "../utils";
+import { format } from "date-fns";
 
 function checkTimeframe(
   rule: RuleParams["within_timerange"],
-  input: ValidationInput
+  input: ValidationInput,
 ): ValidationResult {
   const start =
     typeof rule.start === "string" ? new Date(rule.start) : rule.start;
@@ -21,7 +22,7 @@ function checkTimeframe(
     return createValidationResult(
       VALIDATION_OUTCOME.SKIPPED,
       RULE_KEYS.WITHIN_TIMERANGE,
-      "Unable to determine timestamp"
+      "Unable to determine timestamp",
     );
   }
 
@@ -32,7 +33,7 @@ function checkTimeframe(
     return createValidationResult(
       VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.WITHIN_TIMERANGE,
-      "Invalid timestamp"
+      "Invalid timestamp",
     );
   }
 
@@ -40,22 +41,22 @@ function checkTimeframe(
     return createValidationResult(
       VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.WITHIN_TIMERANGE,
-      `Timestamp is out of range of the specified timeframe: ${timestampDate.toISOString().split("T")[0]} (allowed range: ${start.toISOString().split("T")[0]} - ${end.toISOString().split("T")[0]})`
+      `Photo was taken outside of the specified timeframe (${format(start, "yyyy-MM-dd HH:mm")} - ${format(end, "yyyy-MM-dd HH:mm")})`,
     );
   }
 
   return createValidationResult(
     VALIDATION_OUTCOME.PASSED,
     RULE_KEYS.WITHIN_TIMERANGE,
-    "Timestamp is within range of the specified timeframe"
+    "Timestamp is within range of the specified timeframe",
   );
 }
 
 export const validate: ValidationFunction<typeof RULE_KEYS.WITHIN_TIMERANGE> = (
   rule,
-  inputs
+  inputs,
 ) => {
   return inputs.map((input) =>
-    attachFileName(checkTimeframe(rule, input), input)
+    attachFileName(checkTimeframe(rule, input), input),
   );
 };

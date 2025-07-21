@@ -1,8 +1,8 @@
 import React, { Suspense } from "react";
-import { AddStaffDialog } from "./_components/add-staff-dialog";
-import { StaffListMenu } from "./_components/staff-list-menu";
-import { StaffListSkeleton } from "./_components/staff-list-skeleton";
-import { StaffDetailsSkeleton } from "./_components/staff-details-skeleton";
+import { AddStaffDialog } from "@/components/admin/add-staff-dialog";
+import { StaffListMenu } from "@/components/admin/staff-list-menu";
+import { StaffListSkeleton } from "@/components/admin/staff-list-skeleton";
+import { StaffDetailsSkeleton } from "@/components/admin/staff-details-skeleton";
 import { getDomain } from "@/lib/get-domain";
 import { batchPrefetch, trpc } from "@/trpc/server";
 

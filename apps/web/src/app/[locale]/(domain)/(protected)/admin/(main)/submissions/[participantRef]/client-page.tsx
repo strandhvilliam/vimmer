@@ -1,8 +1,8 @@
 "use client";
 
-import { ParticipantHeader } from "./_components/participant-header";
-import { PhotoSubmissionCard } from "./_components/submission-card";
-import { ValidationResultsTable } from "./_components/validation-results-table";
+import { ParticipantHeader } from "@/components/admin/participant-header";
+import { PhotoSubmissionCard } from "@/components/admin/submission-card";
+import { ValidationResultsTable } from "@/components/admin/validation-results-table";
 import {
   Tabs,
   TabsContent,
@@ -29,13 +29,13 @@ export function ParticipantSubmissionClientPage({
     trpc.participants.getByReference.queryOptions({
       reference: participantRef,
       domain,
-    })
+    }),
   );
 
   const { data: topics } = useSuspenseQuery(
     trpc.topics.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
 
   const data = participant?.submissions

@@ -1,7 +1,6 @@
 import { Button } from "@vimmer/ui/components/button";
 import { Skeleton } from "@vimmer/ui/components/skeleton";
 import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import {
   Card,
   CardContent,

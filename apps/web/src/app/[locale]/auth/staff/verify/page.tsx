@@ -1,8 +1,7 @@
 import { Suspense } from "react";
 import { DotPattern } from "@vimmer/ui/components/dot-pattern";
-import { notFound, redirect } from "next/navigation";
-import { VerifyForm } from "../_components/verify-form";
-import { getDomain } from "@/lib/get-domain";
+import { redirect } from "next/navigation";
+import { StaffVerifyForm } from "@/components/auth/staff-verify-form";
 
 type PageProps = {
   searchParams: Promise<{
@@ -28,7 +27,7 @@ export default async function VerifyPage({ searchParams }: PageProps) {
       </div>
       <div className="w-full max-w-sm px-6">
         <Suspense fallback={<div>Loading...</div>}>
-          <VerifyForm email={email} />
+          <StaffVerifyForm email={email} />
         </Suspense>
       </div>
     </div>

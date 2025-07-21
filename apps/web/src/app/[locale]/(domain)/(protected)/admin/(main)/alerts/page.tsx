@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { AlertsTable } from "./_components/alerts-table";
+import { AlertsTable } from "@/components/admin/alerts-table";
 import { getDomain } from "@/lib/get-domain";
 import { trpc, batchPrefetch } from "@/trpc/server";
 

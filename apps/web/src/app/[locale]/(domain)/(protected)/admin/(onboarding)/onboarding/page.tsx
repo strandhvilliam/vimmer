@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { OnboardingFlow } from "./_components/onboarding-flow";
-import { OnboardingLoading } from "./_components/onboarding-loading";
+import { OnboardingFlow } from "@/components/admin/onboarding-flow";
+import { OnboardingLoading } from "@/components/admin/onboarding-loading";
 import {
   batchPrefetch,
   getQueryClient,

@@ -1,8 +1,8 @@
 import { Suspense } from "react";
-import { StaffDetailsClient } from "./staff-details-client";
+import { StaffDetailsClient } from "./client-page";
 import { getDomain } from "@/lib/get-domain";
 import { HydrateClient, batchPrefetch, trpc } from "@/trpc/server";
-import { StaffDetailsSkeleton } from "../_components/staff-details-skeleton";
+import { StaffDetailsSkeleton } from "@/components/admin/staff-details-skeleton";
 
 interface PageProps {
   params: Promise<{

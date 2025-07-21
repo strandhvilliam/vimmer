@@ -1,7 +1,7 @@
 import React, { Suspense } from "react";
-import { InvitationNotFound } from "../_components/invitation-not-found";
-import { JuryInvitationDetails } from "../_components/jury-invitation-details";
-import { JuryInvitationDetailsSkeleton } from "../_components/jury-invitation-details-skeleton";
+import { InvitationNotFound } from "@/components/admin/invitation-not-found";
+import { JuryInvitationDetails } from "@/components/admin/jury-invitation-details";
+import { JuryInvitationDetailsSkeleton } from "@/components/admin/jury-invitation-details-skeleton";
 import { batchPrefetch, getQueryClient, trpc } from "@/trpc/server";
 import { HydrateClient } from "@/trpc/server";
 import { getDomain } from "@/lib/get-domain";
@@ -33,7 +33,7 @@ export default async function JuryInvitationDetailsPage({
   const invitation = await queryClient.fetchQuery(
     trpc.jury.getJuryInvitationById.queryOptions({
       id: Number(invitationId),
-    })
+    }),
   );
 
   if (!invitation) {

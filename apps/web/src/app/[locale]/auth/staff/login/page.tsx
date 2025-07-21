@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import { LoginForm } from "../_components/login-form";
-import { LoginFormSkeleton } from "../_components/login-form-skeleton";
+import { StaffLoginForm } from "@/components/auth/staff-login-form";
+import { LoginFormSkeleton } from "@/components/auth/staff-login-form-skeleton";
 import { DotPattern } from "@vimmer/ui/components/dot-pattern";
 
 export default function StaffLoginPage() {
@@ -15,7 +15,7 @@ export default function StaffLoginPage() {
       </div>
       <div className="w-full max-w-md px-6">
         <Suspense fallback={<LoginFormSkeleton />}>
-          <LoginForm />
+          <StaffLoginForm />
         </Suspense>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
-import { JurySidebar } from "./jury-sidebar";
-import { JurySidebarSkeleton } from "./jury-sidebar-skeleton";
+import { JurySidebar } from "../../../../../../../components/admin/jury-sidebar";
+import { JurySidebarSkeleton } from "../../../../../../../components/admin/jury-sidebar-skeleton";
 import { ErrorBoundary } from "react-error-boundary";
 import { getDomain } from "@/lib/get-domain";
 import { batchPrefetch, HydrateClient, trpc } from "@/trpc/server";

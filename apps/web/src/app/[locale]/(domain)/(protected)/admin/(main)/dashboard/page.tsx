@@ -1,9 +1,9 @@
-import { DashboardCards } from "./_components/dashboard-cards";
-import { RecentParticipantsTable } from "./_components/recent-participants-table";
-import { TimeSeriesChart } from "./_components/time-series-chart";
-import { GpsMapChart } from "./_components/gps-map-chart";
-import { DeviceGroupChart } from "./_components/device-group-chart";
-import { ClassChart } from "./_components/class-chart";
+import { DashboardCards } from "@/components/admin/dashboard-cards";
+import { RecentParticipantsTable } from "@/components/admin/recent-participants-table";
+import { TimeSeriesChart } from "@/components/admin/time-series-chart";
+import { GpsMapChart } from "@/components/admin/gps-map-chart";
+import { DeviceGroupChart } from "@/components/admin/device-group-chart";
+import { ClassChart } from "@/components/admin/class-chart";
 import { Suspense } from "react";
 import {
   DashboardCardsSkeleton,
@@ -12,7 +12,7 @@ import {
   TimeSeriesChartSkeleton,
   GpsMapChartSkeleton,
   RecentParticipantsTableSkeleton,
-} from "./_components/loading-skeletons";
+} from "@/components/admin/loading-skeletons";
 import { getDomain } from "@/lib/get-domain";
 import { batchPrefetch, HydrateClient, trpc } from "@/trpc/server";
 

@@ -7,9 +7,9 @@ import {
   TabsList,
   TabsTrigger,
 } from "@vimmer/ui/components/tabs";
-import { SubmissionsParticipantsTabSkeleton } from "./_components/submissions-participants-skeleton";
-import { SubmissionsParticipantsTable } from "./_components/submissions-participants-table";
-import { SubmissionsTopicsTable } from "./_components/submissions-topics-table";
+import { SubmissionsParticipantsTabSkeleton } from "@/components/admin/submissions-participants-skeleton";
+import { SubmissionsParticipantsTable } from "@/components/admin/submissions-participants-table";
+import { SubmissionsTopicsTable } from "@/components/admin/submissions-topics-table";
 import { useDomain } from "@/contexts/domain-context";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
@@ -21,7 +21,7 @@ export function SubmissionsClientPage() {
   const { data: participants } = useSuspenseQuery(
     trpc.participants.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
 
   return (

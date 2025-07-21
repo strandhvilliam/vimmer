@@ -1,8 +1,8 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
-import { TopicsClientWrapper } from "./_components/topics-client-wrapper";
-import { TopicsTableSkeleton } from "./_components/topics-table-skeleton";
-import { TopicsHeader } from "./_components/topics-header";
+import { TopicsClientWrapper } from "@/components/admin/topics-client-wrapper";
+import { TopicsTableSkeleton } from "@/components/admin/topics-table-skeleton";
+import { TopicsHeader } from "@/components/admin/topics-header";
 import { HydrateClient, batchPrefetch, trpc } from "@/trpc/server";
 import { getDomain } from "@/lib/get-domain";
 

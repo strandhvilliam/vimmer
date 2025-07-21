@@ -1,8 +1,8 @@
 import { Separator } from "@vimmer/ui/components/separator";
 import { Suspense } from "react";
-import { ClassesLoadingSkeleton } from "./_components/class-loading-skeleton";
-import { DeviceGroupsSection } from "./_components/device-groups-section";
-import { CompetitionClassSection } from "./_components/competition-class-section";
+import { ClassesLoadingSkeleton } from "@/components/admin/class-loading-skeleton";
+import { DeviceGroupsSection } from "@/components/admin/device-groups-section";
+import { CompetitionClassSection } from "@/components/admin/competition-class-section";
 import { getDomain } from "@/lib/get-domain";
 import { batchPrefetch, trpc } from "@/trpc/server";
 
