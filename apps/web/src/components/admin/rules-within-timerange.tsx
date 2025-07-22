@@ -11,7 +11,7 @@ const description =
   "Verify photos were taken during the specified competition timeframe using EXIF data.";
 const recommendedSeverity = "error";
 
-export default function WithinTimerangeRule({ field }: { field: AnyFieldApi }) {
+export function RulesWithinTimerange({ field }: { field: AnyFieldApi }) {
   const hasTimeStart = field.state.value.params?.start !== "";
   const hasTimeEnd = field.state.value.params?.end !== "";
 

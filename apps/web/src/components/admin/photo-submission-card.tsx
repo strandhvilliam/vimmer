@@ -1,20 +1,17 @@
-import {
-  CompetitionClass,
-  Participant,
-  Submission,
-  Topic,
-} from "@vimmer/api/db/types";
+import { CompetitionClass, Topic } from "@vimmer/api/db/types";
 import { Card, CardContent } from "@vimmer/ui/components/card";
 
-export function PhotoSubmissionCard({
-  competitionClass,
-  topic,
-  imageUrl,
-}: {
+interface SubmissionPreviewCardProps {
   competitionClass: CompetitionClass | null;
   topic: Topic;
   imageUrl: string | null;
-}) {
+}
+
+export function SubmissionPreviewCard({
+  competitionClass,
+  topic,
+  imageUrl,
+}: SubmissionPreviewCardProps) {
   return (
     <div className="space-y-4">
       <Card className="sticky top-8 overflow-hidden shadow-2xl h-full flex flex-col">

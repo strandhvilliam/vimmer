@@ -1,5 +1,5 @@
-import { AppSidebar } from "../_components/app-sidebar";
-import { AppHeader } from "../_components/app-header";
+import { AppSidebar } from "@/components/admin/app-sidebar";
+import { AppHeader } from "@/components/admin/app-header";
 import { SidebarInset, SidebarProvider } from "@vimmer/ui/components/sidebar";
 import { DotPattern } from "@vimmer/ui/components/dot-pattern";
 import { getDomain } from "@/lib/get-domain";

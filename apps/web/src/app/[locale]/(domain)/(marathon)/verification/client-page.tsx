@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import QrCodeGenerator from "@/components/qr-generator";
+import QrCodeGenerator from "@/components/participate/qr-generator";
 import {
   CardDescription,
   CardTitle,
@@ -40,8 +40,8 @@ export function ClientVerificationPage() {
         refetchOnWindowFocus: true,
         refetchOnReconnect: true,
         refetchInterval: 5000,
-      }
-    )
+      },
+    ),
   );
 
   useEffect(() => {

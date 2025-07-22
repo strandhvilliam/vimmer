@@ -1,9 +1,13 @@
 "use client";
+
 import dynamic from "next/dynamic";
 
-const ImageGrid = dynamic(() => import("@/components/image-grid"), {
-  ssr: false,
-});
+const ImageGrid = dynamic(
+  () => import("@/components/auth/image-grid").then((mod) => mod.ImageGrid),
+  {
+    ssr: false,
+  },
+);
 
 interface AdminAuthLayoutProps {
   children: React.ReactNode;

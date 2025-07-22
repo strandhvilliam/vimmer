@@ -20,7 +20,7 @@ import { useTRPC } from "@/trpc/client";
 import { useQuery } from "@tanstack/react-query";
 import { useDomain } from "@/contexts/domain-context";
 import { useMarathonIsConfigured } from "@/hooks/use-marathon-is-configured";
-import { MarathonNotConfigured } from "@/components/marathon-not-configured";
+import { MarathonNotConfigured } from "@/components/participate/marathon-not-configured";
 import TermsAndConditionsDialog from "@/components/terms-and-conditions-dialog";
 
 export function ParticipateClientPage() {

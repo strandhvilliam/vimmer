@@ -39,11 +39,11 @@ export function CompetitionClassCreateDialog({
   const { domain } = useDomain();
 
   const { data: marathon } = useSuspenseQuery(
-    trpc.marathons.getByDomain.queryOptions({ domain })
+    trpc.marathons.getByDomain.queryOptions({ domain }),
   );
 
   const { data: topics } = useSuspenseQuery(
-    trpc.topics.getByDomain.queryOptions({ domain })
+    trpc.topics.getByDomain.queryOptions({ domain }),
   );
 
   const { mutate: createCompetitionClass, isPending: isCreatingClass } =
@@ -62,7 +62,7 @@ export function CompetitionClassCreateDialog({
             queryKey: trpc.competitionClasses.pathKey(),
           });
         },
-      })
+      }),
     );
 
   const form = useForm({
@@ -156,7 +156,7 @@ export function CompetitionClassCreateDialog({
               onChange: ({ value }) => {
                 const result =
                   createCompetitionClassSchema.shape.description.safeParse(
-                    value
+                    value,
                   );
                 return result.success
                   ? undefined
@@ -200,7 +200,7 @@ export function CompetitionClassCreateDialog({
               onChange: ({ value }) => {
                 const result =
                   createCompetitionClassSchema.shape.numberOfPhotos.safeParse(
-                    value
+                    value,
                   );
                 return result.success
                   ? undefined
@@ -225,7 +225,7 @@ export function CompetitionClassCreateDialog({
                     onClick={() => {
                       const newValue = Math.max(
                         1,
-                        Number(field.state.value) - 1
+                        Number(field.state.value) - 1,
                       );
                       field.handleChange(newValue);
                     }}
@@ -246,7 +246,7 @@ export function CompetitionClassCreateDialog({
                     onClick={() => {
                       const newValue = Math.min(
                         50,
-                        Number(field.state.value) + 1
+                        Number(field.state.value) + 1,
                       );
                       field.handleChange(newValue);
                     }}
@@ -273,7 +273,7 @@ export function CompetitionClassCreateDialog({
               onChange: ({ value }) => {
                 const result =
                   createCompetitionClassSchema.shape.topicStartIndex.safeParse(
-                    value
+                    value,
                   );
                 return result.success
                   ? undefined

@@ -5,13 +5,12 @@ import { Plus } from "lucide-react";
 import { TopicsCreateDialog } from "./topics-create-dialog";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { useTRPC } from "@/trpc/client";
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useDomain } from "@/contexts/domain-context";
 
 export function TopicsHeader() {
   const { domain } = useDomain();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const queryClient = useQueryClient();
   const trpc = useTRPC();
 
   const { data: marathon } = useSuspenseQuery(
@@ -19,27 +18,6 @@ export function TopicsHeader() {
       domain,
     }),
   );
-
-  // const { execute: createTopic, isExecuting: isCreatingTopic } = useAction(
-  //   createTopicAction,
-  //   {
-  //     onError: (error) => {
-  //       if (typeof error.error.serverError === "string") {
-  //         toast.error("Failed to create topic", {
-  //           description: error.error.serverError,
-  //         });
-  //       }
-  //     },
-  //     onSuccess: () => {
-  //       toast.success("Topic created");
-  //     },
-  //     onSettled: () => {
-  //       queryClient.invalidateQueries({
-  //         queryKey: trpc.topics.pathKey(),
-  //       });
-  //     },
-  //   }
-  // );
 
   if (!marathon) {
     return null;

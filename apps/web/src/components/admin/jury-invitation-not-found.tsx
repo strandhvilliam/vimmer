@@ -6,7 +6,7 @@ interface InvitationNotFoundProps {
   onClick?: () => void;
 }
 
-export function InvitationNotFound({ onClick }: InvitationNotFoundProps) {
+export function JuryInvitationNotFound({ onClick }: InvitationNotFoundProps) {
   const router = useRouter();
 
   const handleClick = () => {

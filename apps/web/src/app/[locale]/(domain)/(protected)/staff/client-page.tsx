@@ -6,7 +6,7 @@ import { Button } from "@vimmer/ui/components/button";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { DotPattern } from "@vimmer/ui/components/dot-pattern";
 import QrScanDrawer from "@/components/qr-scan-drawer";
-import { ManualEntrySheet } from "@/components/manual-entry-overlay";
+import { ManualEntrySheet } from "@/components/staff/manual-entry-overlay";
 import { VerifiedParticipantsSheet } from "@/components/staff/verified-participants-sheet";
 import { ParticipantInfoSheet } from "@/components/staff/participant-info-sheet";
 import { toast } from "sonner";

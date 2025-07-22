@@ -60,11 +60,11 @@ function generateRandomStockholmLocations(count: number): PhotoLocation[] {
   return locations;
 }
 
-export function GpsMapChart() {
+export function DashboardGpsMapChart() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const [photoLocations] = useState<PhotoLocation[]>(
-    generateRandomStockholmLocations(10)
+    generateRandomStockholmLocations(10),
   );
 
   const mapStyle =
@@ -103,8 +103,8 @@ export function GpsMapChart() {
             .setLngLat([location.longitude, location.latitude])
             .setPopup(
               new maplibregl.Popup().setHTML(
-                `<h3>${location.name}</h3>` as string
-              )
+                `<h3>${location.name}</h3>` as string,
+              ),
             )
             .addTo(map.current);
         }

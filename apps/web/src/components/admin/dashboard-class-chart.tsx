@@ -28,14 +28,14 @@ const COLORS = [
   "#D0ED57",
 ];
 
-export function ClassChart() {
+export function DashboardClassChart() {
   const trpc = useTRPC();
   const { domain } = useDomain();
   const { data: competitionClasses } = useSuspenseQuery(
-    trpc.competitionClasses.getByDomain.queryOptions({ domain })
+    trpc.competitionClasses.getByDomain.queryOptions({ domain }),
   );
   const { data: participants } = useSuspenseQuery(
-    trpc.participants.getByDomain.queryOptions({ domain })
+    trpc.participants.getByDomain.queryOptions({ domain }),
   );
 
   const classStats = competitionClasses.map((cls) => ({
@@ -51,7 +51,7 @@ export function ClassChart() {
       };
       return config;
     },
-    {} as Record<string, { label: string; color: string }>
+    {} as Record<string, { label: string; color: string }>,
   );
 
   return (

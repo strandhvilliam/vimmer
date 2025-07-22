@@ -14,7 +14,7 @@ interface SeverityToggleProps {
   recommendedSeverity: SeverityLevel;
 }
 
-export function SeverityToggle({
+export function RulesSeverityToggle({
   severity,
   onSeverityChange,
   recommendedSeverity,
@@ -68,7 +68,7 @@ export function SeverityToggle({
             "rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1",
             severity === "warning"
               ? "bg-amber-100 text-amber-800 shadow-sm border border-amber-200"
-              : "text-muted-foreground hover:bg-background/50"
+              : "text-muted-foreground hover:bg-background/50",
           )}
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
@@ -83,7 +83,7 @@ export function SeverityToggle({
             "rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1",
             severity === "error"
               ? "bg-red-100 text-red-800 shadow-sm border border-red-200"
-              : "text-muted-foreground hover:bg-background/50"
+              : "text-muted-foreground hover:bg-background/50",
           )}
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}

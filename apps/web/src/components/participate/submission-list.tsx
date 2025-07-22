@@ -55,11 +55,6 @@ export function SubmissionsList({
           />
         </motion.div>
       ))}
-
-      {/* Display group validation results */}
-      {/* {groupValidations.length > 0 && photos.length > 1 && (
-              <GroupValidationStatus results={groupValidations} />
-            )} */}
     </div>
   );
 }

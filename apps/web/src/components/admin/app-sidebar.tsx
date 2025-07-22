@@ -7,7 +7,7 @@ import {
 } from "@vimmer/ui/components/sidebar";
 import SidebarLinks from "./sidebar-links";
 import { Suspense } from "react";
-import { NavUser } from "./nav-user";
+import { SidebarNavUser } from "./sidebar-nav-user";
 import {
   AppSidebarHeader,
   AppSidebarHeaderSkeleton,
@@ -34,7 +34,7 @@ export async function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <NavUser />
+            <SidebarNavUser />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

@@ -5,7 +5,7 @@ import { ClassSelectionStep } from "@/components/participate/class-selection-ste
 import { DeviceSelectionStep } from "@/components/participate/device-selection-step";
 import { ParticipantNumberStep } from "@/components/participate/participant-number-step";
 import { ParticipantDetailsStep } from "@/components/participate/participant-details-step";
-import { StepNavigator } from "@/components/step-navigator";
+import { StepNavigator } from "@/components/participate/step-navigator";
 import { UploadSubmissionsStep } from "@/components/participate/upload-submissions-step";
 import { STEPS } from "@/lib/constants";
 import { AnimatePresence } from "motion/react";

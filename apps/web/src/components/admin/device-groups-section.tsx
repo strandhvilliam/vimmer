@@ -27,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@vimmer/ui/components/alert-dialog";
-import { Camera, Smartphone, XIcon, Zap, Trash2 } from "lucide-react";
+import { Camera, Smartphone, Zap, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 function getDeviceIcon(icon: string) {
@@ -47,11 +47,11 @@ export function DeviceGroupsSection() {
   const { domain } = useDomain();
   const [editDeviceGroupId, setEditDeviceGroupId] = useQueryState(
     "editDeviceGroupId",
-    parseAsInteger
+    parseAsInteger,
   );
 
   const { data: groups } = useSuspenseQuery(
-    trpc.deviceGroups.getByDomain.queryOptions({ domain })
+    trpc.deviceGroups.getByDomain.queryOptions({ domain }),
   );
 
   const { mutate: deleteDeviceGroup, isPending: isDeleting } = useMutation(
@@ -67,7 +67,7 @@ export function DeviceGroupsSection() {
           queryKey: trpc.deviceGroups.pathKey(),
         });
       },
-    })
+    }),
   );
 
   return (

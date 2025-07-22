@@ -32,7 +32,7 @@ interface ReviewTimelineProps {
   hasIssues: boolean;
 }
 
-export function ReviewTimeline({
+export function SubmissionReviewTimeline({
   submission,
   participant,
   hasIssues,
@@ -63,7 +63,7 @@ export function ReviewTimeline({
           description: "Photo uploaded by participant",
           timestamp: format(
             new Date(submission.createdAt),
-            "MMM d, yyyy HH:mm"
+            "MMM d, yyyy HH:mm",
           ),
           icon: ImageIcon,
         },
@@ -82,7 +82,7 @@ export function ReviewTimeline({
             description: "Technical validation complete",
             timestamp: format(
               new Date(submission.updatedAt || submission.createdAt),
-              "MMM d, yyyy HH:mm"
+              "MMM d, yyyy HH:mm",
             ),
             icon: CheckCircle,
           }
@@ -103,9 +103,9 @@ export function ReviewTimeline({
             new Date(
               isParticipantVerified && participant.updatedAt
                 ? participant.updatedAt
-                : submission.updatedAt || submission.createdAt
+                : submission.updatedAt || submission.createdAt,
             ),
-            "MMM d, yyyy HH:mm"
+            "MMM d, yyyy HH:mm",
           ),
           icon: CheckCircle2,
         }

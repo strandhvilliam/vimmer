@@ -30,7 +30,7 @@ import { Send } from "lucide-react";
 import { addDays } from "date-fns";
 import { useForm } from "@tanstack/react-form";
 
-interface CreateInvitationSheetProps {
+interface JuryInvitationCreateSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -51,10 +51,10 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function CreateInvitationSheet({
+export function JuryInvitationCreateSheet({
   open,
   onOpenChange,
-}: CreateInvitationSheetProps) {
+}: JuryInvitationCreateSheetProps) {
   const { domain } = useDomain();
   const trpc = useTRPC();
   const queryClient = useQueryClient();

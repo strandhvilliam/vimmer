@@ -9,7 +9,7 @@ const description =
   "Require all photos in a single submission to originate from the same camera/device.";
 const recommendedSeverity = "warning";
 
-export default function SameDeviceRule({ field }: { field: AnyFieldApi }) {
+export function RulesSameDevice({ field }: { field: AnyFieldApi }) {
   return (
     <RuleCard
       title={title}

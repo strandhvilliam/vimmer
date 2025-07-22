@@ -1,7 +1,7 @@
 import { Suspense } from "react";
-import { AdminLoginForm } from "./admin-login-form";
-import { AdminLoginTitle } from "./admin-login-title";
-import { AdminLoginFormSkeleton } from "./admin-login-form-skeleton";
+import { AdminLoginForm } from "../../../../../components/auth/admin-login-form";
+import { AdminLoginTitle } from "../../../../../components/auth/admin-login-title";
+import { AdminLoginFormSkeleton } from "../../../../../components/auth/admin-login-form-skeleton";
 
 export default function AdminLoginPage() {
   return (

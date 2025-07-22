@@ -25,11 +25,11 @@ const timeSeriesConfig = {
   },
 };
 
-export function TimeSeriesChart() {
+export function DashboardTimeSeriesChart() {
   const { domain } = useDomain();
   const trpc = useTRPC();
   const { data: participants } = useSuspenseQuery(
-    trpc.participants.getByDomain.queryOptions({ domain })
+    trpc.participants.getByDomain.queryOptions({ domain }),
   );
 
   const participantsByDate = participants.reduce(
@@ -38,7 +38,7 @@ export function TimeSeriesChart() {
       acc[date] = (acc[date] || 0) + 1;
       return acc;
     },
-    {} as Record<string, number>
+    {} as Record<string, number>,
   );
 
   const timeSeriesData = Object.entries(participantsByDate)

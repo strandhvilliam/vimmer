@@ -26,7 +26,7 @@ import {
 import { SidebarMenuButton, useSidebar } from "@vimmer/ui/components/sidebar";
 import { useSession } from "@/hooks/use-session";
 
-export function NavUser() {
+export function SidebarNavUser() {
   const { user } = useSession();
   const { isMobile } = useSidebar();
   if (!user) return null;

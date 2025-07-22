@@ -5,7 +5,7 @@ import React from "react";
 import { Card } from "@vimmer/ui/components/card";
 import { motion } from "motion/react";
 import { AnyFieldApi } from "@tanstack/react-form";
-import { SeverityToggle } from "./severity-toggle";
+import { RulesSeverityToggle } from "./rules-severity-toggle";
 import { Switch } from "@vimmer/ui/components/switch";
 import { SeverityLevel } from "@vimmer/validation/types";
 
@@ -53,7 +53,7 @@ export function RuleCard({
           transition={{ duration: 0.15, ease: "easeOut" }}
           className="overflow-hidden pt-4 border-t border-border/60 mt-4 flex justify-between items-center"
         >
-          <SeverityToggle
+          <RulesSeverityToggle
             severity={field.state.value.severity}
             onSeverityChange={(severity) => {
               field.handleChange({ ...field.state.value, severity });

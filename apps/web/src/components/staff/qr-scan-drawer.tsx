@@ -10,9 +10,12 @@ import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import posthog from "posthog-js";
 
-const QrScanner = dynamic(() => import("./qr-scanner"), {
-  ssr: false,
-});
+const QrScanner = dynamic(
+  () => import("./qr-scanner").then((mod) => mod.QrScanner),
+  {
+    ssr: false,
+  },
+);
 
 interface QrScanDrawerProps {
   open: boolean;

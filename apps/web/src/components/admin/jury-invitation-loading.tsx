@@ -1,7 +1,7 @@
 import { Skeleton } from "@vimmer/ui/components/skeleton";
 import { Card, CardHeader, CardContent } from "@vimmer/ui/components/card";
 
-export function InvitationLoading() {
+export function JuryInvitationLoading() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <Skeleton className="h-8 w-1/3 mb-4" />

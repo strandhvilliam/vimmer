@@ -12,7 +12,7 @@ import { useTRPC } from "@/trpc/client";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useDomain } from "@/contexts/domain-context";
 import { JuryInvitation } from "@vimmer/supabase/types";
-import { CreateInvitationSheet } from "./create-invitation-sheet";
+import { JuryInvitationCreateSheet } from "./jury-invitation-create-sheet";
 
 export function JurySidebar() {
   const { domain } = useDomain();
@@ -109,7 +109,7 @@ export function JurySidebar() {
           </ScrollArea>
         </div>
       </div>
-      <CreateInvitationSheet open={open} onOpenChange={setOpen} />
+      <JuryInvitationCreateSheet open={open} onOpenChange={setOpen} />
     </>
   );
 }

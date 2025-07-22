@@ -66,7 +66,7 @@ function formatRuleKey(ruleKey: string): string {
 
 const columnHelper = createColumnHelper<ValidationResultWithOrder>();
 
-export function ValidationResultsTable({
+export function ParticipantValidationResultsTable({
   validationResults,
   topics,
 }: ValidationResultsTableProps) {
@@ -99,7 +99,7 @@ export function ValidationResultsTable({
           queryKey: trpc.participants.pathKey(),
         });
       },
-    })
+    }),
   );
 
   const columns = useMemo(
@@ -149,7 +149,7 @@ export function ValidationResultsTable({
                 className={cn(
                   info.row.original.severity === "error"
                     ? "bg-destructive/15 text-destructive hover:bg-destructive/20"
-                    : "bg-yellow-500/15 text-yellow-600 border-yellow-200 hover:bg-yellow-500/20"
+                    : "bg-yellow-500/15 text-yellow-600 border-yellow-200 hover:bg-yellow-500/20",
                 )}
               >
                 {info.row.original.severity === "error" ? (
@@ -223,7 +223,7 @@ export function ValidationResultsTable({
         },
       }),
     ],
-    [updateValidationResult, isUpdatingValidationResult]
+    [updateValidationResult, isUpdatingValidationResult],
   );
 
   const resultsWithOrderIndex = useMemo(
@@ -234,14 +234,14 @@ export function ValidationResultsTable({
 
         if (result.fileName) {
           extractedOrderIndex = extractOrderIndexFromFileName(
-            result.fileName as string
+            result.fileName as string,
           );
           console.log(extractedOrderIndex);
 
           // Find the topic name based on the order index
           if (extractedOrderIndex !== null) {
             const topic = topics.find(
-              (t) => t.orderIndex === extractedOrderIndex
+              (t) => t.orderIndex === extractedOrderIndex,
             );
             topicName = topic?.name || null;
           }
@@ -253,7 +253,7 @@ export function ValidationResultsTable({
           topicName,
         };
       }),
-    [validationResults, topics]
+    [validationResults, topics],
   );
 
   const table = useReactTable({
@@ -303,7 +303,7 @@ export function ValidationResultsTable({
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                   </TableHead>
                 ))}
@@ -322,7 +322,7 @@ export function ValidationResultsTable({
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}

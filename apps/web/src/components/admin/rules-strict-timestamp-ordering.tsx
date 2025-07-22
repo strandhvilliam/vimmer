@@ -4,12 +4,16 @@ import React from "react";
 import { RuleCard } from "./rule-card";
 import { AnyFieldApi } from "@tanstack/react-form";
 
-const title = "No Digital Modifications";
+const title = "Strict Timestamp Ordering";
 const description =
-  "Detect if photos show signs of editing in software like Photoshop, Lightroom, etc.";
+  "Ensure photo timestamps align chronologically with the theme submission order.";
 const recommendedSeverity = "warning";
 
-export default function NoModificationsRule({ field }: { field: AnyFieldApi }) {
+export function RulesStrictTimestampOrdering({
+  field,
+}: {
+  field: AnyFieldApi;
+}) {
   return (
     <RuleCard
       title={title}

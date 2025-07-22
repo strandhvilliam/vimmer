@@ -37,7 +37,7 @@ import {
 } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { JuryStatusBadge } from "@/components/admin/jury-status-badge";
-import { InvitationNotFound } from "@/components/admin/invitation-not-found";
+import { JuryInvitationNotFound } from "@/components/admin/jury-invitation-not-found";
 
 interface JuryInvitationDetailsProps {
   invitationId: number;
@@ -115,7 +115,7 @@ export function JuryInvitationDetails({
   const topic = topics.find((t) => t.id === invitation?.topicId);
 
   if (!invitation) {
-    return <InvitationNotFound />;
+    return <JuryInvitationNotFound />;
   }
 
   return (

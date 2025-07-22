@@ -15,7 +15,7 @@ import {
   AccordionTrigger,
 } from "@vimmer/ui/components/accordion";
 
-export function PhonePreview({ marathon }: { marathon: Marathon }) {
+export function SettingsPhonePreview({ marathon }: { marathon: Marathon }) {
   return (
     <div className="w-[340px] max-h-[680px] relative border-8 border-muted rounded-3xl overflow-y-auto shadow-2xl flex flex-col">
       <DotPattern />

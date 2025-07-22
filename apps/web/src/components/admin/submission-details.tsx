@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { AlertTriangle, Camera, Smartphone, Upload } from "lucide-react";
 import { Card, CardContent } from "@vimmer/ui/components/card";
-import { ReviewTimeline } from "./review-timeline";
+import { SubmissionReviewTimeline } from "./submission-review-timeline";
 import {
   CompetitionClass,
   DeviceGroup,
@@ -91,7 +91,7 @@ export function SubmissionDetails({
         </CardContent>
       </Card>
 
-      <ReviewTimeline
+      <SubmissionReviewTimeline
         submission={submission}
         participant={participant}
         hasIssues={hasIssues}

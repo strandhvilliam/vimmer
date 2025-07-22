@@ -12,7 +12,7 @@ import {
 import { Suspense } from "react";
 import { Input } from "@vimmer/ui/components/input";
 import { cn } from "@vimmer/ui/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { editDeviceGroupSchema } from "@/lib/schemas";
 import { toast } from "sonner";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
@@ -56,7 +56,7 @@ function DeviceGroupEditForm({
   const queryClient = useQueryClient();
 
   const { data: deviceGroup } = useSuspenseQuery(
-    trpc.deviceGroups.getById.queryOptions({ id: deviceGroupId })
+    trpc.deviceGroups.getById.queryOptions({ id: deviceGroupId }),
   );
 
   const { mutate: editDeviceGroup, isPending } = useMutation(
@@ -73,7 +73,7 @@ function DeviceGroupEditForm({
           queryKey: trpc.deviceGroups.pathKey(),
         });
       },
-    })
+    }),
   );
 
   const form = useForm({
@@ -221,7 +221,7 @@ function DeviceGroupEditForm({
                   className={cn(
                     "flex-1 h-fit aspect-square p-0 relative overflow-hidden",
                     field.state.value === type.value &&
-                      "ring-2 ring-primary ring-offset-2"
+                      "ring-2 ring-primary ring-offset-2",
                   )}
                   onClick={() => field.handleChange(type.value)}
                 >

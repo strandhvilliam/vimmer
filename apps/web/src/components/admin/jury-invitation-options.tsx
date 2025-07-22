@@ -18,11 +18,13 @@ import { useRouter } from "next/navigation";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 
-interface InvitationOptionsProps {
+interface JuryInvitationOptionsProps {
   invitationId: number;
 }
 
-export function InvitationOptions({ invitationId }: InvitationOptionsProps) {
+export function JuryInvitationOptions({
+  invitationId,
+}: JuryInvitationOptionsProps) {
   const trpc = useTRPC();
   const router = useRouter();
 

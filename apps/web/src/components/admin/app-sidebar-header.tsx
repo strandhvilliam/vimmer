@@ -17,7 +17,7 @@ export function AppSidebarHeader() {
   const { user } = useSession();
   const { domain } = useDomain();
   const { data: marathons } = useSuspenseQuery(
-    trpc.users.getMarathonsByUserId.queryOptions({ userId: user?.id ?? "" })
+    trpc.users.getMarathonsByUserId.queryOptions({ userId: user?.id ?? "" }),
   );
 
   if (!user) {

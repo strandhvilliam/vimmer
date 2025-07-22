@@ -10,7 +10,7 @@ const title = "Maximum File Size";
 const description = "Set the largest allowed file size for individual photos.";
 const recommendedSeverity = "error";
 
-export default function MaxFileSizeRule({ field }: { field: AnyFieldApi }) {
+export function RulesMaxFileSize({ field }: { field: AnyFieldApi }) {
   const getMbValue = (bytes: number) => Math.round(bytes / (1024 * 1024));
 
   return (

@@ -14,7 +14,7 @@ import {
   CardContent,
 } from "@vimmer/ui/components/card";
 
-export function ExifDataDisplay({ exifData }: { exifData: any }) {
+export function SubmissionExifDataDisplay({ exifData }: { exifData: any }) {
   if (!exifData || Object.keys(exifData).length === 0) {
     return (
       <div className="p-8 text-center text-muted-foreground">
@@ -182,7 +182,7 @@ export function ExifDataDisplay({ exifData }: { exifData: any }) {
 
   const groupedKeys = Object.values(groups).flatMap((group) => group.keys);
   const otherKeys = Object.keys(exifData).filter(
-    (key) => !groupedKeys.includes(key)
+    (key) => !groupedKeys.includes(key),
   );
 
   return (

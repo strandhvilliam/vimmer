@@ -9,9 +9,9 @@ import {
 } from "@vimmer/ui/components/tabs";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
-import { PhotoSubmissionCard } from "./photo-submission-card";
-import { ValidationStepsTable } from "./validation-steps";
-import { ExifDataDisplay } from "./exif-data-display";
+import { SubmissionPreviewCard } from "./photo-submission-card";
+import { SubmissionValidationSteps } from "./submission-validation-steps";
+import { SubmissionExifDataDisplay } from "./submission-exif-data-display";
 import { SubmissionDetails } from "./submission-details";
 import { SubmissionHeader } from "./submission-header";
 import { useDomain } from "@/contexts/domain-context";
@@ -34,17 +34,17 @@ export function SubmissionDetailClient({
     trpc.participants.getByReference.queryOptions({
       domain,
       reference: participantRef,
-    })
+    }),
   );
 
   const { data: topics } = useSuspenseQuery(
     trpc.topics.getByDomain.queryOptions({
       domain,
-    })
+    }),
   );
 
   const submission = participant?.submissions.find(
-    (s) => s.id === parseInt(submissionId)
+    (s) => s.id === parseInt(submissionId),
   );
   const topic = topics.find((t) => t.id === submission?.topicId);
 
@@ -54,11 +54,11 @@ export function SubmissionDetailClient({
 
   const submissionValidationResults =
     participant?.validationResults?.filter(
-      (result) => result.fileName && result.fileName.includes(submission.key)
+      (result) => result.fileName && result.fileName.includes(submission.key),
     ) || [];
 
   const hasIssues = submissionValidationResults.some(
-    (result) => result.outcome === "failed"
+    (result) => result.outcome === "failed",
   );
 
   return (
@@ -105,17 +105,17 @@ export function SubmissionDetailClient({
             </TabsContent>
 
             <TabsContent value="validation" className="mt-4">
-              <ValidationStepsTable
+              <SubmissionValidationSteps
                 validationResults={submissionValidationResults}
               />
             </TabsContent>
 
             <TabsContent value="exif" className="mt-4 space-y-4">
-              <ExifDataDisplay exifData={submission.exif} />
+              <SubmissionExifDataDisplay exifData={submission.exif} />
             </TabsContent>
           </Tabs>
         </div>
-        <PhotoSubmissionCard
+        <SubmissionPreviewCard
           competitionClass={participant.competitionClass}
           topic={topic}
           imageUrl={

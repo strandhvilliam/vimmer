@@ -16,11 +16,7 @@ const FILE_TYPE_OPTIONS = [
   { value: "png", label: "PNG" },
 ];
 
-export default function AllowedFileTypesRule({
-  field,
-}: {
-  field: AnyFieldApi;
-}) {
+export function RulesAllowedFileTypes({ field }: { field: AnyFieldApi }) {
   return (
     <RuleCard
       title={title}
@@ -61,7 +57,7 @@ export default function AllowedFileTypesRule({
                   "border flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 outline-none",
                   isSelected
                     ? "bg-primary text-primary-foreground border-transparent shadow-sm hover:bg-primary/90"
-                    : "bg-secondary/60 hover:bg-secondary text-secondary-foreground border-border/50"
+                    : "bg-secondary/60 hover:bg-secondary text-secondary-foreground border-border/50",
                 )}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}

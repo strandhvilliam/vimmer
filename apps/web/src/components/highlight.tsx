@@ -1,4 +1,5 @@
 "use client";
+
 import { cn } from "@vimmer/ui/lib/utils";
 import { motion } from "motion/react";
 import React from "react";
@@ -30,7 +31,7 @@ export function Highlight({
       }}
       className={cn(
         `relative inline-block pb-1 px-1 rounded-lg bg-gradient-to-r from-pomegranate-300 to-pomegranate-300 dark:from-pomegranate-500 dark:to-pomegranate-500`,
-        className
+        className,
       )}
     >
       {children}

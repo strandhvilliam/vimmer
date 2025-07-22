@@ -30,7 +30,7 @@ interface InvitationDetailCardProps {
   deviceGroups: DeviceGroup[];
 }
 
-export function InvitationDetailCard({
+export function JuryInvitationDetailCard({
   invitation,
   competitionClasses,
   topics,

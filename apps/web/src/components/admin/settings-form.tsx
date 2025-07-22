@@ -23,7 +23,7 @@ import { Calendar } from "@vimmer/ui/components/calendar";
 import { TimePickerInput } from "@vimmer/ui/components/time-picker";
 import { toast } from "sonner";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
-import { PhonePreview } from "./phone-preview";
+import { SettingsPhonePreview } from "./settings-phone-preview";
 import { useForm } from "@tanstack/react-form";
 import { getLogoUploadAction } from "@/lib/actions/logo-presigned-url-action";
 import {
@@ -1130,7 +1130,7 @@ function SettingsForm({
         <div className="relative w-fit">
           <h2 className="text-lg font-medium mb-4 font-rocgrotesk">Preview</h2>
           <div className="sticky top-8 bg-background shadow-lg border border-border p-8 rounded-lg">
-            <PhonePreview marathon={previewMarathon} />
+            <SettingsPhonePreview marathon={previewMarathon} />
           </div>
         </div>
       </div>

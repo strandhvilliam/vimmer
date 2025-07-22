@@ -27,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@vimmer/ui/components/alert-dialog";
-import { Plus, XIcon, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 export function CompetitionClassSection() {
@@ -36,19 +36,19 @@ export function CompetitionClassSection() {
   const { domain } = useDomain();
   const [editCompetitionClassId, setEditCompetitionClassId] = useQueryState(
     "editCompetitionClassId",
-    parseAsInteger
+    parseAsInteger,
   );
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useQueryState(
     "createCompetitionClass",
-    parseAsBoolean
+    parseAsBoolean,
   );
 
   const { data: classes } = useSuspenseQuery(
-    trpc.competitionClasses.getByDomain.queryOptions({ domain })
+    trpc.competitionClasses.getByDomain.queryOptions({ domain }),
   );
 
   const { data: topics } = useSuspenseQuery(
-    trpc.topics.getByDomain.queryOptions({ domain })
+    trpc.topics.getByDomain.queryOptions({ domain }),
   );
 
   const { mutate: deleteCompetitionClass, isPending: isDeleting } = useMutation(
@@ -64,7 +64,7 @@ export function CompetitionClassSection() {
           queryKey: trpc.competitionClasses.pathKey(),
         });
       },
-    })
+    }),
   );
 
   return (
@@ -89,7 +89,7 @@ export function CompetitionClassSection() {
             onOpenEdit={() => setEditCompetitionClassId(classItem.id)}
             isDeleting={isDeleting}
             topic={topics.find(
-              (topic) => topic.orderIndex === classItem.topicStartIndex
+              (topic) => topic.orderIndex === classItem.topicStartIndex,
             )}
           />
         ))}

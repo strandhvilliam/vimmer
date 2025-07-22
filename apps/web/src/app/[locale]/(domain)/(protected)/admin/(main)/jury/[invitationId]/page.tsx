@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { InvitationNotFound } from "@/components/admin/invitation-not-found";
+import { JuryInvitationNotFound } from "@/components/admin/jury-invitation-not-found";
 import { JuryInvitationDetails } from "@/components/admin/jury-invitation-details";
 import { JuryInvitationDetailsSkeleton } from "@/components/admin/jury-invitation-details-skeleton";
 import { batchPrefetch, getQueryClient, trpc } from "@/trpc/server";
@@ -37,7 +37,7 @@ export default async function JuryInvitationDetailsPage({
   );
 
   if (!invitation) {
-    return <InvitationNotFound />;
+    return <JuryInvitationNotFound />;
   }
 
   return (

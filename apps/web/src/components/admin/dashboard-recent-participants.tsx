@@ -31,7 +31,7 @@ import { useCurrentLocale } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";
 import { useTransition } from "react";
 
-export function RecentParticipantsTable() {
+export function DashboardRecentParticipants() {
   const trpc = useTRPC();
   const { domain } = useDomain();
   const locale = useCurrentLocale();
@@ -39,13 +39,13 @@ export function RecentParticipantsTable() {
   const [isPending, startTransition] = useTransition();
 
   const { data: participants } = useSuspenseQuery(
-    trpc.participants.getByDomain.queryOptions({ domain })
+    trpc.participants.getByDomain.queryOptions({ domain }),
   );
 
   const recentParticipants = participants
     .sort(
       (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     )
     .slice(0, 10);
 
@@ -123,7 +123,7 @@ export function RecentParticipantsTable() {
                       <div className="flex items-center gap-2">
                         {participant.validationResults.filter(
                           (r) =>
-                            r.severity === "error" && r.outcome === "failed"
+                            r.severity === "error" && r.outcome === "failed",
                         ).length > 0 && (
                           <Badge
                             variant="destructive"
@@ -134,14 +134,14 @@ export function RecentParticipantsTable() {
                               participant.validationResults.filter(
                                 (r) =>
                                   r.severity === "error" &&
-                                  r.outcome === "failed"
+                                  r.outcome === "failed",
                               ).length
                             }
                           </Badge>
                         )}
                         {participant.validationResults.filter(
                           (r) =>
-                            r.severity === "warning" && r.outcome === "failed"
+                            r.severity === "warning" && r.outcome === "failed",
                         ).length > 0 && (
                           <Badge
                             variant="outline"
@@ -152,7 +152,7 @@ export function RecentParticipantsTable() {
                               participant.validationResults.filter(
                                 (r) =>
                                   r.severity === "warning" &&
-                                  r.outcome === "failed"
+                                  r.outcome === "failed",
                               ).length
                             }
                           </Badge>

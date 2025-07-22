@@ -1,9 +1,10 @@
 "use client";
+
 import { BlurFade } from "@vimmer/ui/components/blur-fade";
 import { motion } from "framer-motion";
 import React from "react";
 
-export default function ImageGrid() {
+export function ImageGrid() {
   const createColumnImages = (columnIndex: number, count: number) => {
     return Array.from({ length: count }, (_, i) => {
       const isLandscape = (i + columnIndex) % 2 === 0;
@@ -65,7 +66,7 @@ export default function ImageGrid() {
                       />
                     </motion.div>
                   </BlurFade>
-                )
+                ),
               )}
             </motion.div>
           </div>

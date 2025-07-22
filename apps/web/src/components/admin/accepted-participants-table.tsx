@@ -36,7 +36,7 @@ import {
   ValidationResult,
   CompetitionClass,
   DeviceGroup,
-} from "@vimmer/supabase/types";
+} from "@vimmer/api/db/types";
 
 type VerificationWithParticipant = ParticipantVerification & {
   participant: Participant & {
@@ -55,7 +55,7 @@ const columns = [
       id: "participantName",
       header: "Participant",
       cell: (info) => info.getValue(),
-    }
+    },
   ),
   columnHelper.accessor("participant.reference", {
     header: "Number",
@@ -139,7 +139,7 @@ export function AcceptedParticipantsTable({
                 <TableHead key={header.id}>
                   {flexRender(
                     header.column.columnDef.header,
-                    header.getContext()
+                    header.getContext(),
                   )}
                 </TableHead>
               ))}
@@ -153,7 +153,7 @@ export function AcceptedParticipantsTable({
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}

@@ -7,7 +7,7 @@ interface QrScannerProps {
   onError: (error: Error) => void;
 }
 
-export default function QrScanner({ onScan, onError }: QrScannerProps) {
+export function QrScanner({ onScan, onError }: QrScannerProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

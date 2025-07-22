@@ -1,9 +1,9 @@
 import { DashboardCards } from "@/components/admin/dashboard-cards";
-import { RecentParticipantsTable } from "@/components/admin/recent-participants-table";
-import { TimeSeriesChart } from "@/components/admin/time-series-chart";
-import { GpsMapChart } from "@/components/admin/gps-map-chart";
+import { DashboardRecentParticipants } from "@/components/admin/dashboard-recent-participants";
+import { DashboardTimeSeriesChart } from "@/components/admin/dashboard-time-series-chart";
+import { DashboardGpsMapChart } from "@/components/admin/dashboard-gps-map-chart";
 import { DeviceGroupChart } from "@/components/admin/device-group-chart";
-import { ClassChart } from "@/components/admin/class-chart";
+import { DashboardClassChart } from "@/components/admin/dashboard-class-chart";
 import { Suspense } from "react";
 import {
   DashboardCardsSkeleton,
@@ -39,21 +39,21 @@ export default async function DashboardPage() {
           </Suspense>
 
           <Suspense fallback={<ClassChartSkeleton />}>
-            <ClassChart />
+            <DashboardClassChart />
           </Suspense>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Suspense fallback={<TimeSeriesChartSkeleton />}>
-            <TimeSeriesChart />
+            <DashboardTimeSeriesChart />
           </Suspense>
           <Suspense fallback={<GpsMapChartSkeleton />}>
-            <GpsMapChart />
+            <DashboardGpsMapChart />
           </Suspense>
         </div>
 
         <Suspense fallback={<RecentParticipantsTableSkeleton />}>
-          <RecentParticipantsTable />
+          <DashboardRecentParticipants />
         </Suspense>
       </div>
     </HydrateClient>

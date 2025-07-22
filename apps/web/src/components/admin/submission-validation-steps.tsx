@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@vimmer/ui/components/table";
 
-export function ValidationStepsTable({
+export function SubmissionValidationSteps({
   validationResults,
 }: {
   validationResults: ValidationResult[];

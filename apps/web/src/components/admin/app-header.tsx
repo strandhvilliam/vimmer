@@ -17,15 +17,15 @@ export function AppHeader() {
   const { domain } = useDomain();
 
   const { data: marathon, isLoading: isMarathonLoading } = useQuery(
-    trpc.marathons.getByDomain.queryOptions({ domain })
+    trpc.marathons.getByDomain.queryOptions({ domain }),
   );
   const { data: deviceGroups, isLoading: isDeviceGroupsLoading } = useQuery(
-    trpc.deviceGroups.getByDomain.queryOptions({ domain })
+    trpc.deviceGroups.getByDomain.queryOptions({ domain }),
   );
   const { data: competitionClasses, isLoading: isCompetitionClassesLoading } =
     useQuery(trpc.competitionClasses.getByDomain.queryOptions({ domain }));
   const { data: topics, isLoading: isTopicsLoading } = useQuery(
-    trpc.topics.getByDomain.queryOptions({ domain })
+    trpc.topics.getByDomain.queryOptions({ domain }),
   );
 
   const isLoading =

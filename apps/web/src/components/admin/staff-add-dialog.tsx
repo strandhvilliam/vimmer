@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FieldApi, useForm } from "@tanstack/react-form";
+import { useForm } from "@tanstack/react-form";
 import { Plus, AlertTriangle, HardHat, Shield, Check } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import {
@@ -40,7 +40,7 @@ const roleTypes = [
   },
 ] as const;
 
-export function AddStaffDialog() {
+export function StaffAddDialog() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { domain } = useDomain();

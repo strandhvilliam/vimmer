@@ -11,7 +11,7 @@ import {
   CardDescription,
 } from "@vimmer/ui/components/card";
 import dynamic from "next/dynamic";
-import { ConfirmationDetailsDialog } from "@/components/confirmation-details-dialog";
+import { ConfirmationDetailsDialog } from "@/components/participate/confirmation-details-dialog";
 import { ConfirmationData } from "@/lib/types";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
