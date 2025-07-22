@@ -13,7 +13,7 @@ import type { SupabaseClient } from "@vimmer/supabase/types";
 
 export async function getParticipantByIdQuery(
   db: Database,
-  { id }: { id: number }
+  { id }: { id: number },
 ) {
   const result = await db.query.participants.findFirst({
     where: eq(participants.id, id),
@@ -25,24 +25,17 @@ export async function getParticipantByIdQuery(
     },
   });
 
-  if (!result) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Participant not found",
-    });
-  }
-
   return result;
 }
 
 export async function getParticipantByReferenceQuery(
   db: Database,
-  { reference, domain }: { reference: string; domain: string }
+  { reference, domain }: { reference: string; domain: string },
 ) {
   const result = await db.query.participants.findFirst({
     where: and(
       eq(participants.reference, reference),
-      eq(participants.domain, domain)
+      eq(participants.domain, domain),
     ),
     with: {
       submissions: true,
@@ -61,7 +54,7 @@ export async function getParticipantByReferenceQuery(
 
 export async function getParticipantsByDomainQuery(
   db: Database,
-  { domain }: { domain: string }
+  { domain }: { domain: string },
 ) {
   const result = await db.query.participants.findMany({
     where: eq(participants.domain, domain),
@@ -78,7 +71,7 @@ export async function getParticipantsByDomainQuery(
 
 export async function createParticipantMutation(
   db: Database,
-  { data }: { data: NewParticipant }
+  { data }: { data: NewParticipant },
 ): Promise<{ id: number }> {
   if (!data.domain) {
     throw new TRPCError({
@@ -122,7 +115,7 @@ export async function createParticipantMutation(
 
 export async function updateParticipantMutation(
   db: Database,
-  { id, data }: { id: number; data: Partial<NewParticipant> }
+  { id, data }: { id: number; data: Partial<NewParticipant> },
 ): Promise<{ id: number }> {
   const result = await db
     .update(participants)
@@ -142,7 +135,7 @@ export async function updateParticipantMutation(
 
 export async function deleteParticipantMutation(
   db: Database,
-  { id }: { id: number }
+  { id }: { id: number },
 ): Promise<{ id: number }> {
   await db
     .delete(validationResults)
@@ -167,7 +160,7 @@ export async function incrementUploadCounterMutation(
   {
     participantId,
     totalExpected,
-  }: { participantId: number; totalExpected: number }
+  }: { participantId: number; totalExpected: number },
 ) {
   const resp = await supabase
     .rpc("increment_upload_counter", {

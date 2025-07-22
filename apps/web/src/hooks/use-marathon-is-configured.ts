@@ -1,6 +1,6 @@
 import { useTRPC } from "@/trpc/client";
 import { useDomain } from "@/contexts/domain-context";
-import { useSuspenseQueries, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQueries } from "@tanstack/react-query";
 
 interface RequiredAction {
   action: string;

@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { AddStaffDialog } from "@/components/admin/add-staff-dialog";
+import { StaffAddDialog } from "@/components/admin/staff-add-dialog";
 import { StaffListMenu } from "@/components/admin/staff-list-menu";
 import { StaffListSkeleton } from "@/components/admin/staff-list-skeleton";
 import { StaffDetailsSkeleton } from "@/components/admin/staff-details-skeleton";
@@ -25,7 +25,7 @@ export default async function StaffLayout({
         <div className="pt-4 space-y-4  bg-background h-full">
           <div className="flex items-center justify-between px-4">
             <h2 className="text-lg font-semibold font-rocgrotesk">Staff</h2>
-            <AddStaffDialog />
+            <StaffAddDialog />
           </div>
           <Suspense fallback={<StaffListSkeleton />}>
             <StaffListMenu />

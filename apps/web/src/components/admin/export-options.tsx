@@ -41,11 +41,9 @@ export function ExportOptions({
   marathonId,
   isExternallyDisabled,
 }: ExportOptionsProps) {
-  // For EXIF export
   const [format, setFormat] = useState<string>("json");
   const [isLoading, setIsLoading] = useState(false);
 
-  // For ZIP export
   const zipSaver = useZipSaver();
   const { execute, isExecuting } = useAction(getPresignedPhotoArchivesAction, {
     onSuccess: async ({ data }) => {
@@ -54,7 +52,6 @@ export function ExportOptions({
       }
     },
     onError: (err) => {
-      // Optionally handle error
       console.error("Failed to fetch presigned URLs", err);
     },
   });

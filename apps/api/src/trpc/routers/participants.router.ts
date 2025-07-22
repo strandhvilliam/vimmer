@@ -17,6 +17,7 @@ import {
   incrementUploadCounterSchema,
   updateParticipantSchema,
 } from "@vimmer/api/schemas/participants.schemas";
+import { TRPCError } from "@trpc/server";
 
 export const participantsRouter = createTRPCRouter({
   getByDomain: publicProcedure
@@ -30,9 +31,17 @@ export const participantsRouter = createTRPCRouter({
   getById: publicProcedure
     .input(getParticipantByIdSchema)
     .query(async ({ ctx, input }) => {
-      return getParticipantByIdQuery(ctx.db, {
+      const data = await getParticipantByIdQuery(ctx.db, {
         id: input.id,
       });
+
+      if (!data) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Participant not found",
+        });
+      }
+      return data;
     }),
 
   getByReference: publicProcedure

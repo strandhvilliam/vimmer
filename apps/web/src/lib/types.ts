@@ -40,8 +40,34 @@ export interface PhotoWithPresignedUrl extends SelectedPhotoV2 {
 
 export type FileStatus = "pending" | "uploading" | "completed" | "error";
 
+export type FileUploadErrorCode =
+  | "NETWORK_ERROR"
+  | "TIMEOUT"
+  | "FILE_TOO_LARGE"
+  | "UNAUTHORIZED"
+  | "SERVER_ERROR"
+  | "RATE_LIMITED"
+  | "INVALID_FILE_TYPE"
+  | "UNKNOWN";
+
+export interface FileUploadError {
+  message: string;
+  code: FileUploadErrorCode;
+  timestamp: Date;
+  retryable: boolean;
+  httpStatus?: number;
+}
+
 export interface FileState extends PhotoWithPresignedUrl {
   status: FileStatus;
+  error?: FileUploadError;
+  retryCount?: number;
+}
+
+export interface UploadResult {
+  success: boolean;
+  failedFiles: FileState[];
+  successfulFiles: FileState[];
 }
 
 export interface StepNavigationHandlers {

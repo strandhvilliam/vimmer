@@ -23,7 +23,7 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useDomain } from "@/contexts/domain-context";
-import { useSession } from "@/hooks/use-session";
+import { useSession } from "@/contexts/session-context";
 import { cn } from "@vimmer/ui/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 

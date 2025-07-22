@@ -1,10 +1,30 @@
 import { SubmissionClientPage } from "./client-page";
 import { getDomain } from "@/lib/get-domain";
-import { batchPrefetch, HydrateClient, trpc } from "@/trpc/server";
+import {
+  batchPrefetch,
+  getQueryClient,
+  HydrateClient,
+  trpc,
+} from "@/trpc/server";
 import { Suspense } from "react";
+import {
+  loadSubmissionQueryServerParams,
+  submissionQueryServerParamSerializer,
+} from "@/lib/schemas/submission-query-server-schema";
+import { SearchParams } from "nuqs/server";
+import { notFound, redirect } from "next/navigation";
+import { Participant } from "@vimmer/api/db/types";
 
-export default async function SubmissionPage() {
+interface SubmissionPageProps {
+  searchParams: Promise<SearchParams>;
+}
+
+export default async function SubmissionPage({
+  searchParams,
+}: SubmissionPageProps) {
   const domain = await getDomain();
+  const params = await loadSubmissionQueryServerParams(searchParams);
+  const queryClient = getQueryClient();
 
   batchPrefetch([
     trpc.marathons.getByDomain.queryOptions({
@@ -23,6 +43,32 @@ export default async function SubmissionPage() {
       domain,
     }),
   ]);
+
+  if (params.participantId) {
+    let participant: Participant | undefined;
+    try {
+      participant = await queryClient.fetchQuery(
+        trpc.participants.getById.queryOptions({
+          id: params.participantId,
+        }),
+      );
+    } catch (error) {
+      console.error(error);
+      notFound();
+    }
+
+    if (!participant) notFound();
+
+    const redirectParams = submissionQueryServerParamSerializer(params);
+
+    if (participant.status === "completed") {
+      redirect(`/verification${redirectParams}`);
+    }
+
+    if (participant.status === "verified") {
+      redirect(`/confirmation${redirectParams}`);
+    }
+  }
 
   return (
     <HydrateClient>

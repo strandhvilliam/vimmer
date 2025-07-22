@@ -11,7 +11,7 @@ import {
 } from "@vimmer/ui/components/popover";
 import { Button } from "@vimmer/ui/components/button";
 import { SidebarMenuButton, useSidebar } from "@vimmer/ui/components/sidebar";
-import { useSession } from "@/hooks/use-session";
+import { useSession } from "@/contexts/session-context";
 import { Marathon } from "@vimmer/api/db/types";
 import { format } from "date-fns";
 
@@ -30,7 +30,7 @@ export function DomainSwitchDropdown({
   const [hasImageError, setHasImageError] = React.useState(false);
 
   const activeMarathon = marathons.find(
-    (marathon) => marathon.domain === activeDomain
+    (marathon) => marathon.domain === activeDomain,
   );
 
   const handleImageError = () => {

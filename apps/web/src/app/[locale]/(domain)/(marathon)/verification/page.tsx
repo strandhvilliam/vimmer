@@ -31,7 +31,7 @@ export default async function VerificationPage({
     trpc.participants.getByReference.queryOptions({
       domain,
       reference: params.participantRef,
-    })
+    }),
   );
 
   if (!participant) notFound();

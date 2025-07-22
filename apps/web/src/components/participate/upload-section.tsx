@@ -25,7 +25,7 @@ interface UploadSectionProps {
   marathon: Marathon;
 }
 
-export default function UploadSection({
+export function UploadSection({
   maxPhotos,
   onUpload,
   ruleConfigs,

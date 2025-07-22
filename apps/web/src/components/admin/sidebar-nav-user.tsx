@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@vimmer/ui/components/dropdown-menu";
 import { SidebarMenuButton, useSidebar } from "@vimmer/ui/components/sidebar";
-import { useSession } from "@/hooks/use-session";
+import { useSession } from "@/contexts/session-context";
 
 export function SidebarNavUser() {
   const { user } = useSession();

@@ -1,4 +1,4 @@
-import { SessionProvider } from "@/hooks/use-session";
+import { SessionProvider } from "@/contexts/session-context";
 import { getSession } from "@/lib/auth";
 import React from "react";
 

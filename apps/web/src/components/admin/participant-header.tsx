@@ -60,7 +60,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
-import { useSession } from "@/hooks/use-session";
+import { useSession } from "@/contexts/session-context";
 import { useState } from "react";
 import { runZipGenerationAction } from "@/lib/actions/run-zip-generation";
 import { useAction } from "next-safe-action/hooks";
@@ -154,15 +154,15 @@ export function ParticipantHeader({
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
 
   const globalValidations = validationResults.filter(
-    (result) => !result.fileName
+    (result) => !result.fileName,
   );
 
   const hasFailedValidations = globalValidations.some(
-    (result) => result.outcome === "failed"
+    (result) => result.outcome === "failed",
   );
 
   const hasErrors = globalValidations.some(
-    (result) => result.severity === "error" && result.outcome === "failed"
+    (result) => result.severity === "error" && result.outcome === "failed",
   );
 
   const allPassed = globalValidations.length > 0 && !hasFailedValidations;
@@ -187,7 +187,7 @@ export function ParticipantHeader({
           queryKey: trpc.validations.pathKey(),
         });
       },
-    })
+    }),
   );
 
   const { mutate: runValidations, isPending: isRunningValidations } =
@@ -208,14 +208,14 @@ export function ParticipantHeader({
             queryKey: trpc.participants.pathKey(),
           });
         },
-      })
+      }),
     );
 
   const { data: zippedSubmissions } = useSuspenseQuery(
     trpc.submissions.getZippedSubmissionsByParticipantRef.queryOptions({
       domain: participant.domain,
       participantRef: participant.reference,
-    })
+    }),
   );
 
   const { execute: runZipGeneration } = useAction(runZipGenerationAction, {
@@ -251,7 +251,7 @@ export function ParticipantHeader({
       onError: () => {
         toast.error("Failed to get download URL");
       },
-    }
+    },
   );
 
   const handleVerifyParticipant = () => {
@@ -296,7 +296,7 @@ export function ParticipantHeader({
                       ? "bg-green-500/15 text-green-600 hover:bg-green-500/20"
                       : hasErrors
                         ? "bg-destructive/15 text-destructive hover:bg-destructive/20"
-                        : "bg-yellow-500/15 text-yellow-600 border-yellow-200 hover:bg-yellow-500/20"
+                        : "bg-yellow-500/15 text-yellow-600 border-yellow-200 hover:bg-yellow-500/20",
                   )}
                 >
                   {allPassed ? (
@@ -449,7 +449,7 @@ export function ParticipantHeader({
           className={cn(
             "border-2 items-center flex",
             statusConfig.borderColor,
-            statusConfig.bgColor
+            statusConfig.bgColor,
           )}
         >
           <CardContent className="p-4">

@@ -16,11 +16,11 @@ import { SubmissionsList } from "@/components/participate/submission-list";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { usePresignedSubmissions } from "@/hooks/use-presigned-submissions";
 import { combinePhotos } from "@/lib/combine-photos";
-import UploadErrorFallback from "@/components/participate/upload-error-fallback";
-import UploadSection from "@/components/participate/upload-section";
+import { UploadErrorFallback } from "@/components/participate/upload-error-fallback";
+import { UploadSection } from "@/components/participate/upload-section";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { CompetitionClass, Marathon, Topic } from "@vimmer/api/db/types";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { COMMON_IMAGE_EXTENSIONS } from "@/lib/constants";
 import { RULE_KEYS } from "@vimmer/validation/constants";
 import { toast } from "sonner";
@@ -44,10 +44,18 @@ export function UploadSubmissionsStep({
     submissionState: { competitionClassId },
   } = useSubmissionQueryState();
 
+  const [isUploadProgressOpen, setIsUploadProgressOpen] = useState(false);
+
   const { photos, validateAndAddPhotos } = usePhotoStore();
   const { data: presignedSubmissions = [] } = usePresignedSubmissions();
 
-  const { isUploading, executeUpload } = useFileUpload();
+  const {
+    isUploading,
+    fileStates,
+    executeUpload,
+    retryFailedUploads,
+    retrySingleFile,
+  } = useFileUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const combinedPhotos = combinePhotos(photos, presignedSubmissions);
@@ -113,6 +121,13 @@ export function UploadSubmissionsStep({
     fileInputRef.current?.click();
   };
 
+  // useEffect(() => {
+  //   if (participantIsCompleted) {
+  //     setIsUploadProgressOpen(false);
+  //     onNextStep?.();
+  //   }
+  // }, [participantIsCompleted]);
+
   if (!competitionClass) {
     return (
       <UploadErrorFallback
@@ -128,8 +143,12 @@ export function UploadSubmissionsStep({
         topics={topics}
         expectedCount={competitionClass.numberOfPhotos}
         files={combinedPhotos}
+        fileStates={fileStates}
         onComplete={() => onNextStep?.()}
-        open={isUploading}
+        onRetryFailed={retryFailedUploads}
+        isUploading={isUploading}
+        open={isUploadProgressOpen}
+        onRetrySingle={retrySingleFile}
       />
       <div className="max-w-4xl mx-auto space-y-6">
         <CardHeader className="text-center">
@@ -144,7 +163,10 @@ export function UploadSubmissionsStep({
           <UploadSection
             marathon={marathon}
             maxPhotos={competitionClass.numberOfPhotos}
-            onUpload={() => executeUpload(combinedPhotos)}
+            onUpload={() => {
+              setIsUploadProgressOpen(true);
+              executeUpload(combinedPhotos);
+            }}
             ruleConfigs={ruleConfigs}
             topics={topics}
           />

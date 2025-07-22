@@ -7,6 +7,7 @@ import {
   trpc,
 } from "@/trpc/server";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 export default async function ParticipatePage() {
   const queryClient = getQueryClient();

@@ -23,7 +23,7 @@ import {
 } from "@vimmer/api/db/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
-import { useSession } from "@/hooks/use-session";
+import { useSession } from "@/contexts/session-context";
 
 interface ParticipantInfoSheetProps {
   open: boolean;
@@ -65,7 +65,7 @@ type GroupedValidations = {
 const groupValidationsBySubmission = (
   validations: ValidationResult[],
   submissions: Submission[],
-  topics: Topic[]
+  topics: Topic[],
 ): GroupedValidations => {
   const global: ValidationResult[] = [];
   const topicsOrderMap = new Map<number, ValidationResult[]>();
@@ -158,7 +158,7 @@ export function ParticipantInfoSheet({
           queryKey: trpc.validations.pathKey(),
         });
       },
-    })
+    }),
   );
 
   const {
@@ -186,7 +186,7 @@ export function ParticipantInfoSheet({
           queryKey: trpc.participants.pathKey(),
         });
       },
-    })
+    }),
   );
 
   const { mutate: runValidations, isPending: isRunningValidations } =
@@ -207,7 +207,7 @@ export function ParticipantInfoSheet({
             queryKey: trpc.participants.pathKey(),
           });
         },
-      })
+      }),
     );
 
   const toggleSubmissionExpanded = (orderIndex: number) => {
@@ -236,11 +236,11 @@ export function ParticipantInfoSheet({
   const groupedValidations = groupValidationsBySubmission(
     participant.validationResults,
     participant.submissions,
-    topics
+    topics,
   );
 
   const hasUnresolvedErrors = participant.validationResults.some(
-    (v) => v.severity === "error" && v.outcome === "failed" && !v.overruled
+    (v) => v.severity === "error" && v.outcome === "failed" && !v.overruled,
   );
 
   const renderValidationItem = (validation: ValidationResult) => (
@@ -370,21 +370,22 @@ export function ParticipantInfoSheet({
                           {(() => {
                             const errorCount = groupedValidations.global.filter(
                               (v) =>
-                                v.severity === "error" && v.outcome === "failed"
+                                v.severity === "error" &&
+                                v.outcome === "failed",
                             ).length;
                             const warningCount =
                               groupedValidations.global.filter(
                                 (v) =>
                                   v.severity === "warning" &&
-                                  v.outcome === "failed"
+                                  v.outcome === "failed",
                               ).length;
                             const passedCount =
                               groupedValidations.global.filter(
-                                (v) => v.outcome === "passed"
+                                (v) => v.outcome === "passed",
                               ).length;
                             const skippedCount =
                               groupedValidations.global.filter(
-                                (v) => v.outcome === "skipped"
+                                (v) => v.outcome === "skipped",
                               ).length;
 
                             return (
@@ -470,18 +471,18 @@ export function ParticipantInfoSheet({
                                 const errorCount = validations.filter(
                                   (v) =>
                                     v.severity === "error" &&
-                                    v.outcome === "failed"
+                                    v.outcome === "failed",
                                 ).length;
                                 const warningCount = validations.filter(
                                   (v) =>
                                     v.severity === "warning" &&
-                                    v.outcome === "failed"
+                                    v.outcome === "failed",
                                 ).length;
                                 const passedCount = validations.filter(
-                                  (v) => v.outcome === "passed"
+                                  (v) => v.outcome === "passed",
                                 ).length;
                                 const skippedCount = validations.filter(
-                                  (v) => v.outcome === "skipped"
+                                  (v) => v.outcome === "skipped",
                                 ).length;
 
                                 return (
@@ -532,7 +533,7 @@ export function ParticipantInfoSheet({
                         )}
                       </div>
                     );
-                  }
+                  },
                 )}
               </div>
             ) : (

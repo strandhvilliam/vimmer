@@ -11,7 +11,7 @@ import { STEPS } from "@/lib/constants";
 import { AnimatePresence } from "motion/react";
 import { useRouter } from "next/navigation";
 import { parseAsInteger, useQueryState } from "nuqs";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { submissionQueryClientParamSerializer } from "@/lib/schemas/submission-query-client-schema";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { useSuspenseQueries } from "@tanstack/react-query";
@@ -67,10 +67,10 @@ export function SubmissionClientPage() {
     setStep(prevStep);
   };
 
-  const handleNavigateToVerification = () => {
+  const handleNavigateToVerification = useCallback(() => {
     const params = submissionQueryClientParamSerializer(submissionState);
     router.push(`/verification${params}`);
-  };
+  }, [router, submissionState]);
 
   const handleSetStep = (newStep: number) => {
     setDirection(newStep > step ? 1 : -1);

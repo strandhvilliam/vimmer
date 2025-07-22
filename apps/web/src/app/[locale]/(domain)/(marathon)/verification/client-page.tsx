@@ -7,7 +7,7 @@ import {
   CardTitle,
   CardHeader,
 } from "@vimmer/ui/components/card";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { submissionQueryClientParamSerializer } from "@/lib/schemas/submission-query-client-schema";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
@@ -17,6 +17,7 @@ import { useDomain } from "@/contexts/domain-context";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { RefreshCcw } from "lucide-react";
 import { cn } from "@vimmer/ui/lib/utils";
+import { useRefreshTimeout } from "@/hooks/use-refresh-timeout";
 
 export function ClientVerificationPage() {
   const trpc = useTRPC();
@@ -24,11 +25,7 @@ export function ClientVerificationPage() {
   const { submissionState } = useSubmissionQueryState();
   const router = useRouter();
 
-  const {
-    data: participant,
-    refetch,
-    isFetching,
-  } = useQuery(
+  const { data: participant, refetch } = useQuery(
     trpc.participants.getByReference.queryOptions(
       {
         domain,
@@ -51,20 +48,7 @@ export function ClientVerificationPage() {
     }
   }, [participant, router, submissionState]);
 
-  const [refreshTimeout, setRefreshTimeout] = useState(0);
-  useEffect(() => {
-    if (refreshTimeout === 0) return;
-    const timer = setInterval(() => {
-      setRefreshTimeout((t) => {
-        if (t <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [refreshTimeout]);
+  const { refreshTimeout, startTimeout, isActive } = useRefreshTimeout();
 
   const qrCodeValue = `${domain}-${participant?.id}-${participant?.reference}`;
 
@@ -106,27 +90,25 @@ export function ClientVerificationPage() {
                 transformStyle: "preserve-3d",
               }}
             >
-              {qrCodeValue && (
-                <>
-                  <QrCodeGenerator value={qrCodeValue} size={212} />
-                  {participant?.reference && (
-                    <div className="flex flex-col items-center mt-8">
-                      <span className="text-xl md:text-2xl font-rocgrotesk font-semibold text-gray-700">
-                        Participant
-                      </span>
-                      <span
-                        className="font-mono font-bold text-4xl md:text-5xl text-gray-900 select-all tracking-wider mt-2"
-                        style={{
-                          fontFamily:
-                            'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-                        }}
-                      >
-                        {participant.reference}
-                      </span>
-                    </div>
-                  )}
-                </>
-              )}
+              <>
+                <QrCodeGenerator value={qrCodeValue} size={212} />
+                {participant?.reference && (
+                  <div className="flex flex-col items-center mt-8">
+                    <span className="text-xl md:text-2xl font-rocgrotesk font-semibold text-gray-700">
+                      Participant
+                    </span>
+                    <span
+                      className="font-mono font-bold text-4xl md:text-5xl text-gray-900 select-all tracking-wider mt-2"
+                      style={{
+                        fontFamily:
+                          'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                      }}
+                    >
+                      {participant.reference}
+                    </span>
+                  </div>
+                )}
+              </>
             </motion.div>
           </div>
         </motion.div>
@@ -135,9 +117,9 @@ export function ClientVerificationPage() {
         className="mt-4 py-3 w-full max-w-xs md:max-w-lg lg:max-w-2xl"
         onClick={async () => {
           await refetch();
-          setRefreshTimeout(5);
+          startTimeout(5);
         }}
-        disabled={refreshTimeout > 0}
+        disabled={isActive}
       >
         <RefreshCcw className={cn("h-4 w-4")} />
         {refreshTimeout > 0

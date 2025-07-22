@@ -2,7 +2,7 @@
 
 import { ParticipantHeader } from "@/components/admin/participant-header";
 import { PhotoSubmissionCard } from "@/components/admin/submission-card";
-import { ValidationResultsTable } from "@/components/admin/validation-results-table";
+import { ParticipantValidationResultsTable } from "@/components/admin/participant-validation-results-table";
 import {
   Tabs,
   TabsContent,
@@ -98,7 +98,7 @@ export function ParticipantSubmissionClientPage({
         </TabsContent>
 
         <TabsContent value="validation" className="mt-6">
-          <ValidationResultsTable
+          <ParticipantValidationResultsTable
             validationResults={validationResults}
             topics={topics}
           />

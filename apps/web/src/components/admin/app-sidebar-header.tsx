@@ -7,7 +7,7 @@ import {
 } from "@vimmer/ui/components/sidebar";
 import { DomainSwitchDropdown } from "./sidebar-header-dropdown";
 import { Skeleton } from "@vimmer/ui/components/skeleton";
-import { useSession } from "@/hooks/use-session";
+import { useSession } from "@/contexts/session-context";
 import { useDomain } from "@/contexts/domain-context";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
