@@ -10,13 +10,12 @@ import {
   ValidationResult,
 } from "@vimmer/api/db/types";
 import { useTRPC } from "@/trpc/client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useDomain } from "@/contexts/domain-context";
-import { useRef, useState } from "react";
-import { resizeImage } from "@/lib/image-resize";
+import { useRef } from "react";
 import { ValidationResultStateBadge } from "./validation-result-state-badge";
+import { useReplacePhoto } from "@/hooks/use-replace-photo";
 
 interface SubmissionHeaderProps {
   submission: Submission;
@@ -37,98 +36,27 @@ export function SubmissionHeader({
 
   const trpc = useTRPC();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isUploading, setIsUploading] = useState(false);
 
-  const { mutateAsync: getReplacementPresignedUrl } = useMutation(
-    trpc.presignedUrls.generateReplacementPresignedUrl.mutationOptions(),
-  );
-
-  const { mutate: updateSubmissionAfterUpload } = useMutation(
-    trpc.submissions.replacePhoto.mutationOptions({
-      onSuccess: () => {
-        toast.success("Photo replaced successfully");
-
-        queryClient.invalidateQueries({
-          queryKey: trpc.submissions.getById.queryKey({
-            id: Number(submission.id),
-          }),
-        });
-        queryClient.invalidateQueries({
-          queryKey: trpc.participants.getByReference.queryKey({
-            reference: participantRef,
-            domain,
-          }),
-        });
-      },
-      onError: (error) => {
-        console.error("Failed to update submission:", error);
-        toast.error("Failed to replace photo");
-      },
-      onSettled: () => {
-        setIsUploading(false);
-      },
-    }),
-  );
-  const handleReplacePhoto = async (file: File) => {
-    if (!file) return;
-
-    setIsUploading(true);
-
-    try {
-      const presignedData = await getReplacementPresignedUrl({
-        submissionId: submission.id,
-        domain,
+  const { replacePhoto, isUploading } = useReplacePhoto({
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: trpc.submissions.getById.queryKey({
+          id: Number(submission.id),
+        }),
       });
-
-      const [thumbnailResized, previewResized] = await Promise.all([
-        resizeImage(file, { width: presignedData.thumbnail.width }),
-        resizeImage(file, { width: presignedData.preview.width }),
-      ]);
-
-      const uploadPromises = [
-        fetch(presignedData.original.presignedUrl, {
-          method: "PUT",
-          body: file,
-          headers: { "Content-Type": file.type },
+      queryClient.invalidateQueries({
+        queryKey: trpc.participants.getByReference.queryKey({
+          reference: participantRef,
+          domain,
         }),
-        fetch(presignedData.thumbnail.presignedUrl, {
-          method: "PUT",
-          body: thumbnailResized.blob,
-          headers: { "Content-Type": file.type },
-        }),
-        fetch(presignedData.preview.presignedUrl, {
-          method: "PUT",
-          body: previewResized.blob,
-          headers: { "Content-Type": file.type },
-        }),
-      ];
-
-      const responses = await Promise.all(uploadPromises);
-
-      const failedUploads = responses.filter((response) => !response.ok);
-      if (failedUploads.length > 0) {
-        throw new Error(`Failed to upload ${failedUploads.length} file(s)`);
-      }
-
-      updateSubmissionAfterUpload({
-        submissionId: submission.id,
-        originalKey: presignedData.original.key,
-        thumbnailKey: presignedData.thumbnail.key,
-        previewKey: presignedData.preview.key,
-        mimeType: file.type,
-        size: file.size,
       });
-    } catch (error) {
-      console.error("Failed to replace photo:", error);
-      toast.error("Failed to replace photo");
-      setIsUploading(false);
-    }
-  };
+    },
+  });
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      handleReplacePhoto(file);
+      replacePhoto(file, submission.id, domain);
     }
   };
 

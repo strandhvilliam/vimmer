@@ -141,6 +141,7 @@ export const submissionsRouter = createTRPCRouter({
         previewKey: z.string(),
         mimeType: z.string(),
         size: z.number(),
+        exif: z.any(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -151,9 +152,9 @@ export const submissionsRouter = createTRPCRouter({
         previewKey,
         mimeType,
         size,
+        exif,
       } = input;
 
-      // 1. Get current submission to verify it exists
       const submission = await getSubmissionByIdQuery(ctx.db, {
         id: submissionId,
       });
@@ -161,23 +162,18 @@ export const submissionsRouter = createTRPCRouter({
         throw new Error("Submission not found");
       }
 
-      // 2. Update submission with all new keys and data
       await updateSubmissionByIdMutation(ctx.db, {
         id: submissionId,
         data: {
           key: originalKey,
           thumbnailKey,
           previewKey,
-          status: "uploaded", // Set to uploaded since we have all variants
+          status: "uploaded",
           mimeType,
           size,
-          // Clear EXIF data - will be updated by photo-processor if needed
-          exif: null,
+          exif,
         },
       });
-
-      // Note: We don't rely on photo-processor for client-resized images
-      // since we're handling thumbnail/preview generation on the client
 
       return {
         success: true,
