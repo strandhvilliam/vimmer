@@ -8,11 +8,10 @@
     "@aws-sdk/client-sqs": "^3.812.0",
     "@trpc/client": "^11.4.3",
     "@vimmer/api": "workspace:*",
+    "@vimmer/image-processing": "workspace:*",
     "@vimmer/supabase": "workspace:*",
     "@vimmer/validation": "workspace:*",
-    "exifr": "^7.1.3",
     "posthog-node": "^5.1.1",
-    "sharp": "^0.33.5",
     "superjson": "^2.2.2"
   },
   "devDependencies": {

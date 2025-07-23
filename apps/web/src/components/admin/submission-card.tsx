@@ -14,7 +14,6 @@ import {
 import type { Submission, ValidationResult, Topic } from "@vimmer/api/db/types";
 import { cn } from "@vimmer/ui/lib/utils";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
 
 interface PhotoSubmissionCardProps {
   submission: Submission;
@@ -29,27 +28,25 @@ export function PhotoSubmissionCard({
   topic,
   imageUrl,
 }: PhotoSubmissionCardProps) {
-  const { domain, participantRef } = useParams();
+  const { participantRef } = useParams<{ participantRef: string }>();
 
   const submissionValidations = validationResults.filter(
-    (result) => result.fileName === submission.key
+    (result) => result.fileName === submission.key,
   );
 
   const hasFailedValidations = submissionValidations.some(
-    (result) => result.outcome === "failed"
+    (result) => result.outcome === "failed",
   );
 
   const hasErrors = submissionValidations.some(
-    (result) => result.severity === "error" && result.outcome === "failed"
+    (result) => result.severity === "error" && result.outcome === "failed",
   );
 
   const hasWarnings = submissionValidations.some(
-    (result) => result.severity === "warning" && result.outcome === "failed"
+    (result) => result.severity === "warning" && result.outcome === "failed",
   );
 
   const allPassed = submissionValidations.length > 0 && !hasFailedValidations;
-
-  console.log(imageUrl);
 
   return (
     <Link href={`/admin/submissions/${participantRef}/${submission.id}`}>
@@ -126,7 +123,7 @@ export function PhotoSubmissionCard({
                                 "font-semibold",
                                 hasErrors
                                   ? "text-destructive"
-                                  : "text-yellow-500"
+                                  : "text-yellow-500",
                               )}
                             >
                               {hasErrors ? "Errors:" : "Warnings:"}
