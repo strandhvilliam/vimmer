@@ -30,7 +30,7 @@ export const createMultipleValidationResultsSchema = z.object({
       severity: z.string(),
       participantId: z.number(),
       overruled: z.boolean().default(false),
-    })
+    }),
   ),
 });
 

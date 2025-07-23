@@ -6,7 +6,7 @@ import type { SupabaseClient } from "@vimmer/supabase/types";
 
 export async function getTopicsByMarathonIdQuery(
   db: Database,
-  { id }: { id: number }
+  { id }: { id: number },
 ) {
   const result = await db.query.topics.findMany({
     where: eq(topics.marathonId, id),
@@ -17,7 +17,7 @@ export async function getTopicsByMarathonIdQuery(
 
 export async function getTopicsByDomainQuery(
   db: Database,
-  { domain }: { domain: string }
+  { domain }: { domain: string },
 ) {
   const result = await db.query.marathons.findMany({
     where: eq(marathons.domain, domain),
@@ -45,7 +45,7 @@ export async function updateTopicQuery(
   }: {
     id: number;
     data: Partial<NewTopic>;
-  }
+  },
 ) {
   const result = await db
     .update(topics)
@@ -65,7 +65,7 @@ export async function updateTopicsOrder(
   }: {
     topicIds: number[];
     marathonId: number;
-  }
+  },
 ) {
   await supabase
     .rpc("update_topic_order", {
@@ -77,7 +77,7 @@ export async function updateTopicsOrder(
 
 export async function createTopicQuery(
   db: Database,
-  { data }: { data: NewTopic }
+  { data }: { data: NewTopic },
 ) {
   const result = await db.insert(topics).values(data).returning({
     id: topics.id,
@@ -94,7 +94,7 @@ export async function deleteTopicQuery(db: Database, { id }: { id: number }) {
 
 export async function getTopicsWithSubmissionCountQuery(
   db: Database,
-  { domain }: { domain: string }
+  { domain }: { domain: string },
 ): Promise<{ id: number; count: number }[]> {
   const data = await db
     .select({
@@ -111,7 +111,7 @@ export async function getTopicsWithSubmissionCountQuery(
 
 export async function getTotalSubmissionCountQuery(
   db: Database,
-  { marathonId }: { marathonId: number }
+  { marathonId }: { marathonId: number },
 ) {
   const result = await db
     .select({ count: count(submissions.id) })

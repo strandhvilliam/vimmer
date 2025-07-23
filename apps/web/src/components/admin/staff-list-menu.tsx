@@ -20,7 +20,7 @@ export function StaffListMenu() {
   const { data: staffMembers } = useSuspenseQuery(
     trpc.users.getStaffMembersByDomain.queryOptions({
       domain,
-    })
+    }),
   );
 
   const [search, setSearch] = useState("");
@@ -29,7 +29,7 @@ export function StaffListMenu() {
 
   useEffect(() => {
     const filteredStaff = staffMembers.filter((staff) =>
-      staff.user.name.toLowerCase().includes(search.toLowerCase())
+      staff.user.name.toLowerCase().includes(search.toLowerCase()),
     );
     setFilteredStaff(filteredStaff);
   }, [search, staffMembers]);

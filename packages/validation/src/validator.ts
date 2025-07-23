@@ -31,7 +31,7 @@ const validationFunctions: Record<RuleKey, ValidationFunction<any>> = {
 
 function applyValidation<K extends RuleKey>(
   rule: RuleConfig<K>,
-  input: ValidationInput[]
+  input: ValidationInput[],
 ): ValidationResult[] {
   const pipeline = createValidationPipeline(rule.key);
   return pipeline(validationFunctions[rule.key])(rule.params, input);
@@ -39,7 +39,7 @@ function applyValidation<K extends RuleKey>(
 
 function applySeverity<K extends RuleKey>(
   rule: RuleConfig<K>,
-  results: ValidationResult
+  results: ValidationResult,
 ): ValidationResult {
   return {
     ...results,
@@ -50,7 +50,7 @@ function applySeverity<K extends RuleKey>(
 export function createRule<K extends RuleKey>(
   key: K,
   severity: SeverityLevel,
-  params?: RuleParams[K]
+  params?: RuleParams[K],
 ): RuleConfig<K> {
   return {
     key,
@@ -61,9 +61,9 @@ export function createRule<K extends RuleKey>(
 
 export function runValidations(
   rules: RuleConfig<RuleKey>[],
-  input: ValidationInput[]
+  input: ValidationInput[],
 ): ValidationResult[] {
   return rules.flatMap((rule) =>
-    applyValidation(rule, input).map((result) => applySeverity(rule, result))
+    applyValidation(rule, input).map((result) => applySeverity(rule, result)),
   );
 }

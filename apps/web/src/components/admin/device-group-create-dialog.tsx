@@ -49,7 +49,7 @@ export function DeviceGroupCreateDialog() {
   const { domain } = useDomain();
 
   const { data: marathon } = useSuspenseQuery(
-    trpc.marathons.getByDomain.queryOptions({ domain })
+    trpc.marathons.getByDomain.queryOptions({ domain }),
   );
 
   const { mutate: createDeviceGroup, isPending: isCreatingDeviceGroup } =
@@ -68,7 +68,7 @@ export function DeviceGroupCreateDialog() {
             queryKey: trpc.deviceGroups.pathKey(),
           });
         },
-      })
+      }),
     );
 
   const form = useForm({
@@ -197,7 +197,7 @@ export function DeviceGroupCreateDialog() {
                       className={cn(
                         "flex-1 h-fit aspect-square p-0 relative overflow-hidden",
                         field.state.value === type.value &&
-                          "ring-2 ring-primary ring-offset-2"
+                          "ring-2 ring-primary ring-offset-2",
                       )}
                       onClick={() => field.handleChange(type.value)}
                     >

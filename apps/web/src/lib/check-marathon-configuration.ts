@@ -87,7 +87,7 @@ export function checkIfMarathonIsProperlyConfigured({
 
   if (
     competitionClasses.some(
-      (competitionClass) => competitionClass.numberOfPhotos > topics.length
+      (competitionClass) => competitionClass.numberOfPhotos > topics.length,
     )
   ) {
     return {

@@ -53,7 +53,7 @@ export const createMultipleSubmissionsSchema = z.object({
       mimeType: z.string().optional(),
       topicId: z.number(),
       status: z.string().default("initialized"),
-    })
+    }),
   ),
 });
 

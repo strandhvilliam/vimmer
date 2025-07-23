@@ -27,45 +27,45 @@ function checkSameDevice(input: ValidationInput[]): ValidationResult {
     return createValidationResult(
       VALIDATION_OUTCOME.SKIPPED,
       RULE_KEYS.SAME_DEVICE,
-      "Not enough images to compare devices"
+      "Not enough images to compare devices",
     );
   }
 
   const deviceIdentifiers = input.map(({ exif }) => getDeviceIdentifier(exif));
 
   const validIdentifiers = deviceIdentifiers.filter(
-    (identifier): identifier is string => identifier !== null
+    (identifier): identifier is string => identifier !== null,
   );
 
   if (validIdentifiers.length !== input.length) {
     return createValidationResult(
       VALIDATION_OUTCOME.SKIPPED,
       RULE_KEYS.SAME_DEVICE,
-      `No device information found for ${input.length - validIdentifiers.length} images`
+      `No device information found for ${input.length - validIdentifiers.length} images`,
     );
   }
 
   const firstIdentifier = validIdentifiers[0];
   const allSameDevice = validIdentifiers.every(
-    (identifier) => identifier === firstIdentifier
+    (identifier) => identifier === firstIdentifier,
   );
 
   return allSameDevice
     ? createValidationResult(
         VALIDATION_OUTCOME.PASSED,
         RULE_KEYS.SAME_DEVICE,
-        "All images were taken with the same device"
+        "All images were taken with the same device",
       )
     : createValidationResult(
         VALIDATION_OUTCOME.FAILED,
         RULE_KEYS.SAME_DEVICE,
-        `Different devices detected: ${validIdentifiers.join(", ")}`
+        `Different devices detected: ${validIdentifiers.join(", ")}`,
       );
 }
 
 export const validate: ValidationFunction<typeof RULE_KEYS.SAME_DEVICE> = (
   _,
-  input
+  input,
 ) => {
   return [checkSameDevice(input)];
 };

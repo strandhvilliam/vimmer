@@ -50,7 +50,7 @@ export const rulesRouter = createTRPCRouter({
 
       const rulesToUpdate = rules.reduce((acc, rule) => {
         const ruleToUpdate = input.data.find(
-          (item) => item.ruleKey === rule.ruleKey
+          (item) => item.ruleKey === rule.ruleKey,
         );
         if (ruleToUpdate) {
           acc.push({

@@ -11,7 +11,7 @@ describe("modified check", () => {
     const results = checkModified(rule, input);
 
     expect(
-      results.every((result) => result.outcome === VALIDATION_OUTCOME.PASSED)
+      results.every((result) => result.outcome === VALIDATION_OUTCOME.PASSED),
     ).toBe(true);
   });
 
@@ -29,7 +29,7 @@ describe("modified check", () => {
     const results = checkModified(rule, input);
 
     expect(
-      results.some((result) => result.outcome === VALIDATION_OUTCOME.FAILED)
+      results.some((result) => result.outcome === VALIDATION_OUTCOME.FAILED),
     ).toBe(true);
   });
 
@@ -48,7 +48,7 @@ describe("modified check", () => {
     const results = checkModified(rule, input);
 
     expect(
-      results.some((result) => result.outcome === VALIDATION_OUTCOME.FAILED)
+      results.some((result) => result.outcome === VALIDATION_OUTCOME.FAILED),
     ).toBe(true);
   });
 });

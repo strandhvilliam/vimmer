@@ -24,7 +24,7 @@ type MiddlewareFactory = (middleware: NextMiddleware) => NextMiddleware;
 
 function stackMiddlewares(
   functions: MiddlewareFactory[] = [],
-  index = 0
+  index = 0,
 ): NextMiddleware {
   const current = functions[index];
   if (current) {
@@ -116,7 +116,7 @@ async function handleAdminRoute(request: NextRequest, response: NextResponse) {
       !domainAccessToken ||
       !(await verifyDomainAccessToken(
         domainAccessToken,
-        hostDomain || cookieDomain || ""
+        hostDomain || cookieDomain || "",
       ))
     ) {
       const url = new URL("/select-domain", request.url);
@@ -163,7 +163,7 @@ async function handleStaffRoute(request: NextRequest, response: NextResponse) {
       !domainAccessToken ||
       !(await verifyDomainAccessToken(
         domainAccessToken,
-        hostDomain || cookieDomain || ""
+        hostDomain || cookieDomain || "",
       ))
     ) {
       const url = new URL("/select-domain", request.url);
@@ -212,7 +212,7 @@ function getHostDomain(request: NextRequest) {
 
 async function verifyDomainAccessToken(
   token: string,
-  domain: string
+  domain: string,
 ): Promise<boolean> {
   try {
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);

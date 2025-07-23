@@ -65,7 +65,7 @@ export function TopicsTable({
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const handleDeleteClick = (topic: Topic) => {
@@ -86,7 +86,7 @@ export function TopicsTable({
 
   const dataIds: UniqueIdentifier[] = useMemo(
     () => topics.map((t) => t.id),
-    [topics]
+    [topics],
   );
   const tableKey = useMemo(() => `${dataIds.join("-")}`, [dataIds]);
 
@@ -101,7 +101,7 @@ export function TopicsTable({
       const newData = arrayMove(topics, oldIndex, newIndex);
       onUpdateTopicsOrder(newData.map((t) => t.id));
     },
-    [dataIds, topics, onUpdateTopicsOrder]
+    [dataIds, topics, onUpdateTopicsOrder],
   );
 
   const columns: ColumnDef<Topic>[] = useMemo(
@@ -168,7 +168,7 @@ export function TopicsTable({
         ),
       },
     ],
-    [competitionClasses]
+    [competitionClasses],
   );
 
   const table = useReactTable({
@@ -184,7 +184,7 @@ export function TopicsTable({
         <div
           className={cn(
             "rounded-md border relative",
-            isLoading && "pointer-events-none"
+            isLoading && "pointer-events-none",
           )}
         >
           <DndContext
@@ -204,7 +204,7 @@ export function TopicsTable({
                           ? null
                           : flexRender(
                               header.column.columnDef.header,
-                              header.getContext()
+                              header.getContext(),
                             )}
                       </TableHead>
                     ))}

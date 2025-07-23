@@ -2,10 +2,17 @@ import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createTRPCRouter, publicProcedure } from "..";
 import { generatePresignedUrlsSchema } from "@vimmer/api/schemas/presigned-urls.schemas";
-import { PresignedSubmissionService } from "@vimmer/api/utils/generate-presigned-urls";
+import {
+  PresignedSubmissionService,
+  generatePresignedUrl,
+  formatSubmissionKey,
+} from "@vimmer/api/utils/generate-presigned-urls";
 import { Resource } from "sst";
 import { z } from "zod";
-import { getZippedSubmissionsByMarathonIdQuery } from "@vimmer/api/db/queries/submissions.queries";
+import {
+  getZippedSubmissionsByMarathonIdQuery,
+  getSubmissionByIdQuery,
+} from "@vimmer/api/db/queries/submissions.queries";
 
 export const presignedUrlsRouter = createTRPCRouter({
   generatePresignedSubmissions: publicProcedure
@@ -51,5 +58,102 @@ export const presignedUrlsRouter = createTRPCRouter({
       }
       const presignedUrls = await Promise.all(presignedUrlPromises);
       return { presignedUrls, failedParticipantIds };
+    }),
+  generateReplacementPresignedUrl: publicProcedure
+    .input(
+      z.object({
+        submissionId: z.number(),
+        domain: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { submissionId, domain } = input;
+
+      // Get current submission
+      const submission = await getSubmissionByIdQuery(ctx.db, {
+        id: submissionId,
+      });
+      if (!submission) {
+        throw new Error("Submission not found");
+      }
+
+      // Extract current version and increment
+      const currentKey = submission.key!;
+      const versionMatch = currentKey.match(/_v(\d+)\.jpg$/);
+      const currentVersion =
+        versionMatch && versionMatch[1] ? parseInt(versionMatch[1]) : 1;
+      const newVersion = currentVersion + 1;
+
+      // Parse current key to get participant info
+      const keyParts = currentKey.split("/");
+      const participantRef = keyParts[1];
+      const orderIndex = keyParts[2];
+
+      if (!participantRef || !orderIndex) {
+        throw new Error("Invalid submission key format");
+      }
+
+      // Generate new key with incremented version
+      const newKey = formatSubmissionKey({
+        domain,
+        ref: participantRef,
+        index: parseInt(orderIndex) - 1, // formatSubmissionKey expects 0-based index
+        version: newVersion,
+      });
+
+      // Generate variant keys
+      const keyParts2 = newKey.split("/");
+      const fileName = keyParts2[3];
+      const thumbnailKey = [
+        keyParts2[0],
+        keyParts2[1],
+        keyParts2[2],
+        `thumbnail_${fileName}`,
+      ].join("/");
+      const previewKey = [
+        keyParts2[0],
+        keyParts2[1],
+        keyParts2[2],
+        `preview_${fileName}`,
+      ].join("/");
+
+      // Generate presigned URLs for all three versions
+      const s3Client = new S3Client();
+      const [originalPresignedUrl, thumbnailPresignedUrl, previewPresignedUrl] =
+        await Promise.all([
+          generatePresignedUrl(
+            s3Client,
+            newKey,
+            Resource.SubmissionBucket.name,
+          ),
+          generatePresignedUrl(
+            s3Client,
+            thumbnailKey,
+            Resource.ThumbnailBucket.name,
+          ),
+          generatePresignedUrl(
+            s3Client,
+            previewKey,
+            Resource.PreviewBucket.name,
+          ),
+        ]);
+
+      return {
+        original: {
+          presignedUrl: originalPresignedUrl,
+          key: newKey,
+        },
+        thumbnail: {
+          presignedUrl: thumbnailPresignedUrl,
+          key: thumbnailKey,
+          width: 200,
+        },
+        preview: {
+          presignedUrl: previewPresignedUrl,
+          key: previewKey,
+          width: 800,
+        },
+        version: newVersion,
+      };
     }),
 });

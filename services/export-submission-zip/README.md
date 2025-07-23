@@ -72,7 +72,7 @@ const zipFileName = await exportSubmissionsToZip({
   destinationBucket: "your-destination-bucket",
   progressCallback: (progress) => {
     console.log(
-      `Progress: ${progress.processedSubmissions}/${progress.totalSubmissions} files`
+      `Progress: ${progress.processedSubmissions}/${progress.totalSubmissions} files`,
     );
   },
 });

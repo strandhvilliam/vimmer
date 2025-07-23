@@ -11,7 +11,7 @@ export const runZipGenerationAction = actionClient
       participantReference: z.string(),
       domain: z.string(),
       exportType: z.string(),
-    })
+    }),
   )
   .action(
     async ({ parsedInput: { participantReference, domain, exportType } }) => {
@@ -21,5 +21,5 @@ export const runZipGenerationAction = actionClient
         EXPORT_TYPE: exportType,
       });
       console.log("Zip generation task triggered");
-    }
+    },
   );

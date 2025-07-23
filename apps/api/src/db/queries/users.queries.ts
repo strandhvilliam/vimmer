@@ -12,7 +12,7 @@ export async function getUserByIdQuery(db: Database, { id }: { id: string }) {
 
 export async function getUserWithMarathonsQuery(
   db: Database,
-  { userId }: { userId: string }
+  { userId }: { userId: string },
 ) {
   const result = await db.query.user.findFirst({
     where: eq(user.id, userId),
@@ -30,7 +30,7 @@ export async function getUserWithMarathonsQuery(
 
 export async function getMarathonsByUserIdQuery(
   db: Database,
-  { userId }: { userId: string }
+  { userId }: { userId: string },
 ) {
   const result = await db.query.userMarathons.findMany({
     where: eq(userMarathons.userId, userId),
@@ -44,7 +44,7 @@ export async function getMarathonsByUserIdQuery(
 
 export async function getUserByEmailWithMarathonsQuery(
   db: Database,
-  { email }: { email: string }
+  { email }: { email: string },
 ) {
   const result = await db.query.user.findFirst({
     where: eq(user.email, email),
@@ -58,7 +58,7 @@ export async function getUserByEmailWithMarathonsQuery(
 
 export async function getStaffMembersByDomainQuery(
   db: Database,
-  { domain }: { domain: string }
+  { domain }: { domain: string },
 ) {
   const result = await db.query.marathons.findFirst({
     where: eq(marathons.domain, domain),
@@ -76,7 +76,7 @@ export async function getStaffMembersByDomainQuery(
 
 export async function getStaffMemberByIdQuery(
   db: Database,
-  { staffId, domain }: { staffId: string; domain: string }
+  { staffId, domain }: { staffId: string; domain: string },
 ) {
   const marathon = await db.query.marathons.findFirst({
     where: eq(marathons.domain, domain),
@@ -107,7 +107,7 @@ export async function getStaffMemberByIdQuery(
 
   const filteredParticipantVerifications =
     result.participantVerifications.filter(
-      (pv) => pv.participant.marathonId === marathon.id
+      (pv) => pv.participant.marathonId === marathon.id,
     );
 
   return {
@@ -121,7 +121,7 @@ export async function getStaffMemberByIdQuery(
 
 export async function createUserMutation(
   db: Database,
-  { data }: { data: NewUser }
+  { data }: { data: NewUser },
 ) {
   const result = await db.insert(user).values(data).returning({ id: user.id });
   return { id: result[0]?.id ?? null };
@@ -129,7 +129,7 @@ export async function createUserMutation(
 
 export async function updateUserMutation(
   db: Database,
-  { id, data }: { id: string; data: Partial<NewUser> }
+  { id, data }: { id: string; data: Partial<NewUser> },
 ) {
   const result = await db
     .update(user)
@@ -149,7 +149,7 @@ export async function deleteUserMutation(db: Database, { id }: { id: string }) {
 
 export async function createUserMarathonRelationMutation(
   db: Database,
-  { data }: { data: NewUserMarathonRelation }
+  { data }: { data: NewUserMarathonRelation },
 ) {
   const result = await db
     .insert(userMarathons)
@@ -168,7 +168,7 @@ export async function updateUserMarathonRelationMutation(
     userId: string;
     marathonId: number;
     data: Partial<Pick<NewUserMarathonRelation, "role">>;
-  }
+  },
 ) {
   const result = await db
     .update(userMarathons)
@@ -176,8 +176,8 @@ export async function updateUserMarathonRelationMutation(
     .where(
       and(
         eq(userMarathons.userId, userId),
-        eq(userMarathons.marathonId, marathonId)
-      )
+        eq(userMarathons.marathonId, marathonId),
+      ),
     )
     .returning({ id: userMarathons.id });
   return { id: result[0]?.id ?? null };
@@ -185,15 +185,15 @@ export async function updateUserMarathonRelationMutation(
 
 export async function deleteUserMarathonRelationMutation(
   db: Database,
-  { userId, marathonId }: { userId: string; marathonId: number }
+  { userId, marathonId }: { userId: string; marathonId: number },
 ) {
   const result = await db
     .delete(userMarathons)
     .where(
       and(
         eq(userMarathons.userId, userId),
-        eq(userMarathons.marathonId, marathonId)
-      )
+        eq(userMarathons.marathonId, marathonId),
+      ),
     )
     .returning({ id: userMarathons.id });
   return { id: result[0]?.id ?? null };

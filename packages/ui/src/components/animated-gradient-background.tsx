@@ -43,7 +43,7 @@ export function AnimatedGradientBackground() {
         0,
         0,
         canvas.width,
-        canvas.height
+        canvas.height,
       );
       gradient.addColorStop(0, "#ffffff");
       gradient.addColorStop(1, "#fafafa");
@@ -69,7 +69,7 @@ export function AnimatedGradientBackground() {
           0,
           circle.x,
           circle.y,
-          circle.radius
+          circle.radius,
         );
         circleGradient.addColorStop(0, `${circle.color}15`);
         circleGradient.addColorStop(1, `${circle.color}00`);

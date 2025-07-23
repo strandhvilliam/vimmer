@@ -49,11 +49,11 @@ function CompetitionClassEditForm({
   const { domain } = useDomain();
 
   const { data: competitionClass } = useSuspenseQuery(
-    trpc.competitionClasses.getById.queryOptions({ id: competitionClassId })
+    trpc.competitionClasses.getById.queryOptions({ id: competitionClassId }),
   );
 
   const { data: topics } = useSuspenseQuery(
-    trpc.topics.getByDomain.queryOptions({ domain })
+    trpc.topics.getByDomain.queryOptions({ domain }),
   );
 
   const { mutate: editCompetitionClass, isPending } = useMutation(
@@ -70,7 +70,7 @@ function CompetitionClassEditForm({
           queryKey: trpc.competitionClasses.pathKey(),
         });
       },
-    })
+    }),
   );
 
   const form = useForm({

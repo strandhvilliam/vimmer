@@ -74,7 +74,7 @@ type GroupedValidations = {
 const groupValidationsBySubmission = (
   validations: ValidationResult[],
   submissions: Submission[],
-  topics: Topic[]
+  topics: Topic[],
 ): GroupedValidations => {
   const global: ValidationResult[] = [];
   const topicsOrderMap = new Map<number, ValidationResult[]>();
@@ -150,7 +150,7 @@ export function VerifiedParticipantsSheet({
         v.participant.firstname.toLowerCase().includes(lowerSearch) ||
         v.participant.lastname.toLowerCase().includes(lowerSearch) ||
         v.participant.reference.toLowerCase().includes(lowerSearch) ||
-        v.participant.email?.toLowerCase().includes(lowerSearch)
+        v.participant.email?.toLowerCase().includes(lowerSearch),
     );
   }, [searchTerm, verifications]);
 
@@ -220,18 +220,18 @@ function ParticipantItem({
 }: ParticipantItemProps) {
   const [expanded, setExpanded] = useState(false);
   const [expandedSubmissions, setExpandedSubmissions] = useState<Set<number>>(
-    new Set()
+    new Set(),
   );
   const [globalExpanded, setGlobalExpanded] = useState(false);
 
   const issueCount = verification.participant.validationResults?.filter(
-    (v) => v.outcome === "failed" && !v.overruled
+    (v) => v.outcome === "failed" && !v.overruled,
   ).length;
 
   const groupedValidations = groupValidationsBySubmission(
     verification.participant.validationResults,
     verification.participant.submissions,
-    topics
+    topics,
   );
 
   const toggleSubmissionExpanded = (orderIndex: number) => {
@@ -358,17 +358,18 @@ function ParticipantItem({
                         {(() => {
                           const errorCount = groupedValidations.global.filter(
                             (v) =>
-                              v.severity === "error" && v.outcome === "failed"
+                              v.severity === "error" && v.outcome === "failed",
                           ).length;
                           const warningCount = groupedValidations.global.filter(
                             (v) =>
-                              v.severity === "warning" && v.outcome === "failed"
+                              v.severity === "warning" &&
+                              v.outcome === "failed",
                           ).length;
                           const passedCount = groupedValidations.global.filter(
-                            (v) => v.outcome === "passed"
+                            (v) => v.outcome === "passed",
                           ).length;
                           const skippedCount = groupedValidations.global.filter(
-                            (v) => v.outcome === "skipped"
+                            (v) => v.outcome === "skipped",
                           ).length;
 
                           return (
@@ -461,18 +462,18 @@ function ParticipantItem({
                               const errorCount = validations.filter(
                                 (v) =>
                                   v.severity === "error" &&
-                                  v.outcome === "failed"
+                                  v.outcome === "failed",
                               ).length;
                               const warningCount = validations.filter(
                                 (v) =>
                                   v.severity === "warning" &&
-                                  v.outcome === "failed"
+                                  v.outcome === "failed",
                               ).length;
                               const passedCount = validations.filter(
-                                (v) => v.outcome === "passed"
+                                (v) => v.outcome === "passed",
                               ).length;
                               const skippedCount = validations.filter(
-                                (v) => v.outcome === "skipped"
+                                (v) => v.outcome === "skipped",
                               ).length;
 
                               return (
@@ -523,7 +524,7 @@ function ParticipantItem({
                       )}
                     </div>
                   );
-                }
+                },
               )}
             </div>
           )}

@@ -97,7 +97,14 @@ export default $config({
         POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
         ...env,
       },
-      link: [realtime, submissionBucket, exportsBucket, marathonSettingsBucket],
+      link: [
+        realtime,
+        submissionBucket,
+        exportsBucket,
+        marathonSettingsBucket,
+        thumbnailBucket,
+        previewBucket,
+      ],
     });
 
     const vpc = new sst.aws.Vpc("VimmerVPC");

@@ -13,7 +13,7 @@ import { TRPCError } from "@trpc/server";
 
 export async function getValidationResultsByParticipantIdQuery(
   db: Database,
-  { participantId }: { participantId: number }
+  { participantId }: { participantId: number },
 ) {
   const result = await db.query.validationResults.findMany({
     where: eq(validationResults.participantId, participantId),
@@ -24,7 +24,7 @@ export async function getValidationResultsByParticipantIdQuery(
 
 export async function getParticipantVerificationsByStaffIdQuery(
   db: Database,
-  { staffId }: { staffId: string }
+  { staffId }: { staffId: string },
 ) {
   const result = await db.query.participantVerifications.findMany({
     where: eq(participantVerifications.staffId, staffId),
@@ -48,7 +48,7 @@ export async function getParticipantVerificationsByStaffIdQuery(
 
 export async function createValidationResultMutation(
   db: Database,
-  { data }: { data: NewValidationResult }
+  { data }: { data: NewValidationResult },
 ) {
   const result = await db
     .insert(validationResults)
@@ -59,12 +59,12 @@ export async function createValidationResultMutation(
 
 export async function createMultipleValidationResultsMutation(
   db: Database,
-  { data }: { data: NewValidationResult[] }
+  { data }: { data: NewValidationResult[] },
 ) {
   const existingValidationResults = await db.query.validationResults.findMany({
     where: inArray(
       validationResults.participantId,
-      data.map((d) => d.participantId)
+      data.map((d) => d.participantId),
     ),
   });
 
@@ -74,7 +74,7 @@ export async function createMultipleValidationResultsMutation(
         ? `${r.participantId}-${r.fileName}-${r.ruleKey}`
         : `${r.participantId}-${r.ruleKey}`,
       r,
-    ])
+    ]),
   );
 
   const { toCreate, toUpdate } = data.reduce(
@@ -95,7 +95,7 @@ export async function createMultipleValidationResultsMutation(
     {
       toCreate: [] as NewValidationResult[],
       toUpdate: [] as NewValidationResult[],
-    }
+    },
   );
 
   const result: { id: number | null }[] = [];
@@ -123,7 +123,7 @@ export async function createMultipleValidationResultsMutation(
 
 export async function updateValidationResultMutation(
   db: Database,
-  { id, data }: { id: number; data: Partial<NewValidationResult> }
+  { id, data }: { id: number; data: Partial<NewValidationResult> },
 ) {
   const result = await db
     .update(validationResults)
@@ -135,7 +135,7 @@ export async function updateValidationResultMutation(
 
 export async function createParticipantVerificationMutation(
   db: Database,
-  { data }: { data: NewParticipantVerification }
+  { data }: { data: NewParticipantVerification },
 ) {
   const result = await db
     .insert(participantVerifications)
@@ -154,14 +154,14 @@ export async function createParticipantVerificationMutation(
 
 export async function clearNonEnabledRuleResultsMutation(
   db: Database,
-  { participantId, ruleKeys }: { participantId: number; ruleKeys: string[] }
+  { participantId, ruleKeys }: { participantId: number; ruleKeys: string[] },
 ) {
   await db
     .delete(validationResults)
     .where(
       and(
         eq(validationResults.participantId, participantId),
-        notInArray(validationResults.ruleKey, ruleKeys)
-      )
+        notInArray(validationResults.ruleKey, ruleKeys),
+      ),
     );
 }

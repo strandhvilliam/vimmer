@@ -54,7 +54,7 @@ function parseRuleWithParams<TParams>(
     safeParse: (params: unknown) => { success: boolean; data?: TParams };
   },
   key: keyof RulesFormValues,
-  paramOverride?: Partial<TParams>
+  paramOverride?: Partial<TParams>,
 ): Partial<RulesFormValues> {
   if (!rule.params) return {};
   const ok = schema.safeParse(rule.params);
@@ -70,7 +70,7 @@ function parseRuleWithParams<TParams>(
 
 function parseSimpleRule(
   key: keyof RulesFormValues,
-  rule: RuleConfig
+  rule: RuleConfig,
 ): Partial<RulesFormValues> {
   return {
     [key]: {
@@ -83,7 +83,7 @@ function parseSimpleRule(
 
 export function parseRules(
   rules: RuleConfig[],
-  marathon: { startDate?: string; endDate?: string }
+  marathon: { startDate?: string; endDate?: string },
 ): RulesFormValues {
   let parsedRules: Partial<RulesFormValues> = {};
 
@@ -95,13 +95,13 @@ export function parseRules(
       parseRuleWithParams(
         rule,
         maxFileSizeParamsSchema,
-        RULE_KEYS.MAX_FILE_SIZE
+        RULE_KEYS.MAX_FILE_SIZE,
       ),
     [RULE_KEYS.ALLOWED_FILE_TYPES]: (rule) =>
       parseRuleWithParams(
         rule,
         allowedFileTypesParamsSchema,
-        RULE_KEYS.ALLOWED_FILE_TYPES
+        RULE_KEYS.ALLOWED_FILE_TYPES,
       ),
     [RULE_KEYS.WITHIN_TIMERANGE]: (rule) =>
       parseRuleWithParams(
@@ -111,7 +111,7 @@ export function parseRules(
         {
           start: marathon.startDate,
           end: marathon.endDate,
-        }
+        },
       ),
     [RULE_KEYS.SAME_DEVICE]: (rule) =>
       parseSimpleRule(RULE_KEYS.SAME_DEVICE, rule),
@@ -122,7 +122,7 @@ export function parseRules(
 
   for (const rule of rules) {
     const isValidRuleKey = Object.values(RULE_KEYS).includes(
-      rule.ruleKey as RuleKey
+      rule.ruleKey as RuleKey,
     );
     if (rule.ruleKey === RULE_KEYS.WITHIN_TIMERANGE) {
       console.log({ rule });
@@ -153,7 +153,7 @@ export function parseRules(
 
 export function mapRulesToDbRules(
   rules: RulesFormValues,
-  marathonId: number
+  marathonId: number,
 ): NewRuleConfig[] {
   return Object.entries(rules).map(([key, value]) => {
     return {

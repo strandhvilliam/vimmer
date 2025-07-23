@@ -16,7 +16,7 @@ export async function getJurySubmissionsQuery(
     competitionClassId?: number | null;
     deviceGroupId?: number | null;
     topicId?: number | null;
-  }
+  },
 ) {
   const marathon = await db
     .select({ id: marathons.id })
@@ -40,7 +40,7 @@ export async function getJurySubmissionsQuery(
     filters.competitionClassId !== undefined
   ) {
     conditions.push(
-      eq(participants.competitionClassId, filters.competitionClassId)
+      eq(participants.competitionClassId, filters.competitionClassId),
     );
   }
 
@@ -70,7 +70,7 @@ export async function getJurySubmissionsQuery(
 
 export async function getJuryInvitationsByMarathonIdQuery(
   db: Database,
-  { id }: { id: number }
+  { id }: { id: number },
 ) {
   const result = await db.query.juryInvitations.findMany({
     where: eq(juryInvitations.marathonId, id),
@@ -81,7 +81,7 @@ export async function getJuryInvitationsByMarathonIdQuery(
 
 export async function getJuryInvitationByIdQuery(
   db: Database,
-  { id }: { id: number }
+  { id }: { id: number },
 ) {
   const result = await db.query.juryInvitations.findFirst({
     where: eq(juryInvitations.id, id),
@@ -91,7 +91,7 @@ export async function getJuryInvitationByIdQuery(
 
 export async function getJuryInvitationsByDomainQuery(
   db: Database,
-  { domain }: { domain: string }
+  { domain }: { domain: string },
 ) {
   const marathon = await db
     .select({ id: marathons.id })
@@ -120,7 +120,7 @@ export async function getJuryInvitationsByDomainQuery(
 
 export async function createJuryInvitationMutation(
   db: Database,
-  { data }: { data: NewJuryInvitation }
+  { data }: { data: NewJuryInvitation },
 ) {
   const result = await db
     .insert(juryInvitations)
@@ -139,7 +139,7 @@ export async function createJuryInvitationMutation(
 
 export async function updateJuryInvitationMutation(
   db: Database,
-  { id, data }: { id: number; data: Partial<NewJuryInvitation> }
+  { id, data }: { id: number; data: Partial<NewJuryInvitation> },
 ) {
   const result = await db
     .update(juryInvitations)
@@ -151,7 +151,7 @@ export async function updateJuryInvitationMutation(
 
 export async function deleteJuryInvitationMutation(
   db: Database,
-  { id }: { id: number }
+  { id }: { id: number },
 ) {
   const result = await db
     .delete(juryInvitations)

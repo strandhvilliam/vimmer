@@ -61,6 +61,6 @@ export async function getSession(): Promise<{
   return headers().then((headers) =>
     auth.api.getSession({
       headers: headers,
-    })
+    }),
   );
 }

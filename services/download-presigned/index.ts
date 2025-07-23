@@ -33,7 +33,7 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
 
   const zippedSubmissions = await getZippedSubmissionsByDomainQuery(
     supabase,
-    marathon.id
+    marathon.id,
   );
 
   const exportsBucket = Resource.ExportsBucket.name;

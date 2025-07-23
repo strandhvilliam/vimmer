@@ -98,7 +98,7 @@ export function ParticipantNumberStep({ onNextStep, marathon }: Props) {
           toast.error("Failed to create participant");
         }
       },
-    })
+    }),
   );
 
   return (

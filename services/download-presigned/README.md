@@ -57,7 +57,7 @@ const downloadPresignedFunction = new sst.aws.Function(
       },
     ],
     url: true,
-  }
+  },
 );
 ```
 

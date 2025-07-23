@@ -11,7 +11,7 @@ export const staffOtpSignIn = actionClient
       email: z.string().email(),
       otp: z.string(),
       domain: z.string(),
-    })
+    }),
   )
   .action(async ({ parsedInput: { email, otp, domain } }) => {
     const { data, error } = await authClient.signIn.emailOtp({

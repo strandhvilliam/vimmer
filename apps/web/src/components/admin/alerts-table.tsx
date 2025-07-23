@@ -49,7 +49,7 @@ export function AlertsTable() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const { data: participants } = useSuspenseQuery(
-    trpc.participants.getByDomain.queryOptions({ domain })
+    trpc.participants.getByDomain.queryOptions({ domain }),
   );
 
   const alerts = useMemo(() => {
@@ -60,9 +60,9 @@ export function AlertsTable() {
           (result) =>
             result.outcome === "failed" &&
             (result.severity === "warning" || result.severity === "error") &&
-            !result.overruled
+            !result.overruled,
         );
-      }
+      },
     );
 
     return participantsWithIssues.flatMap(
@@ -71,14 +71,14 @@ export function AlertsTable() {
           .filter(
             (result) =>
               result.outcome === "failed" &&
-              (result.severity === "warning" || result.severity === "error")
+              (result.severity === "warning" || result.severity === "error"),
           )
           .map((result) => ({
             ...result,
             participantName: `${participant.firstname} ${participant.lastname}`,
             participantReference: participant.reference,
           }));
-      }
+      },
     ) as ValidationAlertWithParticipant[];
   }, [participants]);
 
@@ -92,7 +92,7 @@ export function AlertsTable() {
             className={cn(
               severity === "error"
                 ? "bg-destructive/15 text-destructive hover:bg-destructive/20"
-                : "bg-yellow-500/15 text-yellow-600 border-yellow-200 hover:bg-yellow-500/20"
+                : "bg-yellow-500/15 text-yellow-600 border-yellow-200 hover:bg-yellow-500/20",
             )}
           >
             {severity === "error" ? (
@@ -186,7 +186,7 @@ export function AlertsTable() {
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                   </TableHead>
                 ))}
@@ -201,7 +201,7 @@ export function AlertsTable() {
                   className="cursor-pointer bg-white"
                   onClick={() =>
                     router.push(
-                      `submissions/${row.original.participantReference}`
+                      `submissions/${row.original.participantReference}`,
                     )
                   }
                   data-state={row.getIsSelected() && "selected"}
@@ -210,7 +210,7 @@ export function AlertsTable() {
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}

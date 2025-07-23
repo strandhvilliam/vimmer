@@ -68,7 +68,8 @@ export function ManualEntrySheet({
                   type="submit"
                   className={cn(
                     "text-sm font-medium",
-                    !field.state.value.trim() && "opacity-50 cursor-not-allowed"
+                    !field.state.value.trim() &&
+                      "opacity-50 cursor-not-allowed",
                   )}
                   disabled={!field.state.value.trim()}
                 >

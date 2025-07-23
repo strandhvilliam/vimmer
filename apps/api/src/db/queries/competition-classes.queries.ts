@@ -5,7 +5,7 @@ import type { NewCompetitionClass } from "../types";
 
 export async function getCompetitionClassByIdQuery(
   db: Database,
-  { id }: { id: number }
+  { id }: { id: number },
 ) {
   const result = await db.query.competitionClasses.findFirst({
     where: eq(competitionClasses.id, id),
@@ -15,7 +15,7 @@ export async function getCompetitionClassByIdQuery(
 
 export async function getCompetitionClassesByDomainQuery(
   db: Database,
-  { domain }: { domain: string }
+  { domain }: { domain: string },
 ) {
   const result = await db
     .select()
@@ -28,7 +28,7 @@ export async function getCompetitionClassesByDomainQuery(
 
 export async function createCompetitionClass(
   db: Database,
-  { data }: { data: NewCompetitionClass }
+  { data }: { data: NewCompetitionClass },
 ) {
   const result = await db
     .insert(competitionClasses)
@@ -45,7 +45,7 @@ export async function updateCompetitionClass(
   }: {
     id: number;
     data: Partial<NewCompetitionClass>;
-  }
+  },
 ) {
   const result = await db
     .update(competitionClasses)
@@ -57,7 +57,7 @@ export async function updateCompetitionClass(
 
 export async function deleteCompetitionClass(
   db: Database,
-  { id }: { id: number }
+  { id }: { id: number },
 ) {
   const result = await db
     .delete(competitionClasses)

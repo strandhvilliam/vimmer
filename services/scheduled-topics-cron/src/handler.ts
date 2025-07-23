@@ -38,12 +38,12 @@ export const handler: Handler = async (event): Promise<void> => {
         updateTopic(supabase, topic.id, {
           visibility: "public",
           scheduledStart: null,
-        })
-      )
+        }),
+      ),
     );
 
     const marathonDomains = topicsToUpdate.map(
-      (topic) => topic.marathon.domain
+      (topic) => topic.marathon.domain,
     );
     // const revalidateUrl = new URL(ADMIN_APP_REVALIDATE_PATH, ADMIN_APP_URL);
     // revalidateUrl.searchParams.set("type", "topics");

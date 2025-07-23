@@ -8,7 +8,7 @@ export async function parseAndValidateFiles(
   files: File[],
   ruleConfigs: RuleConfig<RuleKey>[],
   orderIndexes: number[],
-  maxPhotos: number
+  maxPhotos: number,
 ) {
   const currentLength = currentPhotos.length;
   const remainingSlots = maxPhotos - currentLength;
@@ -26,11 +26,11 @@ export async function parseAndValidateFiles(
         preview: URL.createObjectURL(file),
         orderIndex,
       };
-    })
+    }),
   );
 
   const validPhotos = newPhotos.filter(
-    (photo): photo is SelectedPhotoV2 => photo !== null
+    (photo): photo is SelectedPhotoV2 => photo !== null,
   );
 
   const sortedByTime = [...currentPhotos, ...validPhotos]

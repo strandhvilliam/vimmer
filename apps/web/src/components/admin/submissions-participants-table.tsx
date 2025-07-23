@@ -174,7 +174,7 @@ const columns = [
       if (!validationResults.length) return null;
 
       const failedResults = validationResults.filter(
-        (result) => result.outcome === "failed"
+        (result) => result.outcome === "failed",
       );
 
       if (failedResults.length === 0) {
@@ -182,10 +182,10 @@ const columns = [
       }
 
       const errorCount = failedResults.filter(
-        (result) => result.severity === "error"
+        (result) => result.severity === "error",
       ).length;
       const warningCount = failedResults.filter(
-        (result) => result.severity === "warning"
+        (result) => result.severity === "warning",
       ).length;
 
       return (
@@ -261,11 +261,11 @@ const columns = [
       // Sort by failed validation count
       const failedA =
         rowA.original.validationResults?.filter(
-          (result) => result.outcome === "failed"
+          (result) => result.outcome === "failed",
         ).length || 0;
       const failedB =
         rowB.original.validationResults?.filter(
-          (result) => result.outcome === "failed"
+          (result) => result.outcome === "failed",
         ).length || 0;
 
       if (failedA !== failedB) return failedA - failedB;
@@ -273,11 +273,13 @@ const columns = [
       // If same number of failed validations, sort by error count
       const errorsA =
         rowA.original.validationResults?.filter(
-          (result) => result.outcome === "failed" && result.severity === "error"
+          (result) =>
+            result.outcome === "failed" && result.severity === "error",
         ).length || 0;
       const errorsB =
         rowB.original.validationResults?.filter(
-          (result) => result.outcome === "failed" && result.severity === "error"
+          (result) =>
+            result.outcome === "failed" && result.severity === "error",
         ).length || 0;
 
       if (errorsA !== errorsB) return errorsA - errorsB;
@@ -286,12 +288,12 @@ const columns = [
       const warningsA =
         rowA.original.validationResults?.filter(
           (result) =>
-            result.outcome === "failed" && result.severity === "warning"
+            result.outcome === "failed" && result.severity === "warning",
         ).length || 0;
       const warningsB =
         rowB.original.validationResults?.filter(
           (result) =>
-            result.outcome === "failed" && result.severity === "warning"
+            result.outcome === "failed" && result.severity === "warning",
         ).length || 0;
 
       return warningsA - warningsB;
@@ -456,7 +458,7 @@ export function SubmissionsParticipantsTable({
                   <div className="flex items-center gap-1">
                     {flexRender(
                       header.column.columnDef.header,
-                      header.getContext()
+                      header.getContext(),
                     )}
                   </div>
                 </TableHead>
@@ -475,7 +477,7 @@ export function SubmissionsParticipantsTable({
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -506,7 +508,7 @@ export function SubmissionsParticipantsTable({
             {Math.min(
               (table.getState().pagination.pageIndex + 1) *
                 table.getState().pagination.pageSize,
-              table.getFilteredRowModel().rows.length
+              table.getFilteredRowModel().rows.length,
             )}{" "}
             of {table.getFilteredRowModel().rows.length} entries
           </span>
@@ -564,7 +566,7 @@ export function SubmissionsParticipantsTable({
                 }
 
                 return null;
-              }
+              },
             )}
 
             <PaginationItem>

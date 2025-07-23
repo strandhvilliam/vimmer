@@ -27,7 +27,7 @@ export const loadSubmissionQueryServerParams = createLoader(
       participantFirstName: "pf",
       participantLastName: "pl",
     },
-  }
+  },
 );
 
 export const submissionQueryServerParamSerializer = createSerializer(
@@ -42,5 +42,5 @@ export const submissionQueryServerParamSerializer = createSerializer(
       participantFirstName: "pf",
       participantLastName: "pl",
     },
-  }
+  },
 );

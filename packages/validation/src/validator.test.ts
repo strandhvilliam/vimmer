@@ -42,7 +42,7 @@ describe("Validator integration tests", () => {
 
     // Check that all validation results are valid
     expect(
-      results.every((result) => result.outcome === VALIDATION_OUTCOME.PASSED)
+      results.every((result) => result.outcome === VALIDATION_OUTCOME.PASSED),
     ).toBe(true);
   });
 
@@ -87,28 +87,28 @@ describe("Validator integration tests", () => {
 
     // Should have at least one invalid result
     expect(
-      results.some((result) => result.outcome === VALIDATION_OUTCOME.FAILED)
+      results.some((result) => result.outcome === VALIDATION_OUTCOME.FAILED),
     ).toBe(true);
 
     // Check specific validation errors
     const fileTypeErrors = results.filter(
       (r) =>
         r.ruleKey === RULE_KEYS.ALLOWED_FILE_TYPES &&
-        r.outcome === VALIDATION_OUTCOME.FAILED
+        r.outcome === VALIDATION_OUTCOME.FAILED,
     );
     expect(fileTypeErrors.length).toBeGreaterThan(0);
 
     const fileSizeErrors = results.filter(
       (r) =>
         r.ruleKey === RULE_KEYS.MAX_FILE_SIZE &&
-        r.outcome === VALIDATION_OUTCOME.FAILED
+        r.outcome === VALIDATION_OUTCOME.FAILED,
     );
     expect(fileSizeErrors.length).toBeGreaterThan(0);
 
     const deviceErrors = results.filter(
       (r) =>
         r.ruleKey === RULE_KEYS.SAME_DEVICE &&
-        r.outcome === VALIDATION_OUTCOME.FAILED
+        r.outcome === VALIDATION_OUTCOME.FAILED,
     );
     expect(deviceErrors.length).toBeGreaterThan(0);
   });
@@ -150,16 +150,16 @@ describe("Validator integration tests", () => {
     const orderingErrors = results.filter(
       (r) =>
         r.ruleKey === RULE_KEYS.STRICT_TIMESTAMP_ORDERING &&
-        r.outcome === VALIDATION_OUTCOME.FAILED
+        r.outcome === VALIDATION_OUTCOME.FAILED,
     );
     expect(orderingErrors.length).toBeGreaterThan(0);
 
     // But file type validation should pass
     const fileTypeResults = results.filter(
-      (r) => r.ruleKey === RULE_KEYS.ALLOWED_FILE_TYPES
+      (r) => r.ruleKey === RULE_KEYS.ALLOWED_FILE_TYPES,
     );
     expect(
-      fileTypeResults.every((r) => r.outcome === VALIDATION_OUTCOME.PASSED)
+      fileTypeResults.every((r) => r.outcome === VALIDATION_OUTCOME.PASSED),
     ).toBe(true);
   });
 });

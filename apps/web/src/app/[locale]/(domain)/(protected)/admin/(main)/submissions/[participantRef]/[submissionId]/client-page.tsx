@@ -7,19 +7,14 @@ import {
   TabsList,
   TabsTrigger,
 } from "@vimmer/ui/components/tabs";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
-import { SubmissionPreviewCard } from "@/components/admin/photo-submission-card";
+import { SubmissionPreviewCard } from "@/components/admin/submission-preview-card";
 import { SubmissionValidationSteps } from "@/components/admin/submission-validation-steps";
 import { SubmissionExifDataDisplay } from "@/components/admin/submission-exif-data-display";
 import { SubmissionDetails } from "@/components/admin/submission-details";
 import { SubmissionHeader } from "@/components/admin/submission-header";
 import { useDomain } from "@/contexts/domain-context";
-import { toast } from "sonner";
 
 interface SubmissionDetailClientProps {
   baseImageUrl: string;
@@ -32,7 +27,6 @@ export function SubmissionDetailClient({
   participantRef,
   submissionId,
 }: SubmissionDetailClientProps) {
-  const queryClient = useQueryClient();
   const { domain } = useDomain();
   const trpc = useTRPC();
 
@@ -46,30 +40,6 @@ export function SubmissionDetailClient({
   const { data: topics } = useSuspenseQuery(
     trpc.topics.getByDomain.queryOptions({
       domain,
-    }),
-  );
-
-  const { mutate: replacePhoto } = useMutation(
-    trpc.submissions.replacePhoto.mutationOptions({
-      onSuccess: () => {
-        toast.success("Photo replaced successfully");
-      },
-      onError: () => {
-        toast.error("Failed to replace photo");
-      },
-      onSettled: () => {
-        queryClient.invalidateQueries({
-          queryKey: trpc.submissions.getById.queryKey({
-            id: Number(submissionId),
-          }),
-        });
-        queryClient.invalidateQueries({
-          queryKey: trpc.participants.getByReference.queryKey({
-            reference: participantRef,
-            domain,
-          }),
-        });
-      },
     }),
   );
 
@@ -98,7 +68,6 @@ export function SubmissionDetailClient({
         participant={participant}
         topic={topic}
         validationResults={submissionValidationResults}
-        domain={domain}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6">

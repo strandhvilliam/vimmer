@@ -6,7 +6,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 export async function generatePresignedUrl(
   s3Client: S3Client,
   key: string,
-  bucketName: string
+  bucketName: string,
 ) {
   // "use cache";
   // cacheLife("minutes");
@@ -17,7 +17,7 @@ export async function generatePresignedUrl(
       new PutObjectCommand({
         Key: key,
         Bucket: bucketName,
-      })
+      }),
     );
   } catch (error: unknown) {
     console.error(error);

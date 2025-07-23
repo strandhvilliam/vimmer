@@ -25,7 +25,7 @@ export function StepNavigator({ currentStep, handleSetStep }: Props) {
             key={step}
             className={cn(
               "flex flex-col items-center",
-              step !== STEPS.UploadSubmissionStep && "flex-1"
+              step !== STEPS.UploadSubmissionStep && "flex-1",
             )}
           >
             <div className="flex items-center w-full">
@@ -50,7 +50,7 @@ export function StepNavigator({ currentStep, handleSetStep }: Props) {
                   "w-8 h-8 sm:w-10 sm:h-10",
                   "hover:cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2",
                   "focus:ring-primary transition-shadow relative z-10 bg-background",
-                  step <= currentStep ? "shadow-md" : ""
+                  step <= currentStep ? "shadow-md" : "",
                 )}
                 transition={{ duration: 0.2 }}
               >
@@ -88,7 +88,7 @@ export function StepNavigator({ currentStep, handleSetStep }: Props) {
                 "hidden sm:block text-sm mt-2 font-medium truncate max-w-[80px] text-center",
                 step <= currentStep
                   ? "text-foreground"
-                  : "text-muted-foreground"
+                  : "text-muted-foreground",
               )}
               transition={{ duration: 0.2, delay: 0.1 }}
             >

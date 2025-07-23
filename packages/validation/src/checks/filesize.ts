@@ -9,27 +9,27 @@ import { attachFileName, createValidationResult } from "../utils";
 
 function checkFileSize(
   rule: RuleParams["max_file_size"],
-  input: ValidationInput
+  input: ValidationInput,
 ): ValidationResult {
   if (input.fileSize > rule.maxBytes) {
     return createValidationResult(
       VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.MAX_FILE_SIZE,
-      `File size is too large: ${input.fileSize / 1024 / 1024} mb (max ${rule.maxBytes / 1024 / 1024} mb)`
+      `File size is too large: ${input.fileSize / 1024 / 1024} mb (max ${rule.maxBytes / 1024 / 1024} mb)`,
     );
   }
   return createValidationResult(
     VALIDATION_OUTCOME.PASSED,
     RULE_KEYS.MAX_FILE_SIZE,
-    "File size is valid"
+    "File size is valid",
   );
 }
 
 export const validate: ValidationFunction<typeof RULE_KEYS.MAX_FILE_SIZE> = (
   rule,
-  inputs
+  inputs,
 ) => {
   return inputs.map((input) =>
-    attachFileName(checkFileSize(rule, input), input)
+    attachFileName(checkFileSize(rule, input), input),
   );
 };

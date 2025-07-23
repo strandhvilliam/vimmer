@@ -33,8 +33,8 @@ export function DomainSelect({
       },
       {
         enabled: !!session.user.id,
-      }
-    )
+      },
+    ),
   );
   const [selectedDomainId, setSelectedDomainId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -53,7 +53,7 @@ export function DomainSelect({
 
       try {
         const { type } = searchParamsSchema.parse(
-          Object.fromEntries(searchParams)
+          Object.fromEntries(searchParams),
         );
         execute({ domain, type });
       } catch (error) {
@@ -67,7 +67,7 @@ export function DomainSelect({
         setIsSelecting(false);
       }
     },
-    [execute, searchParams]
+    [execute, searchParams],
   );
 
   useEffect(() => {

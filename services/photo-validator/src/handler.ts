@@ -26,7 +26,7 @@ const createApiClient = () =>
 
 // Function to map database rule configs to validation rule configs
 function mapDbRuleConfigsToValidationConfigs(
-  dbRuleConfigs: DbRuleConfig[]
+  dbRuleConfigs: DbRuleConfig[],
 ): RuleConfig<RuleKey>[] {
   return dbRuleConfigs
     .filter((rule) => rule.enabled) // Only include enabled rules
@@ -97,7 +97,7 @@ export const handler = async (event: SQSEvent): Promise<void> => {
         fileSize: s.size,
         mimeType: s.mimeType,
         orderIndex: topics.find((t) => t.id === s.topicId)?.orderIndex,
-      }))
+      })),
     );
 
     if (!parsedSubmissions.success) {
@@ -107,7 +107,7 @@ export const handler = async (event: SQSEvent): Promise<void> => {
 
     const validationResults = runValidations(
       ruleConfigs,
-      parsedSubmissions.data
+      parsedSubmissions.data,
     ).map((r) => ({
       ...r,
       participantId,

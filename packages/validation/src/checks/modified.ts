@@ -17,24 +17,24 @@ function checkSoftware(input: ValidationInput): ValidationResult {
     return createValidationResult(
       VALIDATION_OUTCOME.PASSED,
       RULE_KEYS.MODIFIED,
-      "No software used to edit the image"
+      "No software used to edit the image",
     );
   }
 
   const hasEditingSoftwareKeyword = EDITING_SOFTWARE_KEYWORDS.some((keyword) =>
-    software.toLowerCase().includes(keyword)
+    software.toLowerCase().includes(keyword),
   );
 
   return hasEditingSoftwareKeyword
     ? createValidationResult(
         VALIDATION_OUTCOME.FAILED,
         RULE_KEYS.MODIFIED,
-        `Detected usage of photo editing software: ${software}`
+        `Detected usage of photo editing software: ${software}`,
       )
     : createValidationResult(
         VALIDATION_OUTCOME.PASSED,
         RULE_KEYS.MODIFIED,
-        "No software used to edit the image"
+        "No software used to edit the image",
       );
 }
 
@@ -51,7 +51,7 @@ function checkDateInconsistencies(input: ValidationInput): ValidationResult {
     return createValidationResult(
       VALIDATION_OUTCOME.PASSED,
       RULE_KEYS.MODIFIED,
-      "No timestamps found"
+      "No timestamps found",
     );
   }
 
@@ -66,12 +66,12 @@ function checkDateInconsistencies(input: ValidationInput): ValidationResult {
     ? createValidationResult(
         VALIDATION_OUTCOME.FAILED,
         RULE_KEYS.MODIFIED,
-        "Detected timestamp inconsistencies. Possible editing."
+        "Detected timestamp inconsistencies. Possible editing.",
       )
     : createValidationResult(
         VALIDATION_OUTCOME.PASSED,
         RULE_KEYS.MODIFIED,
-        "No timestamp inconsistencies for editing found"
+        "No timestamp inconsistencies for editing found",
       );
 }
 
@@ -93,20 +93,20 @@ function checkLimitedExifData(input: ValidationInput): ValidationResult {
     return createValidationResult(
       VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.MODIFIED,
-      `Limited EXIF data detected (${propertyCount} properties). Possible editing or export from editing software.`
+      `Limited EXIF data detected (${propertyCount} properties). Possible editing or export from editing software.`,
     );
   }
 
   return createValidationResult(
     VALIDATION_OUTCOME.PASSED,
     RULE_KEYS.MODIFIED,
-    "Sufficient EXIF data properties present"
+    "Sufficient EXIF data properties present",
   );
 }
 
 export const validate: ValidationFunction<typeof RULE_KEYS.MODIFIED> = (
   _,
-  inputs
+  inputs,
 ) => {
   return inputs.flatMap((input) => [
     attachFileName(checkSoftware(input), input),

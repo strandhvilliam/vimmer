@@ -12,7 +12,7 @@ describe("allowed-file-types check", () => {
 
     expect(results.length).toBe(2); // Extension check and MIME type check
     expect(
-      results.every((result) => result.outcome === VALIDATION_OUTCOME.PASSED)
+      results.every((result) => result.outcome === VALIDATION_OUTCOME.PASSED),
     ).toBe(true);
   });
 
@@ -23,7 +23,7 @@ describe("allowed-file-types check", () => {
     const results = checkAllowedFileTypes(rule, input);
 
     expect(
-      results.some((result) => result.outcome === VALIDATION_OUTCOME.FAILED)
+      results.some((result) => result.outcome === VALIDATION_OUTCOME.FAILED),
     ).toBe(true);
   });
 
@@ -34,7 +34,7 @@ describe("allowed-file-types check", () => {
     const results = checkAllowedFileTypes(rule, input);
 
     expect(
-      results.some((result) => result.outcome === VALIDATION_OUTCOME.FAILED)
+      results.some((result) => result.outcome === VALIDATION_OUTCOME.FAILED),
     ).toBe(true);
   });
 });

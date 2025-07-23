@@ -14,7 +14,7 @@ import { RULE_KEYS, VALIDATION_OUTCOME } from "./constants";
 export const createValidationResult = (
   outcome: ValidationOutcome,
   ruleKey: RuleKey,
-  message: string
+  message: string,
 ): ValidationResult => ({
   outcome,
   ruleKey,
@@ -24,7 +24,7 @@ export const createValidationResult = (
 
 export function withErrorHandling<K extends RuleKey>(
   ruleKey: K,
-  validationFunction: ValidationFunction<K>
+  validationFunction: ValidationFunction<K>,
 ): ValidationFunction<K> {
   return (rule, input) => {
     try {
@@ -34,7 +34,7 @@ export function withErrorHandling<K extends RuleKey>(
         createValidationResult(
           VALIDATION_OUTCOME.FAILED,
           ruleKey,
-          "Unknown validation error"
+          "Unknown validation error",
         ),
       ];
     }
@@ -59,7 +59,7 @@ const ruleSchemas: Record<RuleKey, z.ZodSchema> = {
 
 function validateRuleParams<K extends RuleKey>(
   ruleKey: K,
-  params: unknown
+  params: unknown,
 ): [boolean, string?] {
   try {
     const schema = ruleSchemas[ruleKey];
@@ -69,7 +69,7 @@ function validateRuleParams<K extends RuleKey>(
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errorMessages = error.errors.map(
-        (err) => `${err.path.join(".")}: ${err.message}`
+        (err) => `${err.path.join(".")}: ${err.message}`,
       );
       return [false, errorMessages.join("; ")];
     }
@@ -79,7 +79,7 @@ function validateRuleParams<K extends RuleKey>(
 
 export function withParamValidation<K extends RuleKey>(
   ruleKey: K,
-  validationFunction: ValidationFunction<K>
+  validationFunction: ValidationFunction<K>,
 ): ValidationFunction<K> {
   return (rule, input) => {
     const [isValid, errorMessage] = validateRuleParams(ruleKey, rule);
@@ -89,7 +89,7 @@ export function withParamValidation<K extends RuleKey>(
         createValidationResult(
           VALIDATION_OUTCOME.FAILED,
           ruleKey,
-          `Invalid rule configuration: ${errorMessage}`
+          `Invalid rule configuration: ${errorMessage}`,
         ),
       ];
     }
@@ -123,7 +123,7 @@ function validateInput(input: unknown): [boolean, string?] {
 
 export function withInputValidation<K extends RuleKey>(
   ruleKey: K,
-  validationFunction: ValidationFunction<K>
+  validationFunction: ValidationFunction<K>,
 ): ValidationFunction<K> {
   return (rule, input) => {
     const validationResults = input.reduce((acc, inp) => {
@@ -134,10 +134,10 @@ export function withInputValidation<K extends RuleKey>(
             createValidationResult(
               VALIDATION_OUTCOME.FAILED,
               ruleKey,
-              errorMessage ?? "Invalid input data"
+              errorMessage ?? "Invalid input data",
             ),
-            inp
-          )
+            inp,
+          ),
         );
       }
       return acc;
@@ -159,18 +159,18 @@ export function pipe<K extends RuleKey>(
 }
 
 export function createValidationPipeline<K extends RuleKey>(
-  ruleKey: K
+  ruleKey: K,
 ): (fn: ValidationFunction<K>) => ValidationFunction<K> {
   return pipe(
     (fn) => withErrorHandling(ruleKey, fn),
     (fn) => withParamValidation(ruleKey, fn),
-    (fn) => withInputValidation(ruleKey, fn)
+    (fn) => withInputValidation(ruleKey, fn),
   );
 }
 
 export function attachFileName(
   result: ValidationResult,
-  input: ValidationInput
+  input: ValidationInput,
 ): ValidationResult {
   return { ...result, fileName: input.fileName };
 }

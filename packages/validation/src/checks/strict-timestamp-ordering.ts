@@ -21,13 +21,13 @@ function getTimestamp(exif: ExifData): Date | null {
 }
 
 function checkStrictTimestampOrdering(
-  input: ValidationInput[]
+  input: ValidationInput[],
 ): ValidationResult {
   if (!input || input.length <= 1) {
     return createValidationResult(
       VALIDATION_OUTCOME.SKIPPED,
       RULE_KEYS.STRICT_TIMESTAMP_ORDERING,
-      "Not enough images to validate timestamp ordering"
+      "Not enough images to validate timestamp ordering",
     );
   }
 
@@ -38,19 +38,19 @@ function checkStrictTimestampOrdering(
     }))
     .filter(
       (entry): entry is { orderIndex: number; timestamp: Date } =>
-        entry.timestamp !== null
+        entry.timestamp !== null,
     );
 
   if (timestampEntries.length < 2) {
     return createValidationResult(
       VALIDATION_OUTCOME.SKIPPED,
       RULE_KEYS.STRICT_TIMESTAMP_ORDERING,
-      "Not enough images with valid timestamps to validate ordering"
+      "Not enough images with valid timestamps to validate ordering",
     );
   }
 
   const sortedByTime = [...timestampEntries].sort(
-    (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+    (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
   );
 
   const isOrderCorrect = sortedByTime.every((entry, index) => {
@@ -64,12 +64,12 @@ function checkStrictTimestampOrdering(
     ? createValidationResult(
         VALIDATION_OUTCOME.PASSED,
         RULE_KEYS.STRICT_TIMESTAMP_ORDERING,
-        "Image order matches chronological timestamp order"
+        "Image order matches chronological timestamp order",
       )
     : createValidationResult(
         VALIDATION_OUTCOME.FAILED,
         RULE_KEYS.STRICT_TIMESTAMP_ORDERING,
-        "Image order does not match chronological timestamp order"
+        "Image order does not match chronological timestamp order",
       );
 }
 

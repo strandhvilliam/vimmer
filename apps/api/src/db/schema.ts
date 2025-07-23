@@ -85,7 +85,7 @@ export const participants = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ]
+  ],
 );
 
 export const account = pgTable(
@@ -111,7 +111,7 @@ export const account = pgTable(
       foreignColumns: [user.id],
       name: "account_userId_fkey",
     }),
-  ]
+  ],
 );
 
 export const juryInvitations = pgTable("jury_invitations", {
@@ -176,7 +176,7 @@ export const ruleConfigs = pgTable(
       foreignColumns: [marathons.id],
       name: "rule_configs_marathon_id_fkey",
     }),
-  ]
+  ],
 );
 
 export const session = pgTable(
@@ -199,7 +199,7 @@ export const session = pgTable(
       name: "session_userId_fkey",
     }),
     unique("session_token_key").on(table.token),
-  ]
+  ],
 );
 
 export const userMarathons = pgTable(
@@ -233,7 +233,7 @@ export const userMarathons = pgTable(
       foreignColumns: [user.id],
       name: "user_marathons_user_id_fkey",
     }),
-  ]
+  ],
 );
 
 export const validationResults = pgTable(
@@ -267,7 +267,7 @@ export const validationResults = pgTable(
       foreignColumns: [participants.id],
       name: "validation_results_participant_id_fkey",
     }),
-  ]
+  ],
 );
 
 export const verification = pgTable("verification", {
@@ -334,7 +334,7 @@ export const competitionClasses = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ]
+  ],
 );
 
 export const deviceGroups = pgTable(
@@ -367,7 +367,7 @@ export const deviceGroups = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ]
+  ],
 );
 
 export const participantVerifications = pgTable(
@@ -402,7 +402,7 @@ export const participantVerifications = pgTable(
       foreignColumns: [user.id],
       name: "participant_verification_staff_id_fkey",
     }),
-  ]
+  ],
 );
 
 export const submissions = pgTable(
@@ -457,7 +457,7 @@ export const submissions = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ]
+  ],
 );
 
 export const topics = pgTable(
@@ -494,7 +494,7 @@ export const topics = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ]
+  ],
 );
 
 export const zippedSubmissions = pgTable(
@@ -534,7 +534,7 @@ export const zippedSubmissions = pgTable(
       foreignColumns: [participants.id],
       name: "zipped_submissions_participant_id_fkey",
     }),
-  ]
+  ],
 );
 
 export const user = pgTable(
@@ -551,7 +551,7 @@ export const user = pgTable(
     banReason: text(),
     banExpires: timestamp({ mode: "string" }),
   },
-  (table) => [unique("user_email_key").on(table.email)]
+  (table) => [unique("user_email_key").on(table.email)],
 );
 
 export const participantsRelations = relations(
@@ -573,7 +573,7 @@ export const participantsRelations = relations(
     participantVerifications: many(participantVerifications),
     submissions: many(submissions),
     zippedSubmissions: many(zippedSubmissions),
-  })
+  }),
 );
 
 export const competitionClassesRelations = relations(
@@ -585,7 +585,7 @@ export const competitionClassesRelations = relations(
       fields: [competitionClasses.marathonId],
       references: [marathons.id],
     }),
-  })
+  }),
 );
 
 export const deviceGroupsRelations = relations(
@@ -597,7 +597,7 @@ export const deviceGroupsRelations = relations(
       fields: [deviceGroups.marathonId],
       references: [marathons.id],
     }),
-  })
+  }),
 );
 
 export const marathonsRelations = relations(marathons, ({ many }) => ({
@@ -642,7 +642,7 @@ export const validationResultsRelations = relations(
       fields: [validationResults.participantId],
       references: [participants.id],
     }),
-  })
+  }),
 );
 
 export const participantVerificationsRelations = relations(
@@ -656,7 +656,7 @@ export const participantVerificationsRelations = relations(
       fields: [participantVerifications.staffId],
       references: [user.id],
     }),
-  })
+  }),
 );
 
 export const submissionsRelations = relations(submissions, ({ one }) => ({
@@ -694,7 +694,7 @@ export const zippedSubmissionsRelations = relations(
       fields: [zippedSubmissions.participantId],
       references: [participants.id],
     }),
-  })
+  }),
 );
 
 export const juryInvitationsRelations = relations(
@@ -716,5 +716,5 @@ export const juryInvitationsRelations = relations(
       fields: [juryInvitations.deviceGroupId],
       references: [deviceGroups.id],
     }),
-  })
+  }),
 );

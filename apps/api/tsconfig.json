@@ -21,7 +21,8 @@
     "baseUrl": ".",
     "paths": {
       "@vimmer/api/*": ["src/*"],
-      "@vimmer/validation/*": ["../../packages/validation/src/*"]
+      "@vimmer/validation/*": ["../../packages/validation/src/*"],
+      "@vimmer/image-processing/*": ["../../packages/image-processing/src/*"]
     },
     "types": ["bun-types"]
   },

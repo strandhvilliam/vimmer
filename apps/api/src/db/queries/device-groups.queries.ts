@@ -5,7 +5,7 @@ import type { NewDeviceGroup } from "../types";
 
 export async function getDeviceGroupByIdQuery(
   db: Database,
-  { id }: { id: number }
+  { id }: { id: number },
 ) {
   const result = await db.query.deviceGroups.findFirst({
     where: eq(deviceGroups.id, id),
@@ -15,7 +15,7 @@ export async function getDeviceGroupByIdQuery(
 
 export async function getDeviceGroupsByDomainQuery(
   db: Database,
-  { domain }: { domain: string }
+  { domain }: { domain: string },
 ) {
   const result = await db
     .select()
@@ -28,7 +28,7 @@ export async function getDeviceGroupsByDomainQuery(
 
 export async function createDeviceGroup(
   db: Database,
-  { data }: { data: NewDeviceGroup }
+  { data }: { data: NewDeviceGroup },
 ) {
   const result = await db
     .insert(deviceGroups)
@@ -45,7 +45,7 @@ export async function updateDeviceGroup(
   }: {
     id: number;
     data: Partial<NewDeviceGroup>;
-  }
+  },
 ) {
   const result = await db
     .update(deviceGroups)

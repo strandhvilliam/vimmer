@@ -33,10 +33,10 @@ export function DeviceGroupChart() {
   const trpc = useTRPC();
   const { domain } = useDomain();
   const { data: deviceGroups } = useSuspenseQuery(
-    trpc.deviceGroups.getByDomain.queryOptions({ domain })
+    trpc.deviceGroups.getByDomain.queryOptions({ domain }),
   );
   const { data: participants } = useSuspenseQuery(
-    trpc.participants.getByDomain.queryOptions({ domain })
+    trpc.participants.getByDomain.queryOptions({ domain }),
   );
 
   const deviceGroupStats = deviceGroups.map((group) => ({
@@ -52,7 +52,7 @@ export function DeviceGroupChart() {
       };
       return config;
     },
-    {} as Record<string, { label: string; color: string }>
+    {} as Record<string, { label: string; color: string }>,
   );
 
   return (

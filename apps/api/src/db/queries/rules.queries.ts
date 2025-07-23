@@ -7,7 +7,7 @@ import { TRPCError } from "@trpc/server";
 
 function getDefaultRuleConfigs(
   marathonId: number,
-  { startDate, endDate }: { startDate: string | null; endDate: string | null }
+  { startDate, endDate }: { startDate: string | null; endDate: string | null },
 ): NewRuleConfig[] {
   return [
     {
@@ -64,7 +64,7 @@ function getDefaultRuleConfigs(
 
 export async function getRulesByDomainQuery(
   db: Database,
-  { domain }: { domain: string }
+  { domain }: { domain: string },
 ): Promise<RuleConfig[]> {
   const result = await db.query.marathons.findFirst({
     where: eq(marathons.domain, domain),
@@ -80,7 +80,7 @@ export async function getRulesByDomainQuery(
       getDefaultRuleConfigs(result.id, {
         startDate: result.startDate,
         endDate: result.endDate,
-      })
+      }),
     );
     const newResult = await db.query.marathons.findFirst({
       where: eq(marathons.id, result.id),
@@ -108,7 +108,7 @@ export async function getRulesByDomainQuery(
 
 export async function createRuleConfigMutation(
   db: Database,
-  { data }: { data: NewRuleConfig }
+  { data }: { data: NewRuleConfig },
 ) {
   const result = await db
     .insert(ruleConfigs)
@@ -119,7 +119,7 @@ export async function createRuleConfigMutation(
 
 export async function updateRuleConfigMutation(
   db: Database,
-  { id, data }: { id: number; data: Partial<NewRuleConfig> }
+  { id, data }: { id: number; data: Partial<NewRuleConfig> },
 ) {
   const result = await db
     .update(ruleConfigs)
@@ -131,13 +131,13 @@ export async function updateRuleConfigMutation(
 
 export async function updateMultipleRuleConfigMutation(
   db: Database,
-  { data }: { data: NewRuleConfig[] }
+  { data }: { data: NewRuleConfig[] },
 ) {
   const promises = [];
   for (const rule of data) {
     if (rule.id) {
       promises.push(
-        db.update(ruleConfigs).set(rule).where(eq(ruleConfigs.id, rule.id))
+        db.update(ruleConfigs).set(rule).where(eq(ruleConfigs.id, rule.id)),
       );
     }
   }
@@ -147,7 +147,7 @@ export async function updateMultipleRuleConfigMutation(
 
 export async function deleteRuleConfigMutation(
   db: Database,
-  { id }: { id: number }
+  { id }: { id: number },
 ) {
   const result = await db
     .delete(ruleConfigs)

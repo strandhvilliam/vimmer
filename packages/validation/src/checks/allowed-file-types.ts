@@ -12,7 +12,7 @@ import type {
 import { attachFileName, createValidationResult } from "../utils";
 
 function getExtensionFromFilename(
-  filename: string
+  filename: string,
 ): keyof typeof IMAGE_EXTENSION_TO_MIME_TYPE | null {
   const match = filename.match(/\.([^.]+)$/);
   const extension = match ? match[1]?.toLowerCase().replace(/^\./, "") : null;
@@ -21,7 +21,7 @@ function getExtensionFromFilename(
 
 function checkIfValidExtension(
   rule: RuleParams["allowed_file_types"],
-  input: ValidationInput
+  input: ValidationInput,
 ): ValidationResult {
   const extension = getExtensionFromFilename(input.fileName);
 
@@ -37,7 +37,7 @@ function checkIfValidExtension(
     return createValidationResult(
       VALIDATION_OUTCOME.SKIPPED,
       RULE_KEYS.ALLOWED_FILE_TYPES,
-      "Unable to determine file extension"
+      "Unable to determine file extension",
     );
   }
 
@@ -45,49 +45,49 @@ function checkIfValidExtension(
     return createValidationResult(
       VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.ALLOWED_FILE_TYPES,
-      `Invalid file extension: ${extension} (allowed: ${parsedAllowedFileTypes.join(", ")})`
+      `Invalid file extension: ${extension} (allowed: ${parsedAllowedFileTypes.join(", ")})`,
     );
   }
 
   return createValidationResult(
     VALIDATION_OUTCOME.PASSED,
     RULE_KEYS.ALLOWED_FILE_TYPES,
-    "Valid file extension"
+    "Valid file extension",
   );
 }
 
 function checkIfValidMimeType(
   rule: RuleParams["allowed_file_types"],
-  input: ValidationInput
+  input: ValidationInput,
 ): ValidationResult {
   const filteredMimeTypes = Object.entries(IMAGE_EXTENSION_TO_MIME_TYPE).filter(
-    ([key, _]) => rule.allowedFileTypes.includes(key)
+    ([key, _]) => rule.allowedFileTypes.includes(key),
   );
 
   if (filteredMimeTypes.length === 0) {
     return createValidationResult(
       VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.ALLOWED_FILE_TYPES,
-      `Invalid mime type: ${input.mimeType} (allowed: ${filteredMimeTypes.map(([key]) => key).join(", ")})`
+      `Invalid mime type: ${input.mimeType} (allowed: ${filteredMimeTypes.map(([key]) => key).join(", ")})`,
     );
   }
 
   const isValidMimeType = filteredMimeTypes.some(
-    ([_, value]) => value === input.mimeType
+    ([_, value]) => value === input.mimeType,
   );
 
   if (!isValidMimeType) {
     return createValidationResult(
       VALIDATION_OUTCOME.FAILED,
       RULE_KEYS.ALLOWED_FILE_TYPES,
-      `Invalid file mime type: ${input.mimeType} (allowed: ${filteredMimeTypes.map(([key]) => key).join(", ")})`
+      `Invalid file mime type: ${input.mimeType} (allowed: ${filteredMimeTypes.map(([key]) => key).join(", ")})`,
     );
   }
 
   return createValidationResult(
     VALIDATION_OUTCOME.PASSED,
     RULE_KEYS.ALLOWED_FILE_TYPES,
-    "Valid mime type"
+    "Valid mime type",
   );
 }
 

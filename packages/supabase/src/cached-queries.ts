@@ -84,7 +84,7 @@ export async function getMarathonByDomain(domain: string) {
 }
 
 export async function getCompetitionClassesByDomain(
-  domain: string
+  domain: string,
 ): Promise<CompetitionClass[]> {
   // "use cache";
   // cacheTag(competitionClassesByDomainTag({ domain }));
@@ -95,7 +95,7 @@ export async function getCompetitionClassesByDomain(
 }
 
 export async function getDeviceGroupsByDomain(
-  domain: string
+  domain: string,
 ): Promise<DeviceGroup[]> {
   // "use cache";
   // cacheTag(deviceGroupsByDomainTag({ domain }));
@@ -122,7 +122,7 @@ export async function getParticipantsByDomain(domain: string): Promise<
 
 export async function getParticipantByReference(
   domain: string,
-  reference: string
+  reference: string,
 ): Promise<
   | (Participant & {
       submissions: Submission[];
@@ -145,7 +145,7 @@ export async function getParticipantByReference(
 }
 
 export async function getValidationResultsByParticipantId(
-  participantId: number
+  participantId: number,
 ) {
   // "use cache";
   // cacheTag(validationResultsByParticipantIdTag({ participantId }));
@@ -153,7 +153,7 @@ export async function getValidationResultsByParticipantId(
   const supabase = await createClient();
   const data = await getValidationResultsByParticipantIdQuery(
     supabase,
-    participantId
+    participantId,
   );
   return data;
 }
@@ -192,13 +192,13 @@ export async function getParticipantVerificationsByStaffId(staffId: string) {
   const supabase = await createClient();
   const data = await getParticipantVerificationsByStaffIdQuery(
     supabase,
-    staffId
+    staffId,
   );
   return data;
 }
 
 export async function getCachedZippedSubmissionsByMarathonId(
-  marathonId: number
+  marathonId: number,
 ) {
   // "use cache";
   // cacheTag(zippedSubmissionsByMarathonIdTag({ marathonId }));
@@ -209,7 +209,7 @@ export async function getCachedZippedSubmissionsByMarathonId(
 }
 
 export async function getJuryInvitationsByDomain(
-  domain: string
+  domain: string,
 ): Promise<JuryInvitation[]> {
   // "use cache";
   // cacheTag(juryInvitationsByDomainTag({ domain }));
@@ -224,7 +224,7 @@ export async function getJuryInvitationsByDomain(
 }
 
 export async function getJuryInvitationById(
-  invitationId: number
+  invitationId: number,
 ): Promise<JuryInvitation | null> {
   // "use cache";
   // cacheTag(juryInvitationByIdTag({ invitationId }));
@@ -256,7 +256,7 @@ export async function getSubmissionsForJury(filters: {
 }
 
 export async function getStaffMembersByDomain(
-  domain: string
+  domain: string,
 ): Promise<(UserMarathonRelation & { user: User })[]> {
   // "use cache";
   // cacheTag(staffMembersByDomainTag({ domain }));
@@ -268,7 +268,7 @@ export async function getStaffMembersByDomain(
 
 export async function getStaffMemberById(
   staffId: string,
-  marathonId: number
+  marathonId: number,
 ): Promise<(UserMarathonRelation & { user: User }) | null> {
   // "use cache";
   // cacheTag(staffMemberByIdTag({ staffId, marathonId }));

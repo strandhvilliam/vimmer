@@ -21,7 +21,7 @@ export function DateTimePicker({
   className,
 }: DateTimePickerProps) {
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(
-    date
+    date,
   );
 
   // Update internal state when prop changes
@@ -56,7 +56,7 @@ export function DateTimePicker({
           className={cn(
             "w-full justify-start text-left font-normal",
             !date && "text-muted-foreground",
-            className
+            className,
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />

@@ -42,7 +42,7 @@ export const verifyParticipant = actionClient
       participantByReferenceTag({
         domain: participant.domain,
         reference: participant.reference,
-      })
+      }),
     );
     revalidateTag(participantsByDomainTag({ domain: participant.domain }));
     revalidatePath(`/staff`);

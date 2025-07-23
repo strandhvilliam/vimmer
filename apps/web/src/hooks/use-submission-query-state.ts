@@ -21,7 +21,7 @@ export function useSubmissionQueryState() {
         participantFirstName: "pf",
         participantLastName: "pl",
       },
-    }
+    },
   );
 
   return { submissionState, setSubmissionState };

@@ -50,7 +50,7 @@ export function TopicsEditDialog({
           queryKey: trpc.topics.pathKey(),
         });
       },
-    })
+    }),
   );
 
   const form = useForm({
@@ -157,7 +157,7 @@ export function TopicsEditDialog({
                   <div
                     className={cn(
                       "flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm",
-                      scheduledStart && "opacity-50"
+                      scheduledStart && "opacity-50",
                     )}
                   >
                     <div className="space-y-0.5">

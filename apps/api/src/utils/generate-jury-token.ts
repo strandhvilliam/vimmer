@@ -3,7 +3,7 @@ const MAX_EXPIRY_DAYS = 90;
 
 export async function generateJuryToken(
   domain: string,
-  invitationId: number
+  invitationId: number,
 ): Promise<string> {
   const secret = new TextEncoder().encode(process.env.JURY_JWT_SECRET);
   const iat = Math.floor(Date.now() / 1000);

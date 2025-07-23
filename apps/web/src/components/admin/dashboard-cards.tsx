@@ -21,13 +21,13 @@ export function DashboardCards() {
   const { domain } = useDomain();
 
   const { data: participants } = useSuspenseQuery(
-    trpc.participants.getByDomain.queryOptions({ domain })
+    trpc.participants.getByDomain.queryOptions({ domain }),
   );
 
   const totalParticipants = participants.length;
   const totalUploads = participants.reduce(
     (acc: number, p: Participant) => acc + p.uploadCount,
-    0
+    0,
   );
 
   const { inProgressCount, verifiedCount } = participants.reduce(
@@ -42,22 +42,22 @@ export function DashboardCards() {
     { inProgressCount: 0, verifiedCount: 0 } as {
       verifiedCount: number;
       inProgressCount: number;
-    }
+    },
   );
 
   const validationIssues = participants.flatMap(
-    (p) => p.validationResults || []
+    (p) => p.validationResults || [],
   );
 
   const errorCount = validationIssues.filter(
     (v) =>
       v.severity === SEVERITY_LEVELS.ERROR &&
-      v.outcome === VALIDATION_OUTCOME.FAILED
+      v.outcome === VALIDATION_OUTCOME.FAILED,
   ).length;
   const warningCount = validationIssues.filter(
     (v) =>
       v.severity === SEVERITY_LEVELS.WARNING &&
-      v.outcome === VALIDATION_OUTCOME.FAILED
+      v.outcome === VALIDATION_OUTCOME.FAILED,
   ).length;
 
   return (

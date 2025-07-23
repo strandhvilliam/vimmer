@@ -22,5 +22,5 @@ export const submissionQueryClientParamSerializer = createSerializer(
       participantFirstName: "pf",
       participantLastName: "pl",
     },
-  }
+  },
 );

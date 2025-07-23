@@ -55,7 +55,7 @@ export function LandingHeader() {
                   "px-4 py-2 rounded-full transition-colors relative",
                   activePage === "home"
                     ? "text-accent-foreground bg-accent"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted",
                 )}
                 onClick={handleNavClick("home")}
               >
@@ -68,7 +68,7 @@ export function LandingHeader() {
                   "px-4 py-2 rounded-full transition-colors relative",
                   activePage === "features"
                     ? "text-accent-foreground bg-accent"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted",
                 )}
                 onClick={handleNavClick("features")}
               >
@@ -80,7 +80,7 @@ export function LandingHeader() {
                   "px-4 py-2 rounded-full transition-colors relative",
                   activePage === "pricing"
                     ? "text-accent-foreground bg-accent"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted",
                 )}
                 onClick={handleNavClick("pricing")}
               >

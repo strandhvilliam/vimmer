@@ -34,7 +34,7 @@ export const getPresignedPhotoArchivesAction = actionClient
       }
       const zippedSubmissions = await getZippedSubmissionsByDomainQuery(
         supabase,
-        marathon.id
+        marathon.id,
       );
       const exportsBucket = Resource.ExportsBucket.name;
       const s3Client = new S3Client();
@@ -46,12 +46,12 @@ export const getPresignedPhotoArchivesAction = actionClient
           Key: zippedSubmission.zipKey,
         });
         presignedUrlPromises.push(
-          getSignedUrl(s3Client, command, { expiresIn: 60 * 60 * 24 })
+          getSignedUrl(s3Client, command, { expiresIn: 60 * 60 * 24 }),
         );
       }
       const presignedUrls = await Promise.all(presignedUrlPromises);
       return { presignedUrls };
-    }
+    },
   );
 
 const getPresignedExportUrlSchema = z.object({

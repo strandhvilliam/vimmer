@@ -24,7 +24,7 @@ function createConnection(endpoint: string, authorizer: string) {
       username: "", // Must be empty for the authorizer
       password: "PLACEHOLDER_TOKEN", // Passed as the token to the authorizer
       clientId: `client_${window.crypto.randomUUID()}`,
-    }
+    },
   );
 }
 
@@ -56,7 +56,7 @@ export function RealtimeProvider({
 
     const connection = createConnection(
       realtimeConfig.endpoint,
-      realtimeConfig.authorizer
+      realtimeConfig.authorizer,
     );
 
     connection.on("connect", async () => {

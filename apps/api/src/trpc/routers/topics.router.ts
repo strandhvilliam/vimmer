@@ -75,7 +75,7 @@ export const topicsRouter = createTRPCRouter({
         if (currentOrderIndex !== newOrderIndex) {
           // Create new ordering array
           const topicsWithoutCurrent = allTopics.filter(
-            (topic) => topic.id !== id
+            (topic) => topic.id !== id,
           );
           const newOrdering: number[] = [];
 
@@ -86,7 +86,7 @@ export const topicsRouter = createTRPCRouter({
             }
 
             const topicAtPosition = topicsWithoutCurrent.find(
-              (topic) => topic.orderIndex === (i < newOrderIndex ? i : i + 1)
+              (topic) => topic.orderIndex === (i < newOrderIndex ? i : i + 1),
             );
 
             if (topicAtPosition) {
@@ -160,7 +160,7 @@ export const topicsRouter = createTRPCRouter({
 
         if (i < existingTopics.length) {
           const existingTopic = existingTopics.find(
-            (topic) => topic.orderIndex === i
+            (topic) => topic.orderIndex === i,
           );
           if (existingTopic) {
             newOrdering.push(existingTopic.id);

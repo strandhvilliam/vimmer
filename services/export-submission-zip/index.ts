@@ -46,7 +46,7 @@ type ZipExportType = (typeof ZIP_EXPORT_TYPES)[keyof typeof ZIP_EXPORT_TYPES];
 
 function getKeyFromSubmission(
   submission: Partial<Submission>,
-  exportType: ZipExportType
+  exportType: ZipExportType,
 ) {
   let key: string | undefined | null;
   switch (exportType) {
@@ -117,14 +117,14 @@ export async function exportSubmissionsToZip({
           preview_key,
           thumbnail_key
         )
-      `
+      `,
       )
       .eq("marathon_id", marathon.id)
       .eq("submissions.status", "uploaded");
 
     if (participantsError) {
       throw new Error(
-        `Failed to fetch participants: ${participantsError.message}`
+        `Failed to fetch participants: ${participantsError.message}`,
       );
     }
 
@@ -135,7 +135,7 @@ export async function exportSubmissionsToZip({
     progress.totalParticipants = participants.length;
     progress.totalSubmissions = participants.reduce(
       (acc, p) => acc + (p.submissions?.length || 0),
-      0
+      0,
     );
     progress.status = "processing";
 
@@ -182,7 +182,7 @@ export async function exportSubmissionsToZip({
         const topicOrderIndex = topicOrderMap.get(submission.topic_id);
         if (topicOrderIndex === undefined) {
           console.warn(
-            `Topic ID ${submission.topic_id} not found in topics map`
+            `Topic ID ${submission.topic_id} not found in topics map`,
           );
           continue;
         }
@@ -199,12 +199,12 @@ export async function exportSubmissionsToZip({
             new GetObjectCommand({
               Bucket: sourceBucket,
               Key: getKeyFromSubmission(submission, exportType),
-            })
+            }),
           );
 
           if (!Body) {
             console.warn(
-              `File not found: ${getKeyFromSubmission(submission, exportType)}`
+              `File not found: ${getKeyFromSubmission(submission, exportType)}`,
             );
             continue;
           }
@@ -218,8 +218,8 @@ export async function exportSubmissionsToZip({
             throw new Error(
               `Unexpected Body type for ${getKeyFromSubmission(
                 submission,
-                exportType
-              )}`
+                exportType,
+              )}`,
             );
           }
 
@@ -253,7 +253,7 @@ export async function exportSubmissionsToZip({
             Key: zipFileName,
             Body: zipBuffer,
             ContentType: "application/zip",
-          })
+          }),
         );
 
         zipFileNames.push(zipFileName);
@@ -280,7 +280,7 @@ export async function exportSubmissionsToZip({
         Key: manifestKey,
         Body: JSON.stringify(manifestContent, null, 2),
         ContentType: "application/json",
-      })
+      }),
     );
 
     progress.status = "completed";
@@ -297,14 +297,14 @@ export async function exportSubmissionsToZip({
 
 async function updateProgress(
   supabase: SupabaseClient,
-  progress: ProgressInfo
+  progress: ProgressInfo,
 ) {
   if (progress.id === 0 || progress.marathonId === 0) {
     throw new Error("Progress ID and marathon ID are required");
   }
 
   const percentProgress = Math.round(
-    (progress.processedParticipants / progress.totalParticipants) * 100
+    (progress.processedParticipants / progress.totalParticipants) * 100,
   );
 
   await supabase
@@ -370,7 +370,7 @@ export async function exportParticipantSubmissionsToZip({
           preview_key,
           thumbnail_key
         )
-      `
+      `,
       )
       .eq("marathon_id", marathon.id)
       .eq("id", participantId)
@@ -379,13 +379,13 @@ export async function exportParticipantSubmissionsToZip({
 
     if (participantError) {
       throw new Error(
-        `Failed to fetch participant ${participantId}: ${participantError.message}`
+        `Failed to fetch participant ${participantId}: ${participantError.message}`,
       );
     }
 
     if (!participant) {
       throw new Error(
-        `Participant ${participantId} with uploaded submissions not found`
+        `Participant ${participantId} with uploaded submissions not found`,
       );
     }
 
@@ -425,7 +425,7 @@ export async function exportParticipantSubmissionsToZip({
       const topicOrderIndex = topicOrderMap.get(submission.topic_id);
       if (topicOrderIndex === undefined) {
         console.warn(
-          `Topic ID ${submission.topic_id} not found in topics map for participant ${participant.id}`
+          `Topic ID ${submission.topic_id} not found in topics map for participant ${participant.id}`,
         );
         continue;
       }
@@ -441,12 +441,12 @@ export async function exportParticipantSubmissionsToZip({
           new GetObjectCommand({
             Bucket: sourceBucket,
             Key: getKeyFromSubmission(submission, exportType),
-          })
+          }),
         );
 
         if (!Body) {
           console.warn(
-            `File not found: ${getKeyFromSubmission(submission, exportType)}`
+            `File not found: ${getKeyFromSubmission(submission, exportType)}`,
           );
           continue;
         }
@@ -460,8 +460,8 @@ export async function exportParticipantSubmissionsToZip({
           throw new Error(
             `Unexpected Body type for ${getKeyFromSubmission(
               submission,
-              exportType
-            )}`
+              exportType,
+            )}`,
           );
         }
 
@@ -481,7 +481,7 @@ export async function exportParticipantSubmissionsToZip({
       } catch (error) {
         console.error(
           `Error processing submission ${submission.id} for participant ${participant.id}:`,
-          error
+          error,
         );
         // Potentially update progress with error for this specific submission if needed
       }
@@ -510,7 +510,7 @@ export async function exportParticipantSubmissionsToZip({
           Key: zipFileName,
           Body: zipBuffer,
           ContentType: "application/zip",
-        })
+        }),
       );
 
       progress.processedParticipants++;
@@ -546,7 +546,7 @@ export async function handler(): Promise<any> {
     if (
       !exportType ||
       !["zip_submissions", "zip_thumbnails", "zip_previews"].includes(
-        exportType
+        exportType,
       )
     ) {
       throw new Error("Invalid export type");

@@ -30,7 +30,7 @@ import crypto from "crypto";
 
 export async function createParticipant(
   supabase: SupabaseClient,
-  dto: InsertParticipant
+  dto: InsertParticipant,
 ) {
   const { data } = await supabase
     .from("participants")
@@ -44,7 +44,7 @@ export async function createParticipant(
 export async function updateParticipant(
   supabase: SupabaseClient,
   id: number,
-  dto: UpdateParticipant
+  dto: UpdateParticipant,
 ) {
   const { data } = await supabase
     .from("participants")
@@ -58,7 +58,7 @@ export async function updateParticipant(
 
 export async function createSubmission(
   supabase: SupabaseClient,
-  dto: InsertSubmission
+  dto: InsertSubmission,
 ) {
   const { data } = await supabase
     .from("submissions")
@@ -71,7 +71,7 @@ export async function createSubmission(
 
 export async function createMultipleSubmissions(
   supabase: SupabaseClient,
-  dto: InsertSubmission[]
+  dto: InsertSubmission[],
 ) {
   const { data } = await supabase
     .from("submissions")
@@ -84,7 +84,7 @@ export async function createMultipleSubmissions(
 export async function updateSubmissionByKey(
   supabase: SupabaseClient,
   key: string,
-  dto: UpdateSubmission
+  dto: UpdateSubmission,
 ) {
   const { data } = await supabase
     .from("submissions")
@@ -99,7 +99,7 @@ export async function updateSubmissionByKey(
 export async function updateSubmissionById(
   supabase: SupabaseClient,
   id: number,
-  dto: UpdateSubmission
+  dto: UpdateSubmission,
 ) {
   const { data } = await supabase
     .from("submissions")
@@ -114,7 +114,7 @@ export async function updateSubmissionById(
 export async function incrementUploadCounter(
   supabase: SupabaseClient,
   participantId: number,
-  totalExpected: number
+  totalExpected: number,
 ) {
   const { data } = await supabase
     .rpc("increment_upload_counter", {
@@ -133,7 +133,7 @@ export async function incrementUploadCounter(
 export async function updateTopic(
   supabase: SupabaseClient,
   id: number,
-  dto: UpdateTopic
+  dto: UpdateTopic,
 ) {
   if (!dto.updatedAt) {
     dto.updatedAt = new Date().toISOString();
@@ -152,7 +152,7 @@ export async function updateTopic(
 export async function updateTopicsOrder(
   supabase: SupabaseClient,
   topicIds: number[],
-  marathonId: number
+  marathonId: number,
 ) {
   await supabase
     .rpc("update_topic_order", {
@@ -178,7 +178,7 @@ export async function deleteTopic(supabase: SupabaseClient, id: number) {
 
 export async function createDeviceGroup(
   supabase: SupabaseClient,
-  dto: InsertDeviceGroup
+  dto: InsertDeviceGroup,
 ) {
   const { data } = await supabase
     .from("device_groups")
@@ -196,7 +196,7 @@ export async function deleteDeviceGroup(supabase: SupabaseClient, id: number) {
 export async function updateDeviceGroup(
   supabase: SupabaseClient,
   id: number,
-  dto: UpdateDeviceGroup
+  dto: UpdateDeviceGroup,
 ) {
   const { data } = await supabase
     .from("device_groups")
@@ -210,7 +210,7 @@ export async function updateDeviceGroup(
 
 export async function createCompetitionClass(
   supabase: SupabaseClient,
-  dto: InsertCompetitionClass
+  dto: InsertCompetitionClass,
 ) {
   const { data } = await supabase
     .from("competition_classes")
@@ -223,7 +223,7 @@ export async function createCompetitionClass(
 
 export async function deleteCompetitionClass(
   supabase: SupabaseClient,
-  id: number
+  id: number,
 ) {
   await supabase.from("competition_classes").delete().eq("id", id);
 }
@@ -231,7 +231,7 @@ export async function deleteCompetitionClass(
 export async function updateCompetitionClass(
   supabase: SupabaseClient,
   id: number,
-  dto: UpdateCompetitionClass
+  dto: UpdateCompetitionClass,
 ) {
   const { data } = await supabase
     .from("competition_classes")
@@ -246,7 +246,7 @@ export async function updateCompetitionClass(
 export async function updateMarathonByDomain(
   supabase: SupabaseClient,
   domain: string,
-  dto: UpdateMarathon
+  dto: UpdateMarathon,
 ) {
   if (!dto.updatedAt) {
     dto.updatedAt = new Date().toISOString();
@@ -264,7 +264,7 @@ export async function updateMarathonByDomain(
 
 export async function insertValidationResults(
   supabase: SupabaseClient,
-  dto: InsertValidationResult[]
+  dto: InsertValidationResult[],
 ) {
   const { data } = await supabase
     .from("validation_results")
@@ -276,7 +276,7 @@ export async function insertValidationResults(
 
 export async function addRuleConfig(
   supabase: SupabaseClient,
-  dto: InsertRuleConfig
+  dto: InsertRuleConfig,
 ) {
   const { data } = await supabase
     .from("rule_configs")
@@ -290,7 +290,7 @@ export async function addRuleConfig(
 export async function updateRuleConfig(
   supabase: SupabaseClient,
   id: number,
-  dto: UpdateRuleConfig
+  dto: UpdateRuleConfig,
 ) {
   const { data } = await supabase
     .from("rule_configs")
@@ -306,7 +306,7 @@ export async function updateRuleConfigByMarathonIdAndRuleKey(
   supabase: SupabaseClient,
   marathonId: number,
   ruleKey: string,
-  dto: Partial<UpdateRuleConfig>
+  dto: Partial<UpdateRuleConfig>,
 ) {
   const { data } = await supabase
     .from("rule_configs")
@@ -325,7 +325,7 @@ export async function deleteRuleConfig(supabase: SupabaseClient, id: number) {
 
 export async function createParticipantVerification(
   supabase: SupabaseClient,
-  dto: InsertParticipantVerification
+  dto: InsertParticipantVerification,
 ) {
   const { data } = await supabase
     .from("participant_verifications")
@@ -339,7 +339,7 @@ export async function createParticipantVerification(
 export async function updateValidationResult(
   supabase: SupabaseClient,
   id: number,
-  dto: UpdateValidationResult
+  dto: UpdateValidationResult,
 ) {
   const { data } = await supabase
     .from("validation_results")
@@ -354,7 +354,7 @@ export async function updateValidationResult(
 
 export async function createJuryInvitation(
   supabase: SupabaseClient,
-  invitation: InsertJuryInvitation
+  invitation: InsertJuryInvitation,
 ): Promise<JuryInvitation> {
   const { data } = await supabase
     .from("jury_invitations")
@@ -368,7 +368,7 @@ export async function createJuryInvitation(
 
 export async function deleteJuryInvitation(
   supabase: SupabaseClient,
-  id: number
+  id: number,
 ) {
   await supabase.from("jury_invitations").delete().eq("id", id).throwOnError();
 }
@@ -376,7 +376,7 @@ export async function deleteJuryInvitation(
 export async function updateJuryInvitation(
   supabase: SupabaseClient,
   id: number,
-  dto: UpdateJuryInvitation
+  dto: UpdateJuryInvitation,
 ) {
   if (!dto.updatedAt) {
     dto.updatedAt = new Date().toISOString();
@@ -394,7 +394,7 @@ export async function updateJuryInvitation(
 
 export const createZippedSubmission = async (
   supabase: SupabaseClient,
-  dto: InsertZippedSubmission
+  dto: InsertZippedSubmission,
 ) => {
   const { data } = await supabase
     .from("zipped_submissions")
@@ -408,7 +408,7 @@ export const createZippedSubmission = async (
 export const updateZippedSubmission = async (
   supabase: SupabaseClient,
   id: number,
-  dto: UpdateZippedSubmission
+  dto: UpdateZippedSubmission,
 ) => {
   const { data } = await supabase
     .from("zipped_submissions")
@@ -422,7 +422,7 @@ export const updateZippedSubmission = async (
 
 export const createUser = async (
   supabase: SupabaseClient,
-  dto: Pick<InsertUser, "email" | "name">
+  dto: Pick<InsertUser, "email" | "name">,
 ) => {
   const { data } = await supabase
     .from("user")
@@ -441,7 +441,7 @@ export const createUser = async (
 
 export const createUserMarathonRelation = async (
   supabase: SupabaseClient,
-  dto: InsertUserMarathonRelation
+  dto: InsertUserMarathonRelation,
 ) => {
   const { data } = await supabase
     .from("user_marathons")
@@ -456,7 +456,7 @@ export const updateUserMarathonRelation = async (
   supabase: SupabaseClient,
   userId: string,
   marathonId: number,
-  dto: Partial<Pick<UpdateUserMarathonRelation, "role">>
+  dto: Partial<Pick<UpdateUserMarathonRelation, "role">>,
 ) => {
   const { data } = await supabase
     .from("user_marathons")
@@ -472,7 +472,7 @@ export const updateUserMarathonRelation = async (
 export const deleteUserMarathonRelation = async (
   supabase: SupabaseClient,
   userId: string,
-  marathonId: number
+  marathonId: number,
 ) => {
   await supabase
     .from("user_marathons")

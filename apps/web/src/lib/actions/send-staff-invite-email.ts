@@ -13,7 +13,7 @@ export const sendStaffInviteEmail = actionClient
       marathonName: z.string(),
       inviterName: z.string(),
       domain: z.string(),
-    })
+    }),
   )
   .action(
     async ({
@@ -35,5 +35,5 @@ export const sendStaffInviteEmail = actionClient
       if (error) {
         throw new Error("Failed to send email");
       }
-    }
+    },
   );

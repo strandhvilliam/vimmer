@@ -19,7 +19,7 @@ export const useSortableRowContext = () => {
   const context = useContext(SortableRowContext);
   if (!context) {
     throw new Error(
-      "useSortableRowContext must be used within a TopicsSortableRow"
+      "useSortableRowContext must be used within a TopicsSortableRow",
     );
   }
   return context;
@@ -63,7 +63,7 @@ export function TopicsSortableRow({ row }: TopicsSortableRowProps) {
         style={style}
         className={cn(
           "bg-background cursor-default",
-          isDragging && "opacity-50"
+          isDragging && "opacity-50",
         )}
         data-order-index={row.original.orderIndex}
       >

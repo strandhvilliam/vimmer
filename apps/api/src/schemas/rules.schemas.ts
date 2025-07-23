@@ -35,6 +35,6 @@ export const updateMultipleRuleConfigSchema = z.object({
       params: z.any().optional(),
       severity: z.string().optional(),
       enabled: z.boolean().optional(),
-    })
+    }),
   ),
 });

@@ -30,7 +30,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
       dto.files,
       dto.ruleConfigs,
       dto.orderIndexes,
-      dto.maxPhotos
+      dto.maxPhotos,
     );
 
     set({
@@ -41,12 +41,12 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
   removePhoto: (orderIndex) =>
     set(({ photos, validationResults }) => {
       const photoToRemove = photos.find(
-        (photo) => photo.orderIndex === orderIndex
+        (photo) => photo.orderIndex === orderIndex,
       );
       if (!photoToRemove) return { photos, validationResults };
 
       const updatedPhotos = photos.filter(
-        (photo) => photo.orderIndex !== orderIndex
+        (photo) => photo.orderIndex !== orderIndex,
       );
 
       const reorderedPhotos = updatedPhotos.map((photo) => {
@@ -57,7 +57,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
       });
 
       const updatedValidationResults = validationResults.filter(
-        (result) => result.fileName !== photoToRemove.file.name
+        (result) => result.fileName !== photoToRemove.file.name,
       );
 
       return {

@@ -129,7 +129,7 @@ export const validationsRouter = createTRPCRouter({
       });
 
       const mapDbRuleConfigsToValidationConfigs = (
-        dbRuleConfigs: DbRuleConfig[]
+        dbRuleConfigs: DbRuleConfig[],
       ): RuleConfig<RuleKey>[] => {
         return dbRuleConfigs
           .filter((rule) => rule.enabled)
@@ -154,7 +154,7 @@ export const validationsRouter = createTRPCRouter({
           fileSize: s.size,
           mimeType: s.mimeType,
           orderIndex: topics.find((t) => t.id === s.topicId)?.orderIndex,
-        }))
+        })),
       );
 
       if (!parsedSubmissions.success) {
@@ -164,7 +164,7 @@ export const validationsRouter = createTRPCRouter({
 
       const validationResults = runValidations(
         ruleConfigs,
-        parsedSubmissions.data
+        parsedSubmissions.data,
       ).map((r) => ({
         ...r,
         participantId,

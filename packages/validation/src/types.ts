@@ -47,5 +47,5 @@ export interface RuleConfig<K extends RuleKey> {
 
 export type ValidationFunction<K extends RuleKey> = (
   rule: RuleParams[K],
-  input: ValidationInput[]
+  input: ValidationInput[],
 ) => ValidationResult[];
