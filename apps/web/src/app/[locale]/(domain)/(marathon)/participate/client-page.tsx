@@ -22,11 +22,15 @@ import { useDomain } from "@/contexts/domain-context";
 import { useMarathonIsConfigured } from "@/hooks/use-marathon-is-configured";
 import { MarathonNotConfigured } from "@/components/participate/marathon-not-configured";
 import TermsAndConditionsDialog from "@/components/terms-and-conditions-dialog";
+import { useChangeLocale, useCurrentLocale, useI18n } from "@/locales/client";
 
 export function ParticipateClientPage() {
   const router = useRouter();
   const trpc = useTRPC();
   const { domain } = useDomain();
+  const t = useI18n();
+  const changeLocale = useChangeLocale();
+  const locale = useCurrentLocale();
 
   const { data: marathon } = useQuery(
     trpc.marathons.getByDomain.queryOptions({
@@ -36,7 +40,6 @@ export function ParticipateClientPage() {
 
   const { isConfigured, requiredActions } = useMarathonIsConfigured();
 
-  const [language, setLanguage] = useState<string>("en");
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
   const [termsOpen, setTermsOpen] = useState<boolean>(false);
 
@@ -67,7 +70,7 @@ export function ParticipateClientPage() {
           <div>
             <Button variant="link" className="text-xs h-8 px-2 gap-0" asChild>
               <Link href="/staff">
-                Staff
+                {t("staff")}
                 <ChevronRight className="w-4 h-4" />
               </Link>
             </Button>
@@ -94,27 +97,27 @@ export function ParticipateClientPage() {
                   {format(marathon.endDate, "dd MMMM yyyy")}
                 </>
               ) : (
-                "Dates to be announced"
+                t("participate.datesToBeAnnounced")
               )}
             </p>
           </div>
           <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-6 border border-background/20 shadow-xl">
             <h2 className="text-2xl font-rocgrotesk font-semibold  mb-4">
-              Getting Started
+              {t("participate.gettingStarted")}
             </h2>
 
             <section className="mb-5">
               <label className="block text-sm font-medium mb-2">
-                Choose Language
+                {t("participate.chooseLanguage")}
               </label>
               <div className="flex flex-col gap-3">
                 <Button
                   variant="outline"
                   className={cn(
                     "flex-1 flex items-center justify-center gap-2 py-4 border-2",
-                    language === "en" && "border-foreground",
+                    locale === "en" && "border-foreground",
                   )}
-                  onClick={() => setLanguage("en")}
+                  onClick={() => changeLocale("en")}
                 >
                   <ReactCountryFlag countryCode="GB" svg />
                   English
@@ -123,9 +126,9 @@ export function ParticipateClientPage() {
                   variant="outline"
                   className={cn(
                     "flex-1 flex items-center justify-center gap-2 py-4 border-2",
-                    language === "sv" && "border-foreground",
+                    locale === "sv" && "border-foreground",
                   )}
-                  onClick={() => setLanguage("sv")}
+                  onClick={() => changeLocale("sv")}
                 >
                   <ReactCountryFlag countryCode="SE" svg />
                   Svenska
@@ -149,20 +152,17 @@ export function ParticipateClientPage() {
                   >
                     <div className="flex items-center gap-2 font-medium">
                       <Info size={16} className="" />
-                      Competition Rules & Info
+                      {t("participate.competitionRules")}
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="text-sm font-medium space-y-2">
-                    <p>
-                      Welcome to our annual photo competition! Here are the key
-                      rules:
-                    </p>
+                    <p>{t("participate.rulesWelcome")}</p>
                     <ul className="list-disc pl-5 space-y-1">
-                      <li>All photos must be original and taken by you</li>
-                      <li>Photos must be submitted in JPG or PNG format</li>
-                      <li>Maximum file size: 10MB per photo</li>
-                      <li>Submission deadline: August 15, 2025</li>
-                      <li>Winners will be announced on September 1, 2025</li>
+                      <li>{t("participate.rulesOriginal")}</li>
+                      <li>{t("participate.rulesFormat")}</li>
+                      <li>{t("participate.rulesFileSize")}</li>
+                      <li>{t("participate.rulesDeadline")}</li>
+                      <li>{t("participate.rulesAnnouncement")}</li>
                     </ul>
                   </AccordionContent>
                 </AccordionItem>
@@ -180,12 +180,12 @@ export function ParticipateClientPage() {
                   className="mt-1"
                 />
                 <label htmlFor="terms" className="text-sm font-medium">
-                  I accept the{" "}
+                  {t("participate.termsAccept")}{" "}
                   <button
                     onClick={() => setTermsOpen(true)}
                     className="underline font-semibold"
                   >
-                    terms and conditions
+                    {t("participate.termsAndConditions")}
                   </button>
                 </label>
               </div>
@@ -203,7 +203,7 @@ export function ParticipateClientPage() {
               disabled={!termsAccepted}
               className="w-full py-3 text-base  text-white rounded-full"
             >
-              Begin
+              {t("begin")}
               <ChevronRight className="ml-2 h-5 w-5" />
             </PrimaryButton>
           </div>

@@ -1,3 +1,4 @@
+import { LoadingLogo } from "@/components/loading-logo";
 import { ParticipateClientPage } from "./client-page";
 import { getDomain } from "@/lib/get-domain";
 import {
@@ -41,7 +42,9 @@ export default async function ParticipatePage() {
 
   return (
     <HydrateClient>
-      <ParticipateClientPage />
+      <Suspense fallback={<LoadingLogo />}>
+        <ParticipateClientPage />
+      </Suspense>
     </HydrateClient>
   );
 }

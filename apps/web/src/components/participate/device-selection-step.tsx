@@ -17,6 +17,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDomain } from "@/contexts/domain-context";
 import { DeviceGroup } from "@vimmer/api/db/types";
 import { DeviceSelectionItem } from "./device-selection-item";
+import { useI18n } from "@/locales/client";
 
 interface Props extends StepNavigationHandlers {
   deviceGroups: DeviceGroup[];
@@ -30,6 +31,7 @@ export function DeviceSelectionStep({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { domain } = useDomain();
+  const t = useI18n();
   const {
     submissionState: {
       competitionClassId,
@@ -87,10 +89,10 @@ export function DeviceSelectionStep({
     <div className="max-w-4xl mx-auto space-y-6">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl font-rocgrotesk font-bold text-center">
-          Choose Your Device
+          {t("deviceSelection.title")}
         </CardTitle>
         <CardDescription className="text-center">
-          Select the device you've used during the marathon
+          {t("deviceSelection.description")}
         </CardDescription>
       </CardHeader>
 
@@ -116,7 +118,7 @@ export function DeviceSelectionStep({
           {isUpdateParticipantPending ? (
             <Loader2 className="animate-spin" />
           ) : (
-            "Continue"
+            t("deviceSelection.continue")
           )}
         </PrimaryButton>
         <Button
@@ -125,7 +127,7 @@ export function DeviceSelectionStep({
           onClick={onPrevStep}
           className="w-[200px]"
         >
-          Back
+          {t("deviceSelection.back")}
         </Button>
       </CardFooter>
     </div>

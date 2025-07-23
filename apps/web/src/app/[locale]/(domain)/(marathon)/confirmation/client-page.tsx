@@ -16,6 +16,7 @@ import { useTRPC } from "@/trpc/client";
 import { useDomain } from "@/contexts/domain-context";
 import { Icon } from "@iconify/react";
 import { CheckCircle2, Trophy, ArrowRight } from "lucide-react";
+import { useI18n } from "@/locales/client";
 
 interface ConfirmationClientProps {
   participantRef: string;
@@ -37,6 +38,7 @@ export function ConfirmationClient({
 }: ConfirmationClientProps) {
   const { domain } = useDomain();
   const trpc = useTRPC();
+  const t = useI18n();
   const [selectedImage, setSelectedImage] = useState<ConfirmationData | null>(
     null,
   );
@@ -85,8 +87,7 @@ export function ConfirmationClient({
 
   return (
     <>
-      <div className="min-h-[100dvh] px-4 py-6 space-y-6">
-        {/* Hero Section */}
+      <div className="min-h-[100dvh] px-4 py-6 space-y-6 max-w-[800px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -119,7 +120,7 @@ export function ConfirmationClient({
               transition={{ delay: 0.3 }}
               className="text-3xl font-rocgrotesk font-bold text-foreground"
             >
-              Congratulations!
+              {t("confirmation.congratulations")}
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 10 }}
@@ -127,8 +128,9 @@ export function ConfirmationClient({
               transition={{ delay: 0.4 }}
               className="text-muted-foreground text-lg leading-relaxed"
             >
-              Your {uploadedSubmissions.length} photos are uploaded and ready
-              for judging! Good work!
+              {t("confirmation.photosUploaded", {
+                count: uploadedSubmissions.length,
+              })}
             </motion.p>
           </div>
         </motion.div>
@@ -180,7 +182,6 @@ export function ConfirmationClient({
           </Card>
         </motion.div>
 
-        {/* Photo Gallery */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -188,7 +189,7 @@ export function ConfirmationClient({
         >
           <CardHeader className="pb-4 px-0">
             <CardTitle className="flex items-center gap-2 text-lg">
-              Your Photos
+              {t("confirmation.yourPhotos")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 px-0">
@@ -249,7 +250,7 @@ export function ConfirmationClient({
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Trophy className="h-5 w-5 text-primary" />
-                What's Next?
+                {t("confirmation.whatsNext")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -259,9 +260,11 @@ export function ConfirmationClient({
                     <span className="text-sm font-bold text-primary">1</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Judging Phase</h3>
+                    <h3 className="font-semibold mb-1">
+                      {t("confirmation.judgingPhase")}
+                    </h3>
                     <p className="text-sm text-muted-foreground">
-                      Our expert jury will review all submissions
+                      {t("confirmation.judgingDescription")}
                     </p>
                   </div>
                 </div>
@@ -270,9 +273,11 @@ export function ConfirmationClient({
                     <span className="text-sm font-bold text-primary">2</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Results Announced</h3>
+                    <h3 className="font-semibold mb-1">
+                      {t("confirmation.resultsAnnounced")}
+                    </h3>
                     <p className="text-sm text-muted-foreground">
-                      Winners will be contacted via email
+                      {t("confirmation.resultsDescription")}
                     </p>
                   </div>
                 </div>
@@ -281,9 +286,11 @@ export function ConfirmationClient({
                     <span className="text-sm font-bold text-primary">3</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Share Your Work</h3>
+                    <h3 className="font-semibold mb-1">
+                      {t("confirmation.shareWork")}
+                    </h3>
                     <p className="text-sm text-muted-foreground">
-                      You can share your photos after results
+                      {t("confirmation.shareDescription")}
                     </p>
                   </div>
                 </div>

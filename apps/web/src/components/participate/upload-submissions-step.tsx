@@ -24,6 +24,7 @@ import { useRef, useState } from "react";
 import { COMMON_IMAGE_EXTENSIONS } from "@/lib/constants";
 import { RULE_KEYS } from "@vimmer/validation/constants";
 import { toast } from "sonner";
+import { useI18n } from "@/locales/client";
 
 interface Props extends StepNavigationHandlers {
   competitionClasses: CompetitionClass[];
@@ -40,6 +41,7 @@ export function UploadSubmissionsStep({
   competitionClasses,
   ruleConfigs,
 }: Props) {
+  const t = useI18n();
   const {
     submissionState: { competitionClassId },
   } = useSubmissionQueryState();
@@ -83,7 +85,9 @@ export function UploadSubmissionsStep({
           ?.trim()
           ?.toLowerCase();
         toast.error(
-          `Invalid file type: ${fileExtension ?? "NO FILE EXTENSION"}`,
+          t("uploadSubmissions.invalidFileType", {
+            extension: fileExtension ?? t("uploadSubmissions.noFileExtension"),
+          }),
         );
       });
       return;
@@ -111,11 +115,11 @@ export function UploadSubmissionsStep({
 
   const handleUploadClick = () => {
     if (!competitionClass) {
-      toast.error("Unable to determine class");
+      toast.error(t("uploadSubmissions.unableToDetermineClass"));
       return;
     }
     if (photos.length >= competitionClass.numberOfPhotos) {
-      toast.error("Maximum number of photos reached");
+      toast.error(t("uploadSubmissions.maxPhotosReached"));
       return;
     }
     fileInputRef.current?.click();
@@ -124,7 +128,7 @@ export function UploadSubmissionsStep({
   if (!competitionClass) {
     return (
       <UploadErrorFallback
-        error={"An unexpected error occurred"}
+        error={t("uploadSubmissions.unexpectedError")}
         onPrevStep={onPrevStep}
       />
     );
@@ -146,10 +150,10 @@ export function UploadSubmissionsStep({
       <div className="max-w-4xl mx-auto space-y-6">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-rocgrotesk font-bold text-center">
-            Upload Your Photos
+            {t("uploadSubmissions.title")}
           </CardTitle>
           <CardDescription className="text-center">
-            Submit your photos for each topic below
+            {t("uploadSubmissions.description")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -185,7 +189,7 @@ export function UploadSubmissionsStep({
             onClick={onPrevStep}
             className="w-[200px]"
           >
-            Back
+            {t("uploadSubmissions.back")}
           </Button>
         </CardFooter>
       </div>

@@ -13,6 +13,7 @@ import {
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { CompetitionClass } from "@vimmer/api/db/types";
 import { ClassSelectionItem } from "@/components/participate/class-selection-item";
+import { useI18n } from "@/locales/client";
 
 interface Props extends StepNavigationHandlers {
   competitionClasses: CompetitionClass[];
@@ -23,6 +24,7 @@ export function ClassSelectionStep({
   onNextStep,
   onPrevStep,
 }: Props) {
+  const t = useI18n();
   const {
     submissionState: { competitionClassId },
   } = useSubmissionQueryState();
@@ -31,10 +33,10 @@ export function ClassSelectionStep({
     <div className="max-w-4xl mx-auto space-y-8">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl font-rocgrotesk font-bold text-center">
-          Choose Your Class
+          {t("classSelection.title")}
         </CardTitle>
         <CardDescription className="text-center">
-          Select the class you want to compete in
+          {t("classSelection.description")}
         </CardDescription>
       </CardHeader>
 
@@ -54,7 +56,7 @@ export function ClassSelectionStep({
           disabled={!competitionClassId}
           className="w-full py-3 text-lg rounded-full"
         >
-          Continue
+          {t("classSelection.continue")}
         </PrimaryButton>
         <Button
           variant="ghost"
@@ -62,7 +64,7 @@ export function ClassSelectionStep({
           onClick={onPrevStep}
           className="w-[200px]"
         >
-          Back
+          {t("classSelection.back")}
         </Button>
       </CardFooter>
     </div>

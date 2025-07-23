@@ -2,14 +2,7 @@ import { STEPS } from "@/lib/constants";
 import { CheckIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { cn } from "@vimmer/ui/lib/utils";
-
-const STEP_LABELS = {
-  [STEPS.ParticipantNumberStep]: "Number",
-  [STEPS.ParticipantDetailsStep]: "Details",
-  [STEPS.ClassSelectionStep]: "Class",
-  [STEPS.DeviceSelectionStep]: "Device",
-  [STEPS.UploadSubmissionStep]: "Upload",
-} as const;
+import { useI18n } from "@/locales/client";
 
 interface Props {
   currentStep: number;
@@ -17,6 +10,25 @@ interface Props {
 }
 
 export function StepNavigator({ currentStep, handleSetStep }: Props) {
+  const t = useI18n();
+
+  const getStepLabel = (step: number) => {
+    switch (step) {
+      case STEPS.ParticipantNumberStep:
+        return t("steps.number");
+      case STEPS.ParticipantDetailsStep:
+        return t("steps.details");
+      case STEPS.ClassSelectionStep:
+        return t("steps.class");
+      case STEPS.DeviceSelectionStep:
+        return t("steps.device");
+      case STEPS.UploadSubmissionStep:
+        return t("steps.upload");
+      default:
+        return "";
+    }
+  };
+
   return (
     <nav className="mb-8">
       <ol className="flex items-center mx-auto max-w-3xl">
@@ -92,7 +104,7 @@ export function StepNavigator({ currentStep, handleSetStep }: Props) {
               )}
               transition={{ duration: 0.2, delay: 0.1 }}
             >
-              {STEP_LABELS[step]}
+              {getStepLabel(step)}
             </motion.span>
           </li>
         ))}

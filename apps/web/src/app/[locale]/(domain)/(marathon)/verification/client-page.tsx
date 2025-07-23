@@ -18,12 +18,14 @@ import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { RefreshCcw } from "lucide-react";
 import { cn } from "@vimmer/ui/lib/utils";
 import { useRefreshTimeout } from "@/hooks/use-refresh-timeout";
+import { useI18n } from "@/locales/client";
 
 export function ClientVerificationPage() {
   const trpc = useTRPC();
   const { domain } = useDomain();
   const { submissionState } = useSubmissionQueryState();
   const router = useRouter();
+  const t = useI18n();
 
   const { data: participant, refetch } = useQuery(
     trpc.participants.getByReference.queryOptions(
@@ -57,10 +59,10 @@ export function ClientVerificationPage() {
       <div>
         <CardHeader className="space-y-2">
           <CardTitle className="text-2xl font-rocgrotesk font-bold text-center">
-            Almost there!
+            {t("verification.almostThere")}
           </CardTitle>
           <CardDescription className="text-center">
-            Show this QR code to a crew member to verify your submission.
+            {t("verification.showQrCode")}
           </CardDescription>
         </CardHeader>
       </div>
@@ -95,7 +97,7 @@ export function ClientVerificationPage() {
                 {participant?.reference && (
                   <div className="flex flex-col items-center mt-8">
                     <span className="text-xl md:text-2xl font-rocgrotesk font-semibold text-gray-700">
-                      Participant
+                      {t("participant")}
                     </span>
                     <span
                       className="font-mono font-bold text-4xl md:text-5xl text-gray-900 select-all tracking-wider mt-2"
@@ -123,8 +125,8 @@ export function ClientVerificationPage() {
       >
         <RefreshCcw className={cn("h-4 w-4")} />
         {refreshTimeout > 0
-          ? `Refresh available in ${refreshTimeout}s`
-          : "Refresh"}
+          ? t("verification.refreshAvailable", { seconds: refreshTimeout })
+          : t("refresh")}
       </PrimaryButton>
     </div>
   );

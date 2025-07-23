@@ -6,6 +6,8 @@ import { getDomain } from "@/lib/get-domain";
 import { batchPrefetch, HydrateClient, trpc } from "@/trpc/server";
 import { Suspense } from "react";
 import { Resource } from "sst";
+import { getI18n } from "@/locales/server";
+import { LoadingLogo } from "@/components/loading-logo";
 
 interface ConfirmationPageProps {
   searchParams: Promise<SearchParams>;
@@ -16,6 +18,7 @@ export default async function ConfirmationPage({
 }: ConfirmationPageProps) {
   const domain = await getDomain();
   const params = await loadSubmissionQueryServerParams(searchParams);
+  const t = await getI18n();
 
   if (!params.participantRef) notFound();
 
@@ -30,20 +33,9 @@ export default async function ConfirmationPage({
   ]);
 
   return (
-    <div className="min-h-[100dvh] bg-background">
+    <div className="min-h-[100dvh]">
       <HydrateClient>
-        <Suspense
-          fallback={
-            <div className="flex items-center justify-center min-h-[100dvh] px-4">
-              <div className="text-center space-y-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                <p className="text-muted-foreground">
-                  Loading your submission...
-                </p>
-              </div>
-            </div>
-          }
-        >
+        <Suspense fallback={<LoadingLogo />}>
           <ConfirmationClient
             participantRef={params.participantRef}
             thumbnailsBaseUrl={Resource.ThumbnailsRouter.url}

@@ -14,6 +14,14 @@ import { Input } from "@vimmer/ui/components/input";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { ArrowRight } from "lucide-react";
 import { z } from "zod/v4";
+import { useI18n } from "@/locales/client";
+
+const createParticipantDetailsSchema = (t: any) =>
+  z.object({
+    firstname: z.string().min(1, t("participantDetails.firstNameRequired")),
+    lastname: z.string().min(1, t("participantDetails.lastNameRequired")),
+    email: z.email(t("participantDetails.invalidEmail")),
+  });
 
 const participantDetailsSchema = z.object({
   firstname: z.string().min(1, "First name is required"),
@@ -27,6 +35,7 @@ export function ParticipantDetailsStep({
   onNextStep,
   onPrevStep,
 }: StepNavigationHandlers) {
+  const t = useI18n();
   const {
     submissionState: {
       participantEmail,
@@ -52,8 +61,8 @@ export function ParticipantDetailsStep({
       onNextStep?.();
     },
     validators: {
-      onChange: participantDetailsSchema,
-      onMount: participantDetailsSchema,
+      onChange: createParticipantDetailsSchema(t),
+      onMount: createParticipantDetailsSchema(t),
     },
   });
 
@@ -61,10 +70,10 @@ export function ParticipantDetailsStep({
     <div className="max-w-md mx-auto">
       <CardHeader className="space-y-2">
         <CardTitle className="text-2xl font-rocgrotesk font-bold text-center">
-          Your Details
+          {t("participantDetails.title")}
         </CardTitle>
         <CardDescription className="text-center">
-          Please enter your personal information
+          {t("participantDetails.description")}
         </CardDescription>
       </CardHeader>
       <form
@@ -81,7 +90,7 @@ export function ParticipantDetailsStep({
             children={(field) => (
               <div className="space-y-2">
                 <label className="text-sm font-medium leading-none">
-                  First Name
+                  {t("participantDetails.firstName")}
                 </label>
                 <Input
                   name={field.name}
@@ -106,7 +115,7 @@ export function ParticipantDetailsStep({
             children={(field) => (
               <div className="space-y-2">
                 <label className="text-sm font-medium leading-none">
-                  Last Name
+                  {t("participantDetails.lastName")}
                 </label>
                 <Input
                   name={field.name}
@@ -131,7 +140,7 @@ export function ParticipantDetailsStep({
             children={(field) => (
               <div className="space-y-2">
                 <label className="text-sm font-medium leading-none">
-                  Email Address
+                  {t("participantDetails.email")}
                 </label>
                 <Input
                   name={field.name}
@@ -162,7 +171,7 @@ export function ParticipantDetailsStep({
                 className="w-full py-3 text-lg rounded-full"
                 disabled={!canSubmit}
               >
-                <span>Continue</span>
+                <span>{t("participantDetails.continue")}</span>
                 <ArrowRight className="ml-2 h-5 w-5" />
               </PrimaryButton>
             )}
@@ -173,7 +182,7 @@ export function ParticipantDetailsStep({
             onClick={onPrevStep}
             className="w-full"
           >
-            Back
+            {t("participantDetails.back")}
           </Button>
         </CardFooter>
       </form>

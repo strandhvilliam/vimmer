@@ -20,6 +20,18 @@ import { useTRPC } from "@/trpc/client";
 import { Marathon } from "@vimmer/api/db/types";
 import { useDomain } from "@/contexts/domain-context";
 import { z } from "zod/v4";
+import { useI18n } from "@/locales/client";
+
+const createInitializeParticipantSchema = (t: any) =>
+  z.object({
+    participantRef: z
+      .string()
+      .nonempty({ message: t("participantNumber.required") })
+      .refine((val) => /^\d+$/.test(val), {
+        message: t("participantNumber.numbersOnly"),
+      }),
+    domain: z.string().min(1, "Invalid domain"),
+  });
 
 export const initializeParticipantSchema = z.object({
   participantRef: z
@@ -43,6 +55,7 @@ export function ParticipantNumberStep({ onNextStep, marathon }: Props) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { domain } = useDomain();
+  const t = useI18n();
   const {
     submissionState: { participantRef, participantId },
     setSubmissionState,
@@ -63,7 +76,7 @@ export function ParticipantNumberStep({ onNextStep, marathon }: Props) {
       });
     },
     validators: {
-      onChange: initializeParticipantSchema,
+      onChange: createInitializeParticipantSchema(t),
     },
   });
 
@@ -89,13 +102,13 @@ export function ParticipantNumberStep({ onNextStep, marathon }: Props) {
             onChange: {
               fields: {
                 participantRef: {
-                  message: "Participant already exists",
+                  message: t("participantNumber.participantExists"),
                 },
               },
             },
           });
         } else {
-          toast.error("Failed to create participant");
+          toast.error(t("participantNumber.createFailed"));
         }
       },
     }),
@@ -105,10 +118,10 @@ export function ParticipantNumberStep({ onNextStep, marathon }: Props) {
     <div className="max-w-md mx-auto min-h-[80vh] flex flex-col justify-center">
       <CardHeader className="space-y-4">
         <CardTitle className="text-2xl font-rocgrotesk font-bold text-center">
-          Your Participant Number
+          {t("participantNumber.title")}
         </CardTitle>
         <CardDescription className="text-center">
-          Please enter your participant number to continue
+          {t("participantNumber.description")}
         </CardDescription>
       </CardHeader>
 
@@ -167,7 +180,7 @@ export function ParticipantNumberStep({ onNextStep, marathon }: Props) {
               className="w-full rounded-full py-6 text-lg"
               onClick={onNextStep}
             >
-              Continue
+              {t("participantNumber.continue")}
             </Button>
           ) : (
             <form.Subscribe
@@ -186,7 +199,7 @@ export function ParticipantNumberStep({ onNextStep, marathon }: Props) {
                     <Loader2 className="animate-spin" />
                   ) : (
                     <>
-                      <span>Continue</span>
+                      <span>{t("participantNumber.continue")}</span>
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </>
                   )}

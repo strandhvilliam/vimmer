@@ -15,27 +15,25 @@ export const generateStaticParams = async () => {
   return [{ locale: "en" }];
 };
 
-export default async function RootLayout({
-  // params,
-  children,
-}: {
-  // params: Promise<{ locale: string }>;
+interface RootLayoutProps {
+  params: Promise<{
+    locale: string;
+  }>;
   children: React.ReactNode;
-}) {
-  // const { locale } = await params;
+}
 
-  // const domain = (await headers()).get("x-domain");
+export default async function RootLayout({
+  params,
+  children,
+}: RootLayoutProps) {
+  const { locale } = await params;
 
   let domain: string | null = null;
   try {
     domain = await getDomain();
-  } catch (e) {
+  } catch (_) {
     // expected error
   }
-
-  // if (!domain) {
-  //   return notFound();
-  // }
 
   const realtimeConfig = {
     endpoint: Resource.Realtime.endpoint,
@@ -52,7 +50,11 @@ export default async function RootLayout({
       <body className="bg-muted ">
         <DotPattern />
         <Toaster />
-        <Providers domain={domain} realtimeConfig={realtimeConfig}>
+        <Providers
+          domain={domain}
+          locale={locale}
+          realtimeConfig={realtimeConfig}
+        >
           {children}
         </Providers>
       </body>
