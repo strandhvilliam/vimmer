@@ -22,7 +22,6 @@
     "@trpc/client": "^11.4.3",
     "@trpc/tanstack-react-query": "^11.4.3",
     "@vimmer/api": "workspace:*",
-    "@vimmer/supabase": "workspace:*",
     "@vimmer/ui": "workspace:*",
     "@vimmer/validation": "workspace:*",
     "@yudiel/react-qr-scanner": "^2.3.1",

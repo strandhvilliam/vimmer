@@ -1,3 +1,2 @@
-
-../../../../../../components/staff/participant-info-sheet
-../../../../../../components/staff/verified-participants-sheet
+// This file is intentionally empty - components are imported from the components directory
+export {};

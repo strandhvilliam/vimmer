@@ -18,7 +18,7 @@ import type { NewSubmission, NewZippedSubmission } from "@vimmer/api/db/types";
 
 export async function getSubmissionByIdQuery(
   db: Database,
-  { id }: { id: number }
+  { id }: { id: number },
 ) {
   const result = await db.query.submissions.findFirst({
     where: eq(submissions.id, id),
@@ -27,9 +27,9 @@ export async function getSubmissionByIdQuery(
   return result;
 }
 
-export async function getZippedSubmissionsByDomainQuery(
+export async function getZippedSubmissionsByMarathonIdQuery(
   db: Database,
-  { marathonId }: { marathonId: number }
+  { marathonId }: { marathonId: number },
 ) {
   const result = await db.query.zippedSubmissions.findMany({
     where: eq(zippedSubmissions.marathonId, marathonId),
@@ -40,7 +40,7 @@ export async function getZippedSubmissionsByDomainQuery(
 
 export async function getManySubmissionsByKeysQuery(
   db: Database,
-  { keys }: { keys: string[] }
+  { keys }: { keys: string[] },
 ) {
   const result = await db.query.submissions.findMany({
     where: inArray(submissions.key, keys),
@@ -51,7 +51,7 @@ export async function getManySubmissionsByKeysQuery(
 
 export async function getSubmissionsByParticipantIdQuery(
   db: Database,
-  { participantId }: { participantId: number }
+  { participantId }: { participantId: number },
 ) {
   const result = await db.query.submissions.findMany({
     where: eq(submissions.participantId, participantId),
@@ -67,7 +67,7 @@ export async function getSubmissionsForJuryQuery(
     competitionClassId?: number | null;
     deviceGroupId?: number | null;
     topicId?: number | null;
-  }
+  },
 ) {
   const marathon = await db.query.marathons.findFirst({
     where: eq(marathons.domain, filters.domain),
@@ -106,19 +106,20 @@ export async function getSubmissionsForJuryQuery(
   ) {
     filteredResult = filteredResult.filter(
       (s) =>
-        (s.participant as any).competitionClassId === filters.competitionClassId
+        (s.participant as any).competitionClassId ===
+        filters.competitionClassId,
     );
   }
 
   if (filters.deviceGroupId !== null && filters.deviceGroupId !== undefined) {
     filteredResult = filteredResult.filter(
-      (s) => (s.participant as any).deviceGroupId === filters.deviceGroupId
+      (s) => (s.participant as any).deviceGroupId === filters.deviceGroupId,
     );
   }
 
   if (filters.topicId !== null && filters.topicId !== undefined) {
     filteredResult = filteredResult.filter(
-      (s) => s.topicId === filters.topicId
+      (s) => s.topicId === filters.topicId,
     );
   }
 
@@ -127,7 +128,7 @@ export async function getSubmissionsForJuryQuery(
 
 export async function createSubmissionMutation(
   db: Database,
-  { data }: { data: NewSubmission }
+  { data }: { data: NewSubmission },
 ) {
   const result = await db
     .insert(submissions)
@@ -138,7 +139,7 @@ export async function createSubmissionMutation(
 
 export async function createMultipleSubmissionsMutation(
   db: Database,
-  { data }: { data: NewSubmission[] }
+  { data }: { data: NewSubmission[] },
 ) {
   const result = await db
     .insert(submissions)
@@ -149,7 +150,7 @@ export async function createMultipleSubmissionsMutation(
 
 export async function updateSubmissionByKeyMutation(
   db: Database,
-  { key, data }: { key: string; data: Partial<NewSubmission> }
+  { key, data }: { key: string; data: Partial<NewSubmission> },
 ) {
   const result = await db
     .update(submissions)
@@ -161,7 +162,7 @@ export async function updateSubmissionByKeyMutation(
 
 export async function updateSubmissionByIdMutation(
   db: Database,
-  { id, data }: { id: number; data: Partial<NewSubmission> }
+  { id, data }: { id: number; data: Partial<NewSubmission> },
 ) {
   const result = await db
     .update(submissions)
@@ -173,7 +174,7 @@ export async function updateSubmissionByIdMutation(
 
 export async function createZippedSubmissionMutation(
   db: Database,
-  { data }: { data: NewZippedSubmission }
+  { data }: { data: NewZippedSubmission },
 ) {
   const result = await db
     .insert(zippedSubmissions)
@@ -184,7 +185,7 @@ export async function createZippedSubmissionMutation(
 
 export async function updateZippedSubmissionMutation(
   db: Database,
-  { id, data }: { id: number; data: Partial<NewZippedSubmission> }
+  { id, data }: { id: number; data: Partial<NewZippedSubmission> },
 ) {
   const result = await db
     .update(zippedSubmissions)
@@ -196,12 +197,12 @@ export async function updateZippedSubmissionMutation(
 
 export async function getZippedSubmissionsByParticipantRefQuery(
   db: Database,
-  { domain, participantRef }: { domain: string; participantRef: string }
+  { domain, participantRef }: { domain: string; participantRef: string },
 ) {
   const participant = await db.query.participants.findFirst({
     where: and(
       eq(participants.domain, domain),
-      eq(participants.reference, participantRef)
+      eq(participants.reference, participantRef),
     ),
     with: {
       zippedSubmissions: true,

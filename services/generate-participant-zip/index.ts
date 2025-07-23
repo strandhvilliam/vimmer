@@ -90,7 +90,7 @@ type TRPCProxyClient = ReturnType<typeof createApiClient>;
 
 function getKeyFromSubmission(
   submission: Partial<Submission>,
-  exportType: ZipExportType
+  exportType: ZipExportType,
 ): string {
   const keyMap = {
     [ZIP_EXPORT_TYPES.ZIP_SUBMISSIONS]: submission.key,
@@ -109,7 +109,7 @@ function getKeyFromSubmission(
 
 async function updateProgress(
   apiClient: TRPCProxyClient,
-  progress: ProgressInfo
+  progress: ProgressInfo,
 ): Promise<void> {
   if (
     progress.status !== "error" &&
@@ -119,7 +119,7 @@ async function updateProgress(
   }
 
   const percentProgress = Math.round(
-    (progress.processedSubmissions / progress.totalSubmissions) * 100
+    (progress.processedSubmissions / progress.totalSubmissions) * 100,
   );
 
   await apiClient.submissions.updateZipped.mutate({
@@ -141,11 +141,11 @@ function validateParticipant(
         competitionClass: CompetitionClass | null;
       })
     | null,
-  participantReference: string
+  participantReference: string,
 ) {
   if (!participant) {
     throw new Error(
-      `Participant ${participantReference} with uploaded submissions not found`
+      `Participant ${participantReference} with uploaded submissions not found`,
     );
   }
 
@@ -155,7 +155,7 @@ function validateParticipant(
     !participant.competitionClass
   ) {
     throw new Error(
-      `Participant ${participantReference} has no uploaded submissions`
+      `Participant ${participantReference} has no uploaded submissions`,
     );
   }
 
@@ -164,7 +164,7 @@ function validateParticipant(
     participant.submissions.length
   ) {
     throw new Error(
-      `Participant ${participantReference} has ${participant.submissions.length} submissions, but ${participant.competitionClass.numberOfPhotos} photos expected`
+      `Participant ${participantReference} has ${participant.submissions.length} submissions, but ${participant.competitionClass.numberOfPhotos} photos expected`,
     );
   }
 
@@ -174,13 +174,13 @@ function validateParticipant(
 async function fetchFileFromS3(
   s3Client: S3Client,
   bucket: string,
-  key: string
+  key: string,
 ): Promise<Buffer | null> {
   const { Body } = await s3Client.send(
     new GetObjectCommand({
       Bucket: bucket,
       Key: key,
-    })
+    }),
   );
 
   if (!Body || !(Body instanceof Readable)) {
@@ -212,7 +212,7 @@ async function processSubmission({
   try {
     const fileKey = getKeyFromSubmission(submission, exportType);
     const topicOrderIndex = topics.find(
-      (topic) => topic.id === submission.topicId
+      (topic) => topic.id === submission.topicId,
     )?.orderIndex;
 
     if (!topicOrderIndex && topicOrderIndex !== 0) {
@@ -286,7 +286,7 @@ async function processSubmission({
 
 async function processAllSubmissions(
   submissions: Submission[],
-  params: Omit<ProcessSubmissionParams, "submission">
+  params: Omit<ProcessSubmissionParams, "submission">,
 ): Promise<SubmissionResult> {
   let currentResult: SubmissionResult = {
     progress: params.progress,
@@ -340,13 +340,13 @@ async function exportParticipantSubmissionsToZip({
     });
     if (!participantData) {
       throw new Error(
-        `Participant with reference ${participantReference} not found`
+        `Participant with reference ${participantReference} not found`,
       );
     }
 
     const participant = validateParticipant(
       participantData,
-      participantReference
+      participantReference,
     );
 
     const zippedSubmission = await apiClient.submissions.createZipped.mutate({
@@ -379,7 +379,7 @@ async function exportParticipantSubmissionsToZip({
     const participantZip = new JSZip();
     const date = new Date().toISOString().split("T")[0];
     const time = new Date().toISOString().split("T")[1]?.split(".")[0];
-    const zipFileName = `${domain}/${date}-${time}/${participant.reference}.zip`;
+    const zipFileName = `${domain}/${participant.reference}.zip`;
 
     const result = await processAllSubmissions(participant.submissions, {
       apiClient,
@@ -408,7 +408,7 @@ async function exportParticipantSubmissionsToZip({
         Key: zipFileName,
         Body: zipBuffer,
         ContentType: "application/zip",
-      })
+      }),
     );
 
     progress.zipKey = zipFileName;
@@ -470,7 +470,7 @@ async function main() {
 
     if (!domain || !exportType || !participantReference) {
       throw new Error(
-        `Missing required environment variables: domain=${domain}, exportType=${exportType}, participantReference=${participantReference}`
+        `Missing required environment variables: domain=${domain}, exportType=${exportType}, participantReference=${participantReference}`,
       );
     }
 

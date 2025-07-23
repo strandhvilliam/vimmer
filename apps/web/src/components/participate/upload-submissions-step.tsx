@@ -121,13 +121,6 @@ export function UploadSubmissionsStep({
     fileInputRef.current?.click();
   };
 
-  // useEffect(() => {
-  //   if (participantIsCompleted) {
-  //     setIsUploadProgressOpen(false);
-  //     onNextStep?.();
-  //   }
-  // }, [participantIsCompleted]);
-
   if (!competitionClass) {
     return (
       <UploadErrorFallback

@@ -11,6 +11,7 @@ import {
   participants,
 } from "../db/schema";
 import type { Submission, Topic, NewSubmission } from "../db/types";
+import { TRPCError } from "@trpc/server";
 
 export interface PresignedSubmission {
   presignedUrl: string;
@@ -31,23 +32,25 @@ export function formatSubmissionKey({
   ref,
   index,
   domain,
+  version = 1,
 }: {
   domain: string;
   ref: string;
   index: number;
+  version?: number;
 }) {
   const trimmedRef = ref.trim();
   const isOnlyDigits = /^\d+$/.test(trimmedRef);
   const displayRef = isOnlyDigits ? trimmedRef.padStart(4, "0") : trimmedRef;
   const displayIndex = (index + 1).toString().padStart(2, "0");
-  const fileName = `${displayRef}_${displayIndex}.jpg`;
+  const fileName = `${displayRef}_${displayIndex}_v${version}.jpg`;
   return `${domain}/${displayRef}/${displayIndex}/${fileName}`;
 }
 
 export async function generatePresignedUrl(
   s3Client: S3Client,
   key: string,
-  bucketName: string
+  bucketName: string,
 ) {
   try {
     return await getSignedUrl(
@@ -55,7 +58,7 @@ export async function generatePresignedUrl(
       new PutObjectCommand({
         Key: key,
         Bucket: bucketName,
-      })
+      }),
     );
   } catch (error: unknown) {
     console.error(error);
@@ -67,39 +70,42 @@ export class PresignedSubmissionService {
   constructor(
     private readonly db: Database,
     private readonly s3: S3Client,
-    private readonly submissionBucketName: string
+    private readonly submissionBucketName: string,
   ) {}
 
   async generatePresignedSubmissions(
     participantRef: string,
     domain: string,
     participantId: number,
-    competitionClassId: number
+    competitionClassId: number,
   ): Promise<PresignedSubmission[]> {
-    // Get marathon by domain
     const marathon = await this.db.query.marathons.findFirst({
       where: eq(marathons.domain, domain),
     });
 
     if (!marathon) {
-      throw new Error("Marathon not found");
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Marathon not found",
+      });
     }
 
-    // Get competition classes for the domain
     const competitionClassesList =
       await this.db.query.competitionClasses.findMany({
         where: eq(competitionClasses.marathonId, marathon.id),
       });
 
     const competitionClass = competitionClassesList.find(
-      (cc) => cc.id === competitionClassId
+      (cc) => cc.id === competitionClassId,
     );
 
     if (!competitionClass) {
-      throw new Error("Competition class not found");
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Competition class not found",
+      });
     }
 
-    // Get topics ordered by order index
     const orderedTopics = await this.db.query.topics.findMany({
       where: eq(topics.marathonId, marathon.id),
       orderBy: (topics, { asc }) => [asc(topics.orderIndex)],
@@ -108,31 +114,43 @@ export class PresignedSubmissionService {
     const submissionKeys = this.generateSubmissionKeys(
       participantRef,
       domain,
-      competitionClass.numberOfPhotos
+      competitionClass.numberOfPhotos,
     );
 
-    // Get existing submissions
-    const existingSubmissions = await this.db.query.submissions.findMany({
-      where: inArray(submissions.key, submissionKeys),
+    const participant = await this.db.query.participants.findFirst({
+      where: eq(participants.id, participantId),
+      with: {
+        submissions: true,
+      },
     });
 
-    if (existingSubmissions.length < competitionClass.numberOfPhotos) {
+    if (!participant) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Participant not found",
+      });
+    }
+
+    if (participant.submissions.length < competitionClass.numberOfPhotos) {
       return this.handleNewSubmissions(
-        existingSubmissions,
+        participant.submissions,
         submissionKeys,
         orderedTopics,
         marathon.id,
-        participantId
+        participantId,
       );
     }
 
-    return this.generatePresignedObjects(existingSubmissions, orderedTopics);
+    return this.generatePresignedObjects(
+      participant.submissions,
+      orderedTopics,
+    );
   }
 
   private generateSubmissionKeys(
     participantRef: string,
     domain: string,
-    numberOfPhotos: number
+    numberOfPhotos: number,
   ): string[] {
     return Array.from({ length: numberOfPhotos }).map((_, index) => {
       return formatSubmissionKey({
@@ -148,26 +166,25 @@ export class PresignedSubmissionService {
     submissionKeys: string[],
     orderedTopics: Topic[],
     marathonId: number,
-    participantId: number
+    participantId: number,
   ): Promise<PresignedSubmission[]> {
-    // Update participant upload count
     await this.db
       .update(participants)
       .set({ uploadCount: 0 })
       .where(eq(participants.id, participantId));
 
     const keysToCreate = submissionKeys.filter(
-      (key) => !existingSubmissions.some((submission) => submission.key === key)
+      (key) =>
+        !existingSubmissions.some((submission) => submission.key === key),
     );
 
-    // Create new submissions
     const submissionsToCreate: NewSubmission[] = keysToCreate.map((key) => {
       const originalIndex = submissionKeys.findIndex((k) => k === key);
       const topicId = orderedTopics[originalIndex]?.id;
 
       if (!topicId) {
         throw new Error(
-          `Unable to determine topic id for submission at index ${originalIndex}`
+          `Unable to determine topic id for submission at index ${originalIndex}`,
         );
       }
 
@@ -185,11 +202,10 @@ export class PresignedSubmissionService {
       .values(submissionsToCreate)
       .returning();
 
-    // Get all submissions for this participant
     const allSubmissions = await this.db.query.submissions.findMany({
       where: inArray(
         submissions.id,
-        createdSubmissions.map((s) => s.id)
+        createdSubmissions.map((s) => s.id),
       ),
     });
 
@@ -198,17 +214,17 @@ export class PresignedSubmissionService {
 
   private async generatePresignedObjects(
     submissionsList: Submission[],
-    orderedTopics: Topic[]
+    orderedTopics: Topic[],
   ): Promise<PresignedSubmission[]> {
     const presignedObjects = await Promise.all(
       submissionsList.map(async (submission) => {
         const orderIndex = orderedTopics.findIndex(
-          (t) => t.id === submission.topicId
+          (t) => t.id === submission.topicId,
         );
         const presignedUrl = await generatePresignedUrl(
           this.s3,
           submission.key,
-          this.submissionBucketName
+          this.submissionBucketName,
         );
         return {
           presignedUrl,
@@ -217,7 +233,7 @@ export class PresignedSubmissionService {
           topicId: submission.topicId,
           submissionId: submission.id,
         };
-      })
+      }),
     );
 
     return presignedObjects.sort((a, b) => a.orderIndex - b.orderIndex);

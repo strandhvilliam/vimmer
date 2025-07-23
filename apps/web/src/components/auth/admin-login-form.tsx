@@ -10,6 +10,7 @@ import { motion } from "motion/react";
 import { Card, CardContent } from "@vimmer/ui/components/card";
 import Link from "next/link";
 import { toast } from "sonner";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 
 export function AdminLoginForm() {
   const [email, setEmail] = useState("");
@@ -60,10 +61,14 @@ export function AdminLoginForm() {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <PrimaryButton
+              type="submit"
+              className="w-full rounded-full py-3"
+              disabled={isLoading}
+            >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Send Login Code
-            </Button>
+            </PrimaryButton>
           </form>
 
           <div className="mt-6 text-center text-sm">

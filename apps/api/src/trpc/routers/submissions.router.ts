@@ -1,5 +1,5 @@
 import {
-  getZippedSubmissionsByDomainQuery,
+  getZippedSubmissionsByMarathonIdQuery,
   getManySubmissionsByKeysQuery,
   getSubmissionsForJuryQuery,
   createSubmissionMutation,
@@ -39,7 +39,7 @@ export const submissionsRouter = createTRPCRouter({
   getZippedSubmissionsByDomain: publicProcedure
     .input(getZippedSubmissionsByDomainSchema)
     .query(async ({ ctx, input }) => {
-      return getZippedSubmissionsByDomainQuery(ctx.db, {
+      return getZippedSubmissionsByMarathonIdQuery(ctx.db, {
         marathonId: input.marathonId,
       });
     }),

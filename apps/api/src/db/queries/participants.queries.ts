@@ -89,7 +89,6 @@ export async function createParticipantMutation(
   } catch (error) {
     console.log("error", error);
   }
-  console.log("existingParticipant", existingParticipant);
 
   if (existingParticipant) {
     throw new TRPCError({

@@ -45,7 +45,7 @@ interface ValidationResultsTableProps {
   topics: Topic[];
 }
 
-function extractOrderIndexFromFileName(fileName: string): number | null {
+function extractOrderIndexFromKey(fileName: string): number | null {
   const parts = fileName.split("/");
   if (parts.length >= 3 && parts[2]) {
     return parseInt(parts[2], 10) - 1;
@@ -233,7 +233,7 @@ export function ParticipantValidationResultsTable({
         let topicName: string | null = null;
 
         if (result.fileName) {
-          extractedOrderIndex = extractOrderIndexFromFileName(
+          extractedOrderIndex = extractOrderIndexFromKey(
             result.fileName as string,
           );
           console.log(extractedOrderIndex);

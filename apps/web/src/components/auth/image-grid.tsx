@@ -22,8 +22,8 @@ export function ImageGrid() {
 
   return (
     <div className="absolute inset-0 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-white via-white to-transparent h-[60vh] z-10" />
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white to-transparent h-[40vh] z-10" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white via-white/50 to-transparent h-[5vh] z-10" />
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/50 to-transparent h-[5vh] z-10" />
       <div className="relative z-0 h-full w-full overflow-hidden grid grid-cols-2 gap-2 px-0">
         {columns.map((column, columnIndex) => (
           <div key={columnIndex} className="overflow-hidden h-full">

@@ -1,19 +1,9 @@
 "use client";
 
 import { Card, CardContent } from "@vimmer/ui/components/card";
-import {
-  Download,
-  FileSpreadsheet,
-  FileText,
-  AlertTriangle,
-  CheckCircle2,
-} from "lucide-react";
+import { FileSpreadsheet, FileText } from "lucide-react";
 import { ExportOptions } from "@/components/admin/export-options";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@vimmer/ui/components/alert";
+import { ParticipantArchivesDownload } from "@/components/admin/participant-archives-download";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { useDomain } from "@/contexts/domain-context";
@@ -71,115 +61,64 @@ export function ExportClientPage() {
         </p>
       </div>
 
-      <div className="space-y-4">
-        <Card className="">
-          <CardContent className="p-6 flex justify-between w-full items-center ">
-            <div className="space-y-2 flex-grow">
-              <div className="flex items-center gap-2">
-                <Download className="h-5 w-5" />
-                <h2 className="text-lg font-semibold font-rocgrotesk">
-                  Download Participant Archives
-                </h2>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Download all generated participant photo archives. Archives will
-                be saved to a folder you select on your computer.
-              </p>
-              {canDownloadZippedSubmissions ? (
-                <Alert
-                  variant="default"
-                  className="bg-green-500/10 border-green-500/50 w-fit"
-                >
-                  <CheckCircle2 className="h-4 w-4 text-green-500 stroke-green-500" />
-                  <AlertTitle className="text-green-500 text-sm">
-                    Ready to Download
-                  </AlertTitle>
-                  <AlertDescription className="text-green-500/90 text-xs">
-                    {participantCount} participant archive(s) are generated and
-                    ready for download.
-                  </AlertDescription>
-                </Alert>
-              ) : (
-                <Alert
-                  variant="destructive"
-                  className="bg-red-500/10 border-red-500/50 w-fit"
-                >
-                  <AlertTriangle className="h-4 w-4 text-red-500 stroke-red-500" />
-                  <AlertTitle className="text-red-500 text-sm">
-                    Download Not Available
-                  </AlertTitle>
-                  <AlertDescription className="text-red-500/90 text-xs">
-                    {participantCount === 0
-                      ? "There are no participants in this marathon."
-                      : `Photo downloads are not ready. Expected ${participantCount} participants, but found ${zippedSubmissionsCount}. Please generate archives first.`}
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
-            <div className="flex items-center ml-auto">
-              <ExportOptions
-                domain={domain}
-                type={EXPORT_KEYS.ZIP_SUBMISSIONS}
-                label="Save to Local Folder"
-                description="Download all participant photo archives"
-                marathonId={marathon.id.toString()}
-                // isExternallyDisabled={!canDownloadZippedSubmissions}
-              />
-            </div>
-          </CardContent>
-        </Card>
+      <div className="space-y-6">
+        <ParticipantArchivesDownload
+          domain={domain}
+          marathonId={marathon.id}
+          canDownload={canDownloadZippedSubmissions}
+          participantCount={participantCount}
+          zippedSubmissionsCount={zippedSubmissionsCount}
+        />
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between gap-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <FileSpreadsheet className="h-5 w-5" />
-                  <h2 className="text-lg font-semibold font-rocgrotesk">
-                    Participant Data
-                  </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between gap-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <FileSpreadsheet className="h-5 w-5" />
+                    <h2 className="text-lg font-semibold font-rocgrotesk">
+                      Participant Data
+                    </h2>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Export participant information including contact details,
+                    competition class, and device group.
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Export participant information including contact details,
-                  competition class, and device group.
-                </p>
+                <ExportOptions
+                  domain={domain}
+                  type={EXPORT_KEYS.XLSX_PARTICIPANTS}
+                  label="Export"
+                />
               </div>
-              <ExportOptions
-                domain={domain}
-                type={EXPORT_KEYS.XLSX_PARTICIPANTS}
-                label="Export"
-                description="Download participant data"
-                marathonId={marathon.id.toString()}
-              />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between gap-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <FileSpreadsheet className="h-5 w-5" />
-                  <h2 className="text-lg font-semibold font-rocgrotesk">
-                    Submission Data
-                  </h2>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between gap-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <FileSpreadsheet className="h-5 w-5" />
+                    <h2 className="text-lg font-semibold font-rocgrotesk">
+                      Submission Data
+                    </h2>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Export detailed submission information including upload
+                    times, status, and validation results.
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Export detailed submission information including upload times,
-                  status, and validation results.
-                </p>
+                <ExportOptions
+                  domain={domain}
+                  type={EXPORT_KEYS.XLSX_SUBMISSIONS}
+                  label="Export"
+                />
               </div>
-              <ExportOptions
-                domain={domain}
-                type={EXPORT_KEYS.XLSX_SUBMISSIONS}
-                label="Export"
-                description="Download submission data"
-                marathonId={marathon.id.toString()}
-              />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
         <Card>
           <CardContent className="p-6">
@@ -200,8 +139,6 @@ export function ExportClientPage() {
                 domain={domain}
                 type={EXPORT_KEYS.EXIF}
                 label="Export"
-                description="Download EXIF metadata"
-                marathonId={marathon.id.toString()}
               />
             </div>
           </CardContent>

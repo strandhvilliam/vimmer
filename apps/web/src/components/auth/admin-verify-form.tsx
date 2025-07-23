@@ -108,7 +108,7 @@ export function AdminVerifyForm({ email }: VerifyFormProps) {
         children={([canSubmit, isSubmitting]) => (
           <PrimaryButton
             type="submit"
-            className="w-full font-semibold"
+            className="w-full font-semibold py-3 rounded-full"
             disabled={isSubmitting || !canSubmit}
           >
             {isSubmitting ? (
