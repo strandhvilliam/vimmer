@@ -8,13 +8,21 @@ import {
 } from "@vimmer/api/db/schema";
 import type { NewSubmission, NewZippedSubmission } from "@vimmer/api/db/types";
 
-// interface SubmissionForJuryResponse extends Submission {
-//   participant: Participant & {
-//     competitionClass: CompetitionClass | null;
-//     deviceGroup: DeviceGroup | null;
-//   };
-//   topic: Topic;
-// }
+export async function getAllSubmissionKeysForMarathonQuery(
+  db: Database,
+  { marathonId }: { marathonId: number },
+) {
+  const result = await db.query.submissions.findMany({
+    where: eq(submissions.marathonId, marathonId),
+    columns: {
+      key: true,
+      thumbnailKey: true,
+      previewKey: true,
+    },
+  });
+
+  return result;
+}
 
 export async function getSubmissionByIdQuery(
   db: Database,

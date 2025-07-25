@@ -84,11 +84,7 @@ export function UploadSubmissionsStep({
           .pop()
           ?.trim()
           ?.toLowerCase();
-        toast.error(
-          t("uploadSubmissions.invalidFileType", {
-            extension: fileExtension ?? t("uploadSubmissions.noFileExtension"),
-          }),
-        );
+        toast.error(`Invalid file type: ${fileExtension}`);
       });
       return;
     }
@@ -115,11 +111,11 @@ export function UploadSubmissionsStep({
 
   const handleUploadClick = () => {
     if (!competitionClass) {
-      toast.error(t("uploadSubmissions.unableToDetermineClass"));
+      toast.error("Unable to determine class");
       return;
     }
     if (photos.length >= competitionClass.numberOfPhotos) {
-      toast.error(t("uploadSubmissions.maxPhotosReached"));
+      toast.error("Max photos reached");
       return;
     }
     fileInputRef.current?.click();
@@ -127,10 +123,7 @@ export function UploadSubmissionsStep({
 
   if (!competitionClass) {
     return (
-      <UploadErrorFallback
-        error={t("uploadSubmissions.unexpectedError")}
-        onPrevStep={onPrevStep}
-      />
+      <UploadErrorFallback error={"Unexpected error"} onPrevStep={onPrevStep} />
     );
   }
 

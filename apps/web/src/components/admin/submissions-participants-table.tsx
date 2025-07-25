@@ -51,6 +51,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from "@vimmer/ui/components/dropdown-menu";
 import { useState } from "react";
 import { format } from "date-fns";
@@ -72,6 +75,7 @@ import {
   Participant,
   ValidationResult,
 } from "@vimmer/api/db/types";
+import { useSubmissionsTableFilters } from "@/hooks/use-submissions-table-filters";
 
 type TableRowParticipant = Participant & {
   validationResults: ValidationResult[];
@@ -117,7 +121,26 @@ const columns = [
     cell: (info) => {
       const status = info.getValue();
 
-      return <Badge variant="secondary">{status}</Badge>;
+      const getStatusStyle = (status: string) => {
+        switch (status?.toLowerCase()) {
+          case "verified":
+            return "bg-green-100 text-green-800 border-green-200 hover:bg-green-200";
+          case "uploaded":
+            return "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200";
+          case "rejected":
+            return "bg-red-100 text-red-800 border-red-200 hover:bg-red-200";
+          case "ready_to_upload":
+            return "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200";
+          default:
+            return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200";
+        }
+      };
+
+      return (
+        <Badge variant="outline" className={getStatusStyle(status)}>
+          {status}
+        </Badge>
+      );
     },
     sortingFn: "alphanumeric",
   }),
@@ -320,6 +343,24 @@ export function SubmissionsParticipantsTable({
   const [globalFilter, setGlobalFilter] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const {
+    filteredData,
+    statusFilters,
+    classFilters,
+    deviceFilters,
+    issueFilters,
+    uniqueStatuses,
+    uniqueClasses,
+    uniqueDevices,
+    issueTypes,
+    activeFilterCount,
+    toggleStatusFilter,
+    toggleClassFilter,
+    toggleDeviceFilter,
+    toggleIssueFilter,
+    clearAllFilters,
+  } = useSubmissionsTableFilters({ participants });
+
   const handleRefresh = async () => {
     if (isRefreshing) return;
 
@@ -337,7 +378,7 @@ export function SubmissionsParticipantsTable({
   };
 
   const table = useReactTable({
-    data: participants,
+    data: filteredData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -435,13 +476,83 @@ export function SubmissionsParticipantsTable({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-9 w-9 rounded-lg shadow-sm"
-          >
-            <Filter className="h-4 w-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 rounded-lg shadow-sm flex items-center gap-1"
+              >
+                <Filter className="h-4 w-4" />
+                <span>Filter</span>
+                {activeFilterCount > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                  >
+                    {activeFilterCount}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+              {uniqueStatuses.map((status) => (
+                <DropdownMenuCheckboxItem
+                  key={status}
+                  checked={statusFilters.includes(status)}
+                  onCheckedChange={() => toggleStatusFilter(status)}
+                >
+                  {status}
+                </DropdownMenuCheckboxItem>
+              ))}
+
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Filter by Class</DropdownMenuLabel>
+              {uniqueClasses.map((className) => (
+                <DropdownMenuCheckboxItem
+                  key={className}
+                  checked={classFilters.includes(className ?? "")}
+                  onCheckedChange={() => toggleClassFilter(className ?? "")}
+                >
+                  {className}
+                </DropdownMenuCheckboxItem>
+              ))}
+
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Filter by Device</DropdownMenuLabel>
+              {uniqueDevices.map((deviceName) => (
+                <DropdownMenuCheckboxItem
+                  key={deviceName}
+                  checked={deviceFilters.includes(deviceName ?? "")}
+                  onCheckedChange={() => toggleDeviceFilter(deviceName ?? "")}
+                >
+                  {deviceName}
+                </DropdownMenuCheckboxItem>
+              ))}
+
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Filter by Issues</DropdownMenuLabel>
+              {issueTypes.map((issueType) => (
+                <DropdownMenuCheckboxItem
+                  key={issueType}
+                  checked={issueFilters.includes(issueType)}
+                  onCheckedChange={() => toggleIssueFilter(issueType)}
+                >
+                  {issueType}
+                </DropdownMenuCheckboxItem>
+              ))}
+
+              {activeFilterCount > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={clearAllFilters}>
+                    Clear all filters
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

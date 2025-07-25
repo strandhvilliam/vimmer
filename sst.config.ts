@@ -95,6 +95,9 @@ export default $config({
       environment: {
         POSTHOG_API_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY!,
         POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
+        SUBMISSION_DISTRIBUTION_ID: submissionsRouter.distributionID,
+        PREVIEW_DISTRIBUTION_ID: previewsRouter.distributionID,
+        THUMBNAIL_DISTRIBUTION_ID: thumbnailsRouter.distributionID,
         ...env,
       },
       link: [
@@ -104,6 +107,13 @@ export default $config({
         marathonSettingsBucket,
         thumbnailBucket,
         previewBucket,
+      ],
+      permissions: [
+        {
+          effect: "allow",
+          actions: ["cloudfront:CreateInvalidation"],
+          resources: ["*"],
+        },
       ],
     });
 

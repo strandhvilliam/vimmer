@@ -11,6 +11,7 @@ import {
   getSubmissionsByParticipantIdQuery,
   getSubmissionByIdQuery,
   getZippedSubmissionsByParticipantRefQuery,
+  getAllSubmissionKeysForMarathonQuery,
 } from "@vimmer/api/db/queries/submissions.queries";
 import { createTRPCRouter, publicProcedure } from "..";
 import {
@@ -78,6 +79,18 @@ export const submissionsRouter = createTRPCRouter({
         competitionClassId: input.competitionClassId,
         deviceGroupId: input.deviceGroupId,
         topicId: input.topicId,
+      });
+    }),
+
+  getAllSubmissionKeysForMarathon: publicProcedure
+    .input(
+      z.object({
+        marathonId: z.number(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return getAllSubmissionKeysForMarathonQuery(ctx.db, {
+        marathonId: input.marathonId,
       });
     }),
 

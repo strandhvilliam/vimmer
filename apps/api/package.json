@@ -11,6 +11,7 @@
     "typescript": "^5.7.2"
   },
   "dependencies": {
+    "@aws-sdk/client-cloudfront": "^3.850.0",
     "@aws-sdk/client-iot-data-plane": "^3.840.0",
     "@aws-sdk/client-s3": "^3.850.0",
     "@aws-sdk/s3-request-presigner": "^3.850.0",

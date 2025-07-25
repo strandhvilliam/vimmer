@@ -24,6 +24,10 @@ import {
 } from "@vimmer/api/db/queries/rules.queries";
 import { RULE_KEYS } from "@vimmer/validation/constants";
 import { TRPCError } from "@trpc/server";
+import { resetS3Uploads } from "@vimmer/api/utils/reset-s3-uploads";
+import { eq } from "drizzle-orm";
+import { participants } from "@vimmer/api/db/schema";
+import { invalidateCloudfrontByDomain } from "@vimmer/api/utils/invalidate-cloudfront-domain";
 
 export const marathonsRouter = createTRPCRouter({
   getById: publicProcedure
@@ -107,8 +111,36 @@ export const marathonsRouter = createTRPCRouter({
   reset: publicProcedure
     .input(resetMarathonSchema)
     .mutation(async ({ ctx, input }) => {
-      return resetMarathonMutation(ctx.db, {
+      const marathon = await getMarathonByIdQuery(ctx.db, {
         id: input.id,
       });
+
+      if (!marathon) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Marathon not found for id ${input.id}`,
+        });
+      }
+
+      const allParticipants = await ctx.db.query.participants.findMany({
+        where: eq(participants.marathonId, input.id),
+        with: {
+          submissions: true,
+        },
+      });
+
+      const keysToRemove = allParticipants.flatMap((participant) =>
+        participant.submissions.map((submission) => ({
+          submissionKey: submission.key,
+          thumbnailKey: submission.thumbnailKey,
+          previewKey: submission.previewKey,
+        })),
+      );
+
+      await resetMarathonMutation(ctx.db, {
+        id: input.id,
+      });
+      await resetS3Uploads(keysToRemove);
+      await invalidateCloudfrontByDomain(marathon.domain);
     }),
 });
