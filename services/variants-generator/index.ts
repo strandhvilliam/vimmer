@@ -1,4 +1,3 @@
-import { NextRequest, NextResponse } from "next/server";
 import {
   GetObjectCommand,
   PutObjectCommand,
@@ -9,6 +8,8 @@ import sharp from "sharp";
 import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
 import { AppRouter } from "@vimmer/api/trpc/routers/_app";
 import superjson from "superjson";
+import { z } from "zod/v4";
+import { APIGatewayProxyEventV2 } from "aws-lambda";
 
 const createApiClient = () =>
   createTRPCProxyClient<AppRouter>({
@@ -25,16 +26,23 @@ const createApiClient = () =>
     ],
   });
 
-export async function POST(request: NextRequest) {
+const varantsInputSchema = z.object({
+  submissionIds: z.array(z.number()),
+});
+
+export async function handler(event: APIGatewayProxyEventV2) {
   try {
-    const body = await request.json();
-    const { submissionIds } = body;
+    if (!event.body) throw new Error("No request body");
+    const parsedBody = varantsInputSchema.safeParse(JSON.parse(event.body));
+    if (!parsedBody.success) {
+      console.log("Invalid request body", parsedBody.error);
+      throw new Error("Invalid request body");
+    }
+
+    const { submissionIds } = parsedBody.data;
 
     if (!Array.isArray(submissionIds) || submissionIds.length === 0) {
-      return NextResponse.json(
-        { error: "submissionIds array is required" },
-        { status: 400 },
-      );
+      throw new Error("submissionIds array is required");
     }
 
     const s3Client = new S3Client({ region: "eu-north-1" });
@@ -148,21 +156,17 @@ export async function POST(request: NextRequest) {
     const successCount = results.filter((r) => r.success).length;
     const errorCount = results.filter((r) => !r.success).length;
 
-    return NextResponse.json({
-      success: true,
+    return {
       results,
       summary: {
         total: submissionIds.length,
         successful: successCount,
         failed: errorCount,
       },
-    });
+    };
   } catch (error) {
     console.error("Error in generate-thumbnails API:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    throw new Error("Internal server error");
   }
 }
 

@@ -14,12 +14,14 @@ import { useTRPC } from "@/trpc/client";
 import { useDomain } from "@/contexts/domain-context";
 
 interface ParticipantSubmissionClientPageProps {
+  variantsGeneratorUrl: string;
   participantRef: string;
   thumbnailBaseUrl: string;
   submissionsBaseUrl: string;
 }
 
 export function ParticipantSubmissionClientPage({
+  variantsGeneratorUrl,
   participantRef,
   thumbnailBaseUrl,
   submissionsBaseUrl,
@@ -56,6 +58,7 @@ export function ParticipantSubmissionClientPage({
   return (
     <div className="container mx-auto py-8 space-y-8">
       <ParticipantHeader
+        variantsGeneratorUrl={variantsGeneratorUrl}
         participant={participant}
         validationResults={validationResults}
       />

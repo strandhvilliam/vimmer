@@ -99,6 +99,11 @@ declare module "sst" {
       "type": "sst.aws.Queue"
       "url": string
     }
+    "VariantsGenerator": {
+      "name": string
+      "type": "sst.aws.Function"
+      "url": string
+    }
     "VimmerVPC": {
       "type": "sst.aws.Vpc"
     }

@@ -131,6 +131,33 @@ export default $config({
       ],
     });
 
+    const variantGenerator = new sst.aws.Function("VariantsGenerator", {
+      handler: "./services/variants-generator/index.handler",
+      environment: env,
+      url: {
+        cors: {
+          allowOrigins,
+          allowMethods: ["POST"],
+        },
+      },
+      link: [
+        submissionBucket,
+        thumbnailBucket,
+        previewBucket,
+        exportsBucket,
+        api,
+      ],
+      nodejs: {
+        install: ["sharp"],
+      },
+      permissions: [
+        {
+          actions: ["s3:GetObject", "s3:PutObject"],
+          resources: [previewBucket.arn, exportsBucket.arn],
+        },
+      ],
+    });
+
     const vpc = new sst.aws.Vpc("VimmerVPC");
     const cluster = new sst.aws.Cluster("VimmerCluster", { vpc });
 
@@ -316,6 +343,7 @@ export default $config({
         realtime,
         exportSubmissionsTask,
         generateParticipantZipTask,
+        variantGenerator,
       ],
       server: {
         install: ["sharp"],

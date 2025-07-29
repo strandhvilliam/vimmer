@@ -27,6 +27,7 @@ import type {
   CompetitionClass,
   DeviceGroup,
   Participant,
+  Submission,
   ValidationResult,
 } from "@vimmer/api/db/types";
 import {
@@ -68,10 +69,11 @@ import { useAction } from "next-safe-action/hooks";
 import { getPresignedExportUrlAction } from "@/lib/actions/get-presigned-photo-archives-action";
 
 interface ParticipantHeaderProps {
+  variantsGeneratorUrl: string;
   participant: Participant & {
     competitionClass: CompetitionClass | null;
     deviceGroup: DeviceGroup | null;
-    submissions?: any[];
+    submissions?: Submission[];
   };
   validationResults?: ValidationResult[];
 }
@@ -147,6 +149,7 @@ function getStatusConfig(status: string) {
 }
 
 export function ParticipantHeader({
+  variantsGeneratorUrl,
   participant,
   validationResults = [],
 }: ParticipantHeaderProps) {
@@ -277,7 +280,7 @@ export function ParticipantHeader({
     try {
       const submissionIds = submissionsNeedingThumbnails.map((s) => s.id);
 
-      const response = await fetch("/api/generate-thumbnails", {
+      const response = await fetch(variantsGeneratorUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
