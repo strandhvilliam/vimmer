@@ -13,6 +13,7 @@ import {
   getZippedSubmissionsByMarathonIdQuery,
   getSubmissionByIdQuery,
 } from "@vimmer/api/db/queries/submissions.queries";
+import { updateParticipantMutation } from "@vimmer/api/db/queries/participants.queries";
 
 export const presignedUrlsRouter = createTRPCRouter({
   generatePresignedSubmissions: publicProcedure
@@ -21,6 +22,13 @@ export const presignedUrlsRouter = createTRPCRouter({
       const s3 = new S3Client({ region: "eu-north-1" });
       const bucketName = Resource.SubmissionBucket.name;
       const service = new PresignedSubmissionService(ctx.db, s3, bucketName);
+
+      await updateParticipantMutation(ctx.db, {
+        id: input.participantId,
+        data: {
+          uploadCount: 0,
+        },
+      });
 
       return service.generatePresignedSubmissions(
         input.participantRef,

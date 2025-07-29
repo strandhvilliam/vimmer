@@ -99,6 +99,7 @@ async function processSubmission(
       s3Client,
       key,
     );
+
     const exif = await parseExifData(file);
     const variants = await generateImageVariants(key, file, s3Client);
 
@@ -289,9 +290,6 @@ async function generateImageVariants(
     createVariant(originalKey, photoInstance, IMAGE_VARIANTS.preview, s3),
   ]);
 
-  if (!thumbnailKey || !previewKey) {
-    throw new Error("Image variant creation failed");
-  }
   return { thumbnailKey, previewKey };
 }
 
@@ -300,32 +298,40 @@ async function createVariant(
   photoInstance: sharp.Sharp,
   config: { width: number; prefix: string },
   s3: S3Client,
-): Promise<string | null> {
-  const parsedPath = parseKey(originalKey);
-  const variantBuffer = await photoInstance
-    .clone()
-    .rotate()
-    .resize(config.width)
-    .toBuffer();
-  const variantKey = [
-    parsedPath.domain,
-    parsedPath.participantRef,
-    parsedPath.orderIndex,
-    `${config.prefix}_${parsedPath.fileName}`,
-  ].join("/");
+): Promise<string | undefined> {
+  try {
+    throw new Error("TEST ERROR");
+    const parsedPath = parseKey(originalKey);
+    const variantBuffer = await photoInstance
+      .clone()
+      .rotate()
+      .resize(config.width)
+      .toBuffer();
+    const variantKey = [
+      parsedPath.domain,
+      parsedPath.participantRef,
+      parsedPath.orderIndex,
+      `${config.prefix}_${parsedPath.fileName}`,
+    ].join("/");
 
-  const bucket =
-    config.prefix === "thumbnail"
-      ? Resource.ThumbnailBucket.name
-      : Resource.PreviewBucket.name;
+    const bucket =
+      config.prefix === "thumbnail"
+        ? Resource.ThumbnailBucket.name
+        : Resource.PreviewBucket.name;
 
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: bucket,
-      Key: variantKey,
-      Body: variantBuffer,
-    }),
-  );
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: variantKey,
+        Body: variantBuffer,
+      }),
+    );
 
-  return variantKey;
+    return variantKey;
+  } catch (error) {
+    console.error("Error creating variant:", error);
+    posthog.captureException(error);
+    // We can generate thumbnail and preview later if fails at this stage
+    return undefined;
+  }
 }

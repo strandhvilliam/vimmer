@@ -17,13 +17,15 @@ import { SubmissionHeader } from "@/components/admin/submission-header";
 import { useDomain } from "@/contexts/domain-context";
 
 interface SubmissionDetailClientProps {
-  baseImageUrl: string;
+  previewBaseUrl: string;
+  submissionBaseUrl: string;
   participantRef: string;
   submissionId: string;
 }
 
 export function SubmissionDetailClient({
-  baseImageUrl,
+  previewBaseUrl,
+  submissionBaseUrl,
   participantRef,
   submissionId,
 }: SubmissionDetailClientProps) {
@@ -119,8 +121,10 @@ export function SubmissionDetailClient({
           topic={topic}
           imageUrl={
             submission.previewKey
-              ? `${baseImageUrl}/${submission.previewKey}`
-              : null
+              ? `${previewBaseUrl}/${submission.previewKey}`
+              : submission.key
+                ? `${submissionBaseUrl}/${submission.key}`
+                : null
           }
         />
       </div>

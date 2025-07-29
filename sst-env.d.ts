@@ -10,6 +10,10 @@ declare module "sst" {
       "type": "sst.aws.Function"
       "url": string
     }
+    "ContactSheetsBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
     "DownloadPresignedFunction": {
       "name": string
       "type": "sst.aws.Function"

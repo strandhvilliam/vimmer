@@ -15,12 +15,14 @@ import { useDomain } from "@/contexts/domain-context";
 
 interface ParticipantSubmissionClientPageProps {
   participantRef: string;
-  baseUrl: string;
+  thumbnailBaseUrl: string;
+  submissionsBaseUrl: string;
 }
 
 export function ParticipantSubmissionClientPage({
   participantRef,
-  baseUrl,
+  thumbnailBaseUrl,
+  submissionsBaseUrl,
 }: ParticipantSubmissionClientPageProps) {
   const { domain } = useDomain();
   const trpc = useTRPC();
@@ -80,8 +82,10 @@ export function ParticipantSubmissionClientPage({
               <PhotoSubmissionCard
                 imageUrl={
                   submission.thumbnailKey
-                    ? `${baseUrl}/${submission.thumbnailKey}`
-                    : null
+                    ? `${thumbnailBaseUrl}/${submission.thumbnailKey}`
+                    : submission.key
+                      ? `${submissionsBaseUrl}/${submission.key}`
+                      : null
                 }
                 key={submission.id}
                 submission={submission}

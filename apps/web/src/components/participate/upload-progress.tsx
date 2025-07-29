@@ -1,6 +1,5 @@
 "use client";
 
-import { useSubmissionsListener } from "@/hooks/use-submissions-listener";
 import { FileState, PhotoWithPresignedUrl } from "@/lib/types";
 import { Topic } from "@vimmer/api/db/types";
 import {
@@ -21,69 +20,49 @@ import { Progress } from "@vimmer/ui/components/progress";
 import { AnimatePresence, motion } from "motion/react";
 import { FileProgressItem } from "@/components/participate/file-progress-item";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { useUploadStore } from "@/lib/stores/upload-store";
+import { useFileUpload } from "@/hooks/use-file-upload";
 
 interface UploadProgressProps {
   files: PhotoWithPresignedUrl[];
-  fileStates: FileState[];
   topics: Topic[];
   expectedCount: number;
   onComplete: () => void;
-  onRetryFailed: (failedFiles: FileState[]) => void;
-  onRetrySingle: (fileKey: string) => void;
-  isUploading: boolean;
   open?: boolean;
 }
 
 export function UploadProgress({
-  files,
-  fileStates,
   topics,
   expectedCount: expectedFilesCount,
   onComplete,
-  onRetryFailed,
-  onRetrySingle,
-  isUploading,
   open = true,
 }: UploadProgressProps) {
-  const uploadedSubmissions = useSubmissionsListener({
-    enabled: open,
-  });
+  const { getAllFiles, getUploadProgress } = useUploadStore();
+  const { retryFailedFiles } = useFileUpload();
 
-  // Merge file states with upload status
-  const enhancedFileStates = files.map((file) => {
-    const fileState = fileStates.find((fs) => fs.key === file.key);
-    const isCompleted = uploadedSubmissions.includes(file.submissionId);
+  const fileStates = getAllFiles();
+  const progress = getUploadProgress();
 
-    return {
-      ...file,
-      status: isCompleted ? "completed" : fileState?.status || "pending",
-      error: fileState?.error,
-      retryCount: fileState?.retryCount || 0,
-    } as FileState;
-  });
+  // Convert to FileState format for compatibility
+  const enhancedFileStates: FileState[] = fileStates.map((f) => ({
+    ...f,
+    status:
+      f.phase === "completed"
+        ? ("completed" as const)
+        : f.phase === "error"
+          ? ("error" as const)
+          : f.phase === "s3_upload"
+            ? ("uploading" as const)
+            : ("pending" as const),
+  }));
 
-  const completedFiles = enhancedFileStates.filter(
-    (file) => file.status === "completed",
-  );
   const failedFiles = enhancedFileStates.filter(
     (file) => file.status === "error",
   );
-  const uploadingFiles = enhancedFileStates.filter(
-    (file) => file.status === "uploading",
-  );
-
-  const progress = {
-    percentage: (completedFiles.length / files.length) * 100,
-    completed: completedFiles.length,
-    total: files.length,
-    failed: failedFiles.length,
-    uploading: uploadingFiles.length,
-  };
 
   const allUploadsComplete = progress.completed === expectedFilesCount;
   const hasFailures = failedFiles.length > 0;
-  const canRetry = hasFailures && !isUploading;
-
+  const canRetry = hasFailures;
   return (
     <Dialog open={open}>
       <DialogContent
@@ -94,11 +73,11 @@ export function UploadProgress({
         <Card className="w-full">
           <CardHeader>
             <CardTitle className="text-center text-xl font-rocgrotesk">
-              {isUploading
-                ? "Uploading Photos"
+              {allUploadsComplete
+                ? "Upload Complete"
                 : hasFailures
                   ? "Upload Issues"
-                  : "Upload Complete"}
+                  : "Uploading Photos"}
             </CardTitle>
           </CardHeader>
 
@@ -118,7 +97,7 @@ export function UploadProgress({
               <Progress value={progress.percentage} />
             </div>
 
-            {hasFailures && !isUploading && (
+            {hasFailures && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -148,11 +127,6 @@ export function UploadProgress({
                         (topic) => topic.orderIndex === file.orderIndex,
                       )!
                     }
-                    onRetry={
-                      canRetry && file.error?.retryable !== false
-                        ? () => onRetrySingle(file.key)
-                        : undefined
-                    }
                   />
                 ))}
               </AnimatePresence>
@@ -167,10 +141,9 @@ export function UploadProgress({
                 className="w-full"
               >
                 <Button
-                  onClick={() => onRetryFailed(failedFiles)}
+                  onClick={retryFailedFiles}
                   variant="outline"
                   className="w-full"
-                  disabled={isUploading}
                 >
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Retry Failed Uploads ({failedFiles.length})

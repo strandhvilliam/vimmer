@@ -1,27 +1,30 @@
 import { FileState } from "@/lib/types";
 import { Topic } from "@vimmer/api/db/types";
-import { CheckCircle2, Loader2, XCircle, RefreshCw } from "lucide-react";
+import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { motion } from "motion/react";
-import { Button } from "@vimmer/ui/components/button";
 
 export function FileProgressItem({
   file,
   topic,
-  onRetry,
 }: {
   file: FileState;
   topic: Topic;
-  onRetry?: () => void;
 }) {
-  const statusIcon = {
-    pending: <div className="w-5 h-5" />,
-    uploading: <Loader2 className="w-5 h-5 animate-spin text-primary" />,
-    completed: (
-      <motion.div initial={{ scale: 0.5 }} animate={{ scale: 1 }}>
-        <CheckCircle2 className="w-5 h-5 text-green-500" />
-      </motion.div>
-    ),
-    error: <XCircle className="w-5 h-5 text-destructive" />,
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "completed":
+        return (
+          <motion.div initial={{ scale: 0.5 }} animate={{ scale: 1 }}>
+            <CheckCircle2 className="w-5 h-5 text-green-500" />
+          </motion.div>
+        );
+      case "error":
+        return <XCircle className="w-5 h-5 text-destructive" />;
+      case "pending":
+      case "uploading":
+      default:
+        return <Loader2 className="w-5 h-5 animate-spin text-primary" />;
+    }
   };
 
   const getErrorMessage = () => {
@@ -71,27 +74,12 @@ export function FileProgressItem({
             className="text-xs text-destructive mt-1"
           >
             {getErrorMessage()}
-            {file.retryCount && file.retryCount > 0 && (
-              <span className="ml-2 text-muted-foreground">
-                (Attempt {file.retryCount + 1})
-              </span>
-            )}
           </motion.div>
         )}
       </div>
 
       <div className="flex items-center gap-2 flex-shrink-0">
-        {file.status === "error" && onRetry && (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={onRetry}
-            className="h-6 w-6 p-0 hover:bg-primary/10"
-          >
-            <RefreshCw className="w-3 h-3" />
-          </Button>
-        )}
-        {statusIcon[file.status]}
+        {getStatusIcon(file.status)}
       </div>
     </motion.div>
   );

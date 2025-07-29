@@ -34,7 +34,8 @@ export default async function ParticipantSubmissionPage({ params }: PageProps) {
       <Suspense fallback={<ParticipantSubmissionsSkeleton />}>
         <ParticipantSubmissionClientPage
           participantRef={participantRef}
-          baseUrl={Resource.ThumbnailsRouter.url}
+          thumbnailBaseUrl={Resource.ThumbnailsRouter.url}
+          submissionsBaseUrl={Resource.SubmissionsRouter.url}
         />
       </Suspense>
     </HydrateClient>

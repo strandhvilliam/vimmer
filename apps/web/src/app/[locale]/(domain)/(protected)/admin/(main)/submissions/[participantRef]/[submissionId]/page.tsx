@@ -31,7 +31,8 @@ export default async function SubmissionDetailPage({
       <div className="container mx-auto py-8 space-y-8">
         <Suspense fallback={<SubmissionDetailSkeleton />}>
           <SubmissionDetailClient
-            baseImageUrl={Resource.PreviewsRouter.url}
+            submissionBaseUrl={Resource.SubmissionsRouter.url}
+            previewBaseUrl={Resource.PreviewsRouter.url}
             participantRef={participantRef}
             submissionId={submissionId}
           />

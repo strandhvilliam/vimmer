@@ -1,92 +1,110 @@
-import {
-  PhotoWithPresignedUrl,
-  FileState,
-  UploadResult,
-  FileUploadError,
-  FileUploadErrorCode,
-} from "@/lib/types";
+import { PhotoWithPresignedUrl, UploadResult } from "@/lib/types";
+import { useTRPC } from "@/trpc/client";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import posthog from "posthog-js";
-import { useState, useCallback } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
+import {
+  useUploadStore,
+  classifyError,
+  UploadFileState,
+} from "@/lib/stores/upload-store";
+import { useSubmissionQueryState } from "./use-submission-query-state";
 
 const DEFAULT_TIMEOUT = 30000; // 30 seconds
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB default
-
-// File validation helper
-const validateFile = (file: File): FileUploadError | null => {
-  // File size validation
-  if (file.size > MAX_FILE_SIZE) {
-    return {
-      message: `File too large - maximum size is ${Math.round(MAX_FILE_SIZE / (1024 * 1024))}MB`,
-      code: "FILE_TOO_LARGE",
-      timestamp: new Date(),
-      retryable: false,
-    };
-  }
-
-  // File type validation (basic check)
-  if (!file.type.startsWith("image/")) {
-    return {
-      message: "Invalid file type - only images are allowed",
-      code: "INVALID_FILE_TYPE",
-      timestamp: new Date(),
-      retryable: false,
-    };
-  }
-
-  return null;
-};
-
-// Error classification helper
-const classifyError = (
-  error: Error,
-  httpStatus?: number,
-): { code: FileUploadErrorCode; retryable: boolean } => {
-  const message = error.message.toLowerCase();
-
-  // HTTP status code based classification
-  if (httpStatus) {
-    if (httpStatus === 413) return { code: "FILE_TOO_LARGE", retryable: false };
-    if (httpStatus === 403) return { code: "UNAUTHORIZED", retryable: true };
-    if (httpStatus === 429) return { code: "RATE_LIMITED", retryable: true };
-    if (httpStatus >= 500) return { code: "SERVER_ERROR", retryable: true };
-  }
-
-  // Error name/message based classification
-  if (error.name === "AbortError") return { code: "TIMEOUT", retryable: true };
-  if (message.includes("network") || message.includes("fetch"))
-    return { code: "NETWORK_ERROR", retryable: true };
-  if (message.includes("timeout")) return { code: "TIMEOUT", retryable: true };
-  if (message.includes("too large") || message.includes("413"))
-    return { code: "FILE_TOO_LARGE", retryable: false };
-  if (message.includes("forbidden") || message.includes("403"))
-    return { code: "UNAUTHORIZED", retryable: true };
-  if (message.includes("rate limit") || message.includes("429"))
-    return { code: "RATE_LIMITED", retryable: true };
-
-  return { code: "UNKNOWN", retryable: true };
-};
 
 export function useFileUpload() {
-  const [fileStates, setFileStates] = useState<Map<string, FileState>>(
-    new Map(),
-  );
-  const [isUploading, setIsUploading] = useState(false);
+  const queryClient = useQueryClient();
+  const trpc = useTRPC();
+  const {
+    submissionState: { participantId },
+  } = useSubmissionQueryState();
 
-  const uploadSingleFile = async (
-    file: FileState,
-    retryCount = 0,
-  ): Promise<FileState> => {
-    // Pre-upload validation
-    const validationError = validateFile(file.file);
-    if (validationError) {
-      return {
-        ...file,
-        status: "error" as const,
-        error: validationError,
-        retryCount,
-      };
+  // Zustand store actions and selectors
+  const {
+    initializeFiles,
+    updateFilePhase,
+    setFileError,
+    // setIsUploading,
+    clearFiles,
+    getFile,
+    getFailedFiles,
+    getAllFiles,
+    getUploadProgress,
+    isUploading,
+    resetFileForRetry,
+    incrementRetryCount,
+  } = useUploadStore();
+
+  const { mutateAsync: updateMultipleSubmissions } = useMutation(
+    trpc.submissions.updateMultipleByIds.mutationOptions({
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.submissions.pathKey(),
+        });
+      },
+    }),
+  );
+
+  // Query to listen for submission status changes
+  const { data: submissions } = useQuery(
+    trpc.submissions.getByParticipantId.queryOptions(
+      {
+        participantId: participantId ?? -1,
+      },
+      {
+        refetchInterval: 2000,
+        enabled: !!participantId && isUploading,
+      },
+    ),
+  );
+
+  // Update file phases based on submission status changes
+  useEffect(() => {
+    if (submissions && isUploading) {
+      submissions.forEach((submission) => {
+        const file = getFile(submission.key);
+        if (!file) return;
+
+        // Update phase based on submission status
+        if (submission.status === "uploaded" && file.phase !== "completed") {
+          updateFilePhase(submission.key, "completed");
+        } else if (submission.status === "error" && file.phase !== "error") {
+          setFileError(submission.key, {
+            message: "Processing failed on server",
+            code: "SERVER_ERROR",
+            timestamp: new Date(),
+          });
+        } else if (
+          submission.status === "processing" &&
+          file.phase === "s3_upload" &&
+          file.progress === 100
+        ) {
+          updateFilePhase(submission.key, "processing");
+        }
+      });
+
+      // Check if all uploads are complete
+      // const progress = getUploadProgress();
+      // const allComplete =
+      //   progress.completed + progress.failed === progress.total;
+
+      // if (allComplete && isUploading) {
+      //   setIsUploading(false);
+      // }
     }
+  }, [
+    submissions,
+    isUploading,
+    getFile,
+    updateFilePhase,
+    setFileError,
+    getUploadProgress,
+  ]);
+
+  const uploadSingleFile = async (file: UploadFileState): Promise<void> => {
+    // Update to uploading phase
+    updateFilePhase(file.key, "s3_upload", 0);
 
     // Setup timeout controller
     const controller = new AbortController();
@@ -108,128 +126,97 @@ export function useFileUpload() {
         const error = new Error(
           `Upload failed: ${response.status} ${response.statusText}`,
         );
-        const { code, retryable } = classifyError(error, response.status);
+        const { code } = classifyError(error, response.status);
 
-        return {
-          ...file,
-          status: "error" as const,
-          error: {
-            message: error.message,
-            code,
-            timestamp: new Date(),
-            retryable,
-            httpStatus: response.status,
-          },
-          retryCount,
-        };
+        setFileError(file.key, {
+          message: error.message,
+          code,
+          timestamp: new Date(),
+          httpStatus: response.status,
+        });
+        return;
       }
 
-      return {
-        ...file,
-        status: "completed" as const,
-        error: undefined,
-        retryCount,
-      };
+      // S3 upload successful, move to processing phase
+      updateFilePhase(file.key, "processing", 100);
     } catch (error) {
       clearTimeout(timeoutId);
 
       const err =
         error instanceof Error ? error : new Error("Unknown upload error");
-      const { code, retryable } = classifyError(err);
+      const { code } = classifyError(err);
 
-      return {
-        ...file,
-        status: "error" as const,
-        error: {
-          message: err.message,
-          code,
-          timestamp: new Date(),
-          retryable,
-        },
-        retryCount,
-      };
+      setFileError(file.key, {
+        message: err.message,
+        code,
+        timestamp: new Date(),
+      });
     }
   };
 
   const executeUpload = async (
     photos: PhotoWithPresignedUrl[],
   ): Promise<UploadResult> => {
-    setIsUploading(true);
+    if (!participantId) {
+      toast.error("No participant ID found");
+      return { success: false, failedFiles: [], successfulFiles: [] };
+    }
 
-    // Initialize file states
-    const initialStates = new Map<string, FileState>();
-    photos.forEach((photo) => {
-      initialStates.set(photo.key, {
-        ...photo,
-        status: "uploading",
-        retryCount: 0,
-      });
-    });
-    setFileStates(initialStates);
+    // Initialize files in store
+    initializeFiles(photos, participantId);
 
     try {
-      // Upload all files concurrently but handle failures individually
+      // Upload all files concurrently
       const uploadPromises = photos.map(async (photo) => {
-        const fileState = initialStates.get(photo.key)!;
-        return uploadSingleFile(fileState);
-      });
-
-      const results = await Promise.allSettled(uploadPromises);
-      const finalStates = new Map<string, FileState>();
-      const failedFiles: FileState[] = [];
-      const successfulFiles: FileState[] = [];
-
-      results.forEach((result, index) => {
-        const photo = photos[index];
-        if (!photo) return;
-
-        if (result.status === "fulfilled") {
-          finalStates.set(photo.key, result.value);
-          if (result.value.status === "completed") {
-            successfulFiles.push(result.value);
-          } else {
-            failedFiles.push(result.value);
-          }
-        } else {
-          // This shouldn't happen with our error handling, but just in case
-          const errorState: FileState = {
-            ...photo,
-            status: "error",
-            error: {
-              message: "Unexpected upload failure",
-              code: "UNKNOWN",
-              timestamp: new Date(),
-              retryable: true,
-            },
-            retryCount: 0,
-          };
-          finalStates.set(photo.key, errorState);
-          failedFiles.push(errorState);
+        const file = getFile(photo.key);
+        if (file) {
+          await uploadSingleFile(file);
         }
       });
 
-      setFileStates(finalStates);
+      await Promise.allSettled(uploadPromises);
+
+      // Get final results
+      const failedFiles = getFailedFiles();
+      const allFiles = getAllFiles();
+      const completedFiles = allFiles.filter((f) => f.phase === "completed");
+      const processingFiles = allFiles.filter((f) => f.phase === "processing");
+      const uploadedFiles = completedFiles.length + processingFiles.length;
 
       // Show appropriate toast messages
-      if (successfulFiles.length === 0) {
+      if (uploadedFiles === 0) {
         toast.error(`All uploads failed. Check your connection and try again.`);
-      } else if (failedFiles.length !== 0) {
-        toast.warning(
-          `${successfulFiles.length} uploaded, ${failedFiles.length} failed. You can retry the failed uploads.`,
-        );
+      } else if (failedFiles.length > 0) {
+        if (processingFiles.length > 0) {
+          toast.warning(
+            `${uploadedFiles} uploaded (${processingFiles.length} processing), ${failedFiles.length} failed.`,
+          );
+        } else {
+          toast.warning(
+            `${uploadedFiles} uploaded, ${failedFiles.length} failed.`,
+          );
+        }
       }
-
       // Track analytics
       posthog.capture("file_upload_completed", {
         total_files: photos.length,
-        successful_files: successfulFiles.length,
+        successful_files: uploadedFiles,
         failed_files: failedFiles.length,
       });
 
       return {
         success: failedFiles.length === 0,
-        failedFiles,
-        successfulFiles,
+        failedFiles: failedFiles.map((f) => ({
+          ...f,
+          status: "error" as const,
+        })),
+        successfulFiles: [...completedFiles, ...processingFiles].map((f) => ({
+          ...f,
+          status:
+            f.phase === "completed"
+              ? ("completed" as const)
+              : ("uploading" as const), // Show processing files as uploading
+        })),
       };
     } catch (error) {
       console.error("Upload execution error:", error);
@@ -245,176 +232,114 @@ export function useFileUpload() {
             message: "Upload process failed",
             code: "UNKNOWN" as const,
             timestamp: new Date(),
-            retryable: true,
           },
-          retryCount: 0,
         })),
         successfulFiles: [],
       };
-    } finally {
-      setIsUploading(false);
     }
   };
 
-  const retryFailedUploads = useCallback(
-    async (failedFiles: FileState[]): Promise<UploadResult> => {
-      if (failedFiles.length === 0)
-        return { success: true, failedFiles: [], successfulFiles: [] };
+  const retryFailedFiles = async (): Promise<void> => {
+    if (!participantId) {
+      toast.error("No participant ID found");
+      return;
+    }
 
-      // Filter out non-retryable errors
-      const retryableFiles = failedFiles.filter(
-        (file) => file.error?.retryable !== false,
-      );
-      const nonRetryableFiles = failedFiles.filter(
-        (file) => file.error?.retryable === false,
-      );
+    const failedFiles = getFailedFiles();
+    if (failedFiles.length === 0) {
+      return;
+    }
 
-      if (retryableFiles.length === 0) {
-        toast.error("No files can be retried - all errors are permanent");
-        return {
-          success: false,
-          failedFiles: nonRetryableFiles,
-          successfulFiles: [],
-        };
-      }
+    // setIsUploading(true);
 
-      setIsUploading(true);
+    // Reset failed files for retry and increment retry count
+    failedFiles.forEach((file) => {
+      resetFileForRetry(file.key);
+      incrementRetryCount(file.key);
+    });
 
-      // Update states to show retrying
-      setFileStates((prev) => {
-        const updated = new Map(prev);
-        retryableFiles.forEach((file) => {
-          updated.set(file.key, {
-            ...file,
-            status: "uploading",
-            retryCount: (file.retryCount || 0) + 1,
-          });
-        });
-        return updated;
+    try {
+      // First, reset submission status to "pending" for failed files
+      const submissionUpdates = failedFiles.map((file) => ({
+        id: file.submissionId,
+        data: { status: "pending" as const },
+      }));
+
+      await updateMultipleSubmissions(submissionUpdates);
+
+      // Upload failed files concurrently
+      const uploadPromises = failedFiles.map(async (failedFile) => {
+        const file = getFile(failedFile.key);
+        if (file) {
+          await uploadSingleFile(file);
+        }
       });
 
-      try {
-        const retryPromises = retryableFiles.map(async (file) => {
-          const retryCount = (file.retryCount || 0) + 1;
-          return uploadSingleFile(file, retryCount);
-        });
+      await Promise.allSettled(uploadPromises);
 
-        const results = await Promise.allSettled(retryPromises);
-        const stillFailedFiles: FileState[] = [];
-        const nowSuccessfulFiles: FileState[] = [];
+      // Get final results after retry
+      const newFailedFiles = getFailedFiles();
+      const allFiles = getAllFiles();
+      const completedFiles = allFiles.filter((f) => f.phase === "completed");
+      const processingFiles = allFiles.filter((f) => f.phase === "processing");
+      const retriedSuccessfully = failedFiles.length - newFailedFiles.length;
 
-        results.forEach((result, index) => {
-          const originalFile = retryableFiles[index];
-          if (!originalFile) return;
-
-          if (result.status === "fulfilled") {
-            setFileStates((prev) => {
-              const updated = new Map(prev);
-              updated.set(originalFile.key, result.value);
-              return updated;
-            });
-
-            if (result.value.status === "completed") {
-              nowSuccessfulFiles.push(result.value);
-            } else {
-              stillFailedFiles.push(result.value);
-            }
-          }
-        });
-
-        // Show appropriate feedback
-        if (stillFailedFiles.length === 0) {
-          toast.success(
-            `All ${nowSuccessfulFiles.length} retried uploads succeeded!`,
-          );
-        } else if (nowSuccessfulFiles.length === 0) {
-          toast.error(`All retry attempts failed. Check your connection.`);
-        } else {
-          toast.warning(
-            `${nowSuccessfulFiles.length} succeeded on retry, ${stillFailedFiles.length} still failed.`,
-          );
-        }
-
-        return {
-          success: stillFailedFiles.length === 0,
-          failedFiles: stillFailedFiles,
-          successfulFiles: nowSuccessfulFiles,
-        };
-      } finally {
-        setIsUploading(false);
-      }
-    },
-    [],
-  );
-
-  const getFileState = useCallback(
-    (key: string): FileState | undefined => {
-      return fileStates.get(key);
-    },
-    [fileStates],
-  );
-
-  const getFailedFiles = useCallback((): FileState[] => {
-    return Array.from(fileStates.values()).filter(
-      (file) => file.status === "error",
-    );
-  }, [fileStates]);
-
-  const retrySingleFile = useCallback(
-    async (fileKey: string): Promise<void> => {
-      const fileState = fileStates.get(fileKey);
-      if (!fileState || fileState.status !== "error") {
-        return;
-      }
-
-      // Check if the error is retryable
-      if (fileState.error?.retryable === false) {
-        toast.error("This file cannot be retried - the error is permanent");
-        return;
-      }
-
-      setIsUploading(true);
-
-      // Update state to show retrying
-      setFileStates((prev) => {
-        const updated = new Map(prev);
-        updated.set(fileKey, {
-          ...fileState,
-          status: "uploading",
-          retryCount: (fileState.retryCount || 0) + 1,
-        });
-        return updated;
+      // Track analytics
+      posthog.capture("file_upload_retry", {
+        total_retried: failedFiles.length,
+        successful_retries: retriedSuccessfully,
+        failed_retries: newFailedFiles.length,
       });
+    } catch (error) {
+      console.error("Retry execution error:", error);
+      posthog.captureException(error);
+      toast.error("Retry process failed unexpectedly");
+    }
 
-      try {
-        const retryCount = (fileState.retryCount || 0) + 1;
-        const result = await uploadSingleFile(fileState, retryCount);
+    // Check if all uploads are complete after retry
+    // const progress = getUploadProgress();
+    // const allComplete = progress.completed + progress.failed === progress.total;
 
-        setFileStates((prev) => {
-          const updated = new Map(prev);
-          updated.set(fileKey, result);
-          return updated;
-        });
-
-        if (result.status === "completed") {
-          toast.success("File uploaded successfully!");
-        } else {
-          toast.error("Retry failed - please try again");
-        }
-      } finally {
-        setIsUploading(false);
-      }
-    },
-    [fileStates],
-  );
+    // if (allComplete) {
+    //   setIsUploading(false);
+    // }
+  };
 
   return {
     isUploading,
-    fileStates: Array.from(fileStates.values()),
+    fileStates: getAllFiles().map((f) => ({
+      ...f,
+      status:
+        f.phase === "completed"
+          ? ("completed" as const)
+          : f.phase === "error"
+            ? ("error" as const)
+            : f.phase === "s3_upload"
+              ? ("uploading" as const)
+              : ("pending" as const),
+    })),
     executeUpload,
-    retryFailedUploads,
-    retrySingleFile,
-    getFileState,
-    getFailedFiles,
+    getFileState: (key: string) => {
+      const file = getFile(key);
+      if (!file) return undefined;
+      return {
+        ...file,
+        status:
+          file.phase === "completed"
+            ? ("completed" as const)
+            : file.phase === "error"
+              ? ("error" as const)
+              : file.phase === "s3_upload"
+                ? ("uploading" as const)
+                : ("pending" as const),
+      };
+    },
+    getFailedFiles: () =>
+      getFailedFiles().map((f) => ({
+        ...f,
+        status: "error" as const,
+      })),
+    clearFiles,
+    retryFailedFiles,
   };
 }

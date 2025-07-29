@@ -27,7 +27,10 @@ export default async function StaffPage() {
   return (
     <HydrateClient>
       <Suspense fallback={<div>Loading...</div>}>
-        <StaffClientPage baseThumbnailUrl={Resource.ThumbnailsRouter.url} />
+        <StaffClientPage
+          baseSubmissionUrl={Resource.SubmissionsRouter.url}
+          baseThumbnailUrl={Resource.ThumbnailsRouter.url}
+        />
       </Suspense>
     </HydrateClient>
   );

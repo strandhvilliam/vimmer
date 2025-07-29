@@ -19,6 +19,7 @@ import { combinePhotos } from "@/lib/combine-photos";
 import { UploadErrorFallback } from "@/components/participate/upload-error-fallback";
 import { UploadSection } from "@/components/participate/upload-section";
 import { useFileUpload } from "@/hooks/use-file-upload";
+import { useUploadStore } from "@/lib/stores/upload-store";
 import { CompetitionClass, Marathon, Topic } from "@vimmer/api/db/types";
 import { useRef, useState } from "react";
 import { COMMON_IMAGE_EXTENSIONS } from "@/lib/constants";
@@ -46,18 +47,13 @@ export function UploadSubmissionsStep({
     submissionState: { competitionClassId },
   } = useSubmissionQueryState();
 
-  const [isUploadProgressOpen, setIsUploadProgressOpen] = useState(false);
+  // const [isUploadProgressOpen, setIsUploadProgressOpen] = useState(false);
 
   const { photos, validateAndAddPhotos } = usePhotoStore();
   const { data: presignedSubmissions = [] } = usePresignedSubmissions();
 
-  const {
-    isUploading,
-    fileStates,
-    executeUpload,
-    retryFailedUploads,
-    retrySingleFile,
-  } = useFileUpload();
+  const { executeUpload } = useFileUpload();
+  const { isUploading, setIsUploading } = useUploadStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const combinedPhotos = combinePhotos(photos, presignedSubmissions);
@@ -133,12 +129,8 @@ export function UploadSubmissionsStep({
         topics={topics}
         expectedCount={competitionClass.numberOfPhotos}
         files={combinedPhotos}
-        fileStates={fileStates}
         onComplete={() => onNextStep?.()}
-        onRetryFailed={retryFailedUploads}
-        isUploading={isUploading}
-        open={isUploadProgressOpen}
-        onRetrySingle={retrySingleFile}
+        open={isUploading}
       />
       <div className="max-w-4xl mx-auto space-y-6">
         <CardHeader className="text-center">
@@ -154,7 +146,7 @@ export function UploadSubmissionsStep({
             marathon={marathon}
             maxPhotos={competitionClass.numberOfPhotos}
             onUpload={() => {
-              setIsUploadProgressOpen(true);
+              setIsUploading(true);
               executeUpload(combinedPhotos);
             }}
             ruleConfigs={ruleConfigs}

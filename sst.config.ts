@@ -26,15 +26,25 @@ export default $config({
       access: "cloudfront",
       cors: {
         allowOrigins,
-        allowMethods: ["PUT"],
+        allowMethods: ["GET", "HEAD", "PUT"],
         allowHeaders: ["*"],
       },
     });
     const thumbnailBucket = new sst.aws.Bucket("ThumbnailBucket", {
       access: "cloudfront",
+      cors: {
+        allowOrigins,
+        allowMethods: ["PUT"],
+        allowHeaders: ["*"],
+      },
     });
     const previewBucket = new sst.aws.Bucket("PreviewBucket", {
       access: "cloudfront",
+      cors: {
+        allowOrigins,
+        allowMethods: ["PUT"],
+        allowHeaders: ["*"],
+      },
     });
     const marathonSettingsBucket = new sst.aws.Bucket(
       "MarathonSettingsBucket",
@@ -45,6 +55,10 @@ export default $config({
         },
       },
     );
+
+    const contactSheetsBucket = new sst.aws.Bucket("ContactSheetsBucket", {
+      access: "public",
+    });
 
     const realtime = new sst.aws.Realtime("Realtime", {
       authorizer: "services/authorizer/index.handler",
@@ -145,6 +159,35 @@ export default $config({
       },
     });
 
+    // const contactSheetGeneratorTask = new sst.aws.Task(
+    //   "ContactSheetGenerator",
+    //   {
+    //     cluster,
+    //     // architecture: "arm64",
+    //     image: {
+    //       dockerfile: "./services/contact-sheet-generator/Dockerfile",
+    //     },
+    //     environment: env,
+    //     link: [
+    //       submissionBucket,
+    //       thumbnailBucket,
+    //       previewBucket,
+    //       exportsBucket,
+    //       contactSheetsBucket,
+    //       api,
+    //     ],
+    //     permissions: [
+    //       {
+    //         actions: ["s3:GetObject", "s3:PutObject"],
+    //         resources: [previewBucket.arn, exportsBucket.arn],
+    //       },
+    //     ],
+    //     dev: {
+    //       command: "bun run services/contact-sheet-generator/index.ts",
+    //     },
+    //   },
+    // );
+
     const generateParticipantZipTask = new sst.aws.Task(
       "GenerateParticipantZipTask",
       {
@@ -176,7 +219,11 @@ export default $config({
     new sst.aws.Function("ExportCaller", {
       handler: "services/export-caller/index.handler",
       environment: env,
-      link: [exportSubmissionsTask, generateParticipantZipTask],
+      link: [
+        exportSubmissionsTask,
+        generateParticipantZipTask,
+        // contactSheetGeneratorTask,
+      ],
       url: true,
     });
 
@@ -270,6 +317,9 @@ export default $config({
         exportSubmissionsTask,
         generateParticipantZipTask,
       ],
+      server: {
+        install: ["sharp"],
+      },
       environment: {
         ...env,
         NEXT_PUBLIC_API_URL: api.url,

@@ -28,7 +28,7 @@ import {
   getSubmissionByIdSchema,
   getZippedSubmissionsByParticipantRefSchema,
 } from "@vimmer/api/schemas/submissions.schemas";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 export const submissionsRouter = createTRPCRouter({
   getById: publicProcedure
@@ -126,6 +126,17 @@ export const submissionsRouter = createTRPCRouter({
         id: input.id,
         data: input.data,
       });
+    }),
+
+  updateMultipleByIds: publicProcedure
+    .input(z.array(updateSubmissionByIdSchema))
+    .mutation(async ({ ctx, input }) => {
+      for (const item of input) {
+        await updateSubmissionByIdMutation(ctx.db, {
+          id: item.id,
+          data: item.data,
+        });
+      }
     }),
 
   createZipped: publicProcedure

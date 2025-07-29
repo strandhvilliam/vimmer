@@ -37,6 +37,7 @@ interface ParticipantInfoSheetProps {
   onParticipantVerified?: () => void;
   topics: Topic[];
   baseThumbnailUrl: string;
+  submissionBaseUrl: string;
 }
 
 const parseFileNameForOrderIndex = (fileName: string): number | null => {
@@ -130,6 +131,7 @@ export function ParticipantInfoSheet({
   onParticipantVerified,
   topics,
   baseThumbnailUrl,
+  submissionBaseUrl,
 }: ParticipantInfoSheetProps) {
   const [expandedSubmissions, setExpandedSubmissions] = React.useState<
     Set<number>
@@ -227,7 +229,10 @@ export function ParticipantInfoSheet({
   };
 
   const getThumbnailUrl = (submission: Submission | null): string | null => {
-    if (!submission?.thumbnailKey) return null;
+    if (!submission?.thumbnailKey) {
+      if (!submission?.key) return null;
+      return `${submissionBaseUrl}/${submission.key}`;
+    }
     return `${baseThumbnailUrl}/${submission.thumbnailKey}`;
   };
 

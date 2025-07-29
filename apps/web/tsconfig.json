@@ -7,6 +7,7 @@
       "@vimmer/api/*": ["../api/src/*"],
       "@vimmer/validation/*": ["../../packages/validation/src/*"],
       "@vimmer/ui/*": ["../../packages/ui/src/*"],
+      "@vimmer/image-processing": ["../../packages/image-processing/src"],
       "next-international/*": ["../../node_modules/next-international/*"]
     },
     "plugins": [

@@ -19,8 +19,10 @@ import { useDomain } from "@/contexts/domain-context";
 
 export function StaffClientPage({
   baseThumbnailUrl,
+  baseSubmissionUrl,
 }: {
   baseThumbnailUrl: string;
+  baseSubmissionUrl: string;
 }) {
   const trpc = useTRPC();
   const { user } = useSession();
@@ -168,6 +170,7 @@ export function StaffClientPage({
         participant={participantData ?? null}
         topics={topics}
         baseThumbnailUrl={baseThumbnailUrl}
+        submissionBaseUrl={baseSubmissionUrl}
       />
     </>
   );

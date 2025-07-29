@@ -11,7 +11,7 @@ import { STEPS } from "@/lib/constants";
 import { AnimatePresence } from "motion/react";
 import { useRouter } from "next/navigation";
 import { parseAsInteger, useQueryState } from "nuqs";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { submissionQueryClientParamSerializer } from "@/lib/schemas/submission-query-client-schema";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { useSuspenseQueries } from "@tanstack/react-query";
@@ -30,6 +30,19 @@ export function SubmissionClientPage() {
   const { submissionState } = useSubmissionQueryState();
 
   const { domain } = useDomain();
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      return "Are you sure you want to leave? All progress will be lost.";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
 
   const [
     { data: marathon },

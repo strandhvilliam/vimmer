@@ -54,14 +54,12 @@ export interface FileUploadError {
   message: string;
   code: FileUploadErrorCode;
   timestamp: Date;
-  retryable: boolean;
   httpStatus?: number;
 }
 
 export interface FileState extends PhotoWithPresignedUrl {
   status: FileStatus;
   error?: FileUploadError;
-  retryCount?: number;
 }
 
 export interface UploadResult {
