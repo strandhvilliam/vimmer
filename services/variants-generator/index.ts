@@ -5,26 +5,13 @@ import {
 } from "@aws-sdk/client-s3";
 import { Resource } from "sst";
 import sharp from "sharp";
-import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
-import { AppRouter } from "@vimmer/api/trpc/routers/_app";
-import superjson from "superjson";
 import { z } from "zod/v4";
 import { APIGatewayProxyEventV2 } from "aws-lambda";
-
-const createApiClient = () =>
-  createTRPCProxyClient<AppRouter>({
-    links: [
-      loggerLink({
-        enabled: (op) =>
-          process.env.NODE_ENV === "development" ||
-          (op.direction === "down" && op.result instanceof Error),
-      }),
-      httpBatchLink({
-        url: Resource.Api.url + "trpc",
-        transformer: superjson,
-      }),
-    ],
-  });
+import { db } from "@vimmer/api/db";
+import {
+  getSubmissionByIdQuery,
+  updateSubmissionByIdMutation,
+} from "@vimmer/api/db/queries/submissions.queries";
 
 const varantsInputSchema = z.object({
   submissionIds: z.array(z.number()),
@@ -46,13 +33,12 @@ export async function handler(event: APIGatewayProxyEventV2) {
     }
 
     const s3Client = new S3Client({ region: "eu-north-1" });
-    const apiClient = createApiClient();
     const results = [];
 
     for (const submissionId of submissionIds) {
       try {
         // Get submission from database
-        const submission = await apiClient.submissions.getById.query({
+        const submission = await getSubmissionByIdQuery(db, {
           id: submissionId,
         });
 
@@ -92,24 +78,6 @@ export async function handler(event: APIGatewayProxyEventV2) {
         }
 
         // Generate thumbnails and previews
-        const { thumbnailKey, previewKey } = await generateImageVariants(
-          submission.key,
-          fileData.file,
-          s3Client,
-          Resource.ThumbnailBucket.name,
-          Resource.PreviewBucket.name,
-        );
-
-        if (!fileData) {
-          results.push({
-            submissionId,
-            success: false,
-            error: "Failed to fetch original image from S3",
-          });
-          continue;
-        }
-
-        // Generate thumbnails and previews
         const variants = await generateImageVariants(
           submission.key,
           fileData.file,
@@ -119,7 +87,7 @@ export async function handler(event: APIGatewayProxyEventV2) {
         );
 
         // Update submission with new keys
-        await apiClient.submissions.updateById.mutate({
+        await updateSubmissionByIdMutation(db, {
           id: submissionId,
           data: {
             thumbnailKey: variants.thumbnailKey,
@@ -132,13 +100,6 @@ export async function handler(event: APIGatewayProxyEventV2) {
           success: true,
           thumbnailKey: variants.thumbnailKey,
           previewKey: variants.previewKey,
-        });
-
-        results.push({
-          submissionId,
-          success: true,
-          thumbnailKey,
-          previewKey,
         });
       } catch (error) {
         console.error(

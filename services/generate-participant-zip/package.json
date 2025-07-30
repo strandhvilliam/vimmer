@@ -9,10 +9,8 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.x",
     "@aws-sdk/s3-request-presigner": "^3.x",
-    "@trpc/client": "^11.4.3",
     "@vimmer/api": "workspace:*",
-    "jszip": "^3.10.1",
-    "superjson": "^2.2.2"
+    "jszip": "^3.10.1"
   },
   "devDependencies": {
     "@types/bun": "latest",

@@ -11,9 +11,11 @@ import { PostHog } from "posthog-node";
 import exifr from "exifr";
 import { Resource } from "sst";
 import { task } from "sst/aws/task";
-import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
-import { AppRouter } from "@vimmer/api/trpc/routers/_app";
-import superjson from "superjson";
+import { db } from "@vimmer/api/db";
+import { getParticipantByReferenceQuery } from "@vimmer/api/db/queries/participants.queries";
+import { updateSubmissionByKeyMutation } from "@vimmer/api/db/queries/submissions.queries";
+import { incrementUploadCounterMutation } from "@vimmer/api/db/queries/participants.queries";
+import { createClient } from "@vimmer/supabase/lambda";
 import { Participant, Submission } from "@vimmer/api/db/types";
 
 const IMAGE_VARIANTS = {
@@ -25,48 +27,26 @@ const posthog = new PostHog(process.env.POSTHOG_API_KEY!, {
   host: process.env.POSTHOG_HOST,
 });
 
-const createApiClient = () =>
-  createTRPCProxyClient<AppRouter>({
-    links: [
-      loggerLink({
-        enabled: (op) =>
-          process.env.NODE_ENV === "development" ||
-          (op.direction === "down" && op.result instanceof Error),
-      }),
-      httpBatchLink({
-        url: Resource.Api.url + "trpc",
-        transformer: superjson,
-      }),
-    ],
-  });
-
 export const handler = async (event: SQSEvent): Promise<void> => {
   try {
     const s3Client = new S3Client();
-    const apiClient = createApiClient();
     const keys = event.Records.map((r) => JSON.parse(r.body) as S3Event)
       .flatMap((e) =>
         e.Records?.map((r) => decodeURIComponent(r.s3.object.key)),
       )
       .filter(Boolean);
 
-    await Promise.all(
-      keys.map((key) => processSubmission(key, s3Client, apiClient)),
-    );
+    await Promise.all(keys.map((key) => processSubmission(key, s3Client)));
   } catch (error) {
     console.error(error);
     posthog.captureException(error);
   }
 };
 
-async function processSubmission(
-  key: string,
-  s3Client: S3Client,
-  apiClient: ReturnType<typeof createApiClient>,
-) {
+async function processSubmission(key: string, s3Client: S3Client) {
   try {
     const { participantRef, domain } = parseKey(key);
-    const participant = await apiClient.participants.getByReference.query({
+    const participant = await getParticipantByReferenceQuery(db, {
       reference: participantRef,
       domain,
     });
@@ -84,7 +64,7 @@ async function processSubmission(
       return;
     }
 
-    const { submission } = await prepareSubmission(apiClient, participant, key);
+    const { submission } = await prepareSubmission(participant, key);
 
     if (
       participant.uploadCount >= participant.competitionClass?.numberOfPhotos!
@@ -103,7 +83,7 @@ async function processSubmission(
     const exif = await parseExifData(file);
     const variants = await generateImageVariants(key, file, s3Client);
 
-    await apiClient.submissions.updateByKey.mutate({
+    await updateSubmissionByKeyMutation(db, {
       key,
       data: {
         status: "uploaded",
@@ -116,24 +96,28 @@ async function processSubmission(
       },
     });
 
-    const { isComplete } =
-      await apiClient.participants.incrementUploadCounter.mutate({
-        participantId: submission.participantId,
-        totalExpected: participant.competitionClass?.numberOfPhotos!,
-      });
+    const supabase = await createClient();
+    const { isComplete } = await incrementUploadCounterMutation(supabase, {
+      participantId: submission.participantId,
+      totalExpected: participant.competitionClass?.numberOfPhotos!,
+    });
 
     if (isComplete) {
-      await Promise.all([
+      await Promise.allSettled([
         triggerValidationQueue(submission.participantId),
         triggerZipGenerationTask(
           participant.domain,
           participant.reference,
           "zip_submissions",
         ),
+        triggerContactSheetGenerationQueue(
+          participant.reference,
+          participant.domain,
+        ),
       ]);
     }
   } catch (error) {
-    await handleProcessingError(apiClient, key, error);
+    await handleProcessingError(key, error);
     throw error;
   }
 }
@@ -168,11 +152,10 @@ async function parseExifData(file: Uint8Array<ArrayBufferLike>) {
 }
 
 async function prepareSubmission(
-  apiClient: ReturnType<typeof createApiClient>,
   participant: Participant & { submissions: Submission[] },
   key: string,
 ) {
-  const { id: submissionId } = await apiClient.submissions.updateByKey.mutate({
+  const { id: submissionId } = await updateSubmissionByKeyMutation(db, {
     key,
     data: {
       status: "processing",
@@ -230,19 +213,30 @@ async function triggerValidationQueue(participantId: number) {
   console.log("Validation queue triggered with result", result);
 }
 
-async function handleProcessingError(
-  apiClient: ReturnType<typeof createApiClient>,
-  key: string,
-  error: unknown,
+async function triggerContactSheetGenerationQueue(
+  participantRef: string,
+  domain: string,
 ) {
-  await Promise.all([
-    apiClient.submissions.updateByKey.mutate({
-      key,
-      data: {
-        status: "error",
-      },
+  const sqs = new SQSClient({ region: "eu-north-1" });
+  const result = await sqs.send(
+    new SendMessageCommand({
+      QueueUrl: Resource.ContactSheetGeneratorQueue.url,
+      MessageBody: JSON.stringify({
+        participantRef,
+        domain,
+      }),
     }),
-  ]);
+  );
+  console.log("Contact sheet generator queue triggered with result", result);
+}
+
+async function handleProcessingError(key: string, error: unknown) {
+  await updateSubmissionByKeyMutation(db, {
+    key,
+    data: {
+      status: "error",
+    },
+  });
   console.error(error);
 }
 
@@ -300,7 +294,6 @@ async function createVariant(
   s3: S3Client,
 ): Promise<string | undefined> {
   try {
-    throw new Error("TEST ERROR");
     const parsedPath = parseKey(originalKey);
     const variantBuffer = await photoInstance
       .clone()

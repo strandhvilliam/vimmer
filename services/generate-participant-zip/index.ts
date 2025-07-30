@@ -7,15 +7,20 @@ import { Readable } from "stream";
 import JSZip from "jszip";
 import path from "path";
 import { Resource } from "sst";
-import superjson from "superjson";
 import type {
   CompetitionClass,
   Participant,
   Submission,
   Topic,
 } from "@vimmer/api/db/types";
-import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
-import { AppRouter } from "@vimmer/api/trpc/routers/_app";
+import { db } from "@vimmer/api/db";
+import { getMarathonByDomainQuery } from "@vimmer/api/db/queries/marathons.queries";
+import { getParticipantByReferenceQuery } from "@vimmer/api/db/queries/participants.queries";
+import { getTopicsByDomainQuery } from "@vimmer/api/db/queries/topics.queries";
+import {
+  createZippedSubmissionMutation,
+  updateZippedSubmissionMutation,
+} from "@vimmer/api/db/queries/submissions.queries";
 
 const ZIP_EXPORT_TYPES = {
   ZIP_SUBMISSIONS: "zip_submissions",
@@ -54,7 +59,6 @@ interface ExportParticipantConfig extends ExportConfig {
 }
 
 interface ProcessSubmissionParams {
-  apiClient: TRPCProxyClient;
   submission: Submission;
   exportType: ZipExportType;
   topics: Topic[];
@@ -70,23 +74,6 @@ interface SubmissionResult {
   progress: ProgressInfo;
   participantZip: JSZip;
 }
-
-const createApiClient = () =>
-  createTRPCProxyClient<AppRouter>({
-    links: [
-      loggerLink({
-        enabled: (op) =>
-          process.env.NODE_ENV === "development" ||
-          (op.direction === "down" && op.result instanceof Error),
-      }),
-      httpBatchLink({
-        url: Resource.Api.url + "trpc",
-        transformer: superjson,
-      }),
-    ],
-  });
-
-type TRPCProxyClient = ReturnType<typeof createApiClient>;
 
 function getKeyFromSubmission(
   submission: Partial<Submission>,
@@ -107,10 +94,7 @@ function getKeyFromSubmission(
   return key;
 }
 
-async function updateProgress(
-  apiClient: TRPCProxyClient,
-  progress: ProgressInfo,
-): Promise<void> {
+async function updateProgress(progress: ProgressInfo): Promise<void> {
   if (
     progress.status !== "error" &&
     (progress.zippedSubmissionId === 0 || progress.marathonId === 0)
@@ -122,7 +106,7 @@ async function updateProgress(
     (progress.processedSubmissions / progress.totalSubmissions) * 100,
   );
 
-  await apiClient.submissions.updateZipped.mutate({
+  await updateZippedSubmissionMutation(db, {
     id: progress.zippedSubmissionId,
     data: {
       marathonId: progress.marathonId,
@@ -196,7 +180,6 @@ async function fetchFileFromS3(
 }
 
 async function processSubmission({
-  apiClient,
   submission,
   exportType,
   topics,
@@ -262,7 +245,7 @@ async function processSubmission({
     updatedProgress.processedSubmissions =
       updatedProgress.processedSubmissions + 1;
 
-    await updateProgress(apiClient, updatedProgress);
+    await updateProgress(updatedProgress);
 
     return {
       progress: updatedProgress,
@@ -313,7 +296,6 @@ async function exportParticipantSubmissionsToZip({
   participantReference,
 }: ExportParticipantConfig): Promise<string | null> {
   const s3Client = new S3Client();
-  const apiClient = createApiClient();
 
   let progress: ProgressInfo = {
     marathonId: 0,
@@ -327,14 +309,14 @@ async function exportParticipantSubmissionsToZip({
   };
 
   try {
-    const marathon = await apiClient.marathons.getByDomain.query({
+    const marathon = await getMarathonByDomainQuery(db, {
       domain,
     });
     if (!marathon) {
       throw new Error(`Marathon with domain ${domain} not found`);
     }
 
-    const participantData = await apiClient.participants.getByReference.query({
+    const participantData = await getParticipantByReferenceQuery(db, {
       reference: participantReference,
       domain,
     });
@@ -349,7 +331,7 @@ async function exportParticipantSubmissionsToZip({
       participantReference,
     );
 
-    const zippedSubmission = await apiClient.submissions.createZipped.mutate({
+    const zippedSubmission = await createZippedSubmissionMutation(db, {
       data: {
         marathonId: marathon.id,
         exportType,
@@ -367,9 +349,9 @@ async function exportParticipantSubmissionsToZip({
     progress.totalSubmissions = participant.submissions.length;
     progress.status = "processing";
 
-    await updateProgress(apiClient, progress);
+    await updateProgress(progress);
 
-    const topics = await apiClient.topics.getByDomain.query({
+    const topics = await getTopicsByDomainQuery(db, {
       domain,
     });
     if (!topics) {
@@ -382,7 +364,6 @@ async function exportParticipantSubmissionsToZip({
     const zipFileName = `${domain}/${participant.reference}.zip`;
 
     const result = await processAllSubmissions(participant.submissions, {
-      apiClient,
       exportType,
       topics,
       s3Client,
@@ -413,12 +394,12 @@ async function exportParticipantSubmissionsToZip({
 
     progress.zipKey = zipFileName;
 
-    await updateProgress(apiClient, progress);
+    await updateProgress(progress);
 
     return zipFileName;
   } catch (error) {
     const errorProgress = { ...progress, status: "error" as const };
-    await updateProgress(apiClient, errorProgress);
+    await updateProgress(errorProgress);
     throw error;
   }
 }

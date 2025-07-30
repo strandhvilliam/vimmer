@@ -2,34 +2,17 @@ import type { SQSEvent } from "aws-lambda";
 import { createContactSheet } from "./src/contact-sheet";
 import type { CreateContactSheetParams } from "./src/types";
 import { z } from "zod/v4";
-import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
-import { AppRouter } from "@vimmer/api/trpc/routers/_app";
-import superjson from "superjson";
-import { Resource } from "sst";
+import { db } from "@vimmer/api/db";
+import { getParticipantByReferenceQuery } from "@vimmer/api/db/queries/participants.queries";
+import { getTopicsByDomainQuery } from "@vimmer/api/db/queries/topics.queries";
 
 const EventSchema = z.object({
   domain: z.string(),
   participantRef: z.string(),
 });
 
-const createApiClient = () =>
-  createTRPCProxyClient<AppRouter>({
-    links: [
-      loggerLink({
-        enabled: (op) =>
-          process.env.NODE_ENV === "development" ||
-          (op.direction === "down" && op.result instanceof Error),
-      }),
-      httpBatchLink({
-        url: Resource.Api.url + "trpc",
-        transformer: superjson,
-      }),
-    ],
-  });
-
 export async function handler(event: SQSEvent) {
   const results = [];
-  const apiClient = createApiClient();
 
   for (const record of event.Records) {
     try {
@@ -40,7 +23,7 @@ export async function handler(event: SQSEvent) {
         throw new Error("Invalid event parameters");
       }
 
-      const participant = await apiClient.participants.getByReference.query({
+      const participant = await getParticipantByReferenceQuery(db, {
         reference: parsedParams.data.participantRef,
         domain: parsedParams.data.domain,
       });
@@ -49,7 +32,7 @@ export async function handler(event: SQSEvent) {
         throw new Error("Participant not found");
       }
 
-      const topics = await apiClient.topics.getByDomain.query({
+      const topics = await getTopicsByDomainQuery(db, {
         domain: parsedParams.data.domain,
       });
 

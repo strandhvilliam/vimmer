@@ -260,8 +260,12 @@ export default $config({
     const validateSubmissionDlq = new sst.aws.Queue("ValidateSubmissionDlq");
 
     const processSubmissionQueue = new sst.aws.Queue("ProcessPhotoQueue", {
-      dlq: processSubmissionDlq.arn,
+      dlq: {
+        retry: 5,
+        queue: processSubmissionDlq.arn,
+      },
     });
+
     const validateSubmissionQueue = new sst.aws.Queue(
       "ValidateSubmissionQueue",
       {
@@ -322,6 +326,7 @@ export default $config({
         previewBucket,
         validateSubmissionQueue,
         generateParticipantZipTask,
+        contactSheetGeneratorQueue,
         api,
       ],
       permissions: [

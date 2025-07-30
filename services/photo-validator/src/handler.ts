@@ -4,25 +4,12 @@ import { createRule, runValidations } from "@vimmer/validation/validator";
 import { z } from "zod";
 import { RuleConfig, RuleKey } from "@vimmer/validation/types";
 import type { RuleConfig as DbRuleConfig } from "@vimmer/api/db/types";
-import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
-import { Resource } from "sst";
-import { AppRouter } from "@vimmer/api/trpc/routers/_app";
-import superjson from "superjson";
-
-const createApiClient = () =>
-  createTRPCProxyClient<AppRouter>({
-    links: [
-      loggerLink({
-        enabled: (op) =>
-          process.env.NODE_ENV === "development" ||
-          (op.direction === "down" && op.result instanceof Error),
-      }),
-      httpBatchLink({
-        url: Resource.Api.url + "trpc",
-        transformer: superjson,
-      }),
-    ],
-  });
+import { db } from "@vimmer/api/db";
+import { getParticipantByIdQuery } from "@vimmer/api/db/queries/participants.queries";
+import { getMarathonByIdQuery } from "@vimmer/api/db/queries/marathons.queries";
+import { getRulesByDomainQuery } from "@vimmer/api/db/queries/rules.queries";
+import { getTopicsByMarathonIdQuery } from "@vimmer/api/db/queries/topics.queries";
+import { createMultipleValidationResultsMutation } from "@vimmer/api/db/queries/validations.queries";
 
 // Function to map database rule configs to validation rule configs
 function mapDbRuleConfigsToValidationConfigs(
@@ -47,7 +34,6 @@ const validationInputSchema = z.object({
 });
 
 export const handler = async (event: SQSEvent): Promise<void> => {
-  const apiClient = createApiClient();
   const records = event.Records;
   for (const record of records) {
     const parsedBody = JSON.parse(record.body) as { participantId: number };
@@ -57,7 +43,7 @@ export const handler = async (event: SQSEvent): Promise<void> => {
       throw new Error("Participant id is required");
     }
 
-    const participant = await apiClient.participants.getById.query({
+    const participant = await getParticipantByIdQuery(db, {
       id: participantId,
     });
 
@@ -66,7 +52,7 @@ export const handler = async (event: SQSEvent): Promise<void> => {
       throw new Error(`Participant with id ${participantId} not found`);
     }
 
-    const marathon = await apiClient.marathons.getById.query({
+    const marathon = await getMarathonByIdQuery(db, {
       id: participant.marathonId,
     });
 
@@ -80,13 +66,13 @@ export const handler = async (event: SQSEvent): Promise<void> => {
       continue;
     }
 
-    const dbRuleConfigs = await apiClient.rules.getByDomain.query({
+    const dbRuleConfigs = await getRulesByDomainQuery(db, {
       domain: marathon.domain,
     });
 
     const ruleConfigs = mapDbRuleConfigsToValidationConfigs(dbRuleConfigs);
 
-    const topics = await apiClient.topics.getByMarathonId.query({
+    const topics = await getTopicsByMarathonIdQuery(db, {
       id: participant.marathonId,
     });
 
@@ -114,7 +100,7 @@ export const handler = async (event: SQSEvent): Promise<void> => {
     }));
 
     if (validationResults.length > 0) {
-      await apiClient.validations.createMultipleValidationResults.mutate({
+      await createMultipleValidationResultsMutation(db, {
         data: validationResults,
       });
     }
