@@ -67,6 +67,8 @@ import { useState } from "react";
 import { runZipGenerationAction } from "@/lib/actions/run-zip-generation";
 import { useAction } from "next-safe-action/hooks";
 import { getPresignedExportUrlAction } from "@/lib/actions/get-presigned-photo-archives-action";
+import { runSheetGenerationQueue } from "@/lib/actions/run-sheet-generation-queue";
+import { useDomain } from "@/contexts/domain-context";
 
 interface ParticipantHeaderProps {
   variantsGeneratorUrl: string;
@@ -155,6 +157,7 @@ export function ParticipantHeader({
 }: ParticipantHeaderProps) {
   const trpc = useTRPC();
   const { user } = useSession();
+  const { domain } = useDomain();
   const queryClient = useQueryClient();
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
 
@@ -270,6 +273,9 @@ export function ParticipantHeader({
     submissionsNeedingThumbnails.length > 0;
 
   const [isGeneratingThumbnails, setIsGeneratingThumbnails] = useState(false);
+
+  const { execute: createContactSheet, isExecuting: isGeneratingSheet } =
+    useAction(runSheetGenerationQueue);
 
   // Generate thumbnails and previews for submissions using API route
   const handleGenerateThumbnails = async () => {
@@ -662,6 +668,38 @@ export function ParticipantHeader({
           </Card>
         </div>
       )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+        <Card className="border-2 border-violet-200 bg-violet-50 items-center flex">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 text-violet-600">
+                <ImageIcon className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-sm text-violet-600">
+                  Create Contact Sheet
+                </h3>
+                <PrimaryButton
+                  className="mt-1 w-fit h-8 text-xs"
+                  onClick={() =>
+                    createContactSheet({
+                      domain,
+                      participantRef: participant.reference,
+                    })
+                  }
+                  disabled={isGeneratingSheet}
+                  hoverPrimaryColor="#1d4ed8"
+                  secondaryColor="#2563eb"
+                  primaryColor="#3b82f6"
+                >
+                  <ImageIcon className="h-3.5 w-3.5" />
+                  {isGeneratingThumbnails ? "Create..." : "Create Now"}
+                </PrimaryButton>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

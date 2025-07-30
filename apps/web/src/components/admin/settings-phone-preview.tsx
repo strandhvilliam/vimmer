@@ -14,6 +14,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@vimmer/ui/components/accordion";
+import ReactMarkdown from "react-markdown";
 
 export function SettingsPhonePreview({ marathon }: { marathon: Marathon }) {
   return (
@@ -99,17 +100,69 @@ export function SettingsPhonePreview({ marathon }: { marathon: Marathon }) {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="text-xs font-medium space-y-2">
-                    <p>
-                      Welcome to our annual photo competition! Here are the key
-                      rules:
-                    </p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      <li>All photos must be original and taken by you</li>
-                      <li>Photos must be submitted in JPG or PNG format</li>
-                      <li>Maximum file size: 10MB per photo</li>
-                      <li>Submission deadline: August 15, 2025</li>
-                      <li>Winners will be announced on September 1, 2025</li>
-                    </ul>
+                    {marathon.description ? (
+                      <div className="markdown-content">
+                        <ReactMarkdown
+                          components={{
+                            p: ({ children }) => (
+                              <p className="text-xs font-medium mb-1">
+                                {children}
+                              </p>
+                            ),
+                            ul: ({ children }) => (
+                              <ul className="list-disc pl-4 space-y-0.5 mb-1">
+                                {children}
+                              </ul>
+                            ),
+                            ol: ({ children }) => (
+                              <ol className="list-decimal pl-4 space-y-0.5 mb-1">
+                                {children}
+                              </ol>
+                            ),
+                            li: ({ children }) => (
+                              <li className="text-xs font-medium">
+                                {children}
+                              </li>
+                            ),
+                            h1: ({ children }) => (
+                              <h1 className="text-sm font-rocgrotesk font-bold mb-1">
+                                {children}
+                              </h1>
+                            ),
+                            h2: ({ children }) => (
+                              <h2 className="text-xs font-rocgrotesk font-semibold mb-1">
+                                {children}
+                              </h2>
+                            ),
+                            h3: ({ children }) => (
+                              <h3 className="text-xs font-rocgrotesk font-semibold mb-0.5">
+                                {children}
+                              </h3>
+                            ),
+                            strong: ({ children }) => (
+                              <strong className="font-bold">{children}</strong>
+                            ),
+                            em: ({ children }) => (
+                              <em className="italic">{children}</em>
+                            ),
+                            a: ({ children, href }) => (
+                              <a
+                                href={href}
+                                className="underline text-blue-600 hover:text-blue-800"
+                              >
+                                {children}
+                              </a>
+                            ),
+                          }}
+                        >
+                          {marathon.description}
+                        </ReactMarkdown>
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground italic">
+                        No info added by the organizer
+                      </div>
+                    )}
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>

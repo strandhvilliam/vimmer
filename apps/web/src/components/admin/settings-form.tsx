@@ -535,16 +535,34 @@ function SettingsForm({
                   name="description"
                   children={(field) => (
                     <div className="space-y-2">
-                      <Label htmlFor={field.name}>Description</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor={field.name}>Description</Label>
+                        <span className="text-xs text-muted-foreground">
+                          Supports Markdown formatting
+                        </span>
+                      </div>
                       <Textarea
                         id={field.name}
                         name={field.name}
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
-                        placeholder="Enter contest description, rules, and guidelines..."
-                        className="min-h-[150px]"
+                        placeholder={`Enter contest description, rules, and guidelines...
+
+Examples of formatting:
+ **Bold text**
+ *Italic text*
+ # Heading
+ ## Subheading
+ - List item
+ 1. Numbered list
+ [Link text](https://example.com)`}
+                        className="min-h-[200px] font-mono text-sm"
                       />
+                      <div className="text-xs text-muted-foreground">
+                        This content will appear in the "Competition Rules"
+                        section on the participation page.
+                      </div>
                       {field.state.meta.isTouched &&
                       field.state.meta.errors.length ? (
                         <p className="text-sm text-destructive">

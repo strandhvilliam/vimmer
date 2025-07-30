@@ -1,0 +1,137 @@
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
+import { Resource } from "sst";
+import {
+  AWS_REGION,
+  BOTTOM_ROW_LARGE,
+  BOTTOM_ROW_SMALL,
+  CENTER_COL_LARGE,
+  CENTER_ROW_LARGE,
+  LABEL_INDEX_OFFSET,
+  LEFT_COL,
+  MIDDLE_COL,
+  MIDDLE_ROW,
+  RIGHT_COL_LARGE,
+  RIGHT_COL_SMALL,
+  TOP_ROW,
+} from "./constants";
+import type { ImageFile, SponsorPosition, TopicWithIndex } from "./types";
+
+export function getSponsorPosition(
+  position: SponsorPosition,
+  isSmallGrid: boolean,
+): { row: number; col: number } {
+  const positions = {
+    "bottom-left": {
+      row: isSmallGrid ? BOTTOM_ROW_SMALL : BOTTOM_ROW_LARGE,
+      col: LEFT_COL,
+    },
+    "top-right": {
+      row: TOP_ROW,
+      col: isSmallGrid ? RIGHT_COL_SMALL : RIGHT_COL_LARGE,
+    },
+    "top-left": {
+      row: TOP_ROW,
+      col: LEFT_COL,
+    },
+    center: {
+      row: isSmallGrid ? MIDDLE_ROW : CENTER_ROW_LARGE,
+      col: isSmallGrid ? MIDDLE_COL : CENTER_COL_LARGE,
+    },
+    "bottom-right": {
+      row: isSmallGrid ? BOTTOM_ROW_SMALL : BOTTOM_ROW_LARGE,
+      col: isSmallGrid ? RIGHT_COL_SMALL : RIGHT_COL_LARGE,
+    },
+  };
+
+  return positions[position];
+}
+
+export async function getSponsorFile(key: string): Promise<Buffer> {
+  try {
+    const s3Client = new S3Client({ region: AWS_REGION });
+    const file = await s3Client.send(
+      new GetObjectCommand({
+        Bucket: Resource.MarathonSettingsBucket.name,
+        Key: key,
+      }),
+    );
+    const buffer = await file.Body?.transformToByteArray();
+    if (!buffer) {
+      throw new Error(`Failed to fetch sponsor image from S3: ${key}`);
+    }
+    return Buffer.from(buffer);
+  } catch (error) {
+    console.error(error);
+    throw new Error(`Error fetching sponsor image from S3`);
+  }
+}
+
+export function getIndexFromKey(key: string): number {
+  const n = key.split("/")[2];
+  if (!n) throw new Error("Invalid key format");
+  const orderIndex = parseInt(n, 10);
+  if (isNaN(orderIndex)) throw new Error("Invalid key format");
+  return orderIndex - 1;
+}
+
+export async function getImageFiles(keys: string[]): Promise<ImageFile[]> {
+  try {
+    const s3Client = new S3Client({ region: AWS_REGION });
+    const imagePromises = keys.map(async (key) => {
+      const file = await s3Client.send(
+        new GetObjectCommand({
+          Bucket: Resource.PreviewBucket.name,
+          Key: key,
+        }),
+      );
+      const buffer = await file.Body?.transformToByteArray();
+      if (!buffer) {
+        throw new Error(`Failed to fetch image from S3: ${key}`);
+      }
+      return {
+        key,
+        buffer: Buffer.from(buffer),
+        orderIndex: getIndexFromKey(key),
+      };
+    });
+
+    return await Promise.all(imagePromises);
+  } catch (error) {
+    console.error(error);
+    throw new Error(`Error fetching image from S3`);
+  }
+}
+
+export function uploadFinalSheet({
+  file,
+  participantRef,
+  domain,
+}: {
+  file: Buffer;
+  participantRef: string;
+  domain: string;
+}) {
+  const s3Client = new S3Client({ region: AWS_REGION });
+  const key = `${Resource.ContactSheetsBucket.name}/${domain}/${participantRef}.jpg`;
+  return s3Client.send(
+    new PutObjectCommand({
+      Bucket: Resource.ContactSheetsBucket.name,
+      Key: key,
+      Body: file,
+      ContentType: "image/jpg",
+    }),
+  );
+}
+
+export function getImageLabel(
+  file: ImageFile,
+  topics: TopicWithIndex[],
+): string {
+  const topic = topics.find((t) => t.orderIndex === file.orderIndex);
+  if (!topic) throw new Error("Topic not found");
+  return `${topic.orderIndex + LABEL_INDEX_OFFSET} - ${topic.name}`;
+}

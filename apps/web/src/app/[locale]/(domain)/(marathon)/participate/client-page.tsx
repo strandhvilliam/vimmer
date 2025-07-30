@@ -23,6 +23,7 @@ import { useMarathonIsConfigured } from "@/hooks/use-marathon-is-configured";
 import { MarathonNotConfigured } from "@/components/participate/marathon-not-configured";
 import TermsAndConditionsDialog from "@/components/terms-and-conditions-dialog";
 import { useChangeLocale, useCurrentLocale, useI18n } from "@/locales/client";
+import ReactMarkdown from "react-markdown";
 
 export function ParticipateClientPage() {
   const router = useRouter();
@@ -156,14 +157,70 @@ export function ParticipateClientPage() {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="text-sm font-medium space-y-2">
-                    <p>{t("participate.rulesWelcome")}</p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      <li>{t("participate.rulesOriginal")}</li>
-                      <li>{t("participate.rulesFormat")}</li>
-                      <li>{t("participate.rulesFileSize")}</li>
-                      <li>{t("participate.rulesDeadline")}</li>
-                      <li>{t("participate.rulesAnnouncement")}</li>
-                    </ul>
+                    {marathon.description ? (
+                      <div className="markdown-content">
+                        <ReactMarkdown
+                          components={{
+                            p: ({ children }) => (
+                              <p className="text-sm font-medium mb-2">
+                                {children}
+                              </p>
+                            ),
+                            ul: ({ children }) => (
+                              <ul className="list-disc pl-5 space-y-1 mb-2">
+                                {children}
+                              </ul>
+                            ),
+                            ol: ({ children }) => (
+                              <ol className="list-decimal pl-5 space-y-1 mb-2">
+                                {children}
+                              </ol>
+                            ),
+                            li: ({ children }) => (
+                              <li className="text-sm font-medium">
+                                {children}
+                              </li>
+                            ),
+                            h1: ({ children }) => (
+                              <h1 className="text-lg font-rocgrotesk font-bold mb-2">
+                                {children}
+                              </h1>
+                            ),
+                            h2: ({ children }) => (
+                              <h2 className="text-base font-rocgrotesk font-semibold mb-2">
+                                {children}
+                              </h2>
+                            ),
+                            h3: ({ children }) => (
+                              <h3 className="text-sm font-rocgrotesk font-semibold mb-1">
+                                {children}
+                              </h3>
+                            ),
+                            strong: ({ children }) => (
+                              <strong className="font-bold">{children}</strong>
+                            ),
+                            em: ({ children }) => (
+                              <em className="italic">{children}</em>
+                            ),
+                            a: ({ children, href }) => (
+                              <a
+                                href={href}
+                                className="underline text-blue-600 hover:text-blue-800"
+                              >
+                                {children}
+                              </a>
+                            ),
+                          }}
+                        >
+                          {marathon.description}
+                        </ReactMarkdown>
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground italic">
+                        No description available. Please contact the organizer
+                        for more information.
+                      </div>
+                    )}
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>

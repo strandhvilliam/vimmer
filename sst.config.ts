@@ -134,12 +134,7 @@ export default $config({
     const variantGenerator = new sst.aws.Function("VariantsGenerator", {
       handler: "./services/variants-generator/index.handler",
       environment: env,
-      url: {
-        cors: {
-          allowOrigins,
-          allowMethods: ["POST"],
-        },
-      },
+      url: true,
       link: [
         submissionBucket,
         thumbnailBucket,
@@ -274,6 +269,33 @@ export default $config({
       },
     );
 
+    const contactSheetGeneratorQueue = new sst.aws.Queue(
+      "ContactSheetGeneratorQueue",
+    );
+
+    contactSheetGeneratorQueue.subscribe({
+      handler: "./services/contact-sheet-generator/index.handler",
+      link: [
+        contactSheetsBucket,
+        marathonSettingsBucket,
+        previewBucket,
+        exportsBucket,
+        api,
+      ],
+      environment: env,
+      url: true,
+      permissions: [
+        {
+          actions: ["s3:GetObject", "s3:PutObject"],
+          resources: [
+            previewBucket.arn,
+            exportsBucket.arn,
+            contactSheetsBucket.arn,
+          ],
+        },
+      ],
+    });
+
     validateSubmissionQueue.subscribe({
       handler: "./services/photo-validator/index.handler",
       environment: {
@@ -344,6 +366,7 @@ export default $config({
         exportSubmissionsTask,
         generateParticipantZipTask,
         variantGenerator,
+        contactSheetGeneratorQueue,
       ],
       server: {
         install: ["sharp"],

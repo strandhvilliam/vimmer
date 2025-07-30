@@ -10,6 +10,10 @@ declare module "sst" {
       "type": "sst.aws.Function"
       "url": string
     }
+    "ContactSheetGeneratorQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
+    }
     "ContactSheetsBucket": {
       "name": string
       "type": "sst.aws.Bucket"
