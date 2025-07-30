@@ -4,14 +4,14 @@ import {
   bigint,
   timestamp,
   text,
-  integer,
   jsonb,
-  unique,
   boolean,
+  integer,
+  unique,
   pgSequence,
   pgEnum,
 } from "drizzle-orm/pg-core";
-import { relations, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 
 export const uploadStatus = pgEnum("upload_status", [
   "initialized",
@@ -37,11 +37,50 @@ export const submissionsIdSeq1 = pgSequence("submissions_id_seq1", {
   cycle: false,
 });
 
+export const ruleConfigs = pgTable(
+  "rule_configs",
+  {
+    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "rule_configs_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+    ruleKey: text("rule_key").notNull(),
+    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
+    marathonId: bigint("marathon_id", { mode: "number" }).notNull(),
+    params: jsonb(),
+    severity: text().default("warning").notNull(),
+    enabled: boolean().default(false).notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.marathonId],
+      foreignColumns: [marathons.id],
+      name: "rule_configs_marathon_id_fkey",
+    }),
+  ],
+);
+
 export const participants = pgTable(
   "participants",
   {
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "participants_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -140,38 +179,6 @@ export const juryInvitations = pgTable("jury_invitations", {
   deviceGroupId: bigint("device_group_id", { mode: "number" }),
   notes: text(),
 });
-
-export const ruleConfigs = pgTable(
-  "rule_configs",
-  {
-    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
-      name: "rule_configs_id_seq",
-      startWith: 1,
-      increment: 1,
-      minValue: 1,
-      maxValue: 9223372036854775807,
-      cache: 1,
-    }),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-      .defaultNow()
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-    ruleKey: text("rule_key").notNull(),
-    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    marathonId: bigint("marathon_id", { mode: "number" }).notNull(),
-    params: jsonb(),
-    severity: text().default("warning").notNull(),
-    enabled: boolean().default(false).notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.marathonId],
-      foreignColumns: [marathons.id],
-      name: "rule_configs_marathon_id_fkey",
-    }),
-  ],
-);
 
 export const session = pgTable(
   "session",
@@ -547,210 +554,3 @@ export const user = pgTable(
   },
   (table) => [unique("user_email_key").on(table.email)],
 );
-
-export const sponsors = pgTable(
-  "sponsors",
-  {
-    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
-      name: "sponsors_id_seq",
-      startWith: 1,
-      increment: 1,
-      minValue: 1,
-      maxValue: 9223372036854775807,
-      cache: 1,
-    }),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-      .defaultNow()
-      .notNull(),
-    uploadedAt: timestamp("uploaded_at", {
-      withTimezone: true,
-      mode: "string",
-    }),
-    key: text().notNull(),
-    position: text().notNull(),
-    type: text().notNull(),
-    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    marathonId: bigint("marathon_id", { mode: "number" }).notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.marathonId],
-      foreignColumns: [marathons.id],
-      name: "sponsors_marathon_id_fkey",
-    }).onDelete("cascade"),
-  ],
-);
-
-export const participantsRelations = relations(
-  participants,
-  ({ one, many }) => ({
-    competitionClass: one(competitionClasses, {
-      fields: [participants.competitionClassId],
-      references: [competitionClasses.id],
-    }),
-    deviceGroup: one(deviceGroups, {
-      fields: [participants.deviceGroupId],
-      references: [deviceGroups.id],
-    }),
-    marathon: one(marathons, {
-      fields: [participants.marathonId],
-      references: [marathons.id],
-    }),
-    validationResults: many(validationResults),
-    participantVerifications: many(participantVerifications),
-    submissions: many(submissions),
-    zippedSubmissions: many(zippedSubmissions),
-  }),
-);
-
-export const competitionClassesRelations = relations(
-  competitionClasses,
-  ({ one, many }) => ({
-    participants: many(participants),
-    juryInvitations: many(juryInvitations),
-    marathon: one(marathons, {
-      fields: [competitionClasses.marathonId],
-      references: [marathons.id],
-    }),
-  }),
-);
-
-export const deviceGroupsRelations = relations(
-  deviceGroups,
-  ({ one, many }) => ({
-    participants: many(participants),
-    juryInvitations: many(juryInvitations),
-    marathon: one(marathons, {
-      fields: [deviceGroups.marathonId],
-      references: [marathons.id],
-    }),
-  }),
-);
-
-export const marathonsRelations = relations(marathons, ({ many }) => ({
-  participants: many(participants),
-  ruleConfigs: many(ruleConfigs),
-  userMarathons: many(userMarathons),
-  competitionClasses: many(competitionClasses),
-  deviceGroups: many(deviceGroups),
-  submissions: many(submissions),
-  topics: many(topics),
-  zippedSubmissions: many(zippedSubmissions),
-  juryInvitations: many(juryInvitations),
-  sponsors: many(sponsors),
-}));
-
-export const userRelations = relations(user, ({ many }) => ({
-  userMarathons: many(userMarathons),
-  participantVerifications: many(participantVerifications),
-}));
-
-export const ruleConfigsRelations = relations(ruleConfigs, ({ one }) => ({
-  marathon: one(marathons, {
-    fields: [ruleConfigs.marathonId],
-    references: [marathons.id],
-  }),
-}));
-
-export const userMarathonsRelations = relations(userMarathons, ({ one }) => ({
-  marathon: one(marathons, {
-    fields: [userMarathons.marathonId],
-    references: [marathons.id],
-  }),
-  user: one(user, {
-    fields: [userMarathons.userId],
-    references: [user.id],
-  }),
-}));
-
-export const validationResultsRelations = relations(
-  validationResults,
-  ({ one }) => ({
-    participant: one(participants, {
-      fields: [validationResults.participantId],
-      references: [participants.id],
-    }),
-  }),
-);
-
-export const participantVerificationsRelations = relations(
-  participantVerifications,
-  ({ one }) => ({
-    participant: one(participants, {
-      fields: [participantVerifications.participantId],
-      references: [participants.id],
-    }),
-    user: one(user, {
-      fields: [participantVerifications.staffId],
-      references: [user.id],
-    }),
-  }),
-);
-
-export const submissionsRelations = relations(submissions, ({ one }) => ({
-  marathon: one(marathons, {
-    fields: [submissions.marathonId],
-    references: [marathons.id],
-  }),
-  participant: one(participants, {
-    fields: [submissions.participantId],
-    references: [participants.id],
-  }),
-  topic: one(topics, {
-    fields: [submissions.topicId],
-    references: [topics.id],
-  }),
-}));
-
-export const topicsRelations = relations(topics, ({ one, many }) => ({
-  submissions: many(submissions),
-  juryInvitations: many(juryInvitations),
-  marathon: one(marathons, {
-    fields: [topics.marathonId],
-    references: [marathons.id],
-  }),
-}));
-
-export const zippedSubmissionsRelations = relations(
-  zippedSubmissions,
-  ({ one }) => ({
-    marathon: one(marathons, {
-      fields: [zippedSubmissions.marathonId],
-      references: [marathons.id],
-    }),
-    participant: one(participants, {
-      fields: [zippedSubmissions.participantId],
-      references: [participants.id],
-    }),
-  }),
-);
-
-export const juryInvitationsRelations = relations(
-  juryInvitations,
-  ({ one }) => ({
-    marathon: one(marathons, {
-      fields: [juryInvitations.marathonId],
-      references: [marathons.id],
-    }),
-    topic: one(topics, {
-      fields: [juryInvitations.topicId],
-      references: [topics.id],
-    }),
-    competitionClass: one(competitionClasses, {
-      fields: [juryInvitations.competitionClassId],
-      references: [competitionClasses.id],
-    }),
-    deviceGroup: one(deviceGroups, {
-      fields: [juryInvitations.deviceGroupId],
-      references: [deviceGroups.id],
-    }),
-  }),
-);
-
-export const sponsorsRelations = relations(sponsors, ({ one }) => ({
-  marathon: one(marathons, {
-    fields: [sponsors.marathonId],
-    references: [marathons.id],
-  }),
-}));

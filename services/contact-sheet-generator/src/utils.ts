@@ -50,7 +50,12 @@ export function getSponsorPosition(
   return positions[position];
 }
 
-export async function getSponsorFile(key: string): Promise<Buffer> {
+export async function getSponsorFile(
+  key: string | undefined,
+): Promise<Buffer | undefined> {
+  if (!key) {
+    return undefined;
+  }
   try {
     const s3Client = new S3Client({ region: AWS_REGION });
     const file = await s3Client.send(
@@ -106,18 +111,39 @@ export async function getImageFiles(keys: string[]): Promise<ImageFile[]> {
   }
 }
 
-export function uploadFinalSheet({
+export function parseVersionFromKey(key: string | null | undefined): number {
+  if (!key) return 1;
+
+  const match = key.match(/_v(\d+)\.jpg$/);
+  if (!match || !match[1]) return 1;
+
+  return parseInt(match[1], 10);
+}
+export function generateVersionedKey(
+  domain: string,
+  participantRef: string,
+  version: number,
+): string {
+  return `${domain}/${participantRef}_v${version}.jpg`;
+}
+
+export async function uploadFinalSheet({
   file,
   participantRef,
   domain,
+  currentKey,
 }: {
   file: Buffer;
   participantRef: string;
   domain: string;
+  currentKey?: string | null | undefined;
 }) {
   const s3Client = new S3Client({ region: AWS_REGION });
-  const key = `${Resource.ContactSheetsBucket.name}/${domain}/${participantRef}.jpg`;
-  return s3Client.send(
+  const currentVersion = parseVersionFromKey(currentKey);
+  const newVersion = currentVersion + 1;
+  const key = generateVersionedKey(domain, participantRef, newVersion);
+
+  await s3Client.send(
     new PutObjectCommand({
       Bucket: Resource.ContactSheetsBucket.name,
       Key: key,
@@ -125,6 +151,7 @@ export function uploadFinalSheet({
       ContentType: "image/jpg",
     }),
   );
+  return key;
 }
 
 export function getImageLabel(

@@ -16,15 +16,22 @@ export const EXPORT_KEYS = {
   EXIF: "exif",
   XLSX_PARTICIPANTS: "xlsx_participants",
   XLSX_SUBMISSIONS: "xlsx_submissions",
+  ZIP_CONTACT_SHEETS: "zip_contact_sheets",
 } as const;
 
 interface ExportOptionsProps {
   domain: string;
   type: (typeof EXPORT_KEYS)[keyof typeof EXPORT_KEYS];
   label: string;
+  disabled?: boolean;
 }
 
-export function ExportOptions({ domain, type, label }: ExportOptionsProps) {
+export function ExportOptions({
+  domain,
+  type,
+  label,
+  disabled = false,
+}: ExportOptionsProps) {
   const [format, setFormat] = useState<string>("json");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -46,7 +53,12 @@ export function ExportOptions({ domain, type, label }: ExportOptionsProps) {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      const extension = type === EXPORT_KEYS.EXIF ? format : "xlsx";
+      const extension =
+        type === EXPORT_KEYS.EXIF
+          ? format
+          : type === EXPORT_KEYS.ZIP_CONTACT_SHEETS
+            ? "zip"
+            : "xlsx";
       a.download = `${type}-export-${new Date().toISOString().split("T")[0]}.${extension}`;
       document.body.appendChild(a);
       a.click();
@@ -80,7 +92,7 @@ export function ExportOptions({ domain, type, label }: ExportOptionsProps) {
       )}
       <Button
         onClick={handleExport}
-        disabled={isLoading}
+        disabled={isLoading || disabled}
         className="flex items-center gap-2"
       >
         <Download className="h-4 w-4" />

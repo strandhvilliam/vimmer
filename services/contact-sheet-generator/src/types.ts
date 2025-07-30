@@ -28,6 +28,6 @@ export interface CreateContactSheetParams {
   keys: string[];
   participantRef: string;
   sponsorPosition: SponsorPosition;
-  sponsorKey: string;
+  sponsorKey: string | undefined;
   topics: TopicWithIndex[];
 }

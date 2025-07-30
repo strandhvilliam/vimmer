@@ -37,6 +37,7 @@ export default async function ParticipantSubmissionPage({ params }: PageProps) {
           variantsGeneratorUrl={Resource.VariantsGenerator.url}
           thumbnailBaseUrl={Resource.ThumbnailsRouter.url}
           submissionsBaseUrl={Resource.SubmissionsRouter.url}
+          contactSheetBucketUrl={`https://${Resource.ContactSheetsBucket.name}.s3.amazonaws.com`}
         />
       </Suspense>
     </HydrateClient>

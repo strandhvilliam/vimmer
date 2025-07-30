@@ -372,6 +372,7 @@ export default $config({
         generateParticipantZipTask,
         variantGenerator,
         contactSheetGeneratorQueue,
+        contactSheetsBucket,
       ],
       server: {
         install: ["sharp"],

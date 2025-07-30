@@ -35,6 +35,8 @@ import {
   getSponsorPosition,
   uploadFinalSheet,
 } from "./utils";
+import { updateParticipantMutation } from "@vimmer/api/db/queries/participants.queries";
+import { db } from "@vimmer/api/db";
 
 function getGridConfig(
   sponsorPosition: string,
@@ -62,7 +64,10 @@ export async function createContactSheet({
   sponsorPosition,
   sponsorKey,
   topics,
-}: CreateContactSheetParams): Promise<void> {
+  currentContactSheetKey,
+}: CreateContactSheetParams & {
+  currentContactSheetKey?: string | null;
+}): Promise<string> {
   const imageFiles = await getImageFiles(keys);
   const sponsorFile = await getSponsorFile(sponsorKey);
 
@@ -123,6 +128,7 @@ export async function createContactSheet({
         background: WHITE_BACKGROUND,
       })
       .jpeg()
+      .rotate()
       .toBuffer();
   }
 
@@ -165,8 +171,8 @@ export async function createContactSheet({
       const y = calcY(row);
       const isSponsorPosition = row === sponsorRow && col === sponsorCol;
 
-      if (isSponsorPosition && sponsorKey) {
-        const sponsorImage = await processImage(sponsorFile, "cover");
+      if (isSponsorPosition && sponsorKey && sponsorFile) {
+        const sponsorImage = await processImage(sponsorFile, "inside");
         compositeImages.push({
           input: sponsorImage,
           ...getImagePosition(x, y),
@@ -224,9 +230,12 @@ export async function createContactSheet({
 
   const finalSheet = await canvas.composite(compositeImages).jpeg().toBuffer();
 
-  await uploadFinalSheet({
+  const finalKey = await uploadFinalSheet({
     file: finalSheet,
     participantRef,
     domain,
+    currentKey: currentContactSheetKey,
   });
+
+  return finalKey;
 }

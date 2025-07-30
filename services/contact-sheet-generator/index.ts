@@ -1,10 +1,14 @@
 import type { SQSEvent } from "aws-lambda";
 import { createContactSheet } from "./src/contact-sheet";
-import type { CreateContactSheetParams } from "./src/types";
 import { z } from "zod/v4";
 import { db } from "@vimmer/api/db";
-import { getParticipantByReferenceQuery } from "@vimmer/api/db/queries/participants.queries";
+import {
+  getParticipantByReferenceQuery,
+  updateParticipantMutation,
+} from "@vimmer/api/db/queries/participants.queries";
 import { getTopicsByDomainQuery } from "@vimmer/api/db/queries/topics.queries";
+import { getSponsorsByMarathonIdQuery } from "@vimmer/api/db/queries/sponsors.queries";
+import { Resource } from "sst";
 
 const EventSchema = z.object({
   domain: z.string(),
@@ -32,6 +36,18 @@ export async function handler(event: SQSEvent) {
         throw new Error("Participant not found");
       }
 
+      const sponsors = await getSponsorsByMarathonIdQuery(db, {
+        marathonId: participant.marathonId,
+      });
+
+      const sponsorKey = sponsors
+        .filter((s) => s.type === "contact-sheets")
+        .sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        )
+        .at(-1)?.key;
+
       const topics = await getTopicsByDomainQuery(db, {
         domain: parsedParams.data.domain,
       });
@@ -52,13 +68,21 @@ export async function handler(event: SQSEvent) {
         throw new Error("Missing preview keys");
       }
 
-      await createContactSheet({
+      const key = await createContactSheet({
         keys,
         participantRef: parsedParams.data.participantRef,
         domain: parsedParams.data.domain,
-        sponsorPosition: "bottom-left",
-        sponsorKey: "0991_02_v1.jpg",
+        sponsorPosition: "bottom-right",
+        sponsorKey,
         topics: reducedTopics,
+        currentContactSheetKey: participant.contactSheetKey,
+      });
+
+      await updateParticipantMutation(db, {
+        id: participant.id,
+        data: {
+          contactSheetKey: key,
+        },
       });
 
       results.push({

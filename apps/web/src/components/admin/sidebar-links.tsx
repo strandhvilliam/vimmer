@@ -24,6 +24,7 @@ import {
   Tag,
   File,
   Trophy,
+  Heart,
 } from "lucide-react";
 
 export const NAV_LINKS = {
@@ -79,6 +80,11 @@ export const NAV_LINKS = {
       name: "Settings",
       url: "/settings",
       icon: Settings as LucideIcon,
+    },
+    {
+      name: "Sponsors",
+      url: "/sponsors",
+      icon: Heart as LucideIcon,
     },
   ],
 } as const;

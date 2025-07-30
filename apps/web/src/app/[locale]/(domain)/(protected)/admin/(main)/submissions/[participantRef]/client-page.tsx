@@ -9,15 +9,22 @@ import {
   TabsList,
   TabsTrigger,
 } from "@vimmer/ui/components/tabs";
+import { Participant } from "@vimmer/api/db/types";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { useDomain } from "@/contexts/domain-context";
+import { Button } from "@vimmer/ui/components/button";
+import { PARTICIPANT_STATUS } from "@vimmer/supabase/types";
+import { useState } from "react";
+import { runSheetGenerationQueue } from "@/lib/actions/run-sheet-generation-queue";
+import { Download } from "lucide-react";
 
 interface ParticipantSubmissionClientPageProps {
   variantsGeneratorUrl: string;
   participantRef: string;
   thumbnailBaseUrl: string;
   submissionsBaseUrl: string;
+  contactSheetBucketUrl: string;
 }
 
 export function ParticipantSubmissionClientPage({
@@ -25,6 +32,7 @@ export function ParticipantSubmissionClientPage({
   participantRef,
   thumbnailBaseUrl,
   submissionsBaseUrl,
+  contactSheetBucketUrl,
 }: ParticipantSubmissionClientPageProps) {
   const { domain } = useDomain();
   const trpc = useTRPC();
@@ -77,6 +85,12 @@ export function ParticipantSubmissionClientPage({
           >
             Validation Results
           </TabsTrigger>
+          <TabsTrigger
+            value="contact-sheet"
+            className="px-4 py-2 bg-background rounded-none data-[state=active]:shadow-none data-[state=active]:border-primary border-b-2 border-transparent"
+          >
+            Contact Sheet
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="submissions" className="mt-6">
@@ -110,7 +124,98 @@ export function ParticipantSubmissionClientPage({
             topics={topics}
           />
         </TabsContent>
+
+        <TabsContent value="contact-sheet" className="mt-6">
+          <ContactSheetTab
+            participant={participant}
+            domain={domain}
+            submissionsBaseUrl={submissionsBaseUrl}
+            contactSheetBucketUrl={contactSheetBucketUrl}
+          />
+        </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+interface ContactSheetTabProps {
+  participant: Participant;
+  domain: string;
+  submissionsBaseUrl: string;
+  contactSheetBucketUrl: string;
+}
+
+function ContactSheetTab({
+  participant,
+  domain,
+  submissionsBaseUrl,
+  contactSheetBucketUrl,
+}: ContactSheetTabProps) {
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const hasContactSheet = !!participant.contactSheetKey;
+  const canGenerate =
+    participant.status === PARTICIPANT_STATUS.COMPLETED ||
+    participant.status === PARTICIPANT_STATUS.VERIFIED;
+
+  const handleGenerateContactSheet = async () => {
+    setIsGenerating(true);
+    try {
+      await runSheetGenerationQueue({
+        participantRef: participant.reference,
+        domain,
+      });
+    } catch (error) {
+      console.error("Failed to generate contact sheet:", error);
+    }
+  };
+
+  const handleDownloadContactSheet = () => {
+    const link = document.createElement("a");
+    link.href = `${contactSheetBucketUrl}/${participant.contactSheetKey}`;
+    link.download = `contact-sheet-${participant.reference}.jpg`;
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  console.log(participant.contactSheetKey);
+
+  if (hasContactSheet) {
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-center">
+          <img
+            src={`${contactSheetBucketUrl}/${participant.contactSheetKey}`}
+            alt="Contact Sheet"
+            className="max-w-full h-auto border border-black shadow-lg"
+          />
+        </div>
+        <div className="flex justify-center">
+          <Button onClick={handleDownloadContactSheet} variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Download Contact Sheet
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (canGenerate) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 space-y-4">
+        <p className="text-muted-foreground">No contact sheet available</p>
+        <Button onClick={handleGenerateContactSheet} disabled={isGenerating}>
+          {isGenerating ? "Generating..." : "Generate Contact Sheet"}
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-center py-12">
+      <p className="text-muted-foreground">Nothing to show here</p>
     </div>
   );
 }
