@@ -20,9 +20,11 @@ import { useDomain } from "@/contexts/domain-context";
 export function StaffClientPage({
   baseThumbnailUrl,
   baseSubmissionUrl,
+  basePreviewUrl,
 }: {
   baseThumbnailUrl: string;
   baseSubmissionUrl: string;
+  basePreviewUrl: string;
 }) {
   const trpc = useTRPC();
   const { user } = useSession();
@@ -171,6 +173,7 @@ export function StaffClientPage({
         topics={topics}
         baseThumbnailUrl={baseThumbnailUrl}
         submissionBaseUrl={baseSubmissionUrl}
+        previewBaseUrl={basePreviewUrl}
       />
     </>
   );

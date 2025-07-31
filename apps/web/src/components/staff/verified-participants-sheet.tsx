@@ -250,7 +250,9 @@ function ParticipantItem({
     setGlobalExpanded(!globalExpanded);
   };
 
-  const getThumbnailUrl = (submission: Submission | null): string | null => {
+  const getThumbnailUrl = (
+    submission: Submission | null | undefined,
+  ): string | null => {
     if (!submission?.thumbnailKey) return null;
     return `${baseThumbnailUrl}/${submission.thumbnailKey}`;
   };
@@ -335,89 +337,106 @@ function ParticipantItem({
       </button>
       {expanded && (
         <div className="bg-muted px-4 pb-4 pt-2">
-          <h4 className="text-xs text-muted-foreground mb-3">
-            Validation Results
-          </h4>
-          {verification.participant.validationResults.length === 0 ? (
-            <div className="text-sm text-muted-foreground">
-              No validation results
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {groupedValidations.global.length > 0 && (
-                <div className="border border-border rounded-lg bg-card shadow-sm">
-                  <button
-                    onClick={toggleGlobalExpanded}
-                    className="flex items-center gap-2 w-full text-left p-4 hover:bg-muted/30 rounded-lg transition-colors justify-between"
-                  >
-                    <div className="flex flex-col gap-1">
-                      <span className="text-sm font-medium text-foreground">
-                        General Validations
-                      </span>
-                      <div className="flex items-center gap-1 flex-wrap">
-                        {(() => {
-                          const errorCount = groupedValidations.global.filter(
-                            (v) =>
-                              v.severity === "error" && v.outcome === "failed",
-                          ).length;
-                          const warningCount = groupedValidations.global.filter(
-                            (v) =>
-                              v.severity === "warning" &&
-                              v.outcome === "failed",
-                          ).length;
-                          const passedCount = groupedValidations.global.filter(
-                            (v) => v.outcome === "passed",
-                          ).length;
-                          const skippedCount = groupedValidations.global.filter(
-                            (v) => v.outcome === "skipped",
-                          ).length;
+          <h4 className="text-xs text-muted-foreground mb-3">Submissions</h4>
+          <div className="space-y-4">
+            {groupedValidations.global.length > 0 && (
+              <div className="border border-border rounded-lg bg-card shadow-sm">
+                <button
+                  onClick={toggleGlobalExpanded}
+                  className="flex items-center gap-2 w-full text-left p-4 hover:bg-muted/30 rounded-lg transition-colors justify-between"
+                >
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-medium text-foreground">
+                      General Validations
+                    </span>
+                    <div className="flex items-center gap-1 flex-wrap">
+                      {(() => {
+                        const errorCount = groupedValidations.global.filter(
+                          (v) =>
+                            v.severity === "error" && v.outcome === "failed",
+                        ).length;
+                        const warningCount = groupedValidations.global.filter(
+                          (v) =>
+                            v.severity === "warning" && v.outcome === "failed",
+                        ).length;
+                        const passedCount = groupedValidations.global.filter(
+                          (v) => v.outcome === "passed",
+                        ).length;
+                        const skippedCount = groupedValidations.global.filter(
+                          (v) => v.outcome === "skipped",
+                        ).length;
 
-                          return (
-                            <>
-                              {errorCount > 0 && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                  {errorCount} error
-                                  {errorCount !== 1 ? "s" : ""}
-                                </span>
-                              )}
-                              {warningCount > 0 && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                  {warningCount} warning
-                                  {warningCount !== 1 ? "s" : ""}
-                                </span>
-                              )}
-                              {passedCount > 0 && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                  {passedCount} passed
-                                </span>
-                              )}
-                              {skippedCount > 0 && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                  {skippedCount} skipped
-                                </span>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </div>
+                        return (
+                          <>
+                            {errorCount > 0 && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                {errorCount} error
+                                {errorCount !== 1 ? "s" : ""}
+                              </span>
+                            )}
+                            {warningCount > 0 && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                {warningCount} warning
+                                {warningCount !== 1 ? "s" : ""}
+                              </span>
+                            )}
+                            {passedCount > 0 && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                {passedCount} passed
+                              </span>
+                            )}
+                            {skippedCount > 0 && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                {skippedCount} skipped
+                              </span>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
-                    {globalExpanded ? (
-                      <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                    ) : (
-                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    )}
-                  </button>
-                  {globalExpanded && (
-                    <div className="border-t border-border bg-muted/20">
-                      <div className="space-y-3  p-3 rounded-lg">
-                        {groupedValidations.global.map(renderValidationItem)}
-                      </div>
-                    </div>
+                  </div>
+                  {globalExpanded ? (
+                    <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                  ) : (
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   )}
-                </div>
-              )}
+                </button>
+                {globalExpanded && (
+                  <div className="border-t border-border bg-muted/20">
+                    <div className="space-y-3  p-3 rounded-lg">
+                      {groupedValidations.global.map(renderValidationItem)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
-              {groupedValidations.bySubmission.map(
+            {(() => {
+              // Create a list of all topics with their submissions and validations
+              const allTopicsWithSubmissions = topics
+                .sort((a, b) => a.orderIndex - b.orderIndex)
+                .slice(
+                  0,
+                  verification.participant.competitionClass?.numberOfPhotos,
+                )
+                .map((topic) => {
+                  const submission = verification.participant.submissions.find(
+                    (s) => s.topicId === topic.id,
+                  );
+                  const validations =
+                    groupedValidations.bySubmission.find(
+                      (item) => item.orderIndex === topic.orderIndex,
+                    )?.validations || [];
+
+                  return {
+                    orderIndex: topic.orderIndex,
+                    topic,
+                    submission,
+                    validations,
+                  };
+                });
+
+              return allTopicsWithSubmissions.map(
                 ({ orderIndex, topic, submission, validations }) => {
                   const isExpanded = expandedSubmissions.has(orderIndex);
                   const thumbnailUrl = getThumbnailUrl(submission);
@@ -458,64 +477,76 @@ function ParticipantItem({
                             </h5>
                           </div>
                           <div className="flex items-center gap-1 flex-wrap">
-                            {(() => {
-                              const errorCount = validations.filter(
-                                (v) =>
-                                  v.severity === "error" &&
-                                  v.outcome === "failed",
-                              ).length;
-                              const warningCount = validations.filter(
-                                (v) =>
-                                  v.severity === "warning" &&
-                                  v.outcome === "failed",
-                              ).length;
-                              const passedCount = validations.filter(
-                                (v) => v.outcome === "passed",
-                              ).length;
-                              const skippedCount = validations.filter(
-                                (v) => v.outcome === "skipped",
-                              ).length;
+                            {validations.length > 0 ? (
+                              (() => {
+                                const errorCount = validations.filter(
+                                  (v) =>
+                                    v.severity === "error" &&
+                                    v.outcome === "failed",
+                                ).length;
+                                const warningCount = validations.filter(
+                                  (v) =>
+                                    v.severity === "warning" &&
+                                    v.outcome === "failed",
+                                ).length;
+                                const passedCount = validations.filter(
+                                  (v) => v.outcome === "passed",
+                                ).length;
+                                const skippedCount = validations.filter(
+                                  (v) => v.outcome === "skipped",
+                                ).length;
 
-                              return (
-                                <>
-                                  {errorCount > 0 && (
-                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                      {errorCount} error
-                                      {errorCount !== 1 ? "s" : ""}
-                                    </span>
-                                  )}
-                                  {warningCount > 0 && (
-                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                      {warningCount} warning
-                                      {warningCount !== 1 ? "s" : ""}
-                                    </span>
-                                  )}
-                                  {passedCount > 0 && (
-                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                      {passedCount} passed
-                                    </span>
-                                  )}
-                                  {skippedCount > 0 && (
-                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                      {skippedCount} skipped
-                                    </span>
-                                  )}
-                                </>
-                              );
-                            })()}
+                                return (
+                                  <>
+                                    {errorCount > 0 && (
+                                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        {errorCount} error
+                                        {errorCount !== 1 ? "s" : ""}
+                                      </span>
+                                    )}
+                                    {warningCount > 0 && (
+                                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        {warningCount} warning
+                                        {warningCount !== 1 ? "s" : ""}
+                                      </span>
+                                    )}
+                                    {passedCount > 0 && (
+                                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        {passedCount} passed
+                                      </span>
+                                    )}
+                                    {skippedCount > 0 && (
+                                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        {skippedCount} skipped
+                                      </span>
+                                    )}
+                                  </>
+                                );
+                              })()
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                {submission
+                                  ? "No validations"
+                                  : "No submission"}
+                              </span>
+                            )}
                           </div>
                         </div>
 
                         <div className="flex-shrink-0">
-                          {isExpanded ? (
-                            <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                          ) : (
-                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                          {validations.length > 0 && (
+                            <>
+                              {isExpanded ? (
+                                <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                              ) : (
+                                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                              )}
+                            </>
                           )}
                         </div>
                       </button>
 
-                      {isExpanded && (
+                      {isExpanded && validations.length > 0 && (
                         <div className="border-t border-border bg-muted/20">
                           <div className="space-y-3 p-4">
                             {validations.map(renderValidationItem)}
@@ -525,9 +556,9 @@ function ParticipantItem({
                     </div>
                   );
                 },
-              )}
-            </div>
-          )}
+              );
+            })()}
+          </div>
         </div>
       )}
     </div>

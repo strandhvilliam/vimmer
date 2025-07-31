@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { RefreshCw, Trash2, Mail } from "lucide-react";
+import { RefreshCw, Trash2, Mail, Users, Star, BarChart3 } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import {
   AlertDialog,
@@ -38,6 +38,7 @@ import {
 import { useTRPC } from "@/trpc/client";
 import { JuryStatusBadge } from "@/components/admin/jury-status-badge";
 import { JuryInvitationNotFound } from "@/components/admin/jury-invitation-not-found";
+import { format } from "date-fns";
 
 interface JuryInvitationDetailsProps {
   invitationId: number;
@@ -68,6 +69,13 @@ export function JuryInvitationDetails({
   const { data: deviceGroups } = useSuspenseQuery(
     trpc.deviceGroups.getByDomain.queryOptions({
       domain,
+    }),
+  );
+
+  // Get participants and ratings data for this jury member
+  const { data: participantsData } = useSuspenseQuery(
+    trpc.jury.getParticipants.queryOptions({
+      token: invitation?.token || "",
     }),
   );
 
@@ -118,8 +126,25 @@ export function JuryInvitationDetails({
     return <JuryInvitationNotFound />;
   }
 
+  const { participants, ratings } = participantsData;
+  const totalParticipants = participants.length;
+  const ratedParticipants = ratings.length;
+  const progressPercentage =
+    totalParticipants > 0 ? (ratedParticipants / totalParticipants) * 100 : 0;
+
+  // Calculate rating distribution
+  const ratingDistribution = [1, 2, 3, 4, 5].map((rating) => ({
+    rating,
+    count: ratings.filter((r) => r.rating === rating).length,
+  }));
+
+  const averageRating =
+    ratings.length > 0
+      ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+      : 0;
+
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto py-6 space-y-6 overflow-y-auto">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold font-rocgrotesk">Jury Invitation</h1>
         <div className="space-x-2">
@@ -226,6 +251,167 @@ export function JuryInvitationDetails({
           </div>
         </CardFooter>
       </Card>
+
+      {/* Jury Progress Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Participants
+            </CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalParticipants}</div>
+            <p className="text-xs text-muted-foreground">
+              Available for review
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Ratings Given</CardTitle>
+            <Star className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{ratedParticipants}</div>
+            <p className="text-xs text-muted-foreground">
+              {progressPercentage.toFixed(1)}% complete
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Average Rating
+            </CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {averageRating > 0 ? averageRating.toFixed(1) : "—"}
+            </div>
+            <div className="flex items-center mt-1">
+              {averageRating > 0 &&
+                [1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`h-3 w-3 ${
+                      star <= Math.round(averageRating)
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-neutral-300"
+                    }`}
+                  />
+                ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Rating Distribution */}
+      {ratings.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Rating Distribution</CardTitle>
+            <CardDescription>
+              How this jury member has rated participants
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {ratingDistribution.map(({ rating, count }) => (
+                <div key={rating} className="flex items-center gap-3">
+                  <div className="flex items-center gap-1 w-16">
+                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                    <span className="text-sm font-medium">{rating}</span>
+                  </div>
+                  <div className="flex-1 bg-muted rounded-full h-2">
+                    <div
+                      className="bg-primary h-2 rounded-full transition-all"
+                      style={{
+                        width: `${ratings.length > 0 ? (count / ratings.length) * 100 : 0}%`,
+                      }}
+                    />
+                  </div>
+                  <span className="text-sm text-muted-foreground w-12 text-right">
+                    {count}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Recent Ratings */}
+      {ratings.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Ratings</CardTitle>
+            <CardDescription>
+              Latest ratings given by this jury member
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {ratings
+                .sort(
+                  (a, b) =>
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime(),
+                )
+                .slice(0, 5)
+                .map((rating) => {
+                  const participant = participants.find(
+                    (p) => p.id === rating.participantId,
+                  );
+                  return (
+                    <div
+                      key={rating.id}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`h-3 w-3 ${
+                                star <= rating.rating
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-neutral-300"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <div>
+                          <p className="font-medium">
+                            {participant?.reference ||
+                              `Participant ${rating.participantId}`}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {participant?.firstname} {participant?.lastname}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(rating.createdAt), "PPpp")}
+                        </p>
+                        {rating.notes && (
+                          <p className="text-xs text-muted-foreground max-w-xs truncate">
+                            {rating.notes}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

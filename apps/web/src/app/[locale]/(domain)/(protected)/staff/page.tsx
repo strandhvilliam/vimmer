@@ -30,6 +30,7 @@ export default async function StaffPage() {
         <StaffClientPage
           baseSubmissionUrl={Resource.SubmissionsRouter.url}
           baseThumbnailUrl={Resource.ThumbnailsRouter.url}
+          basePreviewUrl={Resource.PreviewsRouter.url}
         />
       </Suspense>
     </HydrateClient>

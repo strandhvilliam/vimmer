@@ -148,9 +148,8 @@ export function SponsorsClientPage({
 
     return (
       <Card className={disabled ? "opacity-50" : ""}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ImageIcon className="h-5 w-5" />
+        <CardHeader className="space-y-0">
+          <CardTitle className="flex items-center gap-2 text-lg font-rocgrotesk">
             {title}
           </CardTitle>
           <CardDescription>{description}</CardDescription>
@@ -205,29 +204,39 @@ export function SponsorsClientPage({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <SponsorCard
-        title="Contact Sheets"
-        description="Sponsor image displayed on contact sheets"
-        type="contact-sheets"
-        baseUrl={baseUrl}
-      />
+    <div className="container max-w-[1400px] mx-auto py-8">
+      <div className="flex flex-col mb-8 gap-1">
+        <h1 className="text-2xl font-semibold font-rocgrotesk">Sponsors</h1>
+        <p className="text-muted-foreground text-sm">
+          Upload and manage sponsor images to be placed in the submission flow
+          for the partiicipants.
+        </p>
+      </div>
 
-      <SponsorCard
-        title="Participant Initial Page"
-        description="Sponsor image shown on the app initial page"
-        type="participant-initial"
-        disabled
-        baseUrl={baseUrl}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <SponsorCard
+          title="Contact Sheets"
+          description="Sponsor image displayed on contact sheets"
+          type="contact-sheets"
+          baseUrl={baseUrl}
+        />
 
-      <SponsorCard
-        title="Participant Success Page"
-        description="Sponsor image shown on the app success page"
-        type="participant-success"
-        disabled
-        baseUrl={baseUrl}
-      />
+        <SponsorCard
+          title="Participant Initial Page"
+          description="Sponsor image shown on the app initial page"
+          type="participant-initial"
+          disabled
+          baseUrl={baseUrl}
+        />
+
+        <SponsorCard
+          title="Participant Success Page"
+          description="Sponsor image shown on the app success page"
+          type="participant-success"
+          disabled
+          baseUrl={baseUrl}
+        />
+      </div>
     </div>
   );
 }

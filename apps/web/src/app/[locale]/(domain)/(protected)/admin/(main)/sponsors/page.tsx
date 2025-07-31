@@ -15,21 +15,12 @@ export default async function SponsorsPage() {
 
   return (
     <HydrateClient>
-      <div className="container max-w-[1400px] mx-auto py-8">
-        <div className="flex flex-col mb-8 gap-1">
-          <h1 className="text-2xl font-semibold font-rocgrotesk">Sponsors</h1>
-          <p className="text-muted-foreground text-sm">
-            Upload and manage sponsor images for different scenarios.
-          </p>
-        </div>
-
-        <Suspense fallback={<div>Loading...</div>}>
-          <SponsorsClientPage
-            domain={domain}
-            baseUrl={Resource.MarathonSettingsRouter.url}
-          />
-        </Suspense>
-      </div>
+      <Suspense fallback={<div>Loading...</div>}>
+        <SponsorsClientPage
+          domain={domain}
+          baseUrl={Resource.MarathonSettingsRouter.url}
+        />
+      </Suspense>
     </HydrateClient>
   );
 }
