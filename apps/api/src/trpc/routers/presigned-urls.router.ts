@@ -13,7 +13,11 @@ import {
   getZippedSubmissionsByMarathonIdQuery,
   getSubmissionByIdQuery,
 } from "@vimmer/api/db/queries/submissions.queries";
-import { updateParticipantMutation } from "@vimmer/api/db/queries/participants.queries";
+import {
+  updateParticipantMutation,
+  getParticipantsByDomainQuery,
+} from "@vimmer/api/db/queries/participants.queries";
+import { getMarathonByIdQuery } from "@vimmer/api/db/queries/marathons.queries";
 
 export const presignedUrlsRouter = createTRPCRouter({
   generatePresignedSubmissions: publicProcedure
@@ -66,6 +70,62 @@ export const presignedUrlsRouter = createTRPCRouter({
       }
       const presignedUrls = await Promise.all(presignedUrlPromises);
       return { presignedUrls, failedParticipantIds };
+    }),
+  generateContactSheetPresignedUrls: publicProcedure
+    .input(
+      z.object({
+        marathonId: z.number(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Get marathon to find domain
+      const marathon = await getMarathonByIdQuery(ctx.db, {
+        id: input.marathonId,
+      });
+      if (!marathon) {
+        throw new Error("Marathon not found");
+      }
+
+      // Get all participants with contact sheets for this domain
+      const participants = await getParticipantsByDomainQuery(ctx.db, {
+        domain: marathon.domain,
+      });
+      const participantsWithContactSheets = participants.filter(
+        (p) => p.contactSheetKey,
+      );
+
+      const s3Client = new S3Client();
+      const contactSheetUrls: { participantRef: string; url: string }[] = [];
+      const failedParticipantIds: number[] = [];
+
+      for (const participant of participantsWithContactSheets) {
+        if (!participant.contactSheetKey) {
+          failedParticipantIds.push(participant.id);
+          continue;
+        }
+
+        try {
+          const command = new GetObjectCommand({
+            Bucket: Resource.ContactSheetsBucket.name,
+            Key: participant.contactSheetKey,
+          });
+          const presignedUrl = await getSignedUrl(s3Client, command, {
+            expiresIn: 60 * 60 * 24,
+          });
+          contactSheetUrls.push({
+            participantRef: participant.reference,
+            url: presignedUrl,
+          });
+        } catch (error) {
+          console.error(
+            `Failed to generate presigned URL for participant ${participant.id}:`,
+            error,
+          );
+          failedParticipantIds.push(participant.id);
+        }
+      }
+
+      return { contactSheetUrls, failedParticipantIds };
     }),
   generateReplacementPresignedUrl: publicProcedure
     .input(

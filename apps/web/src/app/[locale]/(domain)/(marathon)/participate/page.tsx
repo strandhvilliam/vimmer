@@ -9,10 +9,22 @@ import {
 } from "@/trpc/server";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { Resource } from "sst";
 
 export default async function ParticipatePage() {
   const queryClient = getQueryClient();
   const domain = await getDomain();
+
+  try {
+    await queryClient.fetchQuery(
+      trpc.marathons.getByDomain.queryOptions({
+        domain,
+      }),
+    );
+  } catch (error: any) {
+    console.error(error);
+    notFound();
+  }
 
   batchPrefetch([
     trpc.marathons.getByDomain.queryOptions({
@@ -27,23 +39,17 @@ export default async function ParticipatePage() {
     trpc.topics.getByDomain.queryOptions({
       domain,
     }),
+    trpc.terms.getByDomain.queryOptions({
+      domain,
+    }),
   ]);
-
-  try {
-    await queryClient.fetchQuery(
-      trpc.marathons.getByDomain.queryOptions({
-        domain,
-      }),
-    );
-  } catch (error: any) {
-    console.error(error);
-    notFound();
-  }
 
   return (
     <HydrateClient>
       <Suspense fallback={<LoadingLogo />}>
-        <ParticipateClientPage />
+        <ParticipateClientPage
+          marathonSettingsRouterUrl={Resource.MarathonSettingsRouter.url}
+        />
       </Suspense>
     </HydrateClient>
   );

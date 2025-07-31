@@ -296,6 +296,7 @@ export const marathons = pgTable("marathons", {
   description: text(),
   languages: text().default("en").notNull(),
   setupCompleted: boolean("setup_completed").default(false),
+  termsAndConditionsKey: text("terms_and_conditions_key"),
 });
 
 export const competitionClasses = pgTable(

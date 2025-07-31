@@ -32,6 +32,7 @@ export const updateMarathonSchema = z.object({
     description: z.string().optional(),
     languages: z.string().optional(),
     setupCompleted: z.boolean().optional(),
+    termsAndConditionsKey: z.string().optional(),
   }),
 });
 

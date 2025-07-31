@@ -8,6 +8,9 @@ import {
 import { Button } from "@vimmer/ui/components/button";
 import { X } from "lucide-react";
 import React from "react";
+import { useTRPC } from "@/trpc/client";
+import { useDomain } from "@/contexts/domain-context";
+import { useQuery } from "@tanstack/react-query";
 
 export default function TermsAndConditionsDialog({
   termsOpen,
@@ -20,6 +23,17 @@ export default function TermsAndConditionsDialog({
   termsAccepted: boolean;
   setTermsAccepted: (accepted: boolean) => void;
 }) {
+  const trpc = useTRPC();
+  const { domain } = useDomain();
+
+  const { data: termsData, isLoading } = useQuery(
+    trpc.terms.getByDomain.queryOptions({
+      domain,
+    }),
+  );
+
+  console.log({ termsData });
+
   return (
     <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
       <DialogContent className="max-w-none w-full h-[100dvh] p-0 rounded-none flex flex-col overflow-hidden">
@@ -39,101 +53,24 @@ export default function TermsAndConditionsDialog({
                 Terms and Conditions
               </DialogTitle>
               <DialogDescription className="text-lg">
-                Please read these terms carefully before participating in
-                Stockholm Fotomaraton
+                Please read these terms carefully before participating
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-8 pb-24">
-              <section>
-                <h3 className="font-semibold text-xl mb-4">
-                  1. Photo Submission Guidelines
-                </h3>
-                <ul className="list-disc pl-5 space-y-3 text-base text-gray-600">
-                  <li>
-                    All photographs must be original works taken by you during
-                    the specified competition period
-                  </li>
-                  <li>
-                    Photos must be submitted in JPG or PNG format with a maximum
-                    file size of 10MB per photo
-                  </li>
-                  <li>
-                    No type of editing is allowed, you can only submit the
-                    original photo as is.
-                  </li>
-                  <li>
-                    Photos must be taken in the order of the themes as they are
-                    announced
-                  </li>
-                  <li>
-                    Each photo must be submitted within the designated timeframe
-                  </li>
-                </ul>
-              </section>
-
-              <section>
-                <h3 className="font-semibold text-xl mb-4">
-                  2. Personal Data Processing
-                </h3>
-                <ul className="list-disc pl-5 space-y-3 text-base text-gray-600">
-                  <li>
-                    We collect and process your name, email, and phone number
-                    for competition administration and communication
-                  </li>
-                  <li>
-                    Your contact information will be used only for
-                    competition-related communications
-                  </li>
-                  <li>
-                    Winners' names may be published on our website and social
-                    media channels
-                  </li>
-                  <li>
-                    Your personal data will be stored securely and retained only
-                    for the duration necessary
-                  </li>
-                </ul>
-              </section>
-
-              <section>
-                <h3 className="font-semibold text-xl mb-4">
-                  3. Image Rights and Usage
-                </h3>
-                <ul className="list-disc pl-5 space-y-3 text-base text-gray-600">
-                  <li>You retain copyright of your submitted photographs</li>
-                  <li>
-                    By participating, you grant Stockholm Fotomaraton
-                    non-exclusive rights to use your submitted photos for
-                    promotional purposes
-                  </li>
-                  <li>
-                    We will always credit photographers when using their images
-                  </li>
-                  <li>
-                    You are responsible for obtaining any necessary permissions
-                    from identifiable individuals in your photos
-                  </li>
-                </ul>
-              </section>
-
-              <section>
-                <h3 className="font-semibold text-xl mb-4">
-                  4. Competition Rules
-                </h3>
-                <ul className="list-disc pl-5 space-y-3 text-base text-gray-600">
-                  <li>
-                    Participants must follow the competition schedule and theme
-                    announcements
-                  </li>
-                  <li>Decisions made by the jury are final</li>
-                  <li>Violation of any rules may result in disqualification</li>
-                  <li>
-                    The competition organizers reserve the right to modify rules
-                    or cancel the event due to unforeseen circumstances
-                  </li>
-                </ul>
-              </section>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-muted-foreground">
+                    Loading terms and conditions...
+                  </div>
+                </div>
+              ) : termsData?.content ? (
+                <div className="whitespace-pre-wrap text-base text-gray-700 leading-relaxed">
+                  {termsData.content}
+                </div>
+              ) : (
+                <div className="space-y-8">Nothing here</div>
+              )}
             </div>
           </div>
         </div>

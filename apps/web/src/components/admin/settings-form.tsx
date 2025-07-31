@@ -26,6 +26,7 @@ import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { SettingsPhonePreview } from "./settings-phone-preview";
 import { useForm } from "@tanstack/react-form";
 import { getLogoUploadAction } from "@/lib/actions/logo-presigned-url-action";
+import { getTermsUploadAction } from "@/lib/actions/terms-upload-action";
 import {
   Command,
   CommandEmpty,
@@ -76,6 +77,7 @@ const updateMarathonSettingsSchema = z.object({
   description: z.string().optional(),
   logoUrl: z.string().optional(),
   languages: z.array(z.string()).optional(),
+  termsAndConditionsKey: z.string().optional(),
 });
 type UpdateSettingsInput = z.infer<typeof updateMarathonSettingsSchema>;
 
@@ -149,6 +151,7 @@ function SettingsForm({
   const trpc = useTRPC();
   const { domain } = useDomain();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const termsFileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const [resetConfirmationText, setResetConfirmationText] = useState("");
   const router = useRouter();
@@ -172,6 +175,16 @@ function SettingsForm({
     hasChanged: false,
   });
 
+  const [termsState, setTermsState] = useState<{
+    fileName: string | null;
+    isUploading: boolean;
+    hasChanged: boolean;
+  }>({
+    fileName: null,
+    isUploading: false,
+    hasChanged: false,
+  });
+
   const form = useForm({
     defaultValues: {
       name: initialData.name,
@@ -188,11 +201,19 @@ function SettingsForm({
     },
     onSubmit: async ({ value }) => {
       const file = fileInputRef.current?.files?.[0];
+      const termsFile = termsFileInputRef.current?.files?.[0];
 
       if (file) {
         const logoUrl = await handleLogoUpload(file);
         if (logoUrl) {
           value.logoUrl = logoUrl;
+        }
+      }
+
+      if (termsFile) {
+        const termsKey = await handleTermsUpload(termsFile);
+        if (termsKey) {
+          value.termsAndConditionsKey = termsKey;
         }
       }
 
@@ -211,6 +232,7 @@ function SettingsForm({
             : undefined,
           endDate: value.endDate ? value.endDate.toISOString() : undefined,
           logoUrl: value.logoUrl,
+          termsAndConditionsKey: value.termsAndConditionsKey,
         },
       });
     },
@@ -260,6 +282,11 @@ function SettingsForm({
     executeAsync: generateLogoPresignedUrl,
     isExecuting: isGeneratingLogoPresignedUrl,
   } = useAction(getLogoUploadAction);
+
+  const {
+    executeAsync: generateTermsPresignedUrl,
+    isExecuting: isGeneratingTermsPresignedUrl,
+  } = useAction(getTermsUploadAction);
 
   const { mutate: resetMarathon, isPending: isResettingMarathon } = useMutation(
     trpc.marathons.reset.mutationOptions({
@@ -357,6 +384,38 @@ function SettingsForm({
       return null;
     } finally {
       setLogoState((prev) => ({ ...prev, isUploading: false }));
+    }
+  };
+
+  const handleTermsUpload = async (file: File): Promise<string | null> => {
+    setTermsState((prev) => ({ ...prev, isUploading: true }));
+
+    try {
+      const response = await generateTermsPresignedUrl({
+        domain,
+      });
+
+      if (!response?.data) {
+        toast.error("Failed to generate terms upload URL");
+        return null;
+      }
+
+      const { key, url } = response.data;
+
+      await fetch(url, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": "text/plain",
+        },
+      });
+
+      return key;
+    } catch (error) {
+      toast.error("Failed to upload terms and conditions");
+      return null;
+    } finally {
+      setTermsState((prev) => ({ ...prev, isUploading: false }));
     }
   };
 
@@ -572,6 +631,86 @@ Examples of formatting:
                     </div>
                   )}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Terms and Conditions</Label>
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept=".txt"
+                    ref={termsFileInputRef}
+                    className="hidden"
+                    id="terms-upload"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setTermsState((prev) => ({
+                          ...prev,
+                          fileName: file.name,
+                          hasChanged: true,
+                        }));
+                      }
+                    }}
+                  />
+                  {termsState.fileName ? (
+                    <div className="flex items-center gap-3">
+                      <div className="w-[42px] h-[42px] rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-medium">TXT</span>
+                      </div>
+                      <div className="w-full flex-1 relative h-[42px] rounded-lg overflow-hidden border bg-background flex items-center justify-between gap-3">
+                        <div className="flex items-center justify-between h-full flex-1 pr-3">
+                          <div className="flex items-center gap-2 px-3 h-full">
+                            <span className="text-sm">
+                              {termsState.fileName ||
+                                "terms-and-conditions.txt"}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (termsFileInputRef.current) {
+                                termsFileInputRef.current.value = "";
+                              }
+                              setTermsState({
+                                fileName: null,
+                                isUploading: false,
+                                hasChanged: false,
+                              });
+                            }}
+                            className="flex items-center gap-2 px-3 h-full hover:bg-muted rounded-md text-foreground hover:text-destructive transition-colors"
+                          >
+                            <X className="h-4 w-4" />
+                            <span className="text-sm">Remove</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <div className="w-[42px] h-[42px] rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-medium">TXT</span>
+                      </div>
+                      <label
+                        htmlFor="terms-upload"
+                        className="px-4 w-full flex items-center h-[42px] rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 bg-background transition-colors cursor-pointer gap-3"
+                      >
+                        <div className="flex items-center justify-between flex-1">
+                          <span className="text-sm text-muted-foreground">
+                            Click to upload terms and conditions (.txt)
+                          </span>
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            TXT • 1MB max
+                          </span>
+                        </div>
+                      </label>
+                    </div>
+                  )}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Upload a .txt file containing your terms and conditions. This
+                  will be displayed when participants click the terms link.
+                </div>
               </div>
             </TabsContent>
 

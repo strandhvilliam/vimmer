@@ -22,10 +22,15 @@ import { useDomain } from "@/contexts/domain-context";
 import { useMarathonIsConfigured } from "@/hooks/use-marathon-is-configured";
 import { MarathonNotConfigured } from "@/components/participate/marathon-not-configured";
 import TermsAndConditionsDialog from "@/components/terms-and-conditions-dialog";
+import PlatformTermsDialog from "@/components/platform-terms-dialog";
 import { useChangeLocale, useCurrentLocale, useI18n } from "@/locales/client";
 import ReactMarkdown from "react-markdown";
 
-export function ParticipateClientPage() {
+export function ParticipateClientPage({
+  marathonSettingsRouterUrl,
+}: {
+  marathonSettingsRouterUrl: string;
+}) {
   const router = useRouter();
   const trpc = useTRPC();
   const { domain } = useDomain();
@@ -41,11 +46,15 @@ export function ParticipateClientPage() {
 
   const { isConfigured, requiredActions } = useMarathonIsConfigured();
 
-  const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
-  const [termsOpen, setTermsOpen] = useState<boolean>(false);
+  const [organizerTermsAccepted, setOrganizerTermsAccepted] =
+    useState<boolean>(false);
+  const [organizerTermsOpen, setOrganizerTermsOpen] = useState<boolean>(false);
+  const [platformTermsAccepted, setPlatformTermsAccepted] =
+    useState<boolean>(false);
+  const [platformTermsOpen, setPlatformTermsOpen] = useState<boolean>(false);
 
   const handleBeginUpload = () => {
-    if (termsAccepted) {
+    if (organizerTermsAccepted && platformTermsAccepted) {
       router.push("/submission");
     }
   };
@@ -226,38 +235,68 @@ export function ParticipateClientPage() {
               </Accordion>
             </section>
 
-            <section className="mb-6">
+            <section className="mb-6 space-y-4">
               <div className="flex items-start space-x-2">
                 <Checkbox
-                  id="terms"
-                  checked={termsAccepted}
+                  id="organizer-terms"
+                  checked={organizerTermsAccepted}
                   onCheckedChange={(checked) =>
-                    setTermsAccepted(checked as boolean)
+                    setOrganizerTermsAccepted(checked as boolean)
                   }
                   className="mt-1"
                 />
-                <label htmlFor="terms" className="text-sm font-medium">
+                <label
+                  htmlFor="organizer-terms"
+                  className="text-sm font-medium"
+                >
                   {t("participate.termsAccept")}{" "}
                   <button
-                    onClick={() => setTermsOpen(true)}
+                    onClick={() => setOrganizerTermsOpen(true)}
                     className="underline font-semibold"
                   >
                     {t("participate.termsAndConditions")}
                   </button>
                 </label>
               </div>
+
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="platform-terms"
+                  checked={platformTermsAccepted}
+                  onCheckedChange={(checked) =>
+                    setPlatformTermsAccepted(checked as boolean)
+                  }
+                  className="mt-1"
+                />
+                <label htmlFor="platform-terms" className="text-sm font-medium">
+                  I accept the{" "}
+                  <button
+                    onClick={() => setPlatformTermsOpen(true)}
+                    className="underline font-semibold"
+                  >
+                    Vimmer Platform Terms of Service
+                  </button>
+                </label>
+              </div>
             </section>
 
             <TermsAndConditionsDialog
-              termsOpen={termsOpen}
-              setTermsOpen={setTermsOpen}
-              termsAccepted={termsAccepted}
-              setTermsAccepted={setTermsAccepted}
+              termsOpen={organizerTermsOpen}
+              setTermsOpen={setOrganizerTermsOpen}
+              termsAccepted={organizerTermsAccepted}
+              setTermsAccepted={setOrganizerTermsAccepted}
+            />
+
+            <PlatformTermsDialog
+              termsOpen={platformTermsOpen}
+              setTermsOpen={setPlatformTermsOpen}
+              termsAccepted={platformTermsAccepted}
+              setTermsAccepted={setPlatformTermsAccepted}
             />
 
             <PrimaryButton
               onClick={handleBeginUpload}
-              disabled={!termsAccepted}
+              disabled={!organizerTermsAccepted || !platformTermsAccepted}
               className="w-full py-3 text-base  text-white rounded-full"
             >
               {t("begin")}

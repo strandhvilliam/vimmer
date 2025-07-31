@@ -50,6 +50,11 @@ export const NAV_LINKS = {
       icon: File as LucideIcon,
     },
     {
+      name: "Staff",
+      url: "/staff",
+      icon: Shield as LucideIcon,
+    },
+    {
       name: "Jury",
       url: "/jury",
       icon: Trophy as LucideIcon,
@@ -60,11 +65,6 @@ export const NAV_LINKS = {
       name: "Topics",
       url: "/topics",
       icon: Tag as LucideIcon,
-    },
-    {
-      name: "Staff",
-      url: "/staff",
-      icon: Shield as LucideIcon,
     },
     {
       name: "Classes",

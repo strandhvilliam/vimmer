@@ -10,6 +10,7 @@ import { submissionsRouter } from "./submissions.router";
 import { validationsRouter } from "./validations.router";
 import { presignedUrlsRouter } from "./presigned-urls.router";
 import { sponsorsRouter } from "./sponsors.router";
+import { termsRouter } from "./terms.router";
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { createTRPCRouter } from "..";
 
@@ -26,6 +27,7 @@ export const appRouter = createTRPCRouter({
   validations: validationsRouter,
   presignedUrls: presignedUrlsRouter,
   sponsors: sponsorsRouter,
+  terms: termsRouter,
 });
 
 export type AppRouter = typeof appRouter;

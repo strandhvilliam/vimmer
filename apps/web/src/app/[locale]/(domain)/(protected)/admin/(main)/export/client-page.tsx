@@ -1,10 +1,10 @@
 "use client";
 
 import { Card, CardContent } from "@vimmer/ui/components/card";
-import { FileSpreadsheet, FileText, Image } from "lucide-react";
-import { Badge } from "@vimmer/ui/components/badge";
+import { FileSpreadsheet, FileText } from "lucide-react";
 import { ExportOptions } from "@/components/admin/export-options";
 import { ParticipantArchivesDownload } from "@/components/admin/participant-archives-download";
+import { ContactSheetExport } from "@/components/admin/contact-sheet-export";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { useDomain } from "@/contexts/domain-context";
@@ -53,27 +53,6 @@ export function ExportClientPage() {
   const participantsWithContactSheets = participants.filter(
     (p) => p.contactSheetKey,
   ).length;
-  const contactSheetStatus =
-    participantCount === 0
-      ? "none"
-      : participantsWithContactSheets === participantCount
-        ? "all"
-        : participantsWithContactSheets > 0
-          ? "some"
-          : "none";
-
-  const getContactSheetStatusColor = (status: string) => {
-    switch (status) {
-      case "all":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "some":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "none":
-        return "bg-red-100 text-red-800 border-red-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
 
   if (!marathon) {
     return null;
@@ -172,35 +151,13 @@ export function ExportClientPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between gap-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Image className="h-5 w-5" />
-                  <h2 className="text-lg font-semibold font-rocgrotesk">
-                    Contact Sheets
-                  </h2>
-                  <Badge
-                    className={`${getContactSheetStatusColor(contactSheetStatus)} border`}
-                  >
-                    {participantsWithContactSheets}/{participantCount}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Export all available contact sheets as a ZIP archive. Contact
-                  sheets show participant submissions in a grid layout.
-                </p>
-              </div>
-              <ExportOptions
-                domain={domain}
-                type={EXPORT_KEYS.ZIP_CONTACT_SHEETS}
-                label="Export"
-                disabled={participantsWithContactSheets === 0}
-              />
-            </div>
-          </CardContent>
-        </Card>
+        <ContactSheetExport
+          domain={domain}
+          marathonId={marathon.id}
+          participantsWithContactSheets={participantsWithContactSheets}
+          totalParticipants={participantCount}
+          disabled={participantsWithContactSheets === 0}
+        />
       </div>
     </div>
   );
