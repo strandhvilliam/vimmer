@@ -121,6 +121,7 @@ export default $config({
         marathonSettingsBucket,
         thumbnailBucket,
         previewBucket,
+        contactSheetsBucket,
       ],
       permissions: [
         {
