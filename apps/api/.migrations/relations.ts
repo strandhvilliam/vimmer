@@ -1,14 +1,27 @@
 import { relations } from "drizzle-orm/relations";
-import { marathons, ruleConfigs, competitionClasses, participants, deviceGroups, user, account, session, userMarathons, validationResults, participantVerifications, submissions, topics, zippedSubmissions, sponsors } from "./schema";
+import { juryInvitations, juryRatings, marathons, participants, ruleConfigs, competitionClasses, deviceGroups, user, account, session, userMarathons, validationResults, participantVerifications, submissions, topics, zippedSubmissions, sponsors } from "./schema";
 
-export const ruleConfigsRelations = relations(ruleConfigs, ({one}) => ({
+export const juryRatingsRelations = relations(juryRatings, ({one}) => ({
+	juryInvitation: one(juryInvitations, {
+		fields: [juryRatings.invitationId],
+		references: [juryInvitations.id]
+	}),
 	marathon: one(marathons, {
-		fields: [ruleConfigs.marathonId],
+		fields: [juryRatings.marathonId],
 		references: [marathons.id]
+	}),
+	participant: one(participants, {
+		fields: [juryRatings.participantId],
+		references: [participants.id]
 	}),
 }));
 
+export const juryInvitationsRelations = relations(juryInvitations, ({many}) => ({
+	juryRatings: many(juryRatings),
+}));
+
 export const marathonsRelations = relations(marathons, ({many}) => ({
+	juryRatings: many(juryRatings),
 	ruleConfigs: many(ruleConfigs),
 	participants: many(participants),
 	userMarathons: many(userMarathons),
@@ -21,6 +34,7 @@ export const marathonsRelations = relations(marathons, ({many}) => ({
 }));
 
 export const participantsRelations = relations(participants, ({one, many}) => ({
+	juryRatings: many(juryRatings),
 	competitionClass: one(competitionClasses, {
 		fields: [participants.competitionClassId],
 		references: [competitionClasses.id]
@@ -37,6 +51,13 @@ export const participantsRelations = relations(participants, ({one, many}) => ({
 	participantVerifications: many(participantVerifications),
 	submissions: many(submissions),
 	zippedSubmissions: many(zippedSubmissions),
+}));
+
+export const ruleConfigsRelations = relations(ruleConfigs, ({one}) => ({
+	marathon: one(marathons, {
+		fields: [ruleConfigs.marathonId],
+		references: [marathons.id]
+	}),
 }));
 
 export const competitionClassesRelations = relations(competitionClasses, ({one, many}) => ({

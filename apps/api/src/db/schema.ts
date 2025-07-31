@@ -10,6 +10,7 @@ import {
   boolean,
   pgSequence,
   pgEnum,
+  smallint,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 
@@ -582,6 +583,43 @@ export const sponsors = pgTable(
   ],
 );
 
+export const juryRatings = pgTable(
+  "jury_ratings",
+  {
+    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "jury_ratings_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
+    invitationId: bigint("invitation_id", { mode: "number" }).notNull(),
+    rating: smallint().notNull(),
+    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
+    participantId: bigint("participant_id", { mode: "number" }).notNull(),
+    notes: text().default(""),
+    marathonId: bigint("marathon_id", { mode: "number" }).notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.invitationId],
+      foreignColumns: [juryInvitations.id],
+      name: "jury_ratings_invitation_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.participantId],
+      foreignColumns: [participants.id],
+      name: "jury_ratings_participant_id_fkey",
+    }).onDelete("cascade"),
+  ],
+);
+
 export const participantsRelations = relations(
   participants,
   ({ one, many }) => ({
@@ -728,7 +766,7 @@ export const zippedSubmissionsRelations = relations(
 
 export const juryInvitationsRelations = relations(
   juryInvitations,
-  ({ one }) => ({
+  ({ one, many }) => ({
     marathon: one(marathons, {
       fields: [juryInvitations.marathonId],
       references: [marathons.id],
@@ -745,6 +783,7 @@ export const juryInvitationsRelations = relations(
       fields: [juryInvitations.deviceGroupId],
       references: [deviceGroups.id],
     }),
+    juryRatings: many(juryRatings),
   }),
 );
 
@@ -752,5 +791,16 @@ export const sponsorsRelations = relations(sponsors, ({ one }) => ({
   marathon: one(marathons, {
     fields: [sponsors.marathonId],
     references: [marathons.id],
+  }),
+}));
+
+export const juryRatingsRelations = relations(juryRatings, ({ one }) => ({
+  juryInvitation: one(juryInvitations, {
+    fields: [juryRatings.invitationId],
+    references: [juryInvitations.id],
+  }),
+  participant: one(participants, {
+    fields: [juryRatings.participantId],
+    references: [participants.id],
   }),
 }));

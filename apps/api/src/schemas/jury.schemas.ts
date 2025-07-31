@@ -54,3 +54,40 @@ export const updateJuryInvitationSchema = z.object({
 export const deleteJuryInvitationSchema = z.object({
   id: z.number(),
 });
+
+export const verifyJuryTokenSchema = z.object({
+  token: z.string(),
+});
+
+export const getJuryParticipantsSchema = z.object({
+  token: z.string(),
+});
+
+export const getJuryParticipantSubmissionsSchema = z.object({
+  token: z.string(),
+  participantId: z.number(),
+});
+
+export const createJuryRatingSchema = z.object({
+  token: z.string(),
+  participantId: z.number(),
+  rating: z.number().min(1).max(5),
+  notes: z.string().optional(),
+});
+
+export const updateJuryRatingSchema = z.object({
+  token: z.string(),
+  participantId: z.number(),
+  rating: z.number().min(1).max(5),
+  notes: z.string().optional(),
+});
+
+export const getJuryRatingSchema = z.object({
+  token: z.string(),
+  participantId: z.number(),
+});
+
+export const deleteJuryRatingSchema = z.object({
+  token: z.string(),
+  participantId: z.number(),
+});

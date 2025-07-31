@@ -135,9 +135,9 @@ export function JuryInvitationCreateSheet({
       displayName: "",
       email: "",
       notes: "",
-      competitionClassId: "",
-      deviceGroupId: "",
-      topicId: "",
+      competitionClassId: "all",
+      deviceGroupId: "all",
+      topicId: "all",
       expiryDays: 14,
     } as FormValues,
     onSubmit: async ({ value }) => {
@@ -146,31 +146,41 @@ export function JuryInvitationCreateSheet({
         return;
       }
 
-      const parsedCompetitionClassId = value.competitionClassId
-        ? parseInt(value.competitionClassId)
-        : null;
-      const parsedDeviceGroupId = value.deviceGroupId
-        ? parseInt(value.deviceGroupId)
-        : null;
-      const parsedTopicId = value.topicId ? parseInt(value.topicId) : null;
+      const parsedCompetitionClassId =
+        !value.competitionClassId || value.competitionClassId === "all"
+          ? undefined
+          : parseInt(value.competitionClassId);
+      const parsedDeviceGroupId =
+        !value.deviceGroupId || value.deviceGroupId === "all"
+          ? undefined
+          : parseInt(value.deviceGroupId);
+
+      const parsedTopicId =
+        !value.topicId || value.topicId === "all"
+          ? undefined
+          : parseInt(value.topicId);
 
       const expiresAt = addDays(new Date(), value.expiryDays ?? 14);
       expiresAt.setHours(23, 59, 59, 999);
 
+      const data = {
+        displayName: value.displayName,
+        email: value.email,
+        token: "",
+        expiresAt: expiresAt.toISOString(),
+        competitionClassId: parsedCompetitionClassId,
+        deviceGroupId: parsedDeviceGroupId,
+        topicId: parsedTopicId,
+        notes: value.notes,
+        domain,
+        status: "pending",
+        marathonId: marathon.id,
+      };
+
+      console.log({ data });
+
       createJuryInvitation({
-        data: {
-          displayName: value.displayName,
-          email: value.email,
-          token: "",
-          expiresAt: expiresAt.toISOString(),
-          competitionClassId: parsedCompetitionClassId ?? undefined,
-          deviceGroupId: parsedDeviceGroupId ?? undefined,
-          topicId: parsedTopicId ?? undefined,
-          notes: value.notes,
-          domain,
-          status: "pending",
-          marathonId: marathon.id,
-        },
+        data,
       });
     },
 
