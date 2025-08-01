@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@vimmer/supabase/server";
-import { actionClient } from "@/lib/actions/safe-action";
+import { actionClient } from "@/actions/safe-action";
 import { z } from "zod";
 import { updateJuryInvitation } from "@vimmer/supabase/mutations";
 import { revalidatePath } from "next/cache";

@@ -22,7 +22,7 @@ import {
 } from "@vimmer/ui/components/sheet";
 import { Textarea } from "@vimmer/ui/components/textarea";
 import { toast } from "sonner";
-import { sendInvitationEmailAction } from "@/lib/actions/send-jury-invitation-email";
+import { sendInvitationEmailAction } from "@/actions/send-jury-invitation-email";
 import { useDomain } from "@/contexts/domain-context";
 import { z } from "zod/v4";
 import { Input } from "@vimmer/ui/components/input";

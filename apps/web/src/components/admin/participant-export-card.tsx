@@ -1,4 +1,4 @@
-import { runZipGenerationAction } from "@/lib/actions/run-zip-generation";
+import { runZipGenerationAction } from "@/actions/run-zip-generation";
 import { useTRPC } from "@/trpc/client";
 import { useQueryClient } from "@tanstack/react-query";
 import {

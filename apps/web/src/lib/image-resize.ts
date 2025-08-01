@@ -1,7 +1,3 @@
-/**
- * Client-side image resizing utility using Canvas API
- */
-
 export interface ResizeOptions {
   width: number;
   quality?: number;
@@ -13,10 +9,6 @@ export interface ResizedImage {
   width: number;
   height: number;
 }
-
-/**
- * Resize an image file to specified dimensions while maintaining aspect ratio
- */
 export async function resizeImage(
   file: File,
   options: ResizeOptions,
@@ -28,12 +20,10 @@ export async function resizeImage(
 
     img.onload = () => {
       try {
-        // Calculate new dimensions maintaining aspect ratio
         const aspectRatio = img.height / img.width;
         const newWidth = targetWidth;
         const newHeight = Math.round(targetWidth * aspectRatio);
 
-        // Create canvas
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
 
@@ -42,18 +32,14 @@ export async function resizeImage(
           return;
         }
 
-        // Set canvas dimensions
         canvas.width = newWidth;
         canvas.height = newHeight;
 
-        // Enable image smoothing for better quality
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
 
-        // Draw resized image
         ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-        // Convert to blob
         canvas.toBlob(
           (blob) => {
             if (!blob) {
@@ -79,14 +65,10 @@ export async function resizeImage(
       reject(new Error("Failed to load image"));
     };
 
-    // Load the image
     img.src = URL.createObjectURL(file);
   });
 }
 
-/**
- * Resize image to multiple sizes in parallel
- */
 export async function resizeImageToMultipleSizes(
   file: File,
   sizes: ResizeOptions[],
@@ -95,9 +77,6 @@ export async function resizeImageToMultipleSizes(
   return Promise.all(resizePromises);
 }
 
-/**
- * Get image dimensions without loading the full image
- */
 export function getImageDimensions(
   file: File,
 ): Promise<{ width: number; height: number }> {

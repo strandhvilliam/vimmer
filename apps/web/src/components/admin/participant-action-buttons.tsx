@@ -1,5 +1,5 @@
 import { useDomain } from "@/contexts/domain-context";
-import { runSheetGenerationQueue } from "@/lib/actions/run-sheet-generation-queue";
+import { runSheetGenerationQueue } from "@/actions/run-sheet-generation-queue";
 import { useTRPC } from "@/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";

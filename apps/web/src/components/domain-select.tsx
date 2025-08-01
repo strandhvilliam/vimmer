@@ -8,7 +8,7 @@ import { toast } from "@vimmer/ui/hooks/use-toast";
 import { useAction } from "next-safe-action/hooks";
 import { useTRPC } from "@/trpc/client";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { selectDomain } from "@/lib/actions/select-domain";
+import { selectDomain } from "@/actions/select-domain";
 import { Session, User } from "better-auth";
 import { useSearchParams } from "next/navigation";
 import { z } from "zod";

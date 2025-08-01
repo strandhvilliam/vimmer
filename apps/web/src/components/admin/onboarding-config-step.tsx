@@ -15,7 +15,7 @@ import { Textarea } from "@vimmer/ui/components/textarea";
 import { Upload, Calendar, FileText, Image, PencilIcon, X } from "lucide-react";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { toast } from "sonner";
-import { getLogoUploadAction } from "@/lib/actions/logo-presigned-url-action";
+import { getLogoUploadAction } from "@/actions/logo-presigned-url-action";
 import { useAction } from "next-safe-action/hooks";
 import { useTRPC } from "@/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

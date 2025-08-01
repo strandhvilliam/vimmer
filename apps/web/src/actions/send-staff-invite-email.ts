@@ -1,7 +1,7 @@
 "use server";
 
 import { resend } from "@/lib/resend";
-import { actionClient } from "@/lib/actions/safe-action";
+import { actionClient } from "@/actions/safe-action";
 import { StaffInviteEmail } from "@vimmer/email";
 import { z } from "zod";
 

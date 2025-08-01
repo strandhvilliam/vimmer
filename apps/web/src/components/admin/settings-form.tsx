@@ -25,8 +25,8 @@ import { toast } from "sonner";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { SettingsPhonePreview } from "./settings-phone-preview";
 import { useForm } from "@tanstack/react-form";
-import { getLogoUploadAction } from "@/lib/actions/logo-presigned-url-action";
-import { getTermsUploadAction } from "@/lib/actions/terms-upload-action";
+import { getLogoUploadAction } from "@/actions/logo-presigned-url-action";
+import { getTermsUploadAction } from "@/actions/terms-upload-action";
 import {
   Command,
   CommandEmpty,

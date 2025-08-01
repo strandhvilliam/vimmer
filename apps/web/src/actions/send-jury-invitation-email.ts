@@ -1,6 +1,6 @@
 "use server";
 
-import { actionClient } from "@/lib/actions/safe-action";
+import { actionClient } from "@/actions/safe-action";
 import { z } from "zod";
 import { resend } from "@/lib/resend";
 import { JuryReviewEmail } from "@vimmer/email";

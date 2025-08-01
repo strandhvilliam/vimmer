@@ -20,7 +20,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { useState } from "react";
 import { useAction } from "next-safe-action/hooks";
-import { getPresignedExportUrlAction } from "@/lib/actions/get-presigned-photo-archives-action";
+import { getPresignedExportUrlAction } from "@/actions/get-presigned-photo-archives-action";
 import { ParticipantVerifyDialog } from "@/components/admin/participant-verify-dialog";
 import { ParticipantActionButtons } from "@/components/admin/participant-action-buttons";
 import { ParticipantHeaderInfo } from "@/components/admin/participant-header-info";

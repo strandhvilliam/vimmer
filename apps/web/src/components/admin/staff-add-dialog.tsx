@@ -14,7 +14,7 @@ import {
 import { Input } from "@vimmer/ui/components/input";
 import { Alert, AlertDescription } from "@vimmer/ui/components/alert";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
-import { sendStaffInviteEmail } from "../../lib/actions/send-staff-invite-email";
+import { sendStaffInviteEmail } from "../../actions/send-staff-invite-email";
 import { useTRPC } from "@/trpc/client";
 import {
   useMutation,

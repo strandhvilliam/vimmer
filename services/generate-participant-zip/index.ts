@@ -221,7 +221,6 @@ async function processSubmission({
     const buffer = await fetchFileFromS3(s3Client, sourceBucket, fileKey);
 
     if (!buffer) {
-      console.log("File not found");
       const updatedErrors = {
         ...updatedProgress.submissionErrors,
         [submission.id]: `File not found: ${fileKey}`,
@@ -236,7 +235,6 @@ async function processSubmission({
         participantZip,
       };
     }
-    console.log("File found");
 
     participantZip.file(zipPath, buffer, {
       binary: true,
@@ -282,7 +280,6 @@ async function processAllSubmissions(
   };
 
   for (const submission of submissions) {
-    console.log("Processing submission", submission.id);
     currentResult = await processSubmission({
       ...params,
       submission,
@@ -293,8 +290,6 @@ async function processAllSubmissions(
     if (currentResult.progress.status === "error") {
       break;
     }
-
-    console.log("Finished processing submission", submission.id);
   }
 
   return currentResult;
@@ -319,8 +314,6 @@ async function exportParticipantSubmissionsToZip({
     status: "pending",
     submissionErrors: {},
   };
-
-  console.log("initial progress", progress);
 
   try {
     const marathon = await getMarathonByDomainQuery(db, {
@@ -474,7 +467,6 @@ async function main() {
     const participantReference = process.env.PARTICIPANT_REFERENCE;
 
     if (!domain || !exportType || !participantReference) {
-      console.log("missing env", domain, exportType, participantReference);
       throw new Error(
         `Missing required environment variables: domain=${domain}, exportType=${exportType}, participantReference=${participantReference}`,
       );

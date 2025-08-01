@@ -1,6 +1,6 @@
 "use server";
 
-import { actionClient } from "@/lib/actions/safe-action";
+import { actionClient } from "@/actions/safe-action";
 import { SignJWT } from "jose";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";

@@ -1,5 +1,5 @@
 import { useDomain } from "@/contexts/domain-context";
-import { runSheetGenerationQueue } from "@/lib/actions/run-sheet-generation-queue";
+import { runSheetGenerationQueue } from "@/actions/run-sheet-generation-queue";
 import { PARTICIPANT_STATUS } from "@/lib/constants";
 import { Participant, Submission } from "@vimmer/api/db/types";
 import { Button } from "@vimmer/ui/components/button";

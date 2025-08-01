@@ -1,6 +1,6 @@
 "use server";
 
-import { authClient } from "../auth-client";
+import { authClient } from "../lib/auth-client";
 import { actionClient } from "./safe-action";
 import { z } from "zod";
 import { selectDomain } from "./select-domain";
