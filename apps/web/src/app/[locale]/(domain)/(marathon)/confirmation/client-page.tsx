@@ -86,227 +86,224 @@ export function ConfirmationClient({
   }
 
   return (
-    <>
-      <div className="min-h-[100dvh] px-4 py-6 space-y-6 max-w-[800px] mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center space-y-6 pt-8"
-        >
-          <div className="relative">
+    <div className="min-h-[100dvh] px-4 py-6 space-y-6 max-w-[800px] mx-auto">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05, duration: 0.6 }}
+        className="text-center space-y-6 pt-8"
+      >
+        <div className="relative">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 150 }}
+            className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 relative"
+          >
+            <CheckCircle2 className="h-14 w-14 text-white" />
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 150 }}
-              className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 relative"
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+              className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center"
             >
-              <CheckCircle2 className="h-14 w-14 text-white" />
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-                className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center"
-              >
-                <Trophy className="h-4 w-4 text-yellow-800" />
-              </motion.div>
+              <Trophy className="h-4 w-4 text-yellow-800" />
             </motion.div>
-          </div>
+          </motion.div>
+        </div>
 
-          <div className="space-y-3">
-            <motion.h1
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-3xl font-rocgrotesk font-bold text-foreground"
-            >
-              {t("confirmation.congratulations")}
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="text-muted-foreground text-lg leading-relaxed"
-            >
-              {t("confirmation.photosUploaded", {
-                count: uploadedSubmissions.length,
-              })}
-            </motion.p>
-          </div>
-        </motion.div>
+        <div className="space-y-3">
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-3xl font-rocgrotesk font-bold text-foreground"
+          >
+            {t("confirmation.congratulations")}
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="text-muted-foreground text-lg leading-relaxed"
+          >
+            {t("confirmation.photosUploaded", {
+              count: uploadedSubmissions.length,
+            })}
+          </motion.p>
+        </div>
+      </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 dark:from-green-950/20 dark:to-emerald-950/20 dark:border-green-800">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div>
-                    <p className="text-2xl text-green-600 dark:text-green-400 font-mono font-bold">
-                      #{participant.reference}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 dark:from-green-950/20 dark:to-emerald-950/20 dark:border-green-800">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div>
+                  <p className="text-2xl text-green-600 dark:text-green-400 font-mono font-bold">
+                    #{participant.reference}
+                  </p>
+                  <p className=" font-medium text-green-800 dark:text-green-200">
+                    {participant.firstname} {participant.lastname}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Icon
+                      icon="solar:bookmark-broken"
+                      className="w-4 h-4 text-green-800"
+                      style={{
+                        transform: "rotate(-5deg)",
+                      }}
+                    />
+                    <p className="text-sm text-green-800 dark:text-green-200">
+                      {participant.deviceGroup?.name}
                     </p>
-                    <p className=" font-medium text-green-800 dark:text-green-200">
-                      {participant.firstname} {participant.lastname}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Icon
+                      icon="solar:camera-minimalistic-broken"
+                      className="w-4 h-4 text-green-800"
+                      style={{
+                        transform: "rotate(-5deg)",
+                      }}
+                    />
+                    <p className="text-sm text-green-800 dark:text-green-200">
+                      {participant.competitionClass?.name}
                     </p>
-                    <div className="flex items-center gap-2">
-                      <Icon
-                        icon="solar:bookmark-broken"
-                        className="w-4 h-4 text-green-800"
-                        style={{
-                          transform: "rotate(-5deg)",
-                        }}
-                      />
-                      <p className="text-sm text-green-800 dark:text-green-200">
-                        {participant.deviceGroup?.name}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Icon
-                        icon="solar:camera-minimalistic-broken"
-                        className="w-4 h-4 text-green-800"
-                        style={{
-                          transform: "rotate(-5deg)",
-                        }}
-                      />
-                      <p className="text-sm text-green-800 dark:text-green-200">
-                        {participant.competitionClass?.name}
-                      </p>
-                    </div>
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <CardHeader className="pb-4 px-0">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+      >
+        <CardHeader className="pb-4 px-0">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            {t("confirmation.yourPhotos")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 px-0">
+          <motion.div
+            variants={{
+              hidden: { opacity: 0 },
+              show: {
+                opacity: 1,
+                transition: { staggerChildren: 0.1 },
+              },
+            }}
+            initial="hidden"
+            animate="show"
+            className="space-y-3"
+          >
+            {images.map((image, index) => (
+              <motion.div
+                key={image.id}
+                variants={{
+                  hidden: { opacity: 0, x: -20 },
+                  show: { opacity: 1, x: 0 },
+                }}
+                className="flex items-center gap-4 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+                onClick={() => setSelectedImage(image)}
+              >
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted">
+                    <img
+                      src={image.thumbnailUrl}
+                      alt={image.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  {/* <Badge className="absolute -top-2 -right-2 w-6 h-6 rounded-full p-0 flex items-center justify-center text-xs bg-primary"> */}
+                  {/*   {index + 1} */}
+                  {/* </Badge> */}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-lg text-muted-foreground">
+                    #{image.orderIndex + 1}
+                  </span>
+                  <p className="font-medium truncate">{image.name}</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </motion.div>
+            ))}
+          </motion.div>
+        </CardContent>
+      </motion.div>
+
+      {/* Next Steps */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8 }}
+      >
+        <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
+          <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-lg">
-              {t("confirmation.yourPhotos")}
+              <Trophy className="h-5 w-5 text-primary" />
+              {t("confirmation.whatsNext")}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 px-0">
-            <motion.div
-              variants={{
-                hidden: { opacity: 0 },
-                show: {
-                  opacity: 1,
-                  transition: { staggerChildren: 0.1 },
-                },
-              }}
-              initial="hidden"
-              animate="show"
-              className="space-y-3"
-            >
-              {images.map((image, index) => (
-                <motion.div
-                  key={image.id}
-                  variants={{
-                    hidden: { opacity: 0, x: -20 },
-                    show: { opacity: 1, x: 0 },
-                  }}
-                  className="flex items-center gap-4 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
-                  onClick={() => setSelectedImage(image)}
-                >
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted">
-                      <img
-                        src={image.thumbnailUrl}
-                        alt={image.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    {/* <Badge className="absolute -top-2 -right-2 w-6 h-6 rounded-full p-0 flex items-center justify-center text-xs bg-primary"> */}
-                    {/*   {index + 1} */}
-                    {/* </Badge> */}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-lg text-muted-foreground">
-                      #{image.orderIndex + 1}
-                    </span>
-                    <p className="font-medium truncate">{image.name}</p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                </motion.div>
-              ))}
-            </motion.div>
-          </CardContent>
-        </motion.div>
-
-        {/* Next Steps */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-        >
-          <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Trophy className="h-5 w-5 text-primary" />
-                {t("confirmation.whatsNext")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-sm font-bold text-primary">1</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">
-                      {t("confirmation.judgingPhase")}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {t("confirmation.judgingDescription")}
-                    </p>
-                  </div>
+          <CardContent className="space-y-4">
+            <div className="space-y-4">
+              <div className="flex gap-4">
+                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <span className="text-sm font-bold text-primary">1</span>
                 </div>
-                <div className="flex gap-4">
-                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-sm font-bold text-primary">2</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">
-                      {t("confirmation.resultsAnnounced")}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {t("confirmation.resultsDescription")}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-sm font-bold text-primary">3</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">
-                      {t("confirmation.shareWork")}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {t("confirmation.shareDescription")}
-                    </p>
-                  </div>
+                <div>
+                  <h3 className="font-semibold mb-1">
+                    {t("confirmation.judgingPhase")}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {t("confirmation.judgingDescription")}
+                  </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              <div className="flex gap-4">
+                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <span className="text-sm font-bold text-primary">2</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">
+                    {t("confirmation.resultsAnnounced")}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {t("confirmation.resultsDescription")}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <span className="text-sm font-bold text-primary">3</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">
+                    {t("confirmation.shareWork")}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {t("confirmation.shareDescription")}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
-        <ConfirmationDetailsDialog
-          image={selectedImage}
-          open={!!selectedImage}
-          onOpenChange={(open) => !open && setSelectedImage(null)}
-        />
-      </div>
-
-      <Confetti recycle={false} numberOfPieces={150} />
-    </>
+      <ConfirmationDetailsDialog
+        image={selectedImage}
+        open={!!selectedImage}
+        onOpenChange={(open) => !open && setSelectedImage(null)}
+      />
+      <Confetti recycle={false} numberOfPieces={300} />
+    </div>
   );
 }

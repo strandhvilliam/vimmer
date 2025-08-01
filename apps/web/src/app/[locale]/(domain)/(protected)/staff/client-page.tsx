@@ -1,6 +1,7 @@
 "use client";
+"use no memo";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { QrCodeIcon, PenIcon, UsersIcon, LogOutIcon } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
@@ -16,6 +17,7 @@ import { useSession } from "@/contexts/session-context";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { useDomain } from "@/contexts/domain-context";
+import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
 
 export function StaffClientPage({
   baseThumbnailUrl,
@@ -29,9 +31,8 @@ export function StaffClientPage({
   const trpc = useTRPC();
   const { user } = useSession();
   const { domain } = useDomain();
-  const [activeParticipantReference, setActiveParticipantReference] = useState<
-    string | null
-  >(null);
+  const [activeParticipantReference, setActiveParticipantReference] =
+    useQueryState("reference", parseAsString);
 
   const { data: participantData } = useQuery(
     trpc.participants.getByReference.queryOptions(
@@ -40,18 +41,46 @@ export function StaffClientPage({
         domain,
       },
       {
-        enabled: !!activeParticipantReference,
+        enabled:
+          !!activeParticipantReference && activeParticipantReference !== "",
       },
     ),
   );
 
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
 
-  const [openSheet, setOpenSheet] = useState<
-    "participant-info" | "qr-scan" | "manual-entry" | "verified-list" | null
-  >(null);
+  const [openSheet, setOpenSheet] = useQueryState(
+    "sheet",
+    parseAsStringEnum([
+      "participant-info",
+      "qr-scan",
+      "manual-entry",
+      "verified-list",
+    ]),
+  );
 
   const router = useRouter();
+
+  const openSheetSafely = async (
+    targetSheet:
+      | "participant-info"
+      | "qr-scan"
+      | "manual-entry"
+      | "verified-list",
+  ) => {
+    if (openSheet && openSheet !== targetSheet) {
+      await setOpenSheet(null);
+      setTimeout(() => setOpenSheet(targetSheet), 100);
+    } else {
+      await setOpenSheet(targetSheet);
+    }
+  };
+
+  useEffect(() => {
+    if (openSheet === "participant-info" && !activeParticipantReference) {
+      setOpenSheet(null);
+    }
+  }, [openSheet, activeParticipantReference, setOpenSheet]);
 
   const { data: verifications } = useSuspenseQuery(
     trpc.validations.getParticipantVerificationsByStaffId.queryOptions(
@@ -107,7 +136,7 @@ export function StaffClientPage({
         <div className="flex flex-col items-center justify-center gap-10">
           <div className="flex flex-col items-center gap-4">
             <PrimaryButton
-              onClick={() => setOpenSheet("qr-scan")}
+              onClick={() => openSheetSafely("qr-scan")}
               className="w-48 h-48 rounded-full flex items-center justify-center !shadow-xl"
             >
               <QrCodeIcon className="w-28 h-28" />
@@ -122,7 +151,7 @@ export function StaffClientPage({
           <div className="flex flex-col items-center gap-2">
             <Button
               variant="secondary"
-              onClick={() => setOpenSheet("manual-entry")}
+              onClick={() => openSheetSafely("manual-entry")}
               className="bg-white w-20 h-20 rounded-full shadow"
             >
               <PenIcon className="w-8 h-8 text-vimmer-primary" />
@@ -133,7 +162,7 @@ export function StaffClientPage({
           <div className="flex flex-col items-center gap-2">
             <Button
               variant="ghost"
-              onClick={() => setOpenSheet("verified-list")}
+              onClick={() => openSheetSafely("verified-list")}
               className="bg-white w-20 h-20 rounded-full shadow"
             >
               <UsersIcon className="w-8 h-8 text-vimmer-primary" />
@@ -144,31 +173,30 @@ export function StaffClientPage({
       </div>
       <QrScanDrawer
         open={openSheet === "qr-scan"}
-        onOpenChange={() => setOpenSheet(null)}
-        onScanAction={(qrCode) => {
-          toast.info("Data: " + JSON.stringify(qrCode));
-          setActiveParticipantReference(qrCode.reference);
-          setOpenSheet("participant-info");
+        onOpenChange={(open) => !open && setOpenSheet(null)}
+        onScanAction={async (qrCode) => {
+          await setActiveParticipantReference(qrCode.reference);
+          await openSheetSafely("participant-info");
         }}
       />
       <ManualEntrySheet
         open={openSheet === "manual-entry"}
-        onOpenChange={() => setOpenSheet(null)}
-        onEnterAction={(args) => {
-          setActiveParticipantReference(args.reference);
-          setOpenSheet("participant-info");
+        onOpenChange={(open) => !open && setOpenSheet(null)}
+        onEnterAction={async (args) => {
+          await setActiveParticipantReference(args.reference);
+          await openSheetSafely("participant-info");
         }}
       />
       <VerifiedParticipantsSheet
         open={openSheet === "verified-list"}
-        onOpenChange={() => setOpenSheet(null)}
+        onOpenChange={(open) => !open && setOpenSheet(null)}
         verifications={verifications}
         topics={topics}
         baseThumbnailUrl={baseThumbnailUrl}
       />
       <ParticipantInfoSheet
         open={openSheet === "participant-info"}
-        onOpenChange={() => setOpenSheet(null)}
+        onOpenChange={(open) => !open && setOpenSheet(null)}
         participant={participantData ?? null}
         topics={topics}
         baseThumbnailUrl={baseThumbnailUrl}

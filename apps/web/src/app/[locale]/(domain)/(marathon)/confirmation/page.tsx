@@ -8,6 +8,7 @@ import { Suspense } from "react";
 import { Resource } from "sst";
 import { getI18n } from "@/locales/server";
 import { LoadingLogo } from "@/components/loading-logo";
+import { connection } from "next/server";
 
 interface ConfirmationPageProps {
   searchParams: Promise<SearchParams>;
@@ -16,6 +17,7 @@ interface ConfirmationPageProps {
 export default async function ConfirmationPage({
   searchParams,
 }: ConfirmationPageProps) {
+  await connection();
   const domain = await getDomain();
   const params = await loadSubmissionQueryServerParams(searchParams);
   const t = await getI18n();
@@ -33,16 +35,14 @@ export default async function ConfirmationPage({
   ]);
 
   return (
-    <div className="min-h-[100dvh]">
-      <HydrateClient>
-        <Suspense fallback={<LoadingLogo />}>
-          <ConfirmationClient
-            participantRef={params.participantRef}
-            thumbnailsBaseUrl={Resource.ThumbnailsRouter.url}
-            previewsBaseUrl={Resource.PreviewsRouter.url}
-          />
-        </Suspense>
-      </HydrateClient>
-    </div>
+    <HydrateClient>
+      <Suspense fallback={<LoadingLogo />}>
+        <ConfirmationClient
+          participantRef={params.participantRef}
+          thumbnailsBaseUrl={Resource.ThumbnailsRouter.url}
+          previewsBaseUrl={Resource.PreviewsRouter.url}
+        />
+      </Suspense>
+    </HydrateClient>
   );
 }

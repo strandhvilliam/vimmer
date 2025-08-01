@@ -143,7 +143,7 @@ export async function createContactSheet({
 
   function createTextLabel(label: string): Buffer {
     const textSvg = `
-      <svg width="${cellWidth}" height="${textHeight}" viewBox="0 0 ${cellWidth} ${textHeight}">
+      <svg width="${cellWidth}" height="${textHeight}">
         <text x="${Math.floor((cellWidth - imageWidth) / 2)}" y="${textHeight * TEXT_VERTICAL_POSITION}" 
               font-family="Arial, sans-serif" 
               font-size="${LABEL_FONT_SIZE}" 
@@ -218,7 +218,7 @@ export async function createContactSheet({
     const seqHeight = Math.floor(CANVAS_HEIGHT);
 
     const seqSvg = `
-      <svg width="${seqWidth}" height="${seqHeight}" viewBox="0 0 ${seqWidth} ${seqHeight}">
+      <svg width="${seqWidth}" height="${seqHeight}">
         <text x="${seqWidth / 2}" y="${seqHeight - SEQUENCE_BOTTOM_MARGIN}" 
               font-family="Arial, sans-serif" 
               font-size="${seqFontSize}" 

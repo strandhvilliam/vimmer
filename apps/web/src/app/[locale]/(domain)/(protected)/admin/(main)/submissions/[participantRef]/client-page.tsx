@@ -1,7 +1,6 @@
 "use client";
 
 import { ParticipantHeader } from "@/components/admin/participant-header";
-import { PhotoSubmissionCard } from "@/components/admin/submission-card";
 import { ParticipantValidationResultsTable } from "@/components/admin/participant-validation-results-table";
 import {
   Tabs,
@@ -13,6 +12,17 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { useDomain } from "@/contexts/domain-context";
 import { ParticipantContactSheetTab } from "@/components/admin/participant-contact-sheet-tab";
+import dynamic from "next/dynamic";
+
+const PhotoSubmissionCard = dynamic(
+  () =>
+    import("@/components/admin/submission-card").then(
+      (mod) => mod.PhotoSubmissionCard,
+    ),
+  {
+    ssr: false,
+  },
+);
 
 interface ParticipantSubmissionClientPageProps {
   variantsGeneratorUrl: string;

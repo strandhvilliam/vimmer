@@ -256,7 +256,7 @@ export function ParticipantArchivesDownload({
                       htmlFor="image-width"
                       className="text-sm font-medium"
                     >
-                      Image Width (pixels)
+                      Image Size (pixels)
                     </Label>
                     <Input
                       id="image-width"
@@ -274,7 +274,7 @@ export function ParticipantArchivesDownload({
                       <p className="text-xs text-muted-foreground">
                         {useOriginalSize
                           ? "Images will be downloaded in their original resolution without resizing."
-                          : "Images will be resized to this width while maintaining aspect ratio. Recommended: 1920px for high quality, 1280px for smaller files."}
+                          : "Images will be resized so their largest dimension matches this size while maintaining aspect ratio. Recommended: 1920px for high quality, 1280px for smaller files."}
                       </p>
                     </div>
                   </div>

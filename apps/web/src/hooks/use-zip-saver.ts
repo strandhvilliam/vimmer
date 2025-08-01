@@ -78,7 +78,7 @@ export function useZipSaver(): UsePresignedPhotoSaverReturn {
         });
 
         setStatusMessage(
-          `Found ${presignedUrls.length} archive(s). ${imageWidth ? `Resizing images to ${imageWidth}px...` : `Processing without resizing...`}`,
+          `Found ${presignedUrls.length} archive(s). ${imageWidth ? `Resizing images to ${imageWidth}px (largest dimension)...` : `Processing without resizing...`}`,
         );
 
         for (let i = 0; i < presignedUrls.length; i++) {
@@ -433,7 +433,7 @@ export function useZipSaver(): UsePresignedPhotoSaverReturn {
 
 async function resizeImage(
   blob: Blob,
-  targetWidth: number,
+  targetSize: number,
   filename: string,
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -447,8 +447,21 @@ async function resizeImage(
     }
 
     img.onload = () => {
-      const aspectRatio = img.height / img.width;
-      const targetHeight = targetWidth * aspectRatio;
+      const aspectRatio = img.width / img.height;
+
+      let targetWidth: number;
+      let targetHeight: number;
+
+      // Resize based on the largest dimension
+      if (img.width > img.height) {
+        // Width is larger, set width to targetSize
+        targetWidth = targetSize;
+        targetHeight = targetSize / aspectRatio;
+      } else {
+        // Height is larger or equal, set height to targetSize
+        targetHeight = targetSize;
+        targetWidth = targetSize * aspectRatio;
+      }
 
       canvas.width = targetWidth;
       canvas.height = targetHeight;

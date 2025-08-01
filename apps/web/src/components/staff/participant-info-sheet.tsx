@@ -1,4 +1,5 @@
 "use client";
+"use no memo";
 
 import React, { useState } from "react";
 import {
@@ -253,15 +254,18 @@ export function ParticipantInfoSheet({
     return `${baseThumbnailUrl}/${submission.thumbnailKey}`;
   };
 
-  if (!participant) return null;
+  const groupedValidations = participant
+    ? groupValidationsBySubmission(
+        participant.validationResults,
+        participant.submissions,
+        topics,
+      )
+    : ({
+        global: [],
+        bySubmission: [],
+      } satisfies GroupedValidations);
 
-  const groupedValidations = groupValidationsBySubmission(
-    participant.validationResults,
-    participant.submissions,
-    topics,
-  );
-
-  const hasUnresolvedErrors = participant.validationResults.some(
+  const hasUnresolvedErrors = participant?.validationResults.some(
     (v) => v.severity === "error" && v.outcome === "failed" && !v.overruled,
   );
 
@@ -327,16 +331,16 @@ export function ParticipantInfoSheet({
         <div className="overflow-y-auto h-full pb-16">
           <div className="px-4 py-4 border-b">
             <h3 className="text-lg font-medium">
-              {participant.firstname} {participant.lastname}
+              {participant?.firstname} {participant?.lastname}
             </h3>
             <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
-              <span className="font-mono">#{participant.reference}</span>
-              {participant.email && <span>• {participant.email}</span>}
+              <span className="font-mono">#{participant?.reference}</span>
+              {participant?.email && <span>• {participant?.email}</span>}
             </div>
             <div className="flex items-center mt-3">
               <div className="flex items-center space-x-2 text-sm">
                 <span className="text-muted-foreground">Status:</span>
-                {participant.status === "verified" ? (
+                {participant?.status === "verified" ? (
                   <div className="flex items-center space-x-1 text-green-600">
                     <CheckCircle className="h-4 w-4" />
                     <span>Verified</span>
@@ -354,9 +358,10 @@ export function ParticipantInfoSheet({
                 variant="outline"
                 size="sm"
                 className="text-xs px-2 py-1 h-8"
-                onClick={() =>
-                  runValidations({ participantId: participant.id })
-                }
+                onClick={() => {
+                  if (!participant) return;
+                  runValidations({ participantId: participant.id });
+                }}
                 disabled={isRunningValidations}
               >
                 {isRunningValidations ? (
@@ -448,7 +453,7 @@ export function ParticipantInfoSheet({
                 const allTopicsWithSubmissions = topics
                   .sort((a, b) => a.orderIndex - b.orderIndex)
                   .map((topic) => {
-                    const submission = participant.submissions.find(
+                    const submission = participant?.submissions.find(
                       (s) => s.topicId === topic.id,
                     );
                     const validations =
@@ -616,7 +621,7 @@ export function ParticipantInfoSheet({
               });
             }}
             disabled={
-              participant.status === "verified" ||
+              participant?.status === "verified" ||
               hasUnresolvedErrors ||
               isVerifying
             }
@@ -624,7 +629,7 @@ export function ParticipantInfoSheet({
           >
             {isVerifying ? (
               <Loader2 className="h-4 w-4 animate-spin" />
-            ) : participant.status === "verified" ? (
+            ) : participant?.status === "verified" ? (
               "Already Verified"
             ) : hasUnresolvedErrors ? (
               "Overrule all errors to verify"

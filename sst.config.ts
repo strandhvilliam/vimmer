@@ -157,30 +157,30 @@ export default $config({
     const vpc = new sst.aws.Vpc("VimmerVPC");
     const cluster = new sst.aws.Cluster("VimmerCluster", { vpc });
 
-    const exportSubmissionsTask = new sst.aws.Task("ExportSubmissionsTask", {
-      cluster,
-      architecture: "arm64",
-      image: {
-        dockerfile: "./services/export-submission-zip/Dockerfile",
-      },
-      environment: env,
-      link: [
-        submissionBucket,
-        thumbnailBucket,
-        previewBucket,
-        exportsBucket,
-        api,
-      ],
-      permissions: [
-        {
-          actions: ["s3:GetObject", "s3:PutObject"],
-          resources: [previewBucket.arn, exportsBucket.arn],
-        },
-      ],
-      dev: {
-        command: "bun start",
-      },
-    });
+    // const exportSubmissionsTask = new sst.aws.Task("ExportSubmissionsTask", {
+    //   cluster,
+    //   architecture: "arm64",
+    //   image: {
+    //     dockerfile: "./services/export-submission-zip/Dockerfile",
+    //   },
+    //   environment: env,
+    //   link: [
+    //     submissionBucket,
+    //     thumbnailBucket,
+    //     previewBucket,
+    //     exportsBucket,
+    //     api,
+    //   ],
+    //   permissions: [
+    //     {
+    //       actions: ["s3:GetObject", "s3:PutObject"],
+    //       resources: [previewBucket.arn, exportsBucket.arn],
+    //     },
+    //   ],
+    //   dev: {
+    //     command: "bun start",
+    //   },
+    // });
 
     // const contactSheetGeneratorTask = new sst.aws.Task(
     //   "ContactSheetGenerator",
@@ -239,16 +239,16 @@ export default $config({
       },
     );
 
-    new sst.aws.Function("ExportCaller", {
-      handler: "services/export-caller/index.handler",
-      environment: env,
-      link: [
-        exportSubmissionsTask,
-        generateParticipantZipTask,
-        // contactSheetGeneratorTask,
-      ],
-      url: true,
-    });
+    // new sst.aws.Function("ExportCaller", {
+    //   handler: "services/export-caller/index.handler",
+    //   environment: env,
+    //   link: [
+    //     exportSubmissionsTask,
+    //     generateParticipantZipTask,
+    //     // contactSheetGeneratorTask,
+    //   ],
+    //   url: true,
+    // });
 
     new sst.aws.Function("DownloadPresignedFunction", {
       handler: "services/download-presigned/index.handler",
@@ -372,7 +372,7 @@ export default $config({
         marathonSettingsRouter,
         api,
         realtime,
-        exportSubmissionsTask,
+        // exportSubmissionsTask,
         generateParticipantZipTask,
         variantGenerator,
         contactSheetGeneratorQueue,

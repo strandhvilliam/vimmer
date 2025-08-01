@@ -77,7 +77,6 @@ export function PhotoSubmissionCard({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ opacity: { delay: 0.5, duration: 0.3 } }}
-                loading="lazy"
                 className={cn("w-full h-full object-contain rounded-t-lg")}
                 src={imageUrl}
                 alt={topic?.name ?? ""}
