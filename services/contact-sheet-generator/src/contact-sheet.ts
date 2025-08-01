@@ -132,16 +132,25 @@ export async function createContactSheet({
       .toBuffer();
   }
 
+  function escapeXml(unsafe: string) {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&apos;");
+  }
+
   function createTextLabel(label: string): Buffer {
     const textSvg = `
-      <svg width="${cellWidth}" height="${textHeight}">
+      <svg width="${cellWidth}" height="${textHeight}" viewBox="0 0 ${cellWidth} ${textHeight}">
         <text x="${Math.floor((cellWidth - imageWidth) / 2)}" y="${textHeight * TEXT_VERTICAL_POSITION}" 
               font-family="Arial, sans-serif" 
               font-size="${LABEL_FONT_SIZE}" 
               font-weight="medium"
               fill="black" 
               text-anchor="start"
-              >${label}</text>
+              >${escapeXml(label)}</text>
       </svg>
     `;
     return Buffer.from(textSvg);
@@ -209,14 +218,13 @@ export async function createContactSheet({
     const seqHeight = Math.floor(CANVAS_HEIGHT);
 
     const seqSvg = `
-      <svg width="${seqWidth}" height="${seqHeight}">
+      <svg width="${seqWidth}" height="${seqHeight}" viewBox="0 0 ${seqWidth} ${seqHeight}">
         <text x="${seqWidth / 2}" y="${seqHeight - SEQUENCE_BOTTOM_MARGIN}" 
               font-family="Arial, sans-serif" 
               font-size="${seqFontSize}" 
               font-weight="bold"
               fill="black" 
-              text-anchor="middle"
-              style="line-height: 1;">${participantRef}</text>
+              text-anchor="middle">${escapeXml(participantRef)}</text>
       </svg>
     `;
 

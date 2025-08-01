@@ -165,3 +165,12 @@ export async function clearNonEnabledRuleResultsMutation(
       ),
     );
 }
+
+export async function clearAllValidationResultsMutation(
+  db: Database,
+  { participantId }: { participantId: number },
+) {
+  await db
+    .delete(validationResults)
+    .where(eq(validationResults.participantId, participantId));
+}

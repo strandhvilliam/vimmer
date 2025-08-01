@@ -289,6 +289,9 @@ export default $config({
       ],
       environment: env,
       url: true,
+      nodejs: {
+        install: ["sharp"],
+      },
       permissions: [
         {
           actions: ["s3:GetObject", "s3:PutObject"],

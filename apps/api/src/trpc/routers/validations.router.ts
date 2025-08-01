@@ -5,7 +5,7 @@ import {
   createMultipleValidationResultsMutation,
   updateValidationResultMutation,
   createParticipantVerificationMutation,
-  clearNonEnabledRuleResultsMutation,
+  clearAllValidationResultsMutation,
 } from "@vimmer/api/db/queries/validations.queries";
 import { createTRPCRouter, publicProcedure } from "..";
 import {
@@ -16,7 +16,6 @@ import {
   updateValidationResultSchema,
   createParticipantVerificationSchema,
   runValidationsSchema,
-  verifyParticipantSchema,
 } from "@vimmer/api/schemas/validations.schemas";
 import {
   getParticipantByIdQuery,
@@ -162,6 +161,11 @@ export const validationsRouter = createTRPCRouter({
         throw new Error(`Invalid submissions: ${parsedSubmissions.error}`);
       }
 
+      // Clear all existing validation results before running new validations
+      await clearAllValidationResultsMutation(ctx.db, {
+        participantId,
+      });
+
       const validationResults = runValidations(
         ruleConfigs,
         parsedSubmissions.data,
@@ -173,13 +177,6 @@ export const validationsRouter = createTRPCRouter({
       if (validationResults.length > 0) {
         await createMultipleValidationResultsMutation(ctx.db, {
           data: validationResults,
-        });
-      }
-
-      if (ruleConfigs.length > 0) {
-        await clearNonEnabledRuleResultsMutation(ctx.db, {
-          participantId,
-          ruleKeys: ruleConfigs.map((r) => r.key),
         });
       }
     }),
