@@ -1,4 +1,4 @@
-import { eq, inArray, and } from "drizzle-orm";
+import { eq, inArray, and, desc } from "drizzle-orm";
 import type { Database } from "@vimmer/api/db";
 import {
   submissions,
@@ -6,7 +6,11 @@ import {
   marathons,
   participants,
 } from "@vimmer/api/db/schema";
-import type { NewSubmission, NewZippedSubmission } from "@vimmer/api/db/types";
+import type {
+  NewSubmission,
+  NewZippedSubmission,
+  ZippedSubmission,
+} from "@vimmer/api/db/types";
 
 export async function getAllSubmissionKeysForMarathonQuery(
   db: Database,
@@ -183,12 +187,9 @@ export async function updateSubmissionByIdMutation(
 export async function createZippedSubmissionMutation(
   db: Database,
   { data }: { data: NewZippedSubmission },
-) {
-  const result = await db
-    .insert(zippedSubmissions)
-    .values(data)
-    .returning({ id: zippedSubmissions.id });
-  return { id: result[0]?.id ?? null };
+): Promise<ZippedSubmission | null> {
+  const result = await db.insert(zippedSubmissions).values(data).returning();
+  return result?.[0] ?? null;
 }
 
 export async function updateZippedSubmissionMutation(
@@ -203,7 +204,7 @@ export async function updateZippedSubmissionMutation(
   return { id: result[0]?.id ?? null };
 }
 
-export async function getZippedSubmissionsByParticipantRefQuery(
+export async function getZippedSubmissionByParticipantRefQuery(
   db: Database,
   { domain, participantRef }: { domain: string; participantRef: string },
 ) {
@@ -217,9 +218,9 @@ export async function getZippedSubmissionsByParticipantRefQuery(
     },
   });
 
-  if (!participant || participant.zippedSubmissions.length === 0) {
+  if (!participant || !participant.zippedSubmissions) {
     return null;
   }
 
-  return participant.zippedSubmissions.at(-1);
+  return participant.zippedSubmissions;
 }

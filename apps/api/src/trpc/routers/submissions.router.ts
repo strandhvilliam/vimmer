@@ -10,7 +10,7 @@ import {
   updateZippedSubmissionMutation,
   getSubmissionsByParticipantIdQuery,
   getSubmissionByIdQuery,
-  getZippedSubmissionsByParticipantRefQuery,
+  getZippedSubmissionByParticipantRefQuery,
   getAllSubmissionKeysForMarathonQuery,
 } from "@vimmer/api/db/queries/submissions.queries";
 import { createTRPCRouter, publicProcedure } from "..";
@@ -49,7 +49,7 @@ export const submissionsRouter = createTRPCRouter({
   getZippedSubmissionsByParticipantRef: publicProcedure
     .input(getZippedSubmissionsByParticipantRefSchema)
     .query(async ({ ctx, input }) => {
-      return getZippedSubmissionsByParticipantRefQuery(ctx.db, {
+      return getZippedSubmissionByParticipantRefQuery(ctx.db, {
         domain: input.domain,
         participantRef: input.participantRef,
       });

@@ -53,6 +53,7 @@ export function PhotoSubmissionCard({
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
+        layout
         transition={{
           duration: 0.3,
           ease: [0.2, 0.65, 0.3, 0.9],
@@ -77,6 +78,7 @@ export function PhotoSubmissionCard({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ opacity: { delay: 0.5, duration: 0.3 } }}
+                layout
                 className={cn("w-full h-full object-contain rounded-t-lg")}
                 src={imageUrl}
                 alt={topic?.name ?? ""}

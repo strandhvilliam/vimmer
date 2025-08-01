@@ -19,6 +19,7 @@ import { getParticipantByReferenceQuery } from "@vimmer/api/db/queries/participa
 import { getTopicsByDomainQuery } from "@vimmer/api/db/queries/topics.queries";
 import {
   createZippedSubmissionMutation,
+  getZippedSubmissionByParticipantRefQuery,
   updateZippedSubmissionMutation,
 } from "@vimmer/api/db/queries/submissions.queries";
 
@@ -220,6 +221,7 @@ async function processSubmission({
     const buffer = await fetchFileFromS3(s3Client, sourceBucket, fileKey);
 
     if (!buffer) {
+      console.log("File not found");
       const updatedErrors = {
         ...updatedProgress.submissionErrors,
         [submission.id]: `File not found: ${fileKey}`,
@@ -229,10 +231,12 @@ async function processSubmission({
         progress: {
           ...updatedProgress,
           submissionErrors: updatedErrors,
+          status: "error",
         },
         participantZip,
       };
     }
+    console.log("File found");
 
     participantZip.file(zipPath, buffer, {
       binary: true,
@@ -260,6 +264,7 @@ async function processSubmission({
     return {
       progress: {
         ...updatedProgress,
+        status: "error",
         submissionErrors: updatedErrors,
       },
       participantZip,
@@ -277,12 +282,19 @@ async function processAllSubmissions(
   };
 
   for (const submission of submissions) {
+    console.log("Processing submission", submission.id);
     currentResult = await processSubmission({
       ...params,
       submission,
       progress: currentResult.progress,
       participantZip: currentResult.participantZip,
     });
+
+    if (currentResult.progress.status === "error") {
+      break;
+    }
+
+    console.log("Finished processing submission", submission.id);
   }
 
   return currentResult;
@@ -308,6 +320,8 @@ async function exportParticipantSubmissionsToZip({
     submissionErrors: {},
   };
 
+  console.log("initial progress", progress);
+
   try {
     const marathon = await getMarathonByDomainQuery(db, {
       domain,
@@ -331,16 +345,22 @@ async function exportParticipantSubmissionsToZip({
       participantReference,
     );
 
-    const zippedSubmission = await createZippedSubmissionMutation(db, {
-      data: {
-        marathonId: marathon.id,
-        exportType,
-        participantId: participant.id,
-      },
+    let zippedSubmission = await getZippedSubmissionByParticipantRefQuery(db, {
+      domain,
+      participantRef: participantReference,
     });
 
-    if (!zippedSubmission.id) {
-      console.error("Failed to create zipped submission");
+    if (!zippedSubmission) {
+      zippedSubmission = await createZippedSubmissionMutation(db, {
+        data: {
+          marathonId: marathon.id,
+          exportType,
+          participantId: participant.id,
+        },
+      });
+    }
+
+    if (!zippedSubmission) {
       throw new Error("Failed to create zipped submission");
     }
 
@@ -374,7 +394,11 @@ async function exportParticipantSubmissionsToZip({
       domain,
     });
 
-    progress.submissionErrors = result.progress.submissionErrors;
+    if (result.progress.status === "error") {
+      progress.submissionErrors = result.progress.submissionErrors;
+      await updateProgress(progress);
+      return null;
+    }
     progress.processedSubmissions = result.progress.processedSubmissions;
     progress.status = "completed";
 
@@ -400,6 +424,7 @@ async function exportParticipantSubmissionsToZip({
   } catch (error) {
     const errorProgress = { ...progress, status: "error" as const };
     await updateProgress(errorProgress);
+    console.log("error", error);
     throw error;
   }
 }
@@ -439,7 +464,6 @@ function validateEventPayload(payload: EventPayload): ExportParticipantConfig {
 }
 
 async function main() {
-  console.log("Starting generate-participant-zip");
   try {
     const domain = process.env.DOMAIN;
     const exportType = process.env.EXPORT_TYPE as
@@ -450,6 +474,7 @@ async function main() {
     const participantReference = process.env.PARTICIPANT_REFERENCE;
 
     if (!domain || !exportType || !participantReference) {
+      console.log("missing env", domain, exportType, participantReference);
       throw new Error(
         `Missing required environment variables: domain=${domain}, exportType=${exportType}, participantReference=${participantReference}`,
       );
@@ -468,5 +493,4 @@ async function main() {
   }
 }
 
-console.log("Starting generate-participant-zip");
 main();

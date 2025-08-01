@@ -215,7 +215,6 @@ export default $config({
       "GenerateParticipantZipTask",
       {
         cluster,
-        // architecture: "arm64",
         image: {
           dockerfile: "/services/generate-participant-zip/Dockerfile",
         },
@@ -227,6 +226,7 @@ export default $config({
           exportsBucket,
           api,
         ],
+        memory: "1 GB",
         permissions: [
           {
             actions: ["s3:GetObject", "s3:PutObject"],
