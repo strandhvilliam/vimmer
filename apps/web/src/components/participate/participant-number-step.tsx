@@ -22,7 +22,7 @@ import { useDomain } from "@/contexts/domain-context";
 import { z } from "zod/v4";
 import { useI18n } from "@/locales/client";
 
-const createInitializeParticipantSchema = (t: any) =>
+const createInitializeParticipantSchema = (t: ReturnType<typeof useI18n>) =>
   z.object({
     participantRef: z
       .string()
@@ -32,20 +32,6 @@ const createInitializeParticipantSchema = (t: any) =>
       }),
     domain: z.string().min(1, "Invalid domain"),
   });
-
-export const initializeParticipantSchema = z.object({
-  participantRef: z
-    .string()
-    .nonempty({ message: "Participant reference is required." })
-    .refine((val) => /^\d+$/.test(val), {
-      message: "Only numbers are allowed.",
-    }),
-  domain: z.string().min(1, "Invalid domain"),
-});
-
-export type InitializeParticipantSchema = z.infer<
-  typeof initializeParticipantSchema
->;
 
 interface Props extends StepNavigationHandlers {
   marathon: Marathon;

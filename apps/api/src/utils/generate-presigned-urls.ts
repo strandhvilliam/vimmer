@@ -1,7 +1,7 @@
 import { S3Client } from "@aws-sdk/client-s3";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, not } from "drizzle-orm";
 import type { Database } from "../db";
 import {
   marathons,
@@ -111,6 +111,7 @@ export class PresignedSubmissionService {
       orderBy: (topics, { asc }) => [asc(topics.orderIndex)],
     });
 
+    // add start index handling
     const submissionKeys = this.generateSubmissionKeys(
       participantRef,
       domain,
@@ -139,6 +140,17 @@ export class PresignedSubmissionService {
         marathon.id,
         participantId,
       );
+    }
+
+    if (participant.submissions.length > competitionClass.numberOfPhotos) {
+      // delete the keys not in submissionKeys
+      await this.db
+        .delete(submissions)
+        .where(not(inArray(submissions.key, submissionKeys)));
+      const newParticipants = await this.db.query.submissions.findMany({
+        where: inArray(submissions.key, submissionKeys),
+      });
+      return this.generatePresignedObjects(newParticipants, orderedTopics);
     }
 
     return this.generatePresignedObjects(
@@ -197,16 +209,10 @@ export class PresignedSubmissionService {
       };
     });
 
-    const createdSubmissions = await this.db
-      .insert(submissions)
-      .values(submissionsToCreate)
-      .returning();
+    await this.db.insert(submissions).values(submissionsToCreate);
 
     const allSubmissions = await this.db.query.submissions.findMany({
-      where: inArray(
-        submissions.id,
-        createdSubmissions.map((s) => s.id),
-      ),
+      where: eq(submissions.participantId, participantId),
     });
 
     return this.generatePresignedObjects(allSubmissions, orderedTopics);

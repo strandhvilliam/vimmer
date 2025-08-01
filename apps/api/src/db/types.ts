@@ -12,6 +12,7 @@ import {
   user,
   zippedSubmissions,
   participantVerifications,
+  sponsors,
 } from "./schema";
 
 export type Participant = typeof participants.$inferSelect;
@@ -54,3 +55,6 @@ export type ParticipantVerification =
   typeof participantVerifications.$inferSelect;
 export type NewParticipantVerification =
   typeof participantVerifications.$inferInsert;
+
+export type Sponsor = typeof sponsors.$inferSelect;
+export type NewSponsor = typeof sponsors.$inferInsert;

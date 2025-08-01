@@ -78,7 +78,6 @@ export const presignedUrlsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Get marathon to find domain
       const marathon = await getMarathonByIdQuery(ctx.db, {
         id: input.marathonId,
       });
@@ -86,7 +85,6 @@ export const presignedUrlsRouter = createTRPCRouter({
         throw new Error("Marathon not found");
       }
 
-      // Get all participants with contact sheets for this domain
       const participants = await getParticipantsByDomainQuery(ctx.db, {
         domain: marathon.domain,
       });

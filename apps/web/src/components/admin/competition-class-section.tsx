@@ -2,6 +2,7 @@
 
 import { useDomain } from "@/contexts/domain-context";
 import { useTRPC } from "@/trpc/client";
+import { truncate } from "lodash";
 import {
   useMutation,
   useQueryClient,
@@ -80,7 +81,7 @@ export function CompetitionClassSection() {
         topics they will start from. Use this section to organize the different
         groups or categories for your event.
       </p>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {classes.map((classItem) => (
           <CompetitionClassCard
             key={classItem.id}
@@ -162,17 +163,15 @@ function CompetitionClassCard({
   return (
     <Card key={classItem.id} className="relative justify-between flex flex-col">
       <div className="flex flex-col gap-2 p-4">
-        <div className="flex h-fit items-center w-fit justify-center bg-muted rounded-lg shadow-sm border p-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="w-6 h-6 text-center text-lg font-medium font-mono ">
-                {classItem.numberOfPhotos}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>
-              Number of photos: {classItem.numberOfPhotos}
-            </TooltipContent>
-          </Tooltip>
+        <div className="flex justify-between">
+          <div className="flex h-fit items-center w-fit justify-center bg-muted rounded-lg shadow-sm border p-2">
+            <span className="w-6 h-6 text-center text-lg font-medium font-mono ">
+              {classItem.numberOfPhotos}
+            </span>
+          </div>
+          <span className="text-xs text-muted-foreground">
+            No. photos {classItem.numberOfPhotos}
+          </span>
         </div>
         <div className="flex flex-col tems-center justify-between">
           <h3 className="text-lg font-semibold">{classItem.name}</h3>
@@ -185,7 +184,9 @@ function CompetitionClassCard({
                 <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
                   Starting topic:
                   <span className="font-mono text-xs text-vimmer-primary">
-                    {topic ? `#${topic?.orderIndex + 1} ${topic?.name}` : "-"}
+                    {topic
+                      ? `#${topic?.orderIndex + 1} (${truncate(topic?.name, { length: 20 })})`
+                      : "-"}
                   </span>
                 </span>
               </TooltipTrigger>

@@ -21,7 +21,7 @@ import { UploadSection } from "@/components/participate/upload-section";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { useUploadStore } from "@/lib/stores/upload-store";
 import { CompetitionClass, Marathon, Topic } from "@vimmer/api/db/types";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { COMMON_IMAGE_EXTENSIONS } from "@/lib/constants";
 import { RULE_KEYS } from "@vimmer/validation/constants";
 import { toast } from "sonner";
@@ -46,8 +46,6 @@ export function UploadSubmissionsStep({
   const {
     submissionState: { competitionClassId },
   } = useSubmissionQueryState();
-
-  // const [isUploadProgressOpen, setIsUploadProgressOpen] = useState(false);
 
   const { photos, validateAndAddPhotos } = usePhotoStore();
   const { data: presignedSubmissions = [] } = usePresignedSubmissions();

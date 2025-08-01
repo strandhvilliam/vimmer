@@ -22,6 +22,7 @@ import { FileProgressItem } from "@/components/participate/file-progress-item";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useUploadStore } from "@/lib/stores/upload-store";
 import { useFileUpload } from "@/hooks/use-file-upload";
+import { useMemo } from "react";
 
 interface UploadProgressProps {
   files: PhotoWithPresignedUrl[];
@@ -37,24 +38,43 @@ export function UploadProgress({
   onComplete,
   open = true,
 }: UploadProgressProps) {
-  const { getAllFiles, getUploadProgress } = useUploadStore();
+  const files = useUploadStore((state) => state.files);
   const { retryFailedFiles } = useFileUpload();
 
-  const fileStates = getAllFiles();
-  const progress = getUploadProgress();
+  const enhancedFileStates: FileState[] = useMemo(() => {
+    const fileStates = Array.from(files.values());
+    return fileStates.map((f) => ({
+      ...f,
+      status:
+        f.phase === "completed"
+          ? ("completed" as const)
+          : f.phase === "error"
+            ? ("error" as const)
+            : f.phase === "s3_upload"
+              ? ("uploading" as const)
+              : ("pending" as const),
+    }));
+  }, [files]);
 
-  // Convert to FileState format for compatibility
-  const enhancedFileStates: FileState[] = fileStates.map((f) => ({
-    ...f,
-    status:
-      f.phase === "completed"
-        ? ("completed" as const)
-        : f.phase === "error"
-          ? ("error" as const)
-          : f.phase === "s3_upload"
-            ? ("uploading" as const)
-            : ("pending" as const),
-  }));
+  const progress = useMemo(() => {
+    const fileStates = Array.from(files.values());
+    const total = fileStates.length;
+    const completed = fileStates.filter((f) => f.phase === "completed").length;
+    const failed = fileStates.filter((f) => f.phase === "error").length;
+    const uploading = fileStates.filter((f) => f.phase === "s3_upload").length;
+    const processing = fileStates.filter(
+      (f) => f.phase === "processing",
+    ).length;
+
+    return {
+      total,
+      completed,
+      failed,
+      uploading,
+      processing,
+      percentage: total > 0 ? (completed / total) * 100 : 0,
+    };
+  }, [files]);
 
   const failedFiles = enhancedFileStates.filter(
     (file) => file.status === "error",

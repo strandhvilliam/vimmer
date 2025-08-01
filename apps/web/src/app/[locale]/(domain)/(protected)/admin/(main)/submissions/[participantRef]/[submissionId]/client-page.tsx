@@ -50,18 +50,21 @@ export function SubmissionDetailClient({
   );
   const topic = topics.find((t) => t.id === submission?.topicId);
 
-  if (!submission || !topic || !participant) {
-    notFound();
-  }
-
   const submissionValidationResults =
     participant?.validationResults?.filter(
-      (result) => result.fileName && result.fileName.includes(submission.key),
+      (result) =>
+        result.fileName &&
+        submission?.key &&
+        result.fileName.includes(submission.key),
     ) || [];
 
   const hasIssues = submissionValidationResults.some(
     (result) => result.outcome === "failed",
   );
+
+  if (!submission || !topic || !participant) {
+    notFound();
+  }
 
   return (
     <>

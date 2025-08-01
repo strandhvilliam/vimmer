@@ -3,6 +3,7 @@ import {
   RuleKey,
   SeverityLevel,
 } from "@vimmer/validation/types";
+import { FILE_STATUS, UPLOAD_PHASE } from "./constants";
 
 export interface PresignedSubmission {
   presignedUrl: string;
@@ -38,7 +39,7 @@ export interface PhotoWithPresignedUrl extends SelectedPhotoV2 {
   submissionId: number;
 }
 
-export type FileStatus = "pending" | "uploading" | "completed" | "error";
+export type FileStatus = (typeof FILE_STATUS)[keyof typeof FILE_STATUS];
 
 export type FileUploadErrorCode =
   | "NETWORK_ERROR"
@@ -81,3 +82,8 @@ export interface ConfirmationData {
   orderIndex: number;
   exif: Record<string, unknown>;
 }
+
+export type UploadPhase = (typeof UPLOAD_PHASE)[keyof typeof UPLOAD_PHASE];
+
+export type ParticipantStatus =
+  (typeof PARTICIPANT_STATUS)[keyof typeof PARTICIPANT_STATUS];

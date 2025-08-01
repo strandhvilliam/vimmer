@@ -15,21 +15,16 @@ import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { ArrowRight } from "lucide-react";
 import { z } from "zod/v4";
 import { useI18n } from "@/locales/client";
+import { useEffect } from "react";
 
-const createParticipantDetailsSchema = (t: any) =>
+const createParticipantDetailsSchema = (t: ReturnType<typeof useI18n>) =>
   z.object({
     firstname: z.string().min(1, t("participantDetails.firstNameRequired")),
     lastname: z.string().min(1, t("participantDetails.lastNameRequired")),
     email: z.email(t("participantDetails.invalidEmail")),
   });
 
-const participantDetailsSchema = z.object({
-  firstname: z.string().min(1, "First name is required"),
-  lastname: z.string().min(1, "Last name is required"),
-  email: z.email("Invalid email address"),
-});
-
-type ParticipantDetailsSchema = z.infer<typeof participantDetailsSchema>;
+type ParticipantDetailsSchema = z.infer<typeof createParticipantDetailsSchema>;
 
 export function ParticipantDetailsStep({
   onNextStep,
@@ -76,14 +71,7 @@ export function ParticipantDetailsStep({
           {t("participantDetails.description")}
         </CardDescription>
       </CardHeader>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
-        className="space-y-6"
-      >
+      <form onSubmit={(e) => e.preventDefault()}>
         <CardContent className="space-y-6">
           <form.Field
             name="firstname"
@@ -167,9 +155,11 @@ export function ParticipantDetailsStep({
             selector={(state) => [state.canSubmit, state.isSubmitting]}
             children={([canSubmit]) => (
               <PrimaryButton
-                type="submit"
+                type="button"
                 className="w-full py-3 text-lg rounded-full"
                 disabled={!canSubmit}
+                // submit mannually to avoid specific bug when navigating back between steps
+                onClick={() => form.handleSubmit()}
               >
                 <span>{t("participantDetails.continue")}</span>
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -178,6 +168,7 @@ export function ParticipantDetailsStep({
           />
           <Button
             variant="ghost"
+            type="button"
             size="lg"
             onClick={onPrevStep}
             className="w-full"

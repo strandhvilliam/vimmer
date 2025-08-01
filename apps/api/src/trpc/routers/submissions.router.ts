@@ -113,7 +113,6 @@ export const submissionsRouter = createTRPCRouter({
   updateByKey: publicProcedure
     .input(updateSubmissionByKeySchema)
     .mutation(async ({ ctx, input }) => {
-      console.log("req", input.key);
       return updateSubmissionByKeyMutation(ctx.db, {
         key: input.key,
         data: input.data,

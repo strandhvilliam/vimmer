@@ -1,6 +1,7 @@
 import { trpcServer } from "@hono/trpc-server";
 import { Hono } from "hono";
 import { handle } from "hono/aws-lambda";
+import { cors } from "hono/cors";
 import { appRouter } from "./trpc/routers/_app";
 import { createTRPCContext } from "./trpc";
 import { secureHeaders } from "hono/secure-headers";

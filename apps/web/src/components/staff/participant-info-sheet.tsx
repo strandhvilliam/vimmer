@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   CheckCircle,
   ChevronDown,
@@ -140,17 +140,15 @@ export function ParticipantInfoSheet({
   submissionBaseUrl,
   previewBaseUrl,
 }: ParticipantInfoSheetProps) {
-  const [expandedSubmissions, setExpandedSubmissions] = React.useState<
-    Set<number>
-  >(new Set());
-  const [globalExpanded, setGlobalExpanded] = React.useState(false);
-  const [imageDialogOpen, setImageDialogOpen] = React.useState(false);
-  const [selectedImageUrl, setSelectedImageUrl] = React.useState<string | null>(
+  const [expandedSubmissions, setExpandedSubmissions] = useState<Set<number>>(
+    new Set(),
+  );
+  const [globalExpanded, setGlobalExpanded] = useState(false);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [selectedImageTitle, setSelectedImageTitle] = useState<string | null>(
     null,
   );
-  const [selectedImageTitle, setSelectedImageTitle] = React.useState<
-    string | null
-  >(null);
   const queryClient = useQueryClient();
   const trpc = useTRPC();
   const { user } = useSession();
@@ -495,7 +493,6 @@ export function ParticipantInfoSheet({
                             }}
                           >
                             {thumbnailUrl ? (
-                              // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={thumbnailUrl}
                                 alt={topic.name}

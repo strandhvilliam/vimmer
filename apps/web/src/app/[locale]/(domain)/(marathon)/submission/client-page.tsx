@@ -7,28 +7,24 @@ import { ParticipantNumberStep } from "@/components/participate/participant-numb
 import { ParticipantDetailsStep } from "@/components/participate/participant-details-step";
 import { StepNavigator } from "@/components/participate/step-navigator";
 import { UploadSubmissionsStep } from "@/components/participate/upload-submissions-step";
-import { STEPS } from "@/lib/constants";
+import { PARTICIPANT_SUBMISSION_STEPS } from "@/lib/constants";
 import { AnimatePresence } from "motion/react";
-import { useRouter } from "next/navigation";
-import { parseAsInteger, useQueryState } from "nuqs";
-import { useCallback, useState, useEffect } from "react";
+import { notFound, useRouter } from "next/navigation";
+import { useCallback, useEffect } from "react";
 import { submissionQueryClientParamSerializer } from "@/lib/schemas/submission-query-client-schema";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { useSuspenseQueries } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { useDomain } from "@/contexts/domain-context";
 import { mapDbRuleConfigsToValidationConfigs } from "@/lib/utils";
+import { useParticipantSubmissionStep } from "@/hooks/use-participant-submission-step";
 
 export function SubmissionClientPage() {
   const trpc = useTRPC();
   const router = useRouter();
-  const [step, setStep] = useQueryState(
-    "s",
-    parseAsInteger.withDefault(1).withOptions({ history: "push" }),
-  );
-  const [direction, setDirection] = useState(0);
+  const { handleNextStep, handlePrevStep, handleSetStep, step, direction } =
+    useParticipantSubmissionStep();
   const { submissionState } = useSubmissionQueryState();
-
   const { domain } = useDomain();
 
   useEffect(() => {
@@ -36,7 +32,6 @@ export function SubmissionClientPage() {
       event.preventDefault();
       return "Are you sure you want to leave? All progress will be lost.";
     };
-
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
@@ -68,30 +63,13 @@ export function SubmissionClientPage() {
     ],
   });
 
-  const handleNextStep = () => {
-    const nextStep = Math.min(step + 1, Object.keys(STEPS).length);
-    setDirection(1);
-    setStep(nextStep);
-  };
-
-  const handlePrevStep = () => {
-    const prevStep = Math.max(step - 1, 1);
-    setDirection(-1);
-    setStep(prevStep);
-  };
-
   const handleNavigateToVerification = useCallback(() => {
     const params = submissionQueryClientParamSerializer(submissionState);
     router.push(`/verification${params}`);
   }, [router, submissionState]);
 
-  const handleSetStep = (newStep: number) => {
-    setDirection(newStep > step ? 1 : -1);
-    setStep(newStep);
-  };
-
   if (!marathon) {
-    return null;
+    notFound();
   }
 
   return (
@@ -100,9 +78,9 @@ export function SubmissionClientPage() {
         <StepNavigator currentStep={step} handleSetStep={handleSetStep} />
       </div>
       <AnimatePresence initial={false} custom={direction} mode="wait">
-        {step === STEPS.ParticipantNumberStep && (
+        {step === PARTICIPANT_SUBMISSION_STEPS.ParticipantNumberStep && (
           <AnimatedStepWrapper
-            key={STEPS.ParticipantNumberStep}
+            key={PARTICIPANT_SUBMISSION_STEPS.ParticipantNumberStep}
             direction={direction}
           >
             <ParticipantNumberStep
@@ -111,9 +89,9 @@ export function SubmissionClientPage() {
             />
           </AnimatedStepWrapper>
         )}
-        {step === STEPS.ParticipantDetailsStep && (
+        {step === PARTICIPANT_SUBMISSION_STEPS.ParticipantDetailsStep && (
           <AnimatedStepWrapper
-            key={STEPS.ParticipantDetailsStep}
+            key={PARTICIPANT_SUBMISSION_STEPS.ParticipantDetailsStep}
             direction={direction}
           >
             <ParticipantDetailsStep
@@ -122,9 +100,9 @@ export function SubmissionClientPage() {
             />
           </AnimatedStepWrapper>
         )}
-        {step === STEPS.ClassSelectionStep && (
+        {step === PARTICIPANT_SUBMISSION_STEPS.ClassSelectionStep && (
           <AnimatedStepWrapper
-            key={STEPS.ClassSelectionStep}
+            key={PARTICIPANT_SUBMISSION_STEPS.ClassSelectionStep}
             direction={direction}
           >
             <ClassSelectionStep
@@ -134,9 +112,9 @@ export function SubmissionClientPage() {
             />
           </AnimatedStepWrapper>
         )}
-        {step === STEPS.DeviceSelectionStep && (
+        {step === PARTICIPANT_SUBMISSION_STEPS.DeviceSelectionStep && (
           <AnimatedStepWrapper
-            key={STEPS.DeviceSelectionStep}
+            key={PARTICIPANT_SUBMISSION_STEPS.DeviceSelectionStep}
             direction={direction}
           >
             <DeviceSelectionStep
@@ -146,9 +124,9 @@ export function SubmissionClientPage() {
             />
           </AnimatedStepWrapper>
         )}
-        {step === STEPS.UploadSubmissionStep && (
+        {step === PARTICIPANT_SUBMISSION_STEPS.UploadSubmissionStep && (
           <AnimatedStepWrapper
-            key={STEPS.UploadSubmissionStep}
+            key={PARTICIPANT_SUBMISSION_STEPS.UploadSubmissionStep}
             direction={direction}
           >
             <UploadSubmissionsStep

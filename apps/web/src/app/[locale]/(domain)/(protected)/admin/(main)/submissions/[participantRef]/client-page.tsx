@@ -9,15 +9,10 @@ import {
   TabsList,
   TabsTrigger,
 } from "@vimmer/ui/components/tabs";
-import { Participant } from "@vimmer/api/db/types";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { useDomain } from "@/contexts/domain-context";
-import { Button } from "@vimmer/ui/components/button";
-import { PARTICIPANT_STATUS } from "@vimmer/supabase/types";
-import { useState } from "react";
-import { runSheetGenerationQueue } from "@/lib/actions/run-sheet-generation-queue";
-import { Download } from "lucide-react";
+import { ParticipantContactSheetTab } from "@/components/admin/participant-contact-sheet-tab";
 
 interface ParticipantSubmissionClientPageProps {
   variantsGeneratorUrl: string;
@@ -126,96 +121,12 @@ export function ParticipantSubmissionClientPage({
         </TabsContent>
 
         <TabsContent value="contact-sheet" className="mt-6">
-          <ContactSheetTab
+          <ParticipantContactSheetTab
             participant={participant}
-            domain={domain}
-            submissionsBaseUrl={submissionsBaseUrl}
             contactSheetBucketUrl={contactSheetBucketUrl}
           />
         </TabsContent>
       </Tabs>
-    </div>
-  );
-}
-
-interface ContactSheetTabProps {
-  participant: Participant;
-  domain: string;
-  submissionsBaseUrl: string;
-  contactSheetBucketUrl: string;
-}
-
-function ContactSheetTab({
-  participant,
-  domain,
-  submissionsBaseUrl,
-  contactSheetBucketUrl,
-}: ContactSheetTabProps) {
-  const [isGenerating, setIsGenerating] = useState(false);
-
-  const hasContactSheet = !!participant.contactSheetKey;
-  const canGenerate =
-    participant.status === PARTICIPANT_STATUS.COMPLETED ||
-    participant.status === PARTICIPANT_STATUS.VERIFIED;
-
-  const handleGenerateContactSheet = async () => {
-    setIsGenerating(true);
-    try {
-      await runSheetGenerationQueue({
-        participantRef: participant.reference,
-        domain,
-      });
-    } catch (error) {
-      console.error("Failed to generate contact sheet:", error);
-    }
-  };
-
-  const handleDownloadContactSheet = () => {
-    const link = document.createElement("a");
-    link.href = `${contactSheetBucketUrl}/${participant.contactSheetKey}`;
-    link.download = `contact-sheet-${participant.reference}.jpg`;
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  console.log(participant.contactSheetKey);
-
-  if (hasContactSheet) {
-    return (
-      <div className="space-y-4">
-        <div className="flex justify-center">
-          <img
-            src={`${contactSheetBucketUrl}/${participant.contactSheetKey}`}
-            alt="Contact Sheet"
-            className="max-w-full h-auto border border-black shadow-lg"
-          />
-        </div>
-        <div className="flex justify-center">
-          <Button onClick={handleDownloadContactSheet} variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Download Contact Sheet
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (canGenerate) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 space-y-4">
-        <p className="text-muted-foreground">No contact sheet available</p>
-        <Button onClick={handleGenerateContactSheet} disabled={isGenerating}>
-          {isGenerating ? "Generating..." : "Generate Contact Sheet"}
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center justify-center py-12">
-      <p className="text-muted-foreground">Nothing to show here</p>
     </div>
   );
 }

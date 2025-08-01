@@ -1,4 +1,4 @@
-export const STEPS = {
+export const PARTICIPANT_SUBMISSION_STEPS = {
   ParticipantNumberStep: 1,
   ParticipantDetailsStep: 2,
   ClassSelectionStep: 3,
@@ -26,3 +26,26 @@ export const COMMON_IMAGE_EXTENSIONS = [
   "pef",
   "srw",
 ];
+
+export const UPLOAD_PHASE = {
+  PRESIGNED: "presigned",
+  S3_UPLOAD: "s3_upload",
+  PROCESSING: "processing",
+  COMPLETED: "completed",
+  ERROR: "error",
+} as const;
+
+export const FILE_STATUS = {
+  PENDING: "pending",
+  UPLOADING: "uploading",
+  COMPLETED: "completed",
+  ERROR: "error",
+};
+
+export const PARTICIPANT_STATUS = {
+  INITIALIZED: "initialized",
+  READY_TO_UPLOAD: "ready_to_upload",
+  PROCESSING: "processing",
+  COMPLETED: "completed",
+  VERIFIED: "verified",
+} as const;

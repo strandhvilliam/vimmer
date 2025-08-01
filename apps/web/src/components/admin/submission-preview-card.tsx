@@ -11,11 +11,7 @@ export function SubmissionPreviewCard({
   competitionClass,
   topic,
   imageUrl,
-}: {
-  competitionClass: CompetitionClass | null;
-  topic: Topic;
-  imageUrl: string | null;
-}) {
+}: SubmissionPreviewCardProps) {
   return (
     <div className="space-y-4">
       <Card className="sticky top-8 overflow-hidden shadow-2xl h-full flex flex-col">

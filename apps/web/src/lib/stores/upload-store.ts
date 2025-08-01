@@ -4,14 +4,9 @@ import {
   PhotoWithPresignedUrl,
   FileUploadError,
   FileUploadErrorCode,
+  UploadPhase,
 } from "@/lib/types";
-
-export type UploadPhase =
-  | "presigned"
-  | "s3_upload"
-  | "processing"
-  | "completed"
-  | "error";
+import { UPLOAD_PHASE } from "../constants";
 
 export interface UploadFileState {
   // File info
@@ -56,17 +51,8 @@ interface UploadStore {
 
   // Selectors
   getFile: (key: string) => UploadFileState | undefined;
-  getFilesByPhase: (phase: UploadPhase) => UploadFileState[];
   getFailedFiles: () => UploadFileState[];
   getAllFiles: () => UploadFileState[];
-  getUploadProgress: () => {
-    total: number;
-    completed: number;
-    failed: number;
-    uploading: number;
-    processing: number;
-    percentage: number;
-  };
 }
 
 export const useUploadStore = create<UploadStore>()(
@@ -92,7 +78,7 @@ export const useUploadStore = create<UploadStore>()(
           presignedUrl: photo.presignedUrl,
           exif: photo.exif,
           preview: photo.preview,
-          phase: "presigned",
+          phase: UPLOAD_PHASE.PRESIGNED,
           progress: 0,
           retryCount: 0,
           startedAt: new Date(),
@@ -112,16 +98,16 @@ export const useUploadStore = create<UploadStore>()(
             ...file,
             phase,
             progress: progress ?? file.progress,
-            error: phase === "error" ? file.error : undefined,
+            error: phase === UPLOAD_PHASE.ERROR ? file.error : undefined,
           };
 
           // Set timestamps based on phase
-          if (phase === "s3_upload" && !file.startedAt) {
+          if (phase === UPLOAD_PHASE.S3_UPLOAD && !file.startedAt) {
             updatedFile.startedAt = new Date();
-          } else if (phase === "processing" && !file.s3CompletedAt) {
+          } else if (phase === UPLOAD_PHASE.PROCESSING && !file.s3CompletedAt) {
             updatedFile.s3CompletedAt = new Date();
             updatedFile.progress = 100; // S3 upload is complete
-          } else if (phase === "completed" && !file.completedAt) {
+          } else if (phase === UPLOAD_PHASE.COMPLETED && !file.completedAt) {
             updatedFile.completedAt = new Date();
             updatedFile.progress = 100;
           }
@@ -141,7 +127,7 @@ export const useUploadStore = create<UploadStore>()(
         if (file) {
           newFiles.set(key, {
             ...file,
-            phase: "error",
+            phase: UPLOAD_PHASE.ERROR,
             error,
           });
         }
@@ -155,7 +141,7 @@ export const useUploadStore = create<UploadStore>()(
         const newFiles = new Map(state.files);
         const file = newFiles.get(key);
 
-        if (file && file.phase === "s3_upload") {
+        if (file && file.phase === UPLOAD_PHASE.S3_UPLOAD) {
           newFiles.set(key, {
             ...file,
             progress: Math.min(100, Math.max(0, progress)),
@@ -179,10 +165,10 @@ export const useUploadStore = create<UploadStore>()(
         const newFiles = new Map(state.files);
         const file = newFiles.get(key);
 
-        if (file && file.phase === "error") {
+        if (file && file.phase === UPLOAD_PHASE.ERROR) {
           newFiles.set(key, {
             ...file,
-            phase: "presigned",
+            phase: UPLOAD_PHASE.PRESIGNED,
             progress: 0,
             error: undefined,
             startedAt: new Date(),
@@ -216,38 +202,14 @@ export const useUploadStore = create<UploadStore>()(
       return get().files.get(key);
     },
 
-    getFilesByPhase: (phase: UploadPhase) => {
-      return Array.from(get().files.values()).filter(
-        (file) => file.phase === phase,
-      );
-    },
-
     getFailedFiles: () => {
       return Array.from(get().files.values()).filter(
-        (file) => file.phase === "error",
+        (file) => file.phase === UPLOAD_PHASE.ERROR,
       );
     },
 
     getAllFiles: () => {
       return Array.from(get().files.values());
-    },
-
-    getUploadProgress: () => {
-      const files = Array.from(get().files.values());
-      const total = files.length;
-      const completed = files.filter((f) => f.phase === "completed").length;
-      const failed = files.filter((f) => f.phase === "error").length;
-      const uploading = files.filter((f) => f.phase === "s3_upload").length;
-      const processing = files.filter((f) => f.phase === "processing").length;
-
-      return {
-        total,
-        completed,
-        failed,
-        uploading,
-        processing,
-        percentage: total > 0 ? (completed / total) * 100 : 0,
-      };
     },
   })),
 );

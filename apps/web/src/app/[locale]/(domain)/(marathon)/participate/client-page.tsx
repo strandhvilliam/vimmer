@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, Image, ImageIcon, Info } from "lucide-react";
+import { ChevronRight, ImageIcon, Info } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import { Checkbox } from "@vimmer/ui/components/checkbox";
 import ReactCountryFlag from "react-country-flag";
@@ -25,12 +25,9 @@ import TermsAndConditionsDialog from "@/components/terms-and-conditions-dialog";
 import PlatformTermsDialog from "@/components/platform-terms-dialog";
 import { useChangeLocale, useCurrentLocale, useI18n } from "@/locales/client";
 import ReactMarkdown from "react-markdown";
+import { MarkdownContent } from "@/components/markdown-content";
 
-export function ParticipateClientPage({
-  marathonSettingsRouterUrl,
-}: {
-  marathonSettingsRouterUrl: string;
-}) {
+export function ParticipateClientPage() {
   const router = useRouter();
   const trpc = useTRPC();
   const { domain } = useDomain();
@@ -53,7 +50,7 @@ export function ParticipateClientPage({
     useState<boolean>(false);
   const [platformTermsOpen, setPlatformTermsOpen] = useState<boolean>(false);
 
-  const handleBeginUpload = () => {
+  const handleBeginSubmission = () => {
     if (organizerTermsAccepted && platformTermsAccepted) {
       router.push("/submission");
     }
@@ -167,63 +164,7 @@ export function ParticipateClientPage({
                   </AccordionTrigger>
                   <AccordionContent className="text-sm font-medium space-y-2">
                     {marathon.description ? (
-                      <div className="markdown-content">
-                        <ReactMarkdown
-                          components={{
-                            p: ({ children }) => (
-                              <p className="text-sm font-medium mb-2">
-                                {children}
-                              </p>
-                            ),
-                            ul: ({ children }) => (
-                              <ul className="list-disc pl-5 space-y-1 mb-2">
-                                {children}
-                              </ul>
-                            ),
-                            ol: ({ children }) => (
-                              <ol className="list-decimal pl-5 space-y-1 mb-2">
-                                {children}
-                              </ol>
-                            ),
-                            li: ({ children }) => (
-                              <li className="text-sm font-medium">
-                                {children}
-                              </li>
-                            ),
-                            h1: ({ children }) => (
-                              <h1 className="text-lg font-rocgrotesk font-bold mb-2">
-                                {children}
-                              </h1>
-                            ),
-                            h2: ({ children }) => (
-                              <h2 className="text-base font-rocgrotesk font-semibold mb-2">
-                                {children}
-                              </h2>
-                            ),
-                            h3: ({ children }) => (
-                              <h3 className="text-sm font-rocgrotesk font-semibold mb-1">
-                                {children}
-                              </h3>
-                            ),
-                            strong: ({ children }) => (
-                              <strong className="font-bold">{children}</strong>
-                            ),
-                            em: ({ children }) => (
-                              <em className="italic">{children}</em>
-                            ),
-                            a: ({ children, href }) => (
-                              <a
-                                href={href}
-                                className="underline text-blue-600 hover:text-blue-800"
-                              >
-                                {children}
-                              </a>
-                            ),
-                          }}
-                        >
-                          {marathon.description}
-                        </ReactMarkdown>
-                      </div>
+                      <MarkdownContent content={marathon.description} />
                     ) : (
                       <div className="text-muted-foreground italic">
                         No description available. Please contact the organizer
@@ -295,7 +236,7 @@ export function ParticipateClientPage({
             />
 
             <PrimaryButton
-              onClick={handleBeginUpload}
+              onClick={handleBeginSubmission}
               disabled={!organizerTermsAccepted || !platformTermsAccepted}
               className="w-full py-3 text-base  text-white rounded-full"
             >

@@ -59,13 +59,13 @@ export default async function SubmissionPage({
 
     if (!participant) notFound();
 
-    const redirectParams = submissionQueryServerParamSerializer(params);
-
     if (participant.status === "completed") {
+      const redirectParams = submissionQueryServerParamSerializer(params);
       redirect(`/verification${redirectParams}`);
     }
 
     if (participant.status === "verified") {
+      const redirectParams = submissionQueryServerParamSerializer(params);
       redirect(`/confirmation${redirectParams}`);
     }
   }

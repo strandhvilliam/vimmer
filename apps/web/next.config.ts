@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     // dynamicIO: true,
-    // reactCompiler: true,
+    reactCompiler: true,
     // ppr: true,
     // useCache: true,
   },

@@ -56,6 +56,11 @@ export function SubmissionItem({
     ruleKey: highestPriorityResult?.ruleKey,
   };
 
+  const exifData = photo?.exif || {};
+  const relevantExifData = getRelevantExifData(exifData);
+  const hasExifData = Object.keys(relevantExifData).length > 0;
+  const takenAt = getTimeTaken(photo?.exif);
+
   if (!photo) {
     return (
       <div
@@ -81,11 +86,6 @@ export function SubmissionItem({
       </div>
     );
   }
-
-  const exifData = photo.exif || {};
-  const relevantExifData = getRelevantExifData(exifData);
-  const hasExifData = Object.keys(relevantExifData).length > 0;
-  const takenAt = getTimeTaken(photo.exif);
 
   return (
     <div className="flex flex-col border rounded-lg bg-background overflow-hidden">

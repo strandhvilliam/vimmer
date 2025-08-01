@@ -12,6 +12,7 @@ import {
   competitionClasses,
   deviceGroups,
   ruleConfigs,
+  sponsors,
 } from "@vimmer/api/db/schema";
 import type { NewMarathon } from "@vimmer/api/db/types";
 import { TRPCError } from "@trpc/server";
@@ -137,6 +138,7 @@ export async function resetMarathonMutation(
     .where(eq(competitionClasses.marathonId, id));
   await db.delete(deviceGroups).where(eq(deviceGroups.marathonId, id));
   await db.delete(ruleConfigs).where(eq(ruleConfigs.marathonId, id));
+  await db.delete(sponsors).where(eq(sponsors.marathonId, id));
   await db
     .update(marathons)
     .set({
@@ -148,6 +150,7 @@ export async function resetMarathonMutation(
       description: null,
       logoUrl: null,
       languages: "en",
+      termsAndConditionsKey: null,
     })
     .where(eq(marathons.id, id));
 

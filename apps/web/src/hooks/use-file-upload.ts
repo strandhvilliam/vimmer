@@ -10,6 +10,7 @@ import {
   UploadFileState,
 } from "@/lib/stores/upload-store";
 import { useSubmissionQueryState } from "./use-submission-query-state";
+import { FILE_STATUS, UPLOAD_PHASE } from "@/lib/constants";
 
 const DEFAULT_TIMEOUT = 30000; // 30 seconds
 
@@ -20,17 +21,14 @@ export function useFileUpload() {
     submissionState: { participantId },
   } = useSubmissionQueryState();
 
-  // Zustand store actions and selectors
   const {
     initializeFiles,
     updateFilePhase,
     setFileError,
-    // setIsUploading,
     clearFiles,
     getFile,
     getFailedFiles,
     getAllFiles,
-    getUploadProgress,
     isUploading,
     resetFileForRetry,
     incrementRetryCount,
@@ -46,7 +44,6 @@ export function useFileUpload() {
     }),
   );
 
-  // Query to listen for submission status changes
   const { data: submissions } = useQuery(
     trpc.submissions.getByParticipantId.queryOptions(
       {
@@ -66,10 +63,15 @@ export function useFileUpload() {
         const file = getFile(submission.key);
         if (!file) return;
 
-        // Update phase based on submission status
-        if (submission.status === "uploaded" && file.phase !== "completed") {
-          updateFilePhase(submission.key, "completed");
-        } else if (submission.status === "error" && file.phase !== "error") {
+        if (
+          submission.status === "uploaded" &&
+          file.phase !== UPLOAD_PHASE.COMPLETED
+        ) {
+          updateFilePhase(submission.key, UPLOAD_PHASE.COMPLETED);
+        } else if (
+          submission.status === "error" &&
+          file.phase !== UPLOAD_PHASE.ERROR
+        ) {
           setFileError(submission.key, {
             message: "Processing failed on server",
             code: "SERVER_ERROR",
@@ -77,36 +79,18 @@ export function useFileUpload() {
           });
         } else if (
           submission.status === "processing" &&
-          file.phase === "s3_upload" &&
+          file.phase === UPLOAD_PHASE.S3_UPLOAD &&
           file.progress === 100
         ) {
-          updateFilePhase(submission.key, "processing");
+          updateFilePhase(submission.key, UPLOAD_PHASE.PROCESSING);
         }
       });
-
-      // Check if all uploads are complete
-      // const progress = getUploadProgress();
-      // const allComplete =
-      //   progress.completed + progress.failed === progress.total;
-
-      // if (allComplete && isUploading) {
-      //   setIsUploading(false);
-      // }
     }
-  }, [
-    submissions,
-    isUploading,
-    getFile,
-    updateFilePhase,
-    setFileError,
-    getUploadProgress,
-  ]);
+  }, [submissions, isUploading, getFile, updateFilePhase, setFileError]);
 
   const uploadSingleFile = async (file: UploadFileState): Promise<void> => {
-    // Update to uploading phase
-    updateFilePhase(file.key, "s3_upload", 0);
+    updateFilePhase(file.key, UPLOAD_PHASE.S3_UPLOAD, 0);
 
-    // Setup timeout controller
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT);
 
@@ -137,8 +121,7 @@ export function useFileUpload() {
         return;
       }
 
-      // S3 upload successful, move to processing phase
-      updateFilePhase(file.key, "processing", 100);
+      updateFilePhase(file.key, UPLOAD_PHASE.PROCESSING, 100);
     } catch (error) {
       clearTimeout(timeoutId);
 
@@ -162,11 +145,9 @@ export function useFileUpload() {
       return { success: false, failedFiles: [], successfulFiles: [] };
     }
 
-    // Initialize files in store
     initializeFiles(photos, participantId);
 
     try {
-      // Upload all files concurrently
       const uploadPromises = photos.map(async (photo) => {
         const file = getFile(photo.key);
         if (file) {
@@ -179,8 +160,12 @@ export function useFileUpload() {
       // Get final results
       const failedFiles = getFailedFiles();
       const allFiles = getAllFiles();
-      const completedFiles = allFiles.filter((f) => f.phase === "completed");
-      const processingFiles = allFiles.filter((f) => f.phase === "processing");
+      const completedFiles = allFiles.filter(
+        (f) => f.phase === UPLOAD_PHASE.COMPLETED,
+      );
+      const processingFiles = allFiles.filter(
+        (f) => f.phase === UPLOAD_PHASE.PROCESSING,
+      );
       const uploadedFiles = completedFiles.length + processingFiles.length;
 
       // Show appropriate toast messages
@@ -197,7 +182,6 @@ export function useFileUpload() {
           );
         }
       }
-      // Track analytics
       posthog.capture("file_upload_completed", {
         total_files: photos.length,
         successful_files: uploadedFiles,
@@ -208,14 +192,14 @@ export function useFileUpload() {
         success: failedFiles.length === 0,
         failedFiles: failedFiles.map((f) => ({
           ...f,
-          status: "error" as const,
+          status: FILE_STATUS.ERROR,
         })),
         successfulFiles: [...completedFiles, ...processingFiles].map((f) => ({
           ...f,
           status:
-            f.phase === "completed"
-              ? ("completed" as const)
-              : ("uploading" as const), // Show processing files as uploading
+            f.phase === UPLOAD_PHASE.COMPLETED
+              ? FILE_STATUS.COMPLETED
+              : FILE_STATUS.UPLOADING,
         })),
       };
     } catch (error) {
@@ -227,7 +211,7 @@ export function useFileUpload() {
         success: false,
         failedFiles: photos.map((photo) => ({
           ...photo,
-          status: "error" as const,
+          status: FILE_STATUS.ERROR,
           error: {
             message: "Upload process failed",
             code: "UNKNOWN" as const,
@@ -250,16 +234,12 @@ export function useFileUpload() {
       return;
     }
 
-    // setIsUploading(true);
-
-    // Reset failed files for retry and increment retry count
     failedFiles.forEach((file) => {
       resetFileForRetry(file.key);
       incrementRetryCount(file.key);
     });
 
     try {
-      // First, reset submission status to "pending" for failed files
       const submissionUpdates = failedFiles.map((file) => ({
         id: file.submissionId,
         data: { status: "pending" as const },
@@ -277,14 +257,9 @@ export function useFileUpload() {
 
       await Promise.allSettled(uploadPromises);
 
-      // Get final results after retry
       const newFailedFiles = getFailedFiles();
-      const allFiles = getAllFiles();
-      const completedFiles = allFiles.filter((f) => f.phase === "completed");
-      const processingFiles = allFiles.filter((f) => f.phase === "processing");
       const retriedSuccessfully = failedFiles.length - newFailedFiles.length;
 
-      // Track analytics
       posthog.capture("file_upload_retry", {
         total_retried: failedFiles.length,
         successful_retries: retriedSuccessfully,
@@ -295,14 +270,6 @@ export function useFileUpload() {
       posthog.captureException(error);
       toast.error("Retry process failed unexpectedly");
     }
-
-    // Check if all uploads are complete after retry
-    // const progress = getUploadProgress();
-    // const allComplete = progress.completed + progress.failed === progress.total;
-
-    // if (allComplete) {
-    //   setIsUploading(false);
-    // }
   };
 
   return {
@@ -310,13 +277,13 @@ export function useFileUpload() {
     fileStates: getAllFiles().map((f) => ({
       ...f,
       status:
-        f.phase === "completed"
-          ? ("completed" as const)
-          : f.phase === "error"
-            ? ("error" as const)
-            : f.phase === "s3_upload"
-              ? ("uploading" as const)
-              : ("pending" as const),
+        f.phase === UPLOAD_PHASE.COMPLETED
+          ? FILE_STATUS.COMPLETED
+          : f.phase === UPLOAD_PHASE.ERROR
+            ? FILE_STATUS.ERROR
+            : f.phase === UPLOAD_PHASE.S3_UPLOAD
+              ? FILE_STATUS.UPLOADING
+              : FILE_STATUS.PENDING,
     })),
     executeUpload,
     getFileState: (key: string) => {
@@ -325,19 +292,19 @@ export function useFileUpload() {
       return {
         ...file,
         status:
-          file.phase === "completed"
-            ? ("completed" as const)
-            : file.phase === "error"
-              ? ("error" as const)
-              : file.phase === "s3_upload"
-                ? ("uploading" as const)
-                : ("pending" as const),
+          file.phase === UPLOAD_PHASE.COMPLETED
+            ? FILE_STATUS.COMPLETED
+            : file.phase === UPLOAD_PHASE.ERROR
+              ? FILE_STATUS.ERROR
+              : file.phase === UPLOAD_PHASE.S3_UPLOAD
+                ? FILE_STATUS.UPLOADING
+                : FILE_STATUS.PENDING,
       };
     },
     getFailedFiles: () =>
       getFailedFiles().map((f) => ({
         ...f,
-        status: "error" as const,
+        status: FILE_STATUS.ERROR,
       })),
     clearFiles,
     retryFailedFiles,
