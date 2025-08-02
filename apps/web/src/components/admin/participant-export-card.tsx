@@ -19,56 +19,77 @@ import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { Slider } from "@vimmer/ui/components/slider";
 import { toast } from "sonner";
 import { cn } from "@vimmer/ui/lib/utils";
-import { Loader, AlertTriangle, Download, RefreshCcw } from "lucide-react";
+import {
+  Loader,
+  AlertTriangle,
+  Download,
+  RefreshCcw,
+  Loader2,
+} from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 
 interface ParticipantExportCardProps {
-  zippedSubmissions: ZippedSubmission | null;
   participant: Participant & {
     competitionClass: CompetitionClass | null;
     deviceGroup: DeviceGroup | null;
     submissions?: Submission[];
+    zippedSubmission?: ZippedSubmission | null;
   };
 }
 
 export function ParticipantExportCard({
-  zippedSubmissions,
   participant,
 }: ParticipantExportCardProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const {
-    execute: runZipGeneration,
-    status: zipGenerationStatus,
-    result: zipGenerationResult,
-  } = useAction(runZipGenerationAction, {
-    onSuccess: () => {
-      toast.success("Zip generation started - come back soon!");
+  const { execute: runZipGeneration, result: zipGenerationResult } = useAction(
+    runZipGenerationAction,
+    {
+      onSuccess: () => {
+        toast.success("Zip generation started - come back soon!");
+      },
+      onError: () => {
+        toast.error("Failed to start zip generation");
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.submissions.pathKey(),
+        });
+      },
     },
-    onError: () => {
-      toast.error("Failed to start zip generation");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: trpc.submissions.pathKey(),
-      });
-    },
-  });
+  );
 
-  if (zippedSubmissions?.zipKey && zippedSubmissions.status === "completed") {
+  const parseErrors = (errors: unknown) => {
+    try {
+      console.log(errors);
+      if (errors === undefined) return {};
+      if (typeof errors === "object") return errors;
+      return JSON.parse(errors as string);
+    } catch (error) {
+      console.error("Error parsing errors:", error);
+    }
+  };
+
+  const zippedSubmission = participant.zippedSubmission;
+
+  if (zippedSubmission?.zipKey && zippedSubmission.status === "completed") {
     return null;
   }
+
+  console.log(zippedSubmission);
+
+  console.log(parseErrors(zippedSubmission?.errors));
 
   return (
     <Card
       className={cn(
         "border-2 items-center flex",
-        zipGenerationStatus === "executing" ||
-          (zippedSubmissions && zippedSubmissions.status === "processing")
+        zippedSubmission && zippedSubmission.status === "processing"
           ? "border-blue-200 bg-blue-50"
-          : zipGenerationStatus === "hasErrored" ||
-              (zippedSubmissions && zippedSubmissions.status === "failed")
+          : zippedSubmission &&
+              (zippedSubmission.status === "error" ||
+                Object.keys(parseErrors(zippedSubmission.errors)).length !== 0)
             ? "border-red-200 bg-red-50"
             : "border-orange-200 bg-orange-50",
       )}
@@ -78,20 +99,22 @@ export function ParticipantExportCard({
           <div
             className={cn(
               "p-2",
-              zipGenerationStatus === "executing" ||
-                (zippedSubmissions && zippedSubmissions.status === "processing")
+              zippedSubmission && zippedSubmission.status === "processing"
                 ? "text-blue-600"
-                : zipGenerationStatus === "hasErrored" ||
-                    (zippedSubmissions && zippedSubmissions.status === "failed")
+                : zippedSubmission &&
+                    (zippedSubmission.status === "error" ||
+                      Object.keys(parseErrors(zippedSubmission.errors))
+                        .length !== 0)
                   ? "text-red-600"
                   : "text-orange-600",
             )}
           >
-            {zipGenerationStatus === "executing" ||
-            (zippedSubmissions && zippedSubmissions.status === "processing") ? (
-              <Loader className="h-5 w-5 animate-spin" />
-            ) : zipGenerationStatus === "hasErrored" ||
-              (zippedSubmissions && zippedSubmissions.status === "failed") ? (
+            {zippedSubmission && zippedSubmission.status === "processing" ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : zippedSubmission &&
+              (zippedSubmission.status === "error" ||
+                Object.keys(parseErrors(zippedSubmission.errors)).length !==
+                  0) ? (
               <AlertTriangle className="h-5 w-5" />
             ) : (
               <Download className="h-5 w-5" />
@@ -101,59 +124,63 @@ export function ParticipantExportCard({
             <h3
               className={cn(
                 "font-semibold text-sm",
-                zipGenerationStatus === "executing" ||
-                  (zippedSubmissions &&
-                    zippedSubmissions.status === "processing")
+                zippedSubmission && zippedSubmission.status === "processing"
                   ? "text-blue-600"
-                  : zipGenerationStatus === "hasErrored" ||
-                      (zippedSubmissions &&
-                        zippedSubmissions.status === "failed")
+                  : zippedSubmission &&
+                      (zippedSubmission.status === "error" ||
+                        Object.keys(parseErrors(zippedSubmission.errors))
+                          .length !== 0)
                     ? "text-red-600"
                     : "text-orange-600",
               )}
             >
               <span className="font-normal text-muted-foreground">Export:</span>{" "}
-              {zipGenerationStatus === "executing" ||
-              (zippedSubmissions && zippedSubmissions.status === "processing")
+              {zippedSubmission && zippedSubmission.status === "processing"
                 ? "Generating..."
-                : zipGenerationStatus === "hasErrored" ||
-                    (zippedSubmissions && zippedSubmissions.status === "failed")
+                : zippedSubmission &&
+                    (zippedSubmission.status === "error" ||
+                      Object.keys(parseErrors(zippedSubmission.errors))
+                        .length !== 0)
                   ? "Generation Failed"
                   : "No Zip Available"}
             </h3>
             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-              {zipGenerationStatus === "executing" ||
-              (zippedSubmissions && zippedSubmissions.status === "processing")
+              {zippedSubmission && zippedSubmission.status === "processing"
                 ? "Being generated, come back soon"
-                : zipGenerationStatus === "hasErrored" ||
-                    (zippedSubmissions && zippedSubmissions.status === "failed")
+                : zippedSubmission &&
+                    (zippedSubmission.status === "error" ||
+                      Object.keys(parseErrors(zippedSubmission.errors))
+                        .length !== 0)
                   ? "An error occurred during generation"
                   : "Generate a zip file of all submissions for download"}
             </p>
 
-            {zippedSubmissions &&
-              zippedSubmissions.status === "processing" &&
-              zippedSubmissions.progress !== undefined && (
+            {zippedSubmission &&
+              zippedSubmission.status === "processing" &&
+              zippedSubmission.progress !== undefined && (
                 <div className="mt-2 space-y-1">
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground">Progress</span>
                     <span className="text-blue-600 font-medium">
-                      {zippedSubmissions.progress}%
+                      {zippedSubmission.progress}%
                     </span>
                   </div>
                   <Slider
-                    value={[zippedSubmissions.progress]}
+                    hideThumb
+                    value={[zippedSubmission.progress]}
                     max={100}
                     step={1}
-                    className="w-full"
+                    className="w-full border rounded-full"
                     disabled
                   />
                 </div>
               )}
 
             <div className="flex items-center gap-2 mt-1">
-              {zipGenerationStatus === "hasErrored" ||
-              (zippedSubmissions && zippedSubmissions.status === "failed") ? (
+              {zippedSubmission &&
+              (zippedSubmission.status === "error" ||
+                Object.keys(parseErrors(zippedSubmission.errors)).length !==
+                  0) ? (
                 <>
                   <Popover>
                     <PopoverTrigger asChild>
@@ -173,9 +200,9 @@ export function ParticipantExportCard({
                         </h4>
                         <p className="text-xs text-muted-foreground">
                           {zipGenerationResult?.serverError ||
-                            (zippedSubmissions?.errors &&
-                            typeof zippedSubmissions.errors === "object"
-                              ? JSON.stringify(zippedSubmissions.errors)
+                            (zippedSubmission?.errors &&
+                            typeof zippedSubmission.errors === "object"
+                              ? JSON.stringify(zippedSubmission.errors)
                               : "An unknown error occurred during zip generation")}
                         </p>
                       </div>
@@ -198,9 +225,8 @@ export function ParticipantExportCard({
                     Retry
                   </PrimaryButton>
                 </>
-              ) : zipGenerationStatus !== "executing" &&
-                !(
-                  zippedSubmissions && zippedSubmissions.status === "processing"
+              ) : !(
+                  zippedSubmission && zippedSubmission.status === "processing"
                 ) ? (
                 <PrimaryButton
                   className="w-fit h-8 text-xs"

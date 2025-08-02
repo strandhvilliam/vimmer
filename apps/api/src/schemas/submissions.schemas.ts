@@ -5,7 +5,7 @@ export const getSubmissionByIdSchema = z.object({
 });
 
 export const getZippedSubmissionsByDomainSchema = z.object({
-  marathonId: z.number(),
+  domain: z.string(),
 });
 
 export const getManySubmissionsByKeysSchema = z.object({

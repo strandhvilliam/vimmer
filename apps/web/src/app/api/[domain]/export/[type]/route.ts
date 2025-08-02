@@ -13,10 +13,10 @@ const api = createServerApiClient();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { domain: string; type: string } },
+  { params }: { params: Promise<{ domain: string; type: string }> },
 ) {
   try {
-    const { domain, type } = params;
+    const { domain, type } = await params;
     const { searchParams } = new URL(request.url);
     const format = searchParams.get("format") || "json";
 

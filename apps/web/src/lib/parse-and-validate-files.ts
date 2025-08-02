@@ -6,12 +6,16 @@ import {
 } from "@vimmer/validation/types";
 import { SelectedPhotoV2 } from "./types";
 import exifr from "exifr";
+import { toast } from "sonner";
+import { generateThumbnail } from "./image-resize";
 
 interface ParsedAndValidatedPhotos {
   updatedPhotos: {
     file: File;
     exif: { [key: string]: unknown };
     preview: string;
+    thumbnail: string | null;
+    thumbnailLoading: boolean;
     orderIndex: number;
   }[];
   validationResults: ValidationResult[];
@@ -28,24 +32,47 @@ export async function parseAndValidateFiles(
   const remainingSlots = maxPhotos - currentLength;
   const sortedOrderIndexes = orderIndexes.sort((a, b) => a - b);
 
+  const sameNamePhotos = files.filter((file) =>
+    currentPhotos.some((p) => p.file.name === file.name),
+  );
+  if (sameNamePhotos.length > 0) {
+    toast.error(
+      `${(sameNamePhotos.map((f) => f.name) as string[]).join(", ")} already selected and not added`,
+    );
+  }
+
+  const uniqueNewPhotos = files.filter(
+    (f) => !sameNamePhotos.some((p) => p.name === f.name),
+  );
+
+  if (uniqueNewPhotos.length > remainingSlots) {
+    toast.warning(
+      `More than ${remainingSlots} photos selected, only ${remainingSlots} will be added`,
+    );
+  }
+
   const newPhotos = await Promise.all(
-    files.slice(0, remainingSlots).map(async (file, index) => {
+    uniqueNewPhotos.slice(0, remainingSlots).map(async (file, index) => {
       const orderIndex = sortedOrderIndexes[currentLength + index];
       if (!orderIndex && orderIndex !== 0) return null;
 
       const exif = await parseExifData(file);
+      if (!exif) {
+        toast.error(`No EXIF data found for image no. ${orderIndex + 1}`);
+        throw new Error(`No EXIF data found for image no. ${orderIndex + 1}`);
+      }
+
       return {
         file,
         exif: exif as { [key: string]: unknown },
         preview: URL.createObjectURL(file),
+        thumbnail: null,
+        thumbnailLoading: true,
         orderIndex,
       };
     }),
   );
-
-  const validPhotos = newPhotos.filter(
-    (photo): photo is SelectedPhotoV2 => photo !== null,
-  );
+  const validPhotos = newPhotos.filter((photo) => photo !== null);
 
   const sortedByTime = [...currentPhotos, ...validPhotos]
     .sort((a, b) => {
@@ -72,6 +99,19 @@ export async function parseAndValidateFiles(
 
   const validationResults = runValidations(ruleConfigs, validationInputs);
 
+  // Generate thumbnails asynchronously using proper Zustand pattern
+  validPhotos.forEach(async (photo) => {
+    try {
+      const thumbnail = await generateThumbnail(photo.file, 200);
+      const { usePhotoStore } = await import("@/lib/stores/photo-store");
+      usePhotoStore.getState().updateThumbnail(photo.file.name, thumbnail);
+    } catch (error) {
+      console.error("Thumbnail generation failed:", error);
+      const { usePhotoStore } = await import("@/lib/stores/photo-store");
+      usePhotoStore.getState().updateThumbnail(photo.file.name, "");
+    }
+  });
+
   return {
     updatedPhotos: sortedByTime,
     validationResults,
@@ -86,32 +126,37 @@ function getExifDate(exif: { [key: string]: unknown }) {
 }
 
 async function parseExifData(file: File) {
-  const exif = await exifr.parse(file);
-  if (!exif) {
-    throw new Error("No EXIF data");
-  }
+  try {
+    const exif = await exifr.parse(file);
+    if (!exif) {
+      return null;
+    }
 
-  const dateFields = [
-    "DateTimeOriginal",
-    "DateTimeDigitized",
-    "CreateDate",
-    "ModifyDate",
-    "GPSDateTime",
-    "GPSDate",
-    "DateTime",
-  ];
+    const dateFields = [
+      "DateTimeOriginal",
+      "DateTimeDigitized",
+      "CreateDate",
+      "ModifyDate",
+      "GPSDateTime",
+      "GPSDate",
+      "DateTime",
+    ];
 
-  for (const field of dateFields) {
-    if (exif[field] && typeof exif[field] === "object") {
-      try {
-        exif[field] = exif[field].toISOString();
-      } catch (error) {
-        console.error("Error converting date field to ISO string:", error);
+    for (const field of dateFields) {
+      if (exif[field] && typeof exif[field] === "object") {
+        try {
+          exif[field] = exif[field].toISOString();
+        } catch (error) {
+          console.error("Error converting date field to ISO string:", error);
+        }
       }
     }
-  }
 
-  return sanitizeExifData(exif);
+    return sanitizeExifData(exif);
+  } catch (error) {
+    console.error("Error parsing EXIF data:", error);
+    return null;
+  }
 }
 
 function sanitizeExifData(obj: any, visited = new WeakSet()): any {

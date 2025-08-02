@@ -226,7 +226,7 @@ export default $config({
           exportsBucket,
           api,
         ],
-        memory: "1 GB",
+        memory: "2 GB",
         permissions: [
           {
             actions: ["s3:GetObject", "s3:PutObject"],

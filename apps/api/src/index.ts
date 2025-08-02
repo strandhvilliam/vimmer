@@ -6,14 +6,14 @@ import { appRouter } from "./trpc/routers/_app";
 import { createTRPCContext } from "./trpc";
 import { secureHeaders } from "hono/secure-headers";
 import { realtimeRevalidateMiddleware } from "./middlewares/realtime-revalidate";
-import { posthogCaptureException } from "./utils/posthog-capture-exception";
+import { errorHandler } from "./utils/error-handler";
 
 const app = new Hono();
 
 app.use(secureHeaders());
 app.use(realtimeRevalidateMiddleware());
 
-app.onError((err, c) => posthogCaptureException(err, c));
+app.onError(errorHandler);
 
 app.use(
   "/trpc/*",

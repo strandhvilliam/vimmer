@@ -37,15 +37,14 @@ interface ParticipantActionButtonsProps {
     competitionClass: CompetitionClass | null;
     deviceGroup: DeviceGroup | null;
     submissions?: Submission[];
+    zippedSubmission?: ZippedSubmission | null;
   };
-  zippedSubmission: ZippedSubmission | null;
   exportStatus: string;
   getPresignedExportUrl: (params: { zipKey: string }) => void;
 }
 
 export function ParticipantActionButtons({
   participant,
-  zippedSubmission,
   exportStatus,
   getPresignedExportUrl,
 }: ParticipantActionButtonsProps) {
@@ -86,17 +85,19 @@ export function ParticipantActionButtons({
 
   return (
     <div className="flex flex-wrap gap-2">
-      {zippedSubmission?.zipKey && (
+      {participant.zippedSubmission?.zipKey && (
         <Button
           size="sm"
           variant="default"
           disabled={exportStatus === "executing"}
           onClick={() => {
-            if (!zippedSubmission.zipKey) {
+            if (!participant.zippedSubmission?.zipKey) {
               toast.error("No zip file available");
               return;
             }
-            getPresignedExportUrl({ zipKey: zippedSubmission.zipKey });
+            getPresignedExportUrl({
+              zipKey: participant.zippedSubmission?.zipKey,
+            });
           }}
         >
           <Download className="h-4 w-4 mr-2" />

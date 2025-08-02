@@ -17,6 +17,7 @@ interface PhotoStore {
   photos: SelectedPhotoV2[];
   validationResults: ValidationResult[];
   validateAndAddPhotos: (dto: AddPhotoDto) => Promise<void>;
+  updateThumbnail: (fileName: string, thumbnail: string) => void;
   removePhoto: (orderIndex: number) => void;
 }
 
@@ -38,12 +39,23 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
       validationResults,
     });
   },
+  updateThumbnail: (fileName: string, thumbnail: string) =>
+    set(({ photos }) => ({
+      photos: photos.map((photo) =>
+        photo.file.name === fileName
+          ? { ...photo, thumbnail, thumbnailLoading: false }
+          : photo,
+      ),
+    })),
   removePhoto: (orderIndex) =>
     set(({ photos, validationResults }) => {
       const photoToRemove = photos.find(
         (photo) => photo.orderIndex === orderIndex,
       );
       if (!photoToRemove) return { photos, validationResults };
+
+      if (photoToRemove.thumbnail) URL.revokeObjectURL(photoToRemove.thumbnail);
+      if (photoToRemove.preview) URL.revokeObjectURL(photoToRemove.preview);
 
       const updatedPhotos = photos.filter(
         (photo) => photo.orderIndex !== orderIndex,

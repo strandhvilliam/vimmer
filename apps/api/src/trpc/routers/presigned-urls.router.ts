@@ -16,6 +16,7 @@ import {
 import {
   updateParticipantMutation,
   getParticipantsByDomainQuery,
+  getParticipantByReferenceQuery,
 } from "@vimmer/api/db/queries/participants.queries";
 import { getMarathonByIdQuery } from "@vimmer/api/db/queries/marathons.queries";
 
@@ -27,12 +28,22 @@ export const presignedUrlsRouter = createTRPCRouter({
       const bucketName = Resource.SubmissionBucket.name;
       const service = new PresignedSubmissionService(ctx.db, s3, bucketName);
 
-      await updateParticipantMutation(ctx.db, {
-        id: input.participantId,
-        data: {
-          uploadCount: 0,
-        },
+      const participant = await getParticipantByReferenceQuery(ctx.db, {
+        reference: input.participantRef,
+        domain: input.domain,
       });
+
+      if (
+        participant?.status !== "verified" &&
+        participant?.status !== "completed"
+      ) {
+        await updateParticipantMutation(ctx.db, {
+          id: input.participantId,
+          data: {
+            uploadCount: 0,
+          },
+        });
+      }
 
       return service.generatePresignedSubmissions(
         input.participantRef,

@@ -43,6 +43,36 @@ export const handler = async (event: SQSEvent): Promise<void> => {
   }
 };
 
+function isValidImageSize(metadata: sharp.Metadata) {
+  return metadata.width <= 3840 && metadata.height <= 2160;
+}
+
+async function resizeToMaximumSize(
+  s3Client: S3Client,
+  key: string,
+  sharpInstance: sharp.Sharp,
+) {
+  const resizedImage = sharpInstance
+    .resize(3840, 2160, {
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .keepMetadata();
+
+  const buffer = await resizedImage.toBuffer();
+
+  await s3Client.send(
+    new PutObjectCommand({
+      Bucket: Resource.SubmissionBucket.name,
+      Key: key,
+      Body: buffer,
+      Metadata: {
+        isresized: "true",
+      },
+    }),
+  );
+}
+
 async function processSubmission(key: string, s3Client: S3Client) {
   try {
     const { participantRef, domain } = parseKey(key);
@@ -52,7 +82,7 @@ async function processSubmission(key: string, s3Client: S3Client) {
     });
 
     if (!participant) {
-      console.error("Participant not found");
+      console.error("Participant not found", key);
       return;
     }
 
@@ -60,28 +90,47 @@ async function processSubmission(key: string, s3Client: S3Client) {
       participant.status === "verified" ||
       participant.status === "completed"
     ) {
-      console.log("Participant is already verified or completed, skipping");
+      console.log(
+        "Participant is already verified or completed, skipping",
+        key,
+      );
       return;
     }
-
-    const { submission } = await prepareSubmission(participant, key);
 
     if (
       participant.uploadCount >= participant.competitionClass?.numberOfPhotos!
     ) {
       console.log(
         "Participant has already reached the maximum number of uploads, skipping",
+        key,
       );
       return;
     }
 
-    const { file, size, metadata, mimeType } = await getFileFromS3(
+    const { file, size, mimeType, s3Metadata } = await getFileFromS3(
       s3Client,
       key,
     );
 
-    const exif = await parseExifData(file);
-    const variants = await generateImageVariants(key, file, s3Client);
+    if (s3Metadata?.isresized === "true") {
+      console.log("File only resized, skipping", key);
+      return;
+    }
+
+    console.log("Processing file", key);
+
+    const { submission } = await prepareSubmission(participant, key);
+    const exif = await parseExifData(file, submission);
+    const sharpInstance = sharp(file);
+
+    const [metadata, variants] = await Promise.all([
+      parseMetadata(sharpInstance),
+      generateImageVariants(key, sharpInstance, s3Client),
+    ]);
+
+    if (metadata && !isValidImageSize(metadata)) {
+      await resizeToMaximumSize(s3Client, key, sharpInstance);
+    }
 
     await updateSubmissionByKeyMutation(db, {
       key,
@@ -103,6 +152,9 @@ async function processSubmission(key: string, s3Client: S3Client) {
     });
 
     if (isComplete) {
+      console.log(
+        `All submissions for participant ${participant.id} are complete. Beginning validation and zip generation.`,
+      );
       await Promise.allSettled([
         triggerValidationQueue(submission.participantId),
         triggerZipGenerationTask(
@@ -122,33 +174,56 @@ async function processSubmission(key: string, s3Client: S3Client) {
   }
 }
 
-async function parseExifData(file: Uint8Array<ArrayBufferLike>) {
-  const exif = await exifr.parse(file);
-  if (!exif) {
-    throw new Error("No EXIF data");
+async function parseMetadata(sharpInstance: sharp.Sharp) {
+  try {
+    const metadata = await sharpInstance.metadata();
+    delete metadata.xmp; // deleting to not save large buffer
+    delete metadata.exif; // already get exif from parser
+    return metadata;
+  } catch (error) {
+    console.error("Error parsing metadata:", error);
+    return null;
   }
+}
 
-  const dateFields = [
-    "DateTimeOriginal",
-    "DateTimeDigitized",
-    "CreateDate",
-    "ModifyDate",
-    "GPSDateTime",
-    "GPSDate",
-    "DateTime",
-  ];
+async function parseExifData(
+  file: Uint8Array<ArrayBufferLike>,
+  submission: Submission,
+) {
+  try {
+    const exif = await exifr.parse(file);
+    if (!exif) {
+      throw new Error(`No EXIF data found for submission ${submission.id}`);
+    }
 
-  for (const field of dateFields) {
-    if (exif[field] && typeof exif[field] === "object") {
-      try {
-        exif[field] = exif[field].toISOString();
-      } catch (error) {
-        console.error("Error converting date field to ISO string:", error);
+    const dateFields = [
+      "DateTimeOriginal",
+      "DateTimeDigitized",
+      "CreateDate",
+      "ModifyDate",
+      "GPSDateTime",
+      "GPSDate",
+      "DateTime",
+    ];
+
+    for (const field of dateFields) {
+      if (exif[field] && typeof exif[field] === "object") {
+        try {
+          exif[field] = exif[field].toISOString();
+        } catch (error) {
+          console.error("Error converting date field to ISO string:", error);
+        }
       }
     }
-  }
 
-  return sanitizeExifData(exif);
+    return sanitizeExifData(exif);
+  } catch (error) {
+    console.error(
+      `Error parsing EXIF data for submission ${submission.id}:`,
+      error,
+    );
+    throw error;
+  }
 }
 
 function sanitizeExifData(obj: any, visited = new WeakSet()): any {
@@ -302,7 +377,7 @@ async function getFileFromS3(s3: S3Client, key: string) {
     Body: body,
     ContentType: mimeType,
     ContentLength: size,
-    Metadata: metadata,
+    Metadata: s3Metadata,
   } = await s3.send(
     new GetObjectCommand({
       Bucket: Resource.SubmissionBucket.name,
@@ -318,7 +393,7 @@ async function getFileFromS3(s3: S3Client, key: string) {
     file,
     mimeType,
     size,
-    metadata,
+    s3Metadata,
   };
 }
 
@@ -332,13 +407,12 @@ function parseKey(key: string) {
 
 async function generateImageVariants(
   originalKey: string,
-  file: Uint8Array,
+  sharpInstance: sharp.Sharp,
   s3: S3Client,
 ) {
-  const photoInstance = sharp(file);
   const [thumbnailKey, previewKey] = await Promise.all([
-    createVariant(originalKey, photoInstance, IMAGE_VARIANTS.thumbnail, s3),
-    createVariant(originalKey, photoInstance, IMAGE_VARIANTS.preview, s3),
+    createVariant(originalKey, sharpInstance, IMAGE_VARIANTS.thumbnail, s3),
+    createVariant(originalKey, sharpInstance, IMAGE_VARIANTS.preview, s3),
   ]);
 
   return { thumbnailKey, previewKey };

@@ -39,6 +39,20 @@ export async function getSubmissionByIdQuery(
   return result;
 }
 
+export async function getZippedSubmissionsByDomainQuery(
+  db: Database,
+  { domain }: { domain: string },
+) {
+  const result = await db.query.marathons.findFirst({
+    where: eq(marathons.domain, domain),
+    with: {
+      zippedSubmissions: true,
+    },
+  });
+
+  return result?.zippedSubmissions ?? [];
+}
+
 export async function getZippedSubmissionsByMarathonIdQuery(
   db: Database,
   { marathonId }: { marathonId: number },
@@ -214,13 +228,13 @@ export async function getZippedSubmissionByParticipantRefQuery(
       eq(participants.reference, participantRef),
     ),
     with: {
-      zippedSubmissions: true,
+      zippedSubmission: true,
     },
   });
 
-  if (!participant || !participant.zippedSubmissions) {
+  if (!participant || !participant.zippedSubmission) {
     return null;
   }
 
-  return participant.zippedSubmissions;
+  return participant.zippedSubmission;
 }

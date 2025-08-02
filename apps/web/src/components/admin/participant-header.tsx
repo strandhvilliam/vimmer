@@ -155,18 +155,10 @@ export function ParticipantHeader({
   participant,
   validationResults = [],
 }: ParticipantHeaderProps) {
-  const trpc = useTRPC();
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
 
   const globalValidations = validationResults.filter(
     (result) => !result.fileName,
-  );
-
-  const { data: zippedSubmission } = useSuspenseQuery(
-    trpc.submissions.getZippedSubmissionsByParticipantRef.queryOptions({
-      domain: participant.domain,
-      participantRef: participant.reference,
-    }),
   );
 
   const { execute: getPresignedExportUrl, status: exportStatus } = useAction(
@@ -208,7 +200,6 @@ export function ParticipantHeader({
         />
         <ParticipantActionButtons
           participant={participant}
-          zippedSubmission={zippedSubmission}
           exportStatus={exportStatus}
           getPresignedExportUrl={getPresignedExportUrl}
         />
@@ -221,10 +212,7 @@ export function ParticipantHeader({
         />
         <ParticipantCompetitionClassCard participant={participant} />
         <ParticipantDeviceGroupCard participant={participant} />
-        <ParticipantExportCard
-          zippedSubmissions={zippedSubmission}
-          participant={participant}
-        />
+        <ParticipantExportCard participant={participant} />
         <ParticipantThumbnailGenerationCard
           shouldShow={shouldShowThumbnailGeneration}
           submissionsNeedingThumbnails={submissionsNeedingThumbnails}

@@ -17,6 +17,8 @@ export interface SelectedPhotoV2 {
   file: File;
   exif: { [key: string]: unknown };
   preview: string;
+  thumbnail: string | null;
+  thumbnailLoading: boolean;
   orderIndex: number;
 }
 

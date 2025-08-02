@@ -5,7 +5,7 @@ import { FileSpreadsheet, FileText } from "lucide-react";
 import { ExportOptions } from "@/components/admin/export-options";
 import { ParticipantArchivesDownload } from "@/components/admin/participant-archives-download";
 import { ContactSheetExport } from "@/components/admin/contact-sheet-export";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { useDomain } from "@/contexts/domain-context";
 
@@ -35,13 +35,10 @@ export function ExportClientPage() {
     }),
   );
 
-  const { data: zippedSubmissions } = useQuery(
-    trpc.submissions.getZippedSubmissionsByDomain.queryOptions(
-      {
-        marathonId: marathon!.id,
-      },
-      { enabled: !!marathon?.id },
-    ),
+  const { data: zippedSubmissions } = useSuspenseQuery(
+    trpc.submissions.getZippedSubmissionsByDomain.queryOptions({
+      domain,
+    }),
   );
 
   const participantCount = participants.length;
@@ -70,7 +67,6 @@ export function ExportClientPage() {
 
       <div className="space-y-6">
         <ParticipantArchivesDownload
-          domain={domain}
           marathonId={marathon.id}
           canDownload={canDownloadZippedSubmissions}
           participantCount={participantCount}

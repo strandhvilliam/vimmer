@@ -1,5 +1,12 @@
 import { SelectedPhotoV2 } from "@/lib/types";
-import { ChevronDown, ChevronUp, ImageIcon, Info, X } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  ImageIcon,
+  Info,
+  X,
+  Loader2,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { ValidationStatusBadge } from "@/components/validation-status-badge";
 import { ValidationResult } from "@vimmer/validation/types";
@@ -9,6 +16,12 @@ import {
 } from "@vimmer/validation/constants";
 import { useState } from "react";
 import { Button } from "@vimmer/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@vimmer/ui/components/dialog";
 import { Topic } from "@vimmer/supabase/types";
 import { format } from "date-fns";
 
@@ -30,6 +43,7 @@ export function SubmissionItem({
   onUploadClick,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const [showImageDialog, setShowImageDialog] = useState(false);
 
   const r = validationResults?.sort((a, b) => {
     if (a.outcome !== b.outcome) {
@@ -134,9 +148,12 @@ export function SubmissionItem({
             </div>
           )}
 
-          <p className="text-xs  text-muted-foreground">
-            {takenAt && `Captured at: ${format(takenAt, "HH:mm")}`}
-          </p>
+          <div className="flex flex-col gap-0.5">
+            <p className="text-xs  text-muted-foreground">
+              {takenAt && `Taken: ${format(takenAt, "cccc, HH:mm")}`} |{" "}
+              {photo.file.name && `File: ${photo.file.name}`}
+            </p>
+          </div>
 
           <div className="flex items-center gap-2">
             {hasExifData && (
@@ -164,12 +181,34 @@ export function SubmissionItem({
             transition={{ duration: 0.2 }}
             className="w-full h-full rounded-lg overflow-hidden"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={photo.preview}
-              alt={`Upload preview ${index + 1}`}
-              className="object-cover w-full h-full"
-            />
+            {photo.thumbnailLoading || !photo.thumbnail ? (
+              <div className="w-full h-full bg-muted/50 border-2 border-dashed rounded-lg flex items-center justify-end pb-3 flex-col gap-1">
+                <motion.div
+                  layout
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    repeatType: "loop",
+                    ease: "linear",
+                    duration: 1,
+                    repeat: Infinity,
+                  }}
+                >
+                  <Loader2 className="h-6 w-6 text-muted-foreground" />
+                </motion.div>
+                <span className="text-[0.6rem] text-muted-foreground text-center">
+                  Loading
+                  <br /> Preview...
+                </span>
+              </div>
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={photo.thumbnail}
+                alt={`Upload preview ${index + 1}`}
+                className="object-cover w-full h-full cursor-pointer"
+                onClick={() => setShowImageDialog(true)}
+              />
+            )}{" "}
           </motion.div>
           <button
             type="button"
@@ -204,6 +243,26 @@ export function SubmissionItem({
             </tbody>
           </table>
         </motion.div>
+      )}
+
+      {showImageDialog && (
+        <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+            <DialogHeader className="p-6 pb-0">
+              <DialogTitle>Photo Preview - {topic?.name}</DialogTitle>
+            </DialogHeader>
+            <div className="p-6 pt-0">
+              <div className="w-full max-h-[70vh] overflow-auto">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photo.preview}
+                  alt={`Full preview ${index + 1}`}
+                  className="w-full h-auto object-contain"
+                />
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

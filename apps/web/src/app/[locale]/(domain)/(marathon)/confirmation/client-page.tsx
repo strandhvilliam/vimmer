@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
 import {
   Card,
@@ -87,52 +87,54 @@ export function ConfirmationClient({
 
   return (
     <div className="min-h-[100dvh] px-4 py-6 space-y-6 max-w-[800px] mx-auto">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05, duration: 0.6 }}
-        className="text-center space-y-6 pt-8"
-      >
-        <div className="relative">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 150 }}
-            className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 relative"
-          >
-            <CheckCircle2 className="h-14 w-14 text-white" />
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05, duration: 0.6 }}
+          className="text-center space-y-6 pt-8"
+        >
+          <div className="relative">
             <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-              className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 150 }}
+              className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 relative"
             >
-              <Trophy className="h-4 w-4 text-yellow-800" />
+              <CheckCircle2 className="h-14 w-14 text-white" />
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+                className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center"
+              >
+                <Trophy className="h-4 w-4 text-yellow-800" />
+              </motion.div>
             </motion.div>
-          </motion.div>
-        </div>
+          </div>
 
-        <div className="space-y-3">
-          <motion.h1
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-3xl font-rocgrotesk font-bold text-foreground"
-          >
-            {t("confirmation.congratulations")}
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-muted-foreground text-lg leading-relaxed"
-          >
-            {t("confirmation.photosUploaded", {
-              count: uploadedSubmissions.length,
-            })}
-          </motion.p>
-        </div>
-      </motion.div>
+          <div className="space-y-3">
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-3xl font-rocgrotesk font-bold text-foreground"
+            >
+              {t("confirmation.congratulations")}
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-muted-foreground text-lg leading-relaxed"
+            >
+              {t("confirmation.photosUploaded", {
+                count: uploadedSubmissions.length,
+              })}
+            </motion.p>
+          </div>
+        </motion.div>
+      </AnimatePresence>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}

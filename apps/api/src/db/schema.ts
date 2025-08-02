@@ -639,7 +639,7 @@ export const participantsRelations = relations(
     validationResults: many(validationResults),
     participantVerifications: many(participantVerifications),
     submissions: many(submissions),
-    zippedSubmissions: one(zippedSubmissions),
+    zippedSubmission: one(zippedSubmissions),
   }),
 );
 

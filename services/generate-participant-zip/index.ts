@@ -19,7 +19,6 @@ import { getParticipantByReferenceQuery } from "@vimmer/api/db/queries/participa
 import { getTopicsByDomainQuery } from "@vimmer/api/db/queries/topics.queries";
 import {
   createZippedSubmissionMutation,
-  getZippedSubmissionByParticipantRefQuery,
   updateZippedSubmissionMutation,
 } from "@vimmer/api/db/queries/submissions.queries";
 
@@ -248,12 +247,18 @@ async function processSubmission({
       updatedProgress.processedSubmissions + 1;
 
     await updateProgress(updatedProgress);
+    console.log(
+      `Successfully processed submission: [${submission.id}] | topic: ${topicOrderIndex} | participant: ${participant.id}`,
+    );
 
     return {
       progress: updatedProgress,
       participantZip,
     };
   } catch (error) {
+    console.log(
+      `Error processing submission: ${submission.id} | participant ${participant.id} | error: ${error}`,
+    );
     const updatedErrors = {
       ...updatedProgress.submissionErrors,
       [submission.id]: `Error processing submission ${submission.id} for participant ${participant.id}: ${error}`,
@@ -316,6 +321,9 @@ async function exportParticipantSubmissionsToZip({
   };
 
   try {
+    console.log(
+      `Initializing Zip generation for domain: ${domain} | participant: ${participantReference}`,
+    );
     const marathon = await getMarathonByDomainQuery(db, {
       domain,
     });
@@ -338,10 +346,7 @@ async function exportParticipantSubmissionsToZip({
       participantReference,
     );
 
-    let zippedSubmission = await getZippedSubmissionByParticipantRefQuery(db, {
-      domain,
-      participantRef: participantReference,
-    });
+    let zippedSubmission = participantData.zippedSubmission;
 
     if (!zippedSubmission) {
       zippedSubmission = await createZippedSubmissionMutation(db, {
@@ -376,6 +381,7 @@ async function exportParticipantSubmissionsToZip({
     const time = new Date().toISOString().split("T")[1]?.split(".")[0];
     const zipFileName = `${domain}/${participant.reference}.zip`;
 
+    console.log("Beginning to process all submissions");
     const result = await processAllSubmissions(participant.submissions, {
       exportType,
       topics,
@@ -392,14 +398,19 @@ async function exportParticipantSubmissionsToZip({
       await updateProgress(progress);
       return null;
     }
+    console.log(
+      `Finished processing all submissions for participant: ${participant.reference}`,
+    );
     progress.processedSubmissions = result.progress.processedSubmissions;
     progress.status = "completed";
 
+    console.log("Generating zip file...");
     const zipBuffer = await result.participantZip.generateAsync({
       type: "nodebuffer",
       compression: "DEFLATE",
     });
 
+    console.log("Uploading zip file...");
     await s3Client.send(
       new PutObjectCommand({
         Bucket: destinationBucket,
@@ -479,6 +490,7 @@ async function main() {
     });
 
     await exportParticipantSubmissionsToZip(config);
+    console.log("Export completed successfully");
   } catch (error) {
     console.error("Error processing record:", error);
     throw error;

@@ -99,3 +99,61 @@ export function getImageDimensions(
     img.src = URL.createObjectURL(file);
   });
 }
+
+export async function generateThumbnail(
+  file: File,
+  size: number = 200,
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        if (!ctx) {
+          reject(new Error("Failed to get canvas context"));
+          return;
+        }
+
+        const aspectRatio = img.height / img.width;
+        let newWidth = size;
+        let newHeight = size * aspectRatio;
+
+        if (newHeight > size) {
+          newHeight = size;
+          newWidth = size / aspectRatio;
+        }
+
+        canvas.width = size;
+        canvas.height = size;
+
+        ctx.fillStyle = "#f0f0f0";
+        ctx.fillRect(0, 0, size, size);
+
+        const offsetX = (size - newWidth) / 2;
+        const offsetY = (size - newHeight) / 2;
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+
+        ctx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
+
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+        URL.revokeObjectURL(img.src);
+        resolve(dataUrl);
+      } catch (error) {
+        URL.revokeObjectURL(img.src);
+        reject(error);
+      }
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      reject(new Error("Failed to load image"));
+    };
+
+    img.src = URL.createObjectURL(file);
+  });
+}

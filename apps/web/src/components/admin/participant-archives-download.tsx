@@ -11,6 +11,8 @@ import {
   Archive,
   CheckCircle2,
   Info,
+  Users,
+  ExternalLink,
 } from "lucide-react";
 import { Input } from "@vimmer/ui/components/input";
 import { Label } from "@vimmer/ui/components/label";
@@ -25,13 +27,13 @@ import { Badge } from "@vimmer/ui/components/badge";
 import { Separator } from "@vimmer/ui/components/separator";
 import { toast } from "sonner";
 import { useZipSaver } from "@/hooks/use-zip-saver";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { MultiStepLoader } from "@vimmer/ui/components/multi-step-loader";
 import { Alert, AlertDescription } from "@vimmer/ui/components/alert";
+import { useDomain } from "@/contexts/domain-context";
 
 interface ParticipantArchivesDownloadProps {
-  domain: string;
   marathonId: number;
   canDownload: boolean;
   participantCount: number;
@@ -39,21 +41,42 @@ interface ParticipantArchivesDownloadProps {
 }
 
 export function ParticipantArchivesDownload({
-  domain,
   marathonId,
   canDownload,
   participantCount,
   zippedSubmissionsCount,
 }: ParticipantArchivesDownloadProps) {
   const trpc = useTRPC();
+  const { domain } = useDomain();
   const [imageWidth, setImageWidth] = useState<string>("1920");
   const [useOriginalSize, setUseOriginalSize] = useState<boolean>(false);
   const [showLoader, setShowLoader] = useState(false);
   const [failedParticipants, setFailedParticipants] = useState<number[]>([]);
   const [showErrorState, setShowErrorState] = useState(false);
   const [pendingData, setPendingData] = useState<any>(null);
+  const [showMissingParticipants, setShowMissingParticipants] = useState(false);
 
   const zipSaver = useZipSaver();
+
+  const { data: participants } = useQuery(
+    trpc.participants.getByDomain.queryOptions({
+      domain,
+    }),
+  );
+
+  const { data: zippedSubmissions } = useQuery(
+    trpc.submissions.getZippedSubmissionsByDomain.queryOptions({
+      domain,
+    }),
+  );
+
+  const missingParticipants =
+    participants?.filter(
+      (participant) =>
+        !zippedSubmissions?.some(
+          (zipped) => zipped.participantId === participant.id,
+        ),
+    ) || [];
 
   const loadingStates = [
     { text: "Generating presigned URLs..." },
@@ -217,6 +240,19 @@ export function ParticipantArchivesDownload({
                 {participantCount === 0
                   ? "No participants found in this marathon."
                   : `Archives not ready. Expected ${participantCount} participants, but found ${zippedSubmissionsCount || 0}. Please generate archives first.`}
+                {missingParticipants.length > 0 && (
+                  <div className="mt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowMissingParticipants(true)}
+                      className="text-amber-700 border-amber-300 hover:bg-amber-100"
+                    >
+                      <Users className="h-4 w-4 mr-2" />
+                      View Missing Participants ({missingParticipants.length})
+                    </Button>
+                  </div>
+                )}
               </AlertDescription>
             </Alert>
           )}
@@ -435,6 +471,88 @@ export function ParticipantArchivesDownload({
               >
                 <X className="h-4 w-4 mr-2" />
                 Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showMissingParticipants && (
+        <div className="w-full h-full fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-2xl">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-8 max-w-2xl w-full mx-4 shadow-2xl border max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <Users className="h-6 w-6 text-amber-500" />
+                <h2 className="text-xl font-semibold font-rocgrotesk">
+                  Missing Participants
+                </h2>
+              </div>
+              <Button
+                onClick={() => setShowMissingParticipants(false)}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <p className="text-sm text-muted-foreground">
+                The following {missingParticipants.length} participants are
+                missing zipped submissions:
+              </p>
+
+              <div className="flex-1 overflow-y-auto space-y-2 max-h-96">
+                {missingParticipants.map((participant) => (
+                  <div
+                    key={participant.id}
+                    className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">
+                          {participant.reference}
+                        </span>
+                        {(participant.firstname || participant.lastname) && (
+                          <span className="text-sm text-muted-foreground">
+                            ({participant.firstname} {participant.lastname})
+                          </span>
+                        )}
+                      </div>
+                      {participant.email && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {participant.email}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      className="ml-4"
+                    >
+                      <a
+                        href={`/admin/submissions/${participant.reference}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        View Participant
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                onClick={() => setShowMissingParticipants(false)}
+                variant="outline"
+              >
+                Close
               </Button>
             </div>
           </div>

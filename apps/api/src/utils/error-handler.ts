@@ -1,13 +1,15 @@
 import { env } from "hono/adapter";
+import { HTTPException } from "hono/http-exception";
 import { PostHog } from "posthog-node";
 import { type ErrorHandler } from "hono";
 
-export const posthogCaptureException: ErrorHandler = (err, c) => {
+export const errorHandler: ErrorHandler = (err, c) => {
   const { POSTHOG_API_KEY, POSTHOG_HOST } = env<{
     POSTHOG_API_KEY: string;
     POSTHOG_HOST: string;
   }>(c);
 
+  console.log("[API_ERROR]:", err);
   const posthog = new PostHog(POSTHOG_API_KEY, {
     host: POSTHOG_HOST,
   });
@@ -23,5 +25,10 @@ export const posthogCaptureException: ErrorHandler = (err, c) => {
     },
   );
   posthog.shutdown();
-  return c.text("Internal Server Error", 500);
+
+  if (err instanceof HTTPException) {
+    return err.getResponse();
+  }
+
+  return c.json({ error: err.message }, 500);
 };

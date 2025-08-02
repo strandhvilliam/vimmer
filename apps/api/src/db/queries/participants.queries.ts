@@ -22,6 +22,7 @@ export async function getParticipantByIdQuery(
       competitionClass: true,
       deviceGroup: true,
       validationResults: true,
+      zippedSubmission: true,
     },
   });
 
@@ -42,6 +43,7 @@ export async function getParticipantByReferenceQuery(
       competitionClass: true,
       deviceGroup: true,
       validationResults: true,
+      zippedSubmission: true,
     },
   });
 
@@ -63,6 +65,7 @@ export async function getParticipantsByDomainQuery(
       competitionClass: true,
       deviceGroup: true,
       validationResults: true,
+      zippedSubmission: true,
     },
   });
 

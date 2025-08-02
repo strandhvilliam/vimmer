@@ -37,6 +37,7 @@ import {
   Hash,
   RefreshCw,
   Clock,
+  ShieldAlert,
 } from "lucide-react";
 import {
   Tooltip,
@@ -74,13 +75,16 @@ import {
   DeviceGroup,
   Participant,
   ValidationResult,
+  ZippedSubmission,
 } from "@vimmer/api/db/types";
 import { useSubmissionsTableFilters } from "@/hooks/use-submissions-table-filters";
+import { Icon } from "@iconify/react/dist/iconify.js";
 
 type TableRowParticipant = Participant & {
   validationResults: ValidationResult[];
   competitionClass?: CompetitionClass | null;
   deviceGroup?: DeviceGroup | null;
+  zippedSubmission?: ZippedSubmission | null;
 };
 
 const columnHelper = createColumnHelper<TableRowParticipant>();
@@ -167,161 +171,202 @@ const columns = [
     cell: (info) => info.getValue() || "-",
     sortingFn: "alphanumeric",
   }),
-  columnHelper.accessor((row) => row.deviceGroup?.name, {
+  columnHelper.accessor((row) => row.deviceGroup, {
     id: "deviceGroup",
     header: "Device",
-    cell: (info) => {
-      const deviceName = info.getValue();
+    cell: (data) => {
+      const deviceGroup = data?.getValue();
+
+      const getDeviceIcon = (icon: string | undefined) => {
+        switch (icon) {
+          case "smartphone":
+            return (
+              <Icon
+                icon="solar:smartphone-broken"
+                className="w-4 h-4"
+                style={{ transform: "rotate(-5deg)" }}
+              />
+            );
+          case "camera":
+          default:
+            return (
+              <Icon
+                icon="solar:camera-minimalistic-broken"
+                className="w-4 h-4"
+                style={{ transform: "rotate(-5deg)" }}
+              />
+            );
+        }
+      };
       return (
         <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger>
-              {deviceName ? (
-                <Camera className="h-4 w-4" />
-              ) : (
-                <Smartphone className="h-4 w-4" />
-              )}
-            </TooltipTrigger>
-            <TooltipContent>{deviceName || "Smartphone"}</TooltipContent>
+            <TooltipTrigger>{getDeviceIcon(deviceGroup?.icon)}</TooltipTrigger>
+            <TooltipContent>{deviceGroup?.name || "Unknown"}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       );
     },
     sortingFn: "alphanumeric",
   }),
-  columnHelper.accessor((row) => row.validationResults || [], {
-    id: "issues",
-    header: "Issues",
-    cell: (info) => {
-      const validationResults = info.getValue();
-      if (!validationResults.length) return null;
+  columnHelper.accessor(
+    (row) => ({
+      status: row.status,
+      zippedSubmission: row.zippedSubmission,
+      validationResults: row.validationResults || [],
+    }),
+    {
+      id: "issues",
+      header: "Issues",
+      cell: (info) => {
+        const { validationResults, zippedSubmission, status } = info.getValue();
+        if (!validationResults.length) return null;
 
-      const failedResults = validationResults.filter(
-        (result) => result.outcome === "failed",
-      );
-
-      if (failedResults.length === 0) {
-        return null;
-      }
-
-      const errorCount = failedResults.filter(
-        (result) => result.severity === "error",
-      ).length;
-      const warningCount = failedResults.filter(
-        (result) => result.severity === "warning",
-      ).length;
-
-      return (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger>
-              <div className="flex items-center gap-2">
-                {errorCount > 0 && (
-                  <div className="flex items-center gap-1">
-                    <AlertOctagon className="h-4 w-4 text-destructive" />
-                    <span className="text-sm text-destructive">
-                      {errorCount}
-                    </span>
-                  </div>
-                )}
-                {warningCount > 0 && (
-                  <div className="flex items-center gap-1">
-                    <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                    <span className="text-sm text-yellow-500">
-                      {warningCount}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              <div className="space-y-2">
-                {errorCount > 0 && (
-                  <div>
-                    <p className="font-semibold text-destructive">Errors:</p>
-                    <ul className="list-disc pl-4 space-y-1">
-                      {failedResults
-                        .filter((result) => result.severity === "error")
-                        .map((error, i) => (
-                          <li key={i} className="text-sm">
-                            {error.message || "Unknown error"}
-                            {error.fileName && (
-                              <span className="block text-xs text-muted-foreground mt-0.5">
-                                File: {error.fileName}
-                              </span>
-                            )}
-                          </li>
-                        ))}
-                    </ul>
-                  </div>
-                )}
-                {warningCount > 0 && (
-                  <div>
-                    <p className="font-semibold text-yellow-500">Warnings:</p>
-                    <ul className="list-disc pl-4 space-y-1">
-                      {failedResults
-                        .filter((result) => result.severity === "warning")
-                        .map((warning, i) => (
-                          <li key={i} className="text-sm">
-                            {warning.message || "Unknown warning"}
-                            {warning.fileName && (
-                              <span className="block text-xs text-muted-foreground mt-0.5">
-                                File: {warning.fileName}
-                              </span>
-                            )}
-                          </li>
-                        ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      );
-    },
-    sortingFn: (rowA, rowB) => {
-      // Sort by failed validation count
-      const failedA =
-        rowA.original.validationResults?.filter(
+        const failedResults = validationResults.filter(
           (result) => result.outcome === "failed",
-        ).length || 0;
-      const failedB =
-        rowB.original.validationResults?.filter(
-          (result) => result.outcome === "failed",
-        ).length || 0;
+        );
 
-      if (failedA !== failedB) return failedA - failedB;
+        if (failedResults.length === 0 && zippedSubmission?.zipKey) {
+          return null;
+        }
 
-      // If same number of failed validations, sort by error count
-      const errorsA =
-        rowA.original.validationResults?.filter(
-          (result) =>
-            result.outcome === "failed" && result.severity === "error",
-        ).length || 0;
-      const errorsB =
-        rowB.original.validationResults?.filter(
-          (result) =>
-            result.outcome === "failed" && result.severity === "error",
-        ).length || 0;
+        const errorCount = failedResults.filter(
+          (result) => result.severity === "error",
+        ).length;
+        const warningCount = failedResults.filter(
+          (result) => result.severity === "warning",
+        ).length;
 
-      if (errorsA !== errorsB) return errorsA - errorsB;
+        const isMissingZip = !zippedSubmission?.zipKey && status === "verified";
 
-      // If same number of errors, sort by warning count
-      const warningsA =
-        rowA.original.validationResults?.filter(
-          (result) =>
-            result.outcome === "failed" && result.severity === "warning",
-        ).length || 0;
-      const warningsB =
-        rowB.original.validationResults?.filter(
-          (result) =>
-            result.outcome === "failed" && result.severity === "warning",
-        ).length || 0;
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <div className="flex items-center gap-2">
+                  {errorCount > 0 && (
+                    <div className="flex items-center gap-1">
+                      <AlertOctagon className="h-4 w-4 text-destructive" />
+                      <span className="text-sm text-destructive">
+                        {errorCount}
+                      </span>
+                    </div>
+                  )}
+                  {warningCount > 0 && (
+                    <div className="flex items-center gap-1">
+                      <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                      <span className="text-sm text-yellow-500">
+                        {warningCount}
+                      </span>
+                    </div>
+                  )}
+                  {isMissingZip && (
+                    <div className="flex items-center gap-1">
+                      <ShieldAlert className="h-4 w-4 text-blue-500" />
+                    </div>
+                  )}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="space-y-2">
+                  {isMissingZip && (
+                    <div className="bg-muted/50 p-2 rounded">
+                      <p className="font-semibold text-blue-500">
+                        Missing Zip.
+                      </p>
+                      <span className="block text-xs text-muted-foreground mt-0.5">
+                        This participant is missing a zip file. Please init a
+                        generation.
+                      </span>
+                    </div>
+                  )}
+                  {errorCount > 0 && (
+                    <div className="bg-muted/50 p-2 rounded">
+                      <p className="font-semibold text-destructive">Errors:</p>
+                      <ul className="list-disc pl-4 space-y-1">
+                        {failedResults
+                          .filter((result) => result.severity === "error")
+                          .map((error, i) => (
+                            <li key={i} className="text-xs ">
+                              {error.message || "Unknown error"}
+                              {error.fileName && (
+                                <span className="block text-xs text-muted-foreground mt-0.5">
+                                  File: {error.fileName}
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
+                  {warningCount > 0 && (
+                    <div className="bg-muted/50 p-2 rounded">
+                      <p className="font-semibold text-yellow-500">Warnings:</p>
+                      <ul className="list-disc pl-4 space-y-1">
+                        {failedResults
+                          .filter((result) => result.severity === "warning")
+                          .map((warning, i) => (
+                            <li key={i} className="text-sm">
+                              {warning.message || "Unknown warning"}
+                              {warning.fileName && (
+                                <span className="block text-xs text-muted-foreground mt-0.5">
+                                  File: {warning.fileName}
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      },
+      sortingFn: (rowA, rowB) => {
+        // Sort by failed validation count
+        const failedA =
+          rowA.original.validationResults?.filter(
+            (result) => result.outcome === "failed",
+          ).length || 0;
+        const failedB =
+          rowB.original.validationResults?.filter(
+            (result) => result.outcome === "failed",
+          ).length || 0;
 
-      return warningsA - warningsB;
+        if (failedA !== failedB) return failedA - failedB;
+
+        // If same number of failed validations, sort by error count
+        const errorsA =
+          rowA.original.validationResults?.filter(
+            (result) =>
+              result.outcome === "failed" && result.severity === "error",
+          ).length || 0;
+        const errorsB =
+          rowB.original.validationResults?.filter(
+            (result) =>
+              result.outcome === "failed" && result.severity === "error",
+          ).length || 0;
+
+        if (errorsA !== errorsB) return errorsA - errorsB;
+
+        // If same number of errors, sort by warning count
+        const warningsA =
+          rowA.original.validationResults?.filter(
+            (result) =>
+              result.outcome === "failed" && result.severity === "warning",
+          ).length || 0;
+        const warningsB =
+          rowB.original.validationResults?.filter(
+            (result) =>
+              result.outcome === "failed" && result.severity === "warning",
+          ).length || 0;
+
+        return warningsA - warningsB;
+      },
     },
-  }),
+  ),
 ];
 
 interface SubmissionsParticipantsTableProps {
