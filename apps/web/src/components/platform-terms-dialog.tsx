@@ -143,8 +143,8 @@ export default function PlatformTermsDialog({
                     For questions about these terms or the platform, contact us
                     at:
                   </p>
-                  <p>Email: support@vimmer.com</p>
-                  <p>Website: https://vimmer.com</p>
+                  <p>Email: support@blikka.app</p>
+                  <p>Website: https://blikka.app</p>
                 </div>
               </section>
             </div>

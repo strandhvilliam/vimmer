@@ -73,7 +73,7 @@ export function ParticipateClientPage() {
     <div className="flex flex-col min-h-[100dvh] relative overflow-hidden">
       <div className=" z-20 flex flex-col flex-1 h-full">
         <header className="flex justify-between items-center p-4">
-          <div className="font-rocgrotesk font-extrabold">vimmer</div>
+          <div className="font-rocgrotesk font-extrabold">blikka</div>
           <div>
             <Button variant="link" className="text-xs h-8 px-2 gap-0" asChild>
               <Link href="/staff">

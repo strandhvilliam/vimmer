@@ -11,7 +11,6 @@ import { createTRPCProxyClient, httpBatchLink } from "@trpc/client";
 
 import { Resource } from "sst";
 import superjson from "superjson";
-import { getDomain } from "@/lib/get-domain";
 import { headers } from "next/headers";
 
 export const getQueryClient = cache(createQueryClient);

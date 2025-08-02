@@ -46,6 +46,6 @@ export const selectDomain = actionClient
     if (process.env.NODE_ENV === "development") {
       redirect(`http://${domain}.localhost:3000/${type}`);
     } else {
-      redirect(`https://${domain}.vimmer.photo/${type}`);
+      redirect(`https://${domain}.blikka.app/${type}`);
     }
   });

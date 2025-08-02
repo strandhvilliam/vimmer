@@ -48,8 +48,8 @@ export function AppHeader() {
     requiredActions = configCheck.requiredActions;
   }
 
-  const staffSiteUrl = `https://${domain}.vimmer.photo/staff`;
-  const participantSiteUrl = `https://${domain}.vimmer.photo`;
+  const staffSiteUrl = `https://${domain}.blikka.app/staff`;
+  const participantSiteUrl = `https://${domain}.blikka.app`;
 
   return (
     <div className="z-50 w-full px-4 bg-sidebar">

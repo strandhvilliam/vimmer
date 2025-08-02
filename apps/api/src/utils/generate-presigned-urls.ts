@@ -1,7 +1,7 @@
 import { S3Client } from "@aws-sdk/client-s3";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { eq, inArray, not } from "drizzle-orm";
+import { and, eq, inArray, not } from "drizzle-orm";
 import type { Database } from "../db";
 import {
   marathons,
@@ -146,7 +146,12 @@ export class PresignedSubmissionService {
       // delete the keys not in submissionKeys
       await this.db
         .delete(submissions)
-        .where(not(inArray(submissions.key, submissionKeys)));
+        .where(
+          and(
+            eq(submissions.marathonId, marathon.id),
+            not(inArray(submissions.key, submissionKeys)),
+          ),
+        );
       const newParticipants = await this.db.query.submissions.findMany({
         where: inArray(submissions.key, submissionKeys),
       });

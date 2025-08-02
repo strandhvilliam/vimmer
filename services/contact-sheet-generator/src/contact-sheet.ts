@@ -133,12 +133,15 @@ export async function createContactSheet({
   }
 
   function escapeXml(unsafe: string) {
-    return unsafe
+    console.log("unsafe", unsafe);
+    const escaped = unsafe
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&apos;");
+    console.log("escaped", escaped);
+    return escaped;
   }
 
   function createTextLabel(label: string): Buffer {

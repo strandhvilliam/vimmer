@@ -28,11 +28,11 @@ export const sendInvitationEmailAction = actionClient
       if (process.env.NODE_ENV === "development") {
         return `http://${domain}.localhost:3000`;
       }
-      return `https://${domain}.vimmer.photo`;
+      return `https://${domain}.blikka.app`;
     };
 
     const { data, error } = await resend.emails.send({
-      from: "Vimmer Support <support@vimmer.photo>",
+      from: "Blikka Support <support@vimmer.photo>",
       to: [parsedInput.email],
       subject: `Invitation to review ${parsedInput.marathonName} submissions`,
       react: JuryReviewEmail({

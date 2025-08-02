@@ -28,7 +28,7 @@ export function LandingHeroSection() {
         transition={{ duration: 0.7, delay: 0.3 }}
       >
         <Link
-          href="https://sthlm2025.vimmer.photo/participate"
+          href="https://sthlm2025.blikka.app/participate"
           className="flex justify-center"
           target="_blank"
           rel="noopener noreferrer"

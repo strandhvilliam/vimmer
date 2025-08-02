@@ -7,7 +7,7 @@ import { getDomain } from "@/lib/get-domain";
 import { Resource } from "sst";
 
 export const metadata: Metadata = {
-  title: "Vimmer",
+  title: "Blikka",
   description: "Upload your submissions",
 };
 

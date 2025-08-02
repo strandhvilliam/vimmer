@@ -197,6 +197,7 @@ function getHostDomain(request: NextRequest) {
   const hostDomain = host?.slice(0, host.indexOf(":")).split(".").at(0);
   if (!hostDomain) return null;
   const routeToApex = [
+    "blikka",
     "vimmer",
     "www",
     "localhost",
@@ -254,7 +255,7 @@ function extractSubdomain(request: NextRequest): string | null {
     return null;
   }
 
-  const rootDomain = "vimmer.photo";
+  const rootDomain = "blikka.app";
 
   // Regular subdomain detection
   const isSubdomain =

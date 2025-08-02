@@ -16,9 +16,11 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   trustedOrigins: [
     "*.vimmer.photo",
+    "*.blikka.app",
     "*.localhost:3000",
     "http://localhost:3000",
     "vimmer.photo",
+    "blikka.app",
     "http://192.168.50.186:3000",
   ],
   cookieCache: {
@@ -32,7 +34,7 @@ export const auth = betterAuth({
         switch (type) {
           case "sign-in": {
             const { data, error } = await resend.emails.send({
-              from: "Vimmer Support <support@vimmer.photo>",
+              from: "Blikka Support <support@vimmer.photo>",
               to: [email],
               subject: "Sign in to Your Account",
               html: await render(OTPEmail({ otp, username: email })),

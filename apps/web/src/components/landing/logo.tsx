@@ -6,7 +6,7 @@ export function Logo() {
       {/* <img src="/vimmer-black.svg" alt="vimmer" className="w-8" /> */}
       <Icon icon="camera" className="w-8 h-8" />
       <span className="font-rocgrotesk font-bold text-4xl underline">
-        blicka
+        blikka
       </span>
     </div>
   );

@@ -129,7 +129,7 @@ export function ParticipantList({
                 size="sm"
                 className="text-neutral-400 hover:text-neutral-50 font-rocgrotesk"
               >
-                blicka
+                blikka
               </Button>
               <h1 className="text-xl text-neutral-50 font-semibold font-rocgrotesk">
                 Competition Participants
@@ -182,7 +182,7 @@ export function ParticipantList({
             variant="ghost"
             className="text-neutral-400 hover:text-neutral-50 font-rocgrotesk text-2xl font-semibold"
           >
-            blicka
+            blikka
           </Button>
 
           <div className="flex flex-col">

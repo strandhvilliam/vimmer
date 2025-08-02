@@ -14,8 +14,8 @@ interface ParsedAndValidatedPhotos {
     file: File;
     exif: { [key: string]: unknown };
     preview: string;
-    thumbnail: string | null;
-    thumbnailLoading: boolean;
+    thumbnail?: string | null;
+    thumbnailLoading?: boolean;
     orderIndex: number;
   }[];
   validationResults: ValidationResult[];
@@ -72,7 +72,9 @@ export async function parseAndValidateFiles(
       };
     }),
   );
-  const validPhotos = newPhotos.filter((photo) => photo !== null);
+  const validPhotos = newPhotos.filter(
+    (photo) => photo !== null,
+  ) satisfies SelectedPhotoV2[];
 
   const sortedByTime = [...currentPhotos, ...validPhotos]
     .sort((a, b) => {

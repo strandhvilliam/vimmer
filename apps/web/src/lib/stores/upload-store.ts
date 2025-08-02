@@ -220,6 +220,7 @@ export const classifyError = (
   httpStatus?: number,
 ): { code: FileUploadErrorCode } => {
   const message = error.message.toLowerCase();
+  console.error(message);
 
   // HTTP status code based classification
   if (httpStatus) {

@@ -87,9 +87,7 @@ export function OnboardingSummaryStep({
             `http://${marathon.domain}.localhost:3000/admin/dashboard`,
           );
         } else {
-          router.push(
-            `https://${marathon.domain}.vimmer.photo/admin/dashboard`,
-          );
+          router.push(`https://${marathon.domain}.blikka.app/admin/dashboard`);
         }
       },
       onError: (error) => {
