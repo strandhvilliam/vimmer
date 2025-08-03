@@ -64,6 +64,8 @@ export function RealtimeProvider({
       const message = new TextDecoder("utf8").decode(new Uint8Array(payload));
       const { query } = JSON.parse(message);
 
+      console.log({ query });
+
       // maybe use pathfilter instead
       switch (query) {
         case trpc.competitionClasses.pathKey()[0][0]:

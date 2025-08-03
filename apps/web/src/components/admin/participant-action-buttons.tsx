@@ -83,6 +83,28 @@ export function ParticipantActionButtons({
       }),
     );
 
+  const { mutate: deleteParticipant, isPending: isDeletingParticipant } =
+    useMutation(
+      trpc.participants.delete.mutationOptions({
+        onSuccess: () => {
+          toast.success("Participant deleted");
+          queryClient.invalidateQueries({
+            queryKey: trpc.participants.pathKey(),
+          });
+          queryClient.invalidateQueries({
+            queryKey: trpc.validations.pathKey(),
+          });
+          queryClient.invalidateQueries({
+            queryKey: trpc.submissions.pathKey(),
+          });
+        },
+        onError: (error) => {
+          console.error(error);
+          toast.error("Failed to delete participant");
+        },
+      }),
+    );
+
   return (
     <div className="flex flex-wrap gap-2">
       {participant.zippedSubmission?.zipKey && (
@@ -141,9 +163,19 @@ export function ParticipantActionButtons({
                       : "Generate Contact Sheet"}
                   </span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    deleteParticipant({
+                      id: participant.id,
+                    })
+                  }
+                >
                   <Trash className="h-4 w-4 mr-2 text-destructive" />
-                  <span className="text-destructive">Delete Participant</span>
+                  <span className="text-destructive">
+                    {isDeletingParticipant
+                      ? "Deleting..."
+                      : "Delete Participant"}
+                  </span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

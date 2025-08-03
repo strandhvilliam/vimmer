@@ -287,11 +287,14 @@ export default $config({
         exportsBucket,
         api,
       ],
-      environment: env,
+      environment: { ...env, FONTCONFIG_PATH: "/opt/etc/fonts" },
       url: true,
       nodejs: {
         install: ["sharp"],
       },
+      layers: [
+        "arn:aws:lambda:eu-north-1:347599033421:layer:amazon_linux_fonts:1",
+      ],
       permissions: [
         {
           actions: ["s3:GetObject", "s3:PutObject"],

@@ -19,13 +19,7 @@ import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { Slider } from "@vimmer/ui/components/slider";
 import { toast } from "sonner";
 import { cn } from "@vimmer/ui/lib/utils";
-import {
-  Loader,
-  AlertTriangle,
-  Download,
-  RefreshCcw,
-  Loader2,
-} from "lucide-react";
+import { AlertTriangle, Download, RefreshCcw, Loader2 } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 
 interface ParticipantExportCardProps {
@@ -76,10 +70,6 @@ export function ParticipantExportCard({
   if (zippedSubmission?.zipKey && zippedSubmission.status === "completed") {
     return null;
   }
-
-  console.log(zippedSubmission);
-
-  console.log(parseErrors(zippedSubmission?.errors));
 
   return (
     <Card
@@ -135,7 +125,9 @@ export function ParticipantExportCard({
               )}
             >
               <span className="font-normal text-muted-foreground">Export:</span>{" "}
-              {zippedSubmission && zippedSubmission.status === "processing"
+              {participant.status === "verified" &&
+              zippedSubmission &&
+              zippedSubmission.status === "processing"
                 ? "Generating..."
                 : zippedSubmission &&
                     (zippedSubmission.status === "error" ||

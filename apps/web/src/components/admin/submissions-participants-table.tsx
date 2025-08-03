@@ -57,7 +57,7 @@ import {
   DropdownMenuSeparator,
 } from "@vimmer/ui/components/dropdown-menu";
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, formatDistanceToNow, isSameDay } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import {
@@ -154,7 +154,13 @@ const columns = [
     cell: (info) => {
       const date = info.getValue();
       try {
-        return format(new Date(date), "dd/MM/yyyy HH:mm");
+        if (!isSameDay(new Date(), new Date(date))) {
+          return format(new Date(date), "dd/MM/yyyy HH:mm");
+        }
+
+        return formatDistanceToNow(new Date(date), {
+          addSuffix: true,
+        });
       } catch (error) {
         return date || "-";
       }
