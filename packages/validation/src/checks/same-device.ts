@@ -50,6 +50,10 @@ function checkSameDevice(input: ValidationInput[]): ValidationResult {
     (identifier) => identifier === firstIdentifier,
   );
 
+  const uniqueIdentifiers = validIdentifiers.filter(
+    (identifier, index) => validIdentifiers.indexOf(identifier) === index,
+  );
+
   return allSameDevice
     ? createValidationResult(
         VALIDATION_OUTCOME.PASSED,
@@ -59,7 +63,7 @@ function checkSameDevice(input: ValidationInput[]): ValidationResult {
     : createValidationResult(
         VALIDATION_OUTCOME.FAILED,
         RULE_KEYS.SAME_DEVICE,
-        `Different devices detected: ${validIdentifiers.join(", ")}`,
+        `Different devices detected: ${uniqueIdentifiers.join(", ")}`,
       );
 }
 

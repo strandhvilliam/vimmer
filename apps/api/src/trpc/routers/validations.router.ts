@@ -6,6 +6,7 @@ import {
   updateValidationResultMutation,
   createParticipantVerificationMutation,
   clearAllValidationResultsMutation,
+  getValidationResultsByDomainQuery,
 } from "@vimmer/api/db/queries/validations.queries";
 import { createTRPCRouter, publicProcedure } from "..";
 import {
@@ -16,6 +17,7 @@ import {
   updateValidationResultSchema,
   createParticipantVerificationSchema,
   runValidationsSchema,
+  getValidationResultsByDomainSchema,
 } from "@vimmer/api/schemas/validations.schemas";
 import {
   getParticipantByIdQuery,
@@ -51,6 +53,13 @@ export const validationsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return getParticipantVerificationsByStaffIdQuery(ctx.db, {
         staffId: input.staffId,
+      });
+    }),
+  getValidationResultsByDomain: publicProcedure
+    .input(getValidationResultsByDomainSchema)
+    .query(async ({ ctx, input }) => {
+      return getValidationResultsByDomainQuery(ctx.db, {
+        domain: input.domain,
       });
     }),
 

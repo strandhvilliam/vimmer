@@ -17,6 +17,7 @@ export const EXPORT_KEYS = {
   XLSX_PARTICIPANTS: "xlsx_participants",
   XLSX_SUBMISSIONS: "xlsx_submissions",
   ZIP_CONTACT_SHEETS: "zip_contact_sheets",
+  TXT_VALIDATION_RESULTS: "txt_validation_results",
 } as const;
 
 interface ExportOptionsProps {
@@ -34,35 +35,55 @@ export function ExportOptions({
 }: ExportOptionsProps) {
   const [format, setFormat] = useState<string>("json");
   const [isLoading, setIsLoading] = useState(false);
+  const [onlyFailed, setOnlyFailed] = useState<boolean>(true);
+  const [fileFormat, setFileFormat] = useState<string>("single");
 
   const handleExport = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(
-        `/api/${domain}/export/${type}?format=${format}`,
-        {
-          method: "GET",
-        },
-      );
+
+      let url = `/api/${domain}/export/${type}`;
+      const params = new URLSearchParams();
+
+      if (type === EXPORT_KEYS.EXIF) {
+        params.append("format", format);
+      } else if (type === EXPORT_KEYS.TXT_VALIDATION_RESULTS) {
+        params.append("onlyFailed", onlyFailed.toString());
+        params.append("fileFormat", fileFormat);
+      }
+
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await fetch(url, {
+        method: "GET",
+      });
 
       if (!response.ok) {
         throw new Error("Export failed");
       }
 
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
-      const extension =
-        type === EXPORT_KEYS.EXIF
-          ? format
-          : type === EXPORT_KEYS.ZIP_CONTACT_SHEETS
-            ? "zip"
-            : "xlsx";
+      a.href = downloadUrl;
+
+      let extension = "txt";
+      if (type === EXPORT_KEYS.EXIF) {
+        extension = format;
+      } else if (type === EXPORT_KEYS.ZIP_CONTACT_SHEETS) {
+        extension = "zip";
+      } else if (type === EXPORT_KEYS.TXT_VALIDATION_RESULTS) {
+        extension = fileFormat === "folder" ? "zip" : "txt";
+      } else {
+        extension = "xlsx";
+      }
+
       a.download = `${type}-export-${new Date().toISOString().split("T")[0]}.${extension}`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(downloadUrl);
       document.body.removeChild(a);
 
       toast.success("Export successful", {
@@ -89,6 +110,31 @@ export function ExportOptions({
             <SelectItem value="txt">Text</SelectItem>
           </SelectContent>
         </Select>
+      )}
+      {type === EXPORT_KEYS.TXT_VALIDATION_RESULTS && (
+        <>
+          <Select
+            value={onlyFailed ? "failed" : "all"}
+            onValueChange={(value) => setOnlyFailed(value === "failed")}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select results" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="failed">Only Failed</SelectItem>
+              <SelectItem value="all">All Results</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={fileFormat} onValueChange={setFileFormat}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select format" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="single">Single File</SelectItem>
+              <SelectItem value="folder">Folder per Participant</SelectItem>
+            </SelectContent>
+          </Select>
+        </>
       )}
       <Button
         onClick={handleExport}

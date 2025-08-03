@@ -4,6 +4,7 @@ import {
   validationResults,
   participantVerifications,
   ruleConfigs,
+  marathons,
 } from "@vimmer/api/db/schema";
 import type {
   NewValidationResult,
@@ -20,6 +21,33 @@ export async function getValidationResultsByParticipantIdQuery(
   });
 
   return result;
+}
+
+export async function getValidationResultsByDomainQuery(
+  db: Database,
+  { domain }: { domain: string },
+) {
+  const result = await db.query.marathons.findFirst({
+    where: eq(marathons.domain, domain),
+    with: {
+      participants: { with: { submissions: true, validationResults: true } },
+    },
+  });
+
+  return (
+    result?.participants.flatMap((p) => {
+      return p.submissions.map((s) => {
+        const { submissions: _, validationResults: __, ...rest } = p;
+        return {
+          ...s,
+          participant: rest,
+          validationResults: p.validationResults.filter(
+            (vr) => vr.fileName === s.key,
+          ),
+        };
+      });
+    }) ?? []
+  );
 }
 
 export async function getParticipantVerificationsByStaffIdQuery(

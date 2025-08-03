@@ -8,6 +8,10 @@ export const getParticipantVerificationsByStaffIdSchema = z.object({
   staffId: z.string(),
 });
 
+export const getValidationResultsByDomainSchema = z.object({
+  domain: z.string(),
+});
+
 export const createValidationResultSchema = z.object({
   data: z.object({
     outcome: z.string(),

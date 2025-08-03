@@ -7,6 +7,7 @@ const EXPORT_KEYS = {
   XLSX_PARTICIPANTS: "xlsx_participants",
   XLSX_SUBMISSIONS: "xlsx_submissions",
   ZIP_CONTACT_SHEETS: "zip_contact_sheets",
+  TXT_VALIDATION_RESULTS: "txt_validation_results",
 } as const;
 
 const api = createServerApiClient();
@@ -19,6 +20,8 @@ export async function GET(
     const { domain, type } = await params;
     const { searchParams } = new URL(request.url);
     const format = searchParams.get("format") || "json";
+    const onlyFailed = searchParams.get("onlyFailed") === "true";
+    const fileFormat = searchParams.get("fileFormat") || "single";
 
     const marathon = await api.marathons.getByDomain.query({ domain });
 
@@ -38,6 +41,14 @@ export async function GET(
 
       case EXPORT_KEYS.EXIF:
         return await handleExifExport(domain, format);
+
+      case EXPORT_KEYS.TXT_VALIDATION_RESULTS:
+        return await handleValidationResultsExport(
+          domain,
+          onlyFailed,
+          fileFormat,
+        );
+
       default:
         return NextResponse.json(
           { error: "Invalid export type" },
@@ -204,4 +215,145 @@ async function handleExifExport(domain: string, format: string) {
       "Content-Disposition": `attachment; filename="exif-export-${new Date().toISOString().split("T")[0]}.json"`,
     },
   });
+}
+
+async function handleValidationResultsExport(
+  domain: string,
+  onlyFailed: boolean,
+  fileFormat: string,
+) {
+  const submissionsWithValidations =
+    await api.validations.getValidationResultsByDomain.query({
+      domain,
+    });
+
+  // Extract all validation results from submissions
+  const allValidationResults = submissionsWithValidations.flatMap(
+    (submission) =>
+      submission.validationResults.map((result) => ({
+        ...result,
+        participant: submission.participant,
+        fileName: submission.key,
+      })),
+  );
+
+  // Filter results based on onlyFailed parameter
+  const filteredResults = onlyFailed
+    ? allValidationResults.filter((result) => result.outcome === "failed")
+    : allValidationResults;
+
+  if (fileFormat === "single") {
+    // Single file format
+    let textContent = `Validation Results Export - ${new Date().toLocaleDateString()}\n`;
+    textContent += `Domain: ${domain}\n`;
+    textContent += `Filter: ${onlyFailed ? "Only Failed Results" : "All Results"}\n`;
+    textContent += `Total Results: ${filteredResults.length}\n\n`;
+
+    // Group by participant
+    const resultsByParticipant = filteredResults.reduce(
+      (acc, result) => {
+        const participantKey =
+          result.participant?.reference || `Unknown-${result.participantId}`;
+        if (!acc[participantKey]) {
+          acc[participantKey] = [];
+        }
+        acc[participantKey].push(result);
+        return acc;
+      },
+      {} as Record<string, typeof filteredResults>,
+    );
+
+    Object.entries(resultsByParticipant).forEach(
+      ([participantRef, results]) => {
+        const participant = results[0]?.participant;
+        textContent += `=== PARTICIPANT: ${participantRef} ===\n`;
+        if (participant) {
+          textContent += `Name: ${participant.firstname} ${participant.lastname}\n`;
+        }
+        textContent += `Total Validation Results: ${results.length}\n\n`;
+
+        results.forEach((result, index) => {
+          textContent += `--- Result ${index + 1} ---\n`;
+          textContent += `Rule: ${result.ruleKey}\n`;
+          textContent += `Severity: ${result.severity.toUpperCase()}\n`;
+          textContent += `Outcome: ${result.outcome}\n`;
+          textContent += `Message: ${result.message}\n`;
+          if (result.fileName) {
+            textContent += `File: ${result.fileName}\n`;
+          }
+          textContent += `Date: ${result.createdAt}\n`;
+          if (result.overruled) {
+            textContent += `Status: OVERRULED\n`;
+          }
+          textContent += `\n`;
+        });
+        textContent += `\n`;
+      },
+    );
+
+    return new NextResponse(textContent, {
+      headers: {
+        "Content-Type": "text/plain",
+        "Content-Disposition": `attachment; filename="validation-results-export-${new Date().toISOString().split("T")[0]}.txt"`,
+      },
+    });
+  } else {
+    // Folder format - create a zip with individual files per participant
+    const JSZip = (await import("jszip")).default;
+    const zip = new JSZip();
+
+    // Group by participant
+    const resultsByParticipant = filteredResults.reduce(
+      (acc, result) => {
+        const participantKey =
+          result.participant?.reference || `Unknown-${result.participantId}`;
+        if (!acc[participantKey]) {
+          acc[participantKey] = [];
+        }
+        acc[participantKey].push(result);
+        return acc;
+      },
+      {} as Record<string, typeof filteredResults>,
+    );
+
+    Object.entries(resultsByParticipant).forEach(
+      ([participantRef, results]) => {
+        const participant = results[0]?.participant;
+        let fileContent = `Validation Results for ${participantRef}\n`;
+        fileContent += `Export Date: ${new Date().toLocaleDateString()}\n`;
+        if (participant) {
+          fileContent += `Participant Name: ${participant.firstname} ${participant.lastname}\n`;
+        }
+        fileContent += `Filter: ${onlyFailed ? "Only Failed Results" : "All Results"}\n`;
+        fileContent += `Total Results: ${results.length}\n\n`;
+
+        results.forEach((result, index) => {
+          fileContent += `--- Result ${index + 1} ---\n`;
+          fileContent += `Rule: ${result.ruleKey}\n`;
+          fileContent += `Severity: ${result.severity.toUpperCase()}\n`;
+          fileContent += `Outcome: ${result.outcome}\n`;
+          fileContent += `Message: ${result.message}\n`;
+          if (result.fileName) {
+            fileContent += `File: ${result.fileName}\n`;
+          }
+          fileContent += `Date: ${result.createdAt}\n`;
+          if (result.overruled) {
+            fileContent += `Status: OVERRULED\n`;
+          }
+          fileContent += `\n`;
+        });
+
+        zip.file(`${participantRef}-validation-results.txt`, fileContent);
+      },
+    );
+
+    const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
+
+    return new NextResponse(zipBuffer, {
+      headers: {
+        "Content-Type": "application/zip",
+        "Content-Disposition": `attachment; filename="validation-results-export-${new Date().toISOString().split("T")[0]}.zip"`,
+      },
+    });
+  }
 }

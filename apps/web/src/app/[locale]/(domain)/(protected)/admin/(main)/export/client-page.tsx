@@ -17,6 +17,7 @@ export const EXPORT_KEYS = {
   EXIF: "exif",
   XLSX_PARTICIPANTS: "xlsx_participants",
   XLSX_SUBMISSIONS: "xlsx_submissions",
+  TXT_VALIDATION_RESULTS: "txt_validation_results",
 } as const;
 
 export function ExportClientPage() {
@@ -123,29 +124,56 @@ export function ExportClientPage() {
           </Card>
         </div>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between gap-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  <h2 className="text-lg font-semibold font-rocgrotesk">
-                    EXIF Data
-                  </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between gap-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    <h2 className="text-lg font-semibold font-rocgrotesk">
+                      EXIF Data
+                    </h2>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Export EXIF metadata for all submissions. Choose between
+                    JSON or text format.
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Export EXIF metadata for all submissions. Choose between JSON
-                  or text format.
-                </p>
+                <ExportOptions
+                  domain={domain}
+                  type={EXPORT_KEYS.EXIF}
+                  label="Export"
+                />
               </div>
-              <ExportOptions
-                domain={domain}
-                type={EXPORT_KEYS.EXIF}
-                label="Export"
-              />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between gap-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    <h2 className="text-lg font-semibold font-rocgrotesk">
+                      Validation Results
+                    </h2>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Export validation results for submissions. Choose to export
+                    only failed results or all results, as single file or
+                    folder.
+                  </p>
+                </div>
+                <ExportOptions
+                  domain={domain}
+                  type={EXPORT_KEYS.TXT_VALIDATION_RESULTS}
+                  label="Export"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         <ContactSheetExport
           domain={domain}

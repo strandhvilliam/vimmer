@@ -87,6 +87,35 @@ export function UploadSection({
       fileName: result.fileName,
     }));
 
+  const renderValidationWarnings = () => {
+    if (!hasValidationWarnings) return null;
+    return (
+      <Alert className="bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/50 dark:border-amber-800 dark:text-amber-200 w-full">
+        <AlertTriangle className="h-4 w-4" />
+        <div className="ml-2">
+          <p className="font-medium">Warning</p>
+          <p className="text-sm mt-1">
+            Some validation warnings were found. You may still upload, but the
+            submission will be marked for manual review.
+          </p>
+          <div className="mt-3 space-y-1">
+            {warningMessages.map((warning, index) => (
+              <div
+                key={index}
+                className="text-xs bg-amber-100 dark:bg-amber-900/30 rounded px-2 py-1"
+              >
+                {warning.fileName && (
+                  <span className="font-medium">{warning.fileName}: </span>
+                )}
+                <span>{warning.message}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Alert>
+    );
+  };
+
   return (
     <AnimatePresence mode="wait">
       {hasValidationErrors ? (
@@ -141,33 +170,7 @@ export function UploadSection({
                 All photos selected - ready to upload
               </p>
 
-              {hasValidationWarnings && (
-                <Alert className="bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/50 dark:border-amber-800 dark:text-amber-200 w-full">
-                  <AlertTriangle className="h-4 w-4" />
-                  <div className="ml-2">
-                    <p className="font-medium">Warning</p>
-                    <p className="text-sm mt-1">
-                      Some validation warnings were found. You may still upload,
-                      but the submission will be marked for manual review.
-                    </p>
-                    <div className="mt-3 space-y-1">
-                      {warningMessages.map((warning, index) => (
-                        <div
-                          key={index}
-                          className="text-xs bg-amber-100 dark:bg-amber-900/30 rounded px-2 py-1"
-                        >
-                          {warning.fileName && (
-                            <span className="font-medium">
-                              {warning.fileName}:{" "}
-                            </span>
-                          )}
-                          <span>{warning.message}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </Alert>
-              )}
+              {renderValidationWarnings()}
 
               <PrimaryButton
                 onClick={onUpload}
@@ -239,6 +242,7 @@ export function UploadSection({
           </div>
         </motion.div>
       )}
+      {renderValidationWarnings()}
     </AnimatePresence>
   );
 }

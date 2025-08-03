@@ -22,6 +22,8 @@ import {
 import { toast } from "sonner";
 import { ValidationStatusBadge } from "@/components/validation-status-badge";
 import {
+  CompetitionClass,
+  DeviceGroup,
   Participant,
   Submission,
   Topic,
@@ -37,6 +39,8 @@ interface ParticipantInfoSheetProps {
   participant:
     | (Participant & {
         validationResults: ValidationResult[];
+        competitionClass: CompetitionClass | null;
+        deviceGroup: DeviceGroup | null;
         submissions: Submission[];
       })
     | null;
@@ -452,6 +456,7 @@ export function ParticipantInfoSheet({
                 // Create a list of all topics with their submissions and validations
                 const allTopicsWithSubmissions = topics
                   .sort((a, b) => a.orderIndex - b.orderIndex)
+                  .slice(0, participant?.competitionClass?.numberOfPhotos ?? -1)
                   .map((topic) => {
                     const submission = participant?.submissions.find(
                       (s) => s.topicId === topic.id,
