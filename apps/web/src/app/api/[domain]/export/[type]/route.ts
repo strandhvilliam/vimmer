@@ -228,7 +228,7 @@ async function handleValidationResultsExport(
     });
 
   // Extract all validation results from submissions
-  const allValidationResults = submissionsWithValidations.flatMap(
+  const submissionValidationResults = submissionsWithValidations.flatMap(
     (submission) =>
       submission.validationResults.map((result) => ({
         ...result,
@@ -237,10 +237,37 @@ async function handleValidationResultsExport(
       })),
   );
 
+  // Extract global validation results (participant-level)
+  const globalValidationResults = submissionsWithValidations.flatMap(
+    (submission) =>
+      submission.globalValidationResults.map((result) => ({
+        ...result,
+        participant: submission.participant,
+        fileName: null,
+      })),
+  );
+
+  // Combine all validation results
+  const allValidationResults = [
+    ...submissionValidationResults,
+    ...globalValidationResults,
+  ];
+
+  // Filter duplicates based on participant-rule_key combination
+  const uniqueValidationResults = allValidationResults.filter(
+    (result, index, array) => {
+      const key = `${result.participantId}-${result.ruleKey}`;
+      return (
+        array.findIndex((r) => `${r.participantId}-${r.ruleKey}` === key) ===
+        index
+      );
+    },
+  );
+
   // Filter results based on onlyFailed parameter
   const filteredResults = onlyFailed
-    ? allValidationResults.filter((result) => result.outcome === "failed")
-    : allValidationResults;
+    ? uniqueValidationResults.filter((result) => result.outcome === "failed")
+    : uniqueValidationResults;
 
   if (fileFormat === "single") {
     // Single file format

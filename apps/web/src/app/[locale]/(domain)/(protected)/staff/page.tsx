@@ -6,6 +6,7 @@ import { batchPrefetch, HydrateClient } from "@/trpc/server";
 import { trpc } from "@/trpc/server";
 import { Suspense } from "react";
 import { Resource } from "sst";
+import { StaffLoadingSkeleton } from "@/components/staff/staff-loading-skeleton";
 
 export default async function StaffPage() {
   const session = await getSession();
@@ -26,7 +27,7 @@ export default async function StaffPage() {
 
   return (
     <HydrateClient>
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<StaffLoadingSkeleton />}>
         <StaffClientPage
           baseSubmissionUrl={Resource.SubmissionsRouter.url}
           baseThumbnailUrl={Resource.ThumbnailsRouter.url}

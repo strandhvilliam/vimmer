@@ -20,12 +20,15 @@ export function QrScanner({ onScan, onError }: QrScannerProps) {
     <Scanner
       onScan={(result) => {
         if (result[0]) {
+          if (navigator.vibrate) {
+            navigator.vibrate(100);
+          }
           onScan(result[0].rawValue);
         } else {
           toast.error("No QR code found");
         }
       }}
-      sound={false}
+      sound={true}
       components={{
         finder: false,
       }}

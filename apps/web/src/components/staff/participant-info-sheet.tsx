@@ -1,26 +1,11 @@
 "use client";
-"use no memo";
 
 import React, { useState } from "react";
-import {
-  CheckCircle,
-  ChevronDown,
-  ChevronRight,
-  HammerIcon,
-  Loader2,
-  RefreshCcw,
-  XCircle,
-} from "lucide-react";
-import { Sheet, SheetContent, SheetTitle } from "@vimmer/ui/components/sheet";
+import { CheckCircle, Loader2, RefreshCcw, XCircle } from "lucide-react";
+
 import { Button } from "@vimmer/ui/components/button";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@vimmer/ui/components/dialog";
 import { toast } from "sonner";
-import { ValidationStatusBadge } from "@/components/validation-status-badge";
 import {
   CompetitionClass,
   DeviceGroup,
@@ -32,6 +17,9 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { useSession } from "@/contexts/session-context";
+import { PreviewDialog } from "./preview-dialog";
+import { DrawerLayout } from "./drawer-layout";
+import { ValidationAccordion } from "./validation-accordion";
 
 interface ParticipantInfoSheetProps {
   open: boolean;
@@ -44,6 +32,7 @@ interface ParticipantInfoSheetProps {
         submissions: Submission[];
       })
     | null;
+  participantLoading: boolean;
   onParticipantVerified?: () => void;
   topics: Topic[];
   baseThumbnailUrl: string;
@@ -51,109 +40,19 @@ interface ParticipantInfoSheetProps {
   previewBaseUrl: string;
 }
 
-const parseFileNameForOrderIndex = (fileName: string): number | null => {
-  const parts = fileName.split("/");
-  if (parts.length < 3) return null;
-
-  const fileNamePart = parts[2];
-  if (!fileNamePart) return null;
-
-  const parsedNumber = parseInt(fileNamePart, 10) - 1;
-  console.log({ parsedNumber });
-  if (isNaN(parsedNumber)) return null;
-  return parsedNumber;
-};
-
-type GroupedValidations = {
-  global: ValidationResult[];
-  bySubmission: Array<{
-    orderIndex: number;
-    topic: Topic;
-    submission: Submission | null;
-    validations: ValidationResult[];
-  }>;
-};
-
-const groupValidationsBySubmission = (
-  validations: ValidationResult[],
-  submissions: Submission[],
-  topics: Topic[],
-): GroupedValidations => {
-  const global: ValidationResult[] = [];
-  const topicsOrderMap = new Map<number, ValidationResult[]>();
-
-  validations.forEach((validation) => {
-    if (!validation.fileName) {
-      global.push(validation);
-      return;
-    }
-
-    const orderIndex = parseFileNameForOrderIndex(validation.fileName);
-    if (orderIndex === null) {
-      global.push(validation);
-      return;
-    }
-
-    if (!topicsOrderMap.has(orderIndex)) {
-      topicsOrderMap.set(orderIndex, []);
-    }
-    topicsOrderMap.get(orderIndex)!.push(validation);
-  });
-
-  const bySubmission = Array.from(topicsOrderMap.entries())
-    .map(([orderIndex, validations]) => {
-      const topic = topics.find((t) => t.orderIndex === orderIndex);
-      const submission =
-        submissions.find((s) => {
-          const submissionTopic = topics.find((t) => t.id === s.topicId);
-          return submissionTopic?.orderIndex === orderIndex;
-        }) || null;
-
-      return topic
-        ? {
-            orderIndex,
-            topic,
-            submission,
-            validations: validations.sort((a, b) => {
-              if (a.outcome === "failed" && b.outcome !== "failed") return -1;
-              if (a.outcome !== "failed" && b.outcome === "failed") return 1;
-              return 0;
-            }),
-          }
-        : null;
-    })
-    .filter((item): item is NonNullable<typeof item> => item !== null)
-    .sort((a, b) => a.orderIndex - b.orderIndex);
-
-  return {
-    global: global.sort((a, b) => {
-      if (a.outcome === "failed" && b.outcome !== "failed") return -1;
-      if (a.outcome !== "failed" && b.outcome === "failed") return 1;
-      return 0;
-    }),
-    bySubmission,
-  };
-};
-
 export function ParticipantInfoSheet({
   open,
   onOpenChange,
   participant,
+  participantLoading,
   onParticipantVerified,
   topics,
   baseThumbnailUrl,
   submissionBaseUrl,
   previewBaseUrl,
 }: ParticipantInfoSheetProps) {
-  const [expandedSubmissions, setExpandedSubmissions] = useState<Set<number>>(
-    new Set(),
-  );
-  const [globalExpanded, setGlobalExpanded] = useState(false);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
-  const [selectedImageTitle, setSelectedImageTitle] = useState<string | null>(
-    null,
-  );
   const queryClient = useQueryClient();
   const trpc = useTRPC();
   const { user } = useSession();
@@ -229,394 +128,176 @@ export function ParticipantInfoSheet({
       }),
     );
 
-  const toggleSubmissionExpanded = (orderIndex: number) => {
-    setExpandedSubmissions((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(orderIndex)) {
-        newSet.delete(orderIndex);
-      } else {
-        newSet.add(orderIndex);
-      }
-      return newSet;
-    });
-  };
-
-  const toggleGlobalExpanded = () => {
-    setGlobalExpanded(!globalExpanded);
-  };
-
-  const getThumbnailUrl = (
-    submission: Submission | null | undefined,
-  ): string | null => {
-    if (!submission?.thumbnailKey) {
-      if (!submission?.key) return null;
-      if (submission.previewKey) {
-        return `${previewBaseUrl}/${submission.previewKey}`;
-      }
-      return `${submissionBaseUrl}/${submission.key}`;
-    }
-    return `${baseThumbnailUrl}/${submission.thumbnailKey}`;
-  };
-
-  const groupedValidations = participant
-    ? groupValidationsBySubmission(
-        participant.validationResults,
-        participant.submissions,
-        topics,
-      )
-    : ({
-        global: [],
-        bySubmission: [],
-      } satisfies GroupedValidations);
-
   const hasUnresolvedErrors = participant?.validationResults.some(
     (v) => v.severity === "error" && v.outcome === "failed" && !v.overruled,
   );
 
-  const renderValidationItem = (validation: ValidationResult) => (
-    <div
-      key={validation.id}
-      className="pb-3 border-b border-muted last:border-0"
-    >
-      <div className="flex items-center gap-2 justify-between">
-        <div className="flex items-center gap-2">
-          <ValidationStatusBadge
-            outcome={validation.outcome as "failed" | "passed" | "skipped"}
-            severity={validation.severity as "error" | "warning"}
-          />
-          <span
-            className={
-              validation.outcome === "passed"
-                ? "text-green-700 text-sm font-medium"
-                : validation.severity === "error"
-                  ? "text-red-700 text-sm font-medium"
-                  : "text-amber-700 text-sm font-medium"
-            }
-          >
-            {validation.ruleKey.replace(/_/g, " ")}
-          </span>
+  const hasOverrulableErrors = participant?.validationResults.some(
+    (v) => v.severity === "error" && v.outcome === "failed" && !v.overruled,
+  );
+
+  const renderParticipantLoading = () => (
+    <div className="flex flex-col items-center justify-center h-full gap-6 px-8">
+      <div className="text-center space-y-4">
+        <div className="w-16 h-16 mx-auto rounded-full bg-muted/40 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-        {validation.severity === "error" &&
-          validation.outcome === "failed" &&
-          !validation.overruled && (
+        <div className="space-y-2">
+          <h3 className="text-lg font-medium text-foreground">
+            Loading Participant Information
+          </h3>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            Please wait while we load the participant information
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderParticipantNotFound = () => (
+    <div className="flex flex-col items-center justify-center h-full gap-6 px-8">
+      <div className="text-center space-y-4">
+        <div className="w-16 h-16 mx-auto rounded-full bg-muted/40 flex items-center justify-center">
+          <XCircle className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-lg font-medium text-foreground">
+            Participant Not Found
+          </h3>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            The selected participant could not be loaded. Please try selecting a
+            different participant or refresh the page.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderParticipant = () => (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="px-3 pt-6 pb-3 flex justify-center">
+        <div className="flex flex-col flex-0 items-center">
+          <span className="text-4xl font-bold font-rocgrotesk">
+            #{participant?.reference}
+          </span>
+          <div className="h-1 w-full bg-vimmer-primary" />
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto px-3 pb-4">
+        <div className="flex flex-col items-center gap-2 rounded-xl py-2 px-3">
+          <div className="text-center">
+            <div className="text-lg font-medium text-foreground">
+              {participant?.firstname} {participant?.lastname}
+            </div>
+            {participant?.email && (
+              <div className="text-sm text-muted-foreground ">
+                {participant?.email}
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2 w-full justify-center">
+            <div className="flex items-center space-x-2 text-sm bg-green-100 border border-green-400 rounded-full px-3 py-1">
+              {participant?.status === "verified" ? (
+                <div className="flex items-center space-x-1 text-green-600">
+                  <CheckCircle className="h-4 w-4" />
+                  <span className="font-medium">Verified</span>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-1 text-yellow-600">
+                  <XCircle className="h-4 w-4" />
+                  <span className="font-bold">Not Verified</span>
+                </div>
+              )}
+            </div>
+
             <Button
+              variant="outline"
               size="sm"
-              variant="secondary"
-              onClick={() =>
+              className="text-xs px-2 py-1 h-8 rounded-full border-muted-foreground/40 !bg-background"
+              onClick={() => {
+                if (!participant) return;
+                runValidations({ participantId: participant.id });
+              }}
+              disabled={isRunningValidations}
+            >
+              {isRunningValidations ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCcw className="h-4 w-4" />
+              )}
+              Run Validations
+            </Button>
+          </div>
+        </div>
+        <div className="space-y-2 pt-2">
+          {participant && (
+            <ValidationAccordion
+              validationResults={participant.validationResults}
+              submissions={participant.submissions}
+              topics={topics}
+              competitionClass={participant.competitionClass}
+              baseThumbnailUrl={baseThumbnailUrl}
+              submissionBaseUrl={submissionBaseUrl}
+              previewBaseUrl={previewBaseUrl}
+              onThumbnailClick={(url) => {
+                setImageDialogOpen(true);
+                setSelectedImageUrl(url);
+              }}
+              onOverrule={(validationId) =>
                 updateValidationResult({
-                  id: validation.id,
+                  id: validationId,
                   data: {
                     overruled: true,
                   },
                 })
               }
-              disabled={isUpdatingValidationResult}
-            >
-              <HammerIcon className="h-4 w-4" />
-              Overrule
-            </Button>
+              isOverruling={isUpdatingValidationResult}
+              showOverruleButtons={true}
+            />
           )}
-      </div>
-      <div className="">
-        <p className="text-muted-foreground text-xs">{validation.message}</p>
-        {validation.fileName && (
-          <p className="text-xs text-muted-foreground mt-1">
-            File: {validation.fileName}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90dvh] px-0 rounded-xl">
-        <SheetTitle className="sr-only">Participant Information</SheetTitle>
-        <div className="overflow-y-auto h-full pb-16">
-          <div className="px-4 py-4 border-b">
-            <h3 className="text-lg font-medium">
-              {participant?.firstname} {participant?.lastname}
-            </h3>
-            <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
-              <span className="font-mono">#{participant?.reference}</span>
-              {participant?.email && <span>• {participant?.email}</span>}
-            </div>
-            <div className="flex items-center mt-3">
-              <div className="flex items-center space-x-2 text-sm">
-                <span className="text-muted-foreground">Status:</span>
-                {participant?.status === "verified" ? (
-                  <div className="flex items-center space-x-1 text-green-600">
-                    <CheckCircle className="h-4 w-4" />
-                    <span>Verified</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-1 text-yellow-600">
-                    <XCircle className="h-4 w-4" />
-                    <span>Not Verified</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center mt-3">
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs px-2 py-1 h-8"
-                onClick={() => {
-                  if (!participant) return;
-                  runValidations({ participantId: participant.id });
-                }}
-                disabled={isRunningValidations}
-              >
-                {isRunningValidations ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCcw className="h-4 w-4" />
-                )}
-                Run Validations
-              </Button>
-            </div>
-          </div>
-
-          <div className="px-4 py-4">
-            <h4 className="text-sm font-medium mb-3">Submissions</h4>
-            <div className="space-y-4">
-              {groupedValidations.global.length > 0 && (
-                <div>
-                  <button
-                    onClick={toggleGlobalExpanded}
-                    className="flex items-center gap-2 w-full text-left p-2 hover:bg-muted/30 rounded-lg transition-colors"
-                  >
-                    {globalExpanded ? (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    )}
-                    <div className="flex items-center gap-2">
-                      <h5 className="text-sm font-medium text-muted-foreground">
-                        General Validations
-                      </h5>
-                      <div className="flex items-center gap-1 flex-wrap">
-                        {(() => {
-                          const errorCount = groupedValidations.global.filter(
-                            (v) =>
-                              v.severity === "error" && v.outcome === "failed",
-                          ).length;
-                          const warningCount = groupedValidations.global.filter(
-                            (v) =>
-                              v.severity === "warning" &&
-                              v.outcome === "failed",
-                          ).length;
-                          const passedCount = groupedValidations.global.filter(
-                            (v) => v.outcome === "passed",
-                          ).length;
-                          const skippedCount = groupedValidations.global.filter(
-                            (v) => v.outcome === "skipped",
-                          ).length;
-
-                          return (
-                            <>
-                              {errorCount > 0 && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                  {errorCount} error
-                                  {errorCount !== 1 ? "s" : ""}
-                                </span>
-                              )}
-                              {warningCount > 0 && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                  {warningCount} warning
-                                  {warningCount !== 1 ? "s" : ""}
-                                </span>
-                              )}
-                              {passedCount > 0 && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                  {passedCount} passed
-                                </span>
-                              )}
-                              {skippedCount > 0 && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                  {skippedCount} skipped
-                                </span>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  </button>
-                  {globalExpanded && (
-                    <div className="space-y-3 bg-muted/20 p-3 rounded-lg ml-6">
-                      {groupedValidations.global.map(renderValidationItem)}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {(() => {
-                // Create a list of all topics with their submissions and validations
-                const allTopicsWithSubmissions = topics
-                  .sort((a, b) => a.orderIndex - b.orderIndex)
-                  .slice(0, participant?.competitionClass?.numberOfPhotos ?? -1)
-                  .map((topic) => {
-                    const submission = participant?.submissions.find(
-                      (s) => s.topicId === topic.id,
-                    );
-                    const validations =
-                      groupedValidations.bySubmission.find(
-                        (item) => item.orderIndex === topic.orderIndex,
-                      )?.validations || [];
-
-                    return {
-                      orderIndex: topic.orderIndex,
-                      topic,
-                      submission,
-                      validations,
-                    };
-                  });
-
-                return allTopicsWithSubmissions.map(
-                  ({ orderIndex, topic, submission, validations }) => {
-                    const isExpanded = expandedSubmissions.has(orderIndex);
-                    const thumbnailUrl = getThumbnailUrl(submission);
-
-                    return (
-                      <div
-                        key={orderIndex}
-                        className="border border-border rounded-lg bg-card shadow-sm"
-                      >
-                        <button
-                          onClick={() => toggleSubmissionExpanded(orderIndex)}
-                          className="flex items-center gap-4 w-full text-left p-4 hover:bg-muted/50 transition-colors rounded-lg"
-                        >
-                          <div
-                            className="w-16 h-16 rounded-lg overflow-hidden bg-muted/40 flex-shrink-0 shadow-sm cursor-pointer hover:opacity-80 transition-opacity"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (thumbnailUrl) {
-                                const fullImageUrl = submission?.previewKey
-                                  ? `${previewBaseUrl}/${submission.previewKey}`
-                                  : thumbnailUrl;
-                                setSelectedImageUrl(fullImageUrl);
-                                setSelectedImageTitle(topic.name);
-                                setImageDialogOpen(true);
-                              }
-                            }}
-                          >
-                            {thumbnailUrl ? (
-                              <img
-                                src={thumbnailUrl}
-                                alt={topic.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-muted/60">
-                                <span className="text-xs text-muted-foreground font-medium">
-                                  No image
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex-1 min-w-0 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-foreground">
-                                {orderIndex + 1}.
-                              </span>
-                              <h5 className="text-sm font-medium text-foreground truncate">
-                                {topic.name}
-                              </h5>
-                            </div>
-                            <div className="flex items-center gap-1 flex-wrap">
-                              {validations.length > 0 ? (
-                                (() => {
-                                  const errorCount = validations.filter(
-                                    (v) =>
-                                      v.severity === "error" &&
-                                      v.outcome === "failed",
-                                  ).length;
-                                  const warningCount = validations.filter(
-                                    (v) =>
-                                      v.severity === "warning" &&
-                                      v.outcome === "failed",
-                                  ).length;
-                                  const passedCount = validations.filter(
-                                    (v) => v.outcome === "passed",
-                                  ).length;
-                                  const skippedCount = validations.filter(
-                                    (v) => v.outcome === "skipped",
-                                  ).length;
-
-                                  return (
-                                    <>
-                                      {errorCount > 0 && (
-                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                          {errorCount} error
-                                          {errorCount !== 1 ? "s" : ""}
-                                        </span>
-                                      )}
-                                      {warningCount > 0 && (
-                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                          {warningCount} warning
-                                          {warningCount !== 1 ? "s" : ""}
-                                        </span>
-                                      )}
-                                      {passedCount > 0 && (
-                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                          {passedCount} passed
-                                        </span>
-                                      )}
-                                      {skippedCount > 0 && (
-                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                          {skippedCount} skipped
-                                        </span>
-                                      )}
-                                    </>
-                                  );
-                                })()
-                              ) : (
-                                <span className="text-xs text-muted-foreground">
-                                  {submission
-                                    ? "No validations"
-                                    : "No submission"}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex-shrink-0">
-                            {validations.length > 0 && (
-                              <>
-                                {isExpanded ? (
-                                  <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                                ) : (
-                                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                                )}
-                              </>
-                            )}
-                          </div>
-                        </button>
-
-                        {isExpanded && validations.length > 0 && (
-                          <div className="border-t border-border bg-muted/20">
-                            <div className="space-y-3 p-4">
-                              {validations.map(renderValidationItem)}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  },
-                );
-              })()}
-            </div>
-          </div>
         </div>
+      </div>
 
-        <div className="fixed bottom-0 left-0 right-0 border-t bg-background px-4 py-4 flex justify-center pb-10">
-          <PrimaryButton
-            onClick={() => {
-              if (!participant) return;
-              if (!user?.id) return;
+      {/* Footer */}
+      <div className="border-t bg-background/80 backdrop-blur-sm px-4 py-4 flex justify-center">
+        <PrimaryButton
+          onClick={() => {
+            if (!participant) return;
+            if (!user?.id) return;
+
+            if (hasOverrulableErrors) {
+              // Overrule all failed error validations first
+              const failedErrorValidations =
+                participant.validationResults.filter(
+                  (v) =>
+                    v.severity === "error" &&
+                    v.outcome === "failed" &&
+                    !v.overruled,
+                );
+
+              failedErrorValidations.forEach((validation) => {
+                updateValidationResult({
+                  id: validation.id,
+                  data: {
+                    overruled: true,
+                  },
+                });
+              });
+
+              // Then verify the participant
+              setTimeout(() => {
+                verifyParticipant({
+                  data: {
+                    participantId: participant.id,
+                    staffId: user.id,
+                    notes: "",
+                  },
+                });
+              }, 100);
+            } else {
               verifyParticipant({
                 data: {
                   participantId: participant.id,
@@ -624,50 +305,47 @@ export function ParticipantInfoSheet({
                   notes: "",
                 },
               });
-            }}
-            disabled={
-              participant?.status === "verified" ||
-              hasUnresolvedErrors ||
-              isVerifying
             }
-            className="w-full p-4 text-base"
-          >
-            {isVerifying ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : participant?.status === "verified" ? (
-              "Already Verified"
-            ) : hasUnresolvedErrors ? (
-              "Overrule all errors to verify"
-            ) : (
-              "Verify Participant"
-            )}
-          </PrimaryButton>
-        </div>
-      </SheetContent>
+          }}
+          disabled={
+            participant?.status === "verified" ||
+            isVerifying ||
+            isUpdatingValidationResult
+          }
+          className="w-full max-w-sm p-4 text-base"
+        >
+          {isVerifying || isUpdatingValidationResult ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : participant?.status === "verified" ? (
+            "Already Verified"
+          ) : hasOverrulableErrors ? (
+            "Overrule all and verify"
+          ) : (
+            "Verify Participant"
+          )}
+        </PrimaryButton>
+      </div>
+    </div>
+  );
 
-      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-          <DialogTitle className="sr-only">
-            {selectedImageTitle || "Image"}
-          </DialogTitle>
-          <div className="relative">
-            {selectedImageUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={selectedImageUrl}
-                alt={selectedImageTitle || "Image"}
-                className="w-full h-auto max-h-[85vh] object-contain"
-              />
-            )}
-            <Button
-              className="absolute bottom-4 right-4"
-              onClick={() => setImageDialogOpen(false)}
-            >
-              Close
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </Sheet>
+  return (
+    <>
+      <DrawerLayout
+        open={open}
+        onOpenChange={onOpenChange}
+        title="Participant Information"
+      >
+        {participantLoading
+          ? renderParticipantLoading()
+          : participant
+            ? renderParticipant()
+            : renderParticipantNotFound()}
+      </DrawerLayout>
+      <PreviewDialog
+        open={imageDialogOpen}
+        onOpenChange={setImageDialogOpen}
+        imageUrl={selectedImageUrl}
+      />
+    </>
   );
 }

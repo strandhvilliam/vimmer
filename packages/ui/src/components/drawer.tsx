@@ -4,6 +4,7 @@ import * as React from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 
 import { cn } from "@vimmer/ui/lib/utils";
+import { XIcon } from "lucide-react";
 
 const Drawer = ({
   shouldScaleBackground = true,
@@ -53,7 +54,7 @@ const DrawerContent = React.forwardRef<
       {...props}
     >
       {showHandle && (
-        <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
+        <DrawerHandle className="mt-2 !w-16 !bg-muted-foreground/30" />
       )}
       {children}
     </DrawerPrimitive.Content>

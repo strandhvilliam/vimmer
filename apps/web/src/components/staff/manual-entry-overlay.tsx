@@ -2,101 +2,98 @@ import { QrDataArgs } from "@/lib/schemas/verification-data-schema";
 import { Button } from "@vimmer/ui/components/button";
 import { Input } from "@vimmer/ui/components/input";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
-import { Sheet, SheetContent, SheetTitle } from "@vimmer/ui/components/sheet";
-import { cn } from "@vimmer/ui/lib/utils";
-import { useForm } from "@tanstack/react-form";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@vimmer/ui/components/dialog";
 import { useDomain } from "@/contexts/domain-context";
+import { useState, useEffect } from "react";
+import { cn } from "@vimmer/ui/lib/utils";
+import { geistMono } from "@/lib/fonts";
 
-interface ManualEntrySheetProps {
+interface ManualEntryOverlayProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onEnterAction(args: QrDataArgs): void;
 }
 
-export function ManualEntrySheet({
+export function ManualEntryOverlay({
   open,
   onOpenChange,
   onEnterAction,
-}: ManualEntrySheetProps) {
+}: ManualEntryOverlayProps) {
   const { domain } = useDomain();
+  const [reference, setReference] = useState("");
 
-  const form = useForm({
-    defaultValues: {
-      reference: "",
-    },
-    onSubmit: ({ value }) => {
-      onOpenChange(false);
+  useEffect(() => {
+    if (open) {
+      setReference("");
+    }
+  }, [open]);
 
-      const formattedValue = value.reference.trim().padStart(4, "0");
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
+    if (reference.trim()) {
+      const formattedValue = reference.trim().padStart(4, "0");
       onEnterAction({ reference: formattedValue, domain });
-    },
-  });
+      onOpenChange(false);
+    }
+  };
 
   const handleCancel = () => {
-    form.reset();
+    setReference("");
     onOpenChange(false);
   };
 
   return (
-    <Sheet modal={true} onOpenChange={onOpenChange} open={open}>
-      <SheetContent hideClose side="top" className="w-full max-h-[95vh] p-0">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            form.handleSubmit();
-          }}
-          className="pb-4"
-        >
-          <div className="px-4 py-4 flex flex-row items-center justify-between">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        hideCloseButton
+        className="bg-transparent border-none shadow-none top-[40%]"
+      >
+        <DialogHeader className="text-center">
+          <DialogTitle className="text-lg font-medium">
+            Enter Participant Number
+          </DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 py-4">
+          <Input
+            autoFocus
+            type="number"
+            inputMode="numeric"
+            value={reference}
+            onChange={(e) => setReference(e.target.value)}
+            className={cn(
+              "text-center text-4xl h-16 font-bold font-mono tracking-widest",
+              geistMono.className,
+            )}
+            placeholder="0000"
+            enterKeyHint="done"
+          />
+
+          <div className="flex gap-3">
             <Button
-              onClick={handleCancel}
               type="button"
-              variant="ghost"
-              className="text-sm font-medium"
+              onClick={handleCancel}
+              variant="outline"
+              className="flex-1 h-12 rounded-full"
             >
               Cancel
             </Button>
-            <SheetTitle className="text-base font-medium">
-              Enter Participant Number
-            </SheetTitle>
-            <form.Field
-              name="reference"
-              children={(field) => (
-                <PrimaryButton
-                  type="submit"
-                  className={cn(
-                    "text-sm font-medium",
-                    !field.state.value.trim() &&
-                      "opacity-50 cursor-not-allowed",
-                  )}
-                  disabled={!field.state.value.trim()}
-                >
-                  Submit
-                </PrimaryButton>
-              )}
-            />
-          </div>
-
-          <div className="px-4">
-            <form.Field
-              name="reference"
-              children={(field) => (
-                <Input
-                  autoFocus
-                  type="number"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  className="w-full text-lg bg-secondary rounded-full"
-                  placeholder="123"
-                  enterKeyHint="done"
-                />
-              )}
-            />
+            <PrimaryButton
+              type="submit"
+              disabled={!reference.trim()}
+              className="flex-1 h-12 text-base font-medium rounded-full"
+            >
+              Submit
+            </PrimaryButton>
           </div>
         </form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

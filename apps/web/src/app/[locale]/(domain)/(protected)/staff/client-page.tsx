@@ -1,5 +1,4 @@
 "use client";
-"use no memo";
 
 import React, { useState, useEffect } from "react";
 import { QrCodeIcon, PenIcon, UsersIcon, LogOutIcon } from "lucide-react";
@@ -7,7 +6,6 @@ import { Button } from "@vimmer/ui/components/button";
 import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import { DotPattern } from "@vimmer/ui/components/dot-pattern";
 import QrScanDrawer from "@/components/staff/qr-scan-drawer";
-import { ManualEntrySheet } from "@/components/staff/manual-entry-overlay";
 import { VerifiedParticipantsSheet } from "@/components/staff/verified-participants-sheet";
 import { ParticipantInfoSheet } from "@/components/staff/participant-info-sheet";
 import { toast } from "sonner";
@@ -18,6 +16,7 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { useDomain } from "@/contexts/domain-context";
 import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
+import { ManualEntryOverlay } from "@/components/staff/manual-entry-overlay";
 
 export function StaffClientPage({
   baseThumbnailUrl,
@@ -31,10 +30,28 @@ export function StaffClientPage({
   const trpc = useTRPC();
   const { user } = useSession();
   const { domain } = useDomain();
+
   const [activeParticipantReference, setActiveParticipantReference] =
     useQueryState("reference", parseAsString);
 
-  const { data: participantData } = useQuery(
+  const { data: verifications } = useSuspenseQuery(
+    trpc.validations.getParticipantVerificationsByStaffId.queryOptions(
+      {
+        staffId: user?.id ?? "",
+      },
+      {
+        enabled: !!user?.id,
+      },
+    ),
+  );
+
+  const { data: topics } = useSuspenseQuery(
+    trpc.topics.getByDomain.queryOptions({
+      domain,
+    }),
+  );
+
+  const { data: participantData, isLoading: participantDataLoading } = useQuery(
     trpc.participants.getByReference.queryOptions(
       {
         reference: activeParticipantReference ?? "",
@@ -81,23 +98,6 @@ export function StaffClientPage({
       setOpenSheet(null);
     }
   }, [openSheet, activeParticipantReference, setOpenSheet]);
-
-  const { data: verifications } = useSuspenseQuery(
-    trpc.validations.getParticipantVerificationsByStaffId.queryOptions(
-      {
-        staffId: user?.id ?? "",
-      },
-      {
-        enabled: !!user?.id,
-      },
-    ),
-  );
-
-  const { data: topics } = useSuspenseQuery(
-    trpc.topics.getByDomain.queryOptions({
-      domain,
-    }),
-  );
 
   const handleLogout = async () => {
     try {
@@ -179,7 +179,7 @@ export function StaffClientPage({
           await openSheetSafely("participant-info");
         }}
       />
-      <ManualEntrySheet
+      <ManualEntryOverlay
         open={openSheet === "manual-entry"}
         onOpenChange={(open) => !open && setOpenSheet(null)}
         onEnterAction={async (args) => {
@@ -198,6 +198,7 @@ export function StaffClientPage({
         open={openSheet === "participant-info"}
         onOpenChange={(open) => !open && setOpenSheet(null)}
         participant={participantData ?? null}
+        participantLoading={participantDataLoading}
         topics={topics}
         baseThumbnailUrl={baseThumbnailUrl}
         submissionBaseUrl={baseSubmissionUrl}

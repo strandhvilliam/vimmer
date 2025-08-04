@@ -41,6 +41,9 @@ export async function getValidationResultsByDomainQuery(
         return {
           ...s,
           participant: rest,
+          globalValidationResults: p.validationResults.filter(
+            (vr) => !vr.fileName,
+          ),
           validationResults: p.validationResults.filter(
             (vr) => vr.fileName === s.key,
           ),
