@@ -376,7 +376,7 @@ async function handleValidationResultsExport(
 
     const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
 
-    return new NextResponse(zipBuffer, {
+    return new NextResponse(zipBuffer as any, {
       headers: {
         "Content-Type": "application/zip",
         "Content-Disposition": `attachment; filename="validation-results-export-${new Date().toISOString().split("T")[0]}.zip"`,

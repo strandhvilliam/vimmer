@@ -35,7 +35,40 @@ export const presignedUrlsRouter = createTRPCRouter({
 
       if (
         participant?.status !== "verified" &&
-        participant?.status !== "completed"
+        participant?.status !== "completed" &&
+        participant?.status !== "processing"
+      ) {
+        await updateParticipantMutation(ctx.db, {
+          id: input.participantId,
+          data: {
+            uploadCount: 0,
+          },
+        });
+      }
+
+      return service.generatePresignedSubmissions(
+        input.participantRef,
+        input.domain,
+        input.participantId,
+        input.competitionClassId,
+      );
+    }),
+  generatePresignedSubmissionsOnDemand: publicProcedure
+    .input(generatePresignedUrlsSchema)
+    .mutation(async ({ ctx, input }) => {
+      const s3 = new S3Client({ region: "eu-north-1" });
+      const bucketName = Resource.SubmissionBucket.name;
+      const service = new PresignedSubmissionService(ctx.db, s3, bucketName);
+
+      const participant = await getParticipantByReferenceQuery(ctx.db, {
+        reference: input.participantRef,
+        domain: input.domain,
+      });
+
+      if (
+        participant?.status !== "verified" &&
+        participant?.status !== "completed" &&
+        participant?.status !== "processing"
       ) {
         await updateParticipantMutation(ctx.db, {
           id: input.participantId,

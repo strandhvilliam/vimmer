@@ -1,4 +1,9 @@
-import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
+import {
+  parseAsInteger,
+  parseAsString,
+  parseAsBoolean,
+  useQueryStates,
+} from "nuqs";
 
 export function useSubmissionQueryState() {
   const [submissionState, setSubmissionState] = useQueryStates(
@@ -10,6 +15,7 @@ export function useSubmissionQueryState() {
       participantEmail: parseAsString,
       participantFirstName: parseAsString,
       participantLastName: parseAsString,
+      uploadInstructionsShown: parseAsBoolean.withDefault(false),
     },
     {
       urlKeys: {
@@ -20,6 +26,7 @@ export function useSubmissionQueryState() {
         participantEmail: "pe",
         participantFirstName: "pf",
         participantLastName: "pl",
+        uploadInstructionsShown: "uis",
       },
     },
   );

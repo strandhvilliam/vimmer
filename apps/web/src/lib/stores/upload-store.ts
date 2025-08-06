@@ -7,6 +7,7 @@ import {
   UploadPhase,
 } from "@/lib/types";
 import { UPLOAD_PHASE } from "../constants";
+import posthog from "posthog-js";
 
 export interface UploadFileState {
   // File info
@@ -220,6 +221,7 @@ export const classifyError = (
   httpStatus?: number,
 ): { code: FileUploadErrorCode } => {
   const message = error.message.toLowerCase();
+  posthog.captureException("file upload error", { ...error });
   console.error(message);
 
   // HTTP status code based classification

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronRight, ImageIcon, Info } from "lucide-react";
 import { Button } from "@vimmer/ui/components/button";
 import { Checkbox } from "@vimmer/ui/components/checkbox";
@@ -24,7 +24,6 @@ import { MarathonNotConfigured } from "@/components/participate/marathon-not-con
 import TermsAndConditionsDialog from "@/components/terms-and-conditions-dialog";
 import PlatformTermsDialog from "@/components/platform-terms-dialog";
 import { useChangeLocale, useCurrentLocale, useI18n } from "@/locales/client";
-import ReactMarkdown from "react-markdown";
 import { MarkdownContent } from "@/components/markdown-content";
 
 export function ParticipateClientPage() {
@@ -49,6 +48,21 @@ export function ParticipateClientPage() {
   const [platformTermsAccepted, setPlatformTermsAccepted] =
     useState<boolean>(false);
   const [platformTermsOpen, setPlatformTermsOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (organizerTermsAccepted || platformTermsAccepted) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [organizerTermsAccepted, platformTermsAccepted]);
 
   const handleBeginSubmission = () => {
     if (organizerTermsAccepted && platformTermsAccepted) {
@@ -215,7 +229,7 @@ export function ParticipateClientPage() {
                     onClick={() => setPlatformTermsOpen(true)}
                     className="underline font-semibold"
                   >
-                    Vimmer Platform Terms of Service
+                    Blikka App Terms of Service
                   </button>
                 </label>
               </div>

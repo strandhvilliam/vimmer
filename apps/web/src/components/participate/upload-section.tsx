@@ -6,9 +6,9 @@ import { toast } from "sonner";
 import { CloudUpload, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import React from "react";
-import { UploadZone } from "@/components/participate/upload-zone";
+// import { UploadZone } from "@/components/participate/upload-zone";
 import { usePhotoStore } from "@/lib/stores/photo-store";
-import { usePresignedSubmissions } from "@/hooks/use-presigned-submissions";
+
 import { Marathon, Topic } from "@vimmer/api/db/types";
 import { RuleConfig, RuleKey } from "@vimmer/validation/types";
 import {
@@ -33,12 +33,8 @@ export function UploadSection({
   marathon,
 }: UploadSectionProps) {
   const { photos, validateAndAddPhotos, validationResults } = usePhotoStore();
-  const { data: presignedSubmissions = [] } = usePresignedSubmissions();
 
-  const allPhotosSelected =
-    photos.length === maxPhotos &&
-    photos.length > 0 &&
-    presignedSubmissions.length > 0;
+  const allPhotosSelected = photos.length === maxPhotos && photos.length > 0;
 
   const hasValidationErrors = validationResults.some(
     (result) =>
@@ -101,7 +97,7 @@ export function UploadSection({
           <div className="mt-3 space-y-1">
             {warningMessages.map((warning, index) => (
               <div
-                key={index}
+                key={`warning-${index}`}
                 className="text-xs bg-amber-100 dark:bg-amber-900/30 rounded px-2 py-1"
               >
                 {warning.fileName && (
@@ -127,16 +123,16 @@ export function UploadSection({
           transition={{ duration: 0.3 }}
         >
           <Card className="border-2 border-dashed border-destructive/40 bg-destructive/5 backdrop-blur-sm rounded-lg py-5 mb-6 transition-colors">
-            <CardContent className="flex flex-col items-center justify-center space-y-2">
-              <AlertTriangle className="h-16 w-16 text-destructive" />
+            <CardContent className="flex flex-col items-center justify-center space-y-2 p-2">
+              <AlertTriangle className="h-12 w-12 text-destructive" />
               <div className="text-center space-y-4 max-w-md">
                 <p className="text-base font-medium text-destructive">
-                  Photo Validation Errors
+                  Validation Errors
                 </p>
                 <div className="space-y-2">
                   {errorMessages.map((error, index) => (
                     <div
-                      key={index}
+                      key={`error-${index}`}
                       className="text-xs text-muted-foreground bg-background/50 rounded-md p-3 border"
                     >
                       {error.fileName && (
@@ -148,7 +144,7 @@ export function UploadSection({
                     </div>
                   ))}
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Please fix these issues before proceeding
                 </p>
               </div>
@@ -174,7 +170,6 @@ export function UploadSection({
 
               <PrimaryButton
                 onClick={onUpload}
-                disabled={!presignedSubmissions}
                 className="w-full py-3 text-base rounded-full"
               >
                 Upload Now
@@ -182,7 +177,7 @@ export function UploadSection({
             </CardContent>
           </Card>
         </motion.div>
-      ) : presignedSubmissions.length > 0 ? (
+      ) : photos.length < maxPhotos ? (
         <motion.div
           key="upload-zone"
           initial={{ opacity: 0 }}
@@ -190,7 +185,7 @@ export function UploadSection({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <UploadZone
+          {/* <UploadZone
             onDrop={(acceptedFiles) =>
               validateAndAddPhotos({
                 files: acceptedFiles,
@@ -221,7 +216,74 @@ export function UploadSection({
                 });
               });
             }}
-          />
+          /> */}
+          <div
+            className={`
+              border-2 border-dashed border-muted-foreground/40 bg-background/60 backdrop-blur-sm rounded-lg p-8 mb-6 transition-colors cursor-pointer hover:border-vimmer-primary hover:bg-muted
+              ${photos.length >= maxPhotos ? "opacity-50 pointer-events-none" : ""}
+            `}
+            onClick={() => document.getElementById("photo-upload")?.click()}
+          >
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              disabled={photos.length >= maxPhotos}
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+
+                console.log("files", files);
+
+                if (files.length > 0) {
+                  validateAndAddPhotos({
+                    files,
+                    ruleConfigs: ruleConfigs.map((rule) => {
+                      if (rule.key === RULE_KEYS.WITHIN_TIMERANGE) {
+                        return {
+                          ...rule,
+                          params: {
+                            ...rule.params,
+                            start: marathon.startDate,
+                            end: marathon.endDate,
+                          },
+                        };
+                      }
+                      return rule;
+                    }),
+                    orderIndexes: topics.map((topic) => topic.orderIndex),
+                    maxPhotos,
+                  });
+                } else {
+                  toast.error("No files selected");
+                }
+              }}
+              className="hidden"
+              id="photo-upload"
+            />
+            <div className="text-center flex flex-col justify-center items-center">
+              <PrimaryButton
+                className="flex items-center justify-center p-4 rounded-full mb-4"
+                onClick={() => document.getElementById("photo-upload")?.click()}
+                disabled={photos.length >= maxPhotos}
+              >
+                <CloudUpload className="w-10 h-10 text-white" />
+              </PrimaryButton>
+
+              <p className="text-muted-foreground mb-2">
+                Click to select your photos
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {photos.length} of {maxPhotos} photos uploaded
+              </p>
+              <PrimaryButton
+                disabled={photos.length >= maxPhotos}
+                className="mt-4"
+                onClick={() => document.getElementById("photo-upload")?.click()}
+              >
+                Select Photos
+              </PrimaryButton>
+            </div>
+          </div>
         </motion.div>
       ) : (
         <motion.div

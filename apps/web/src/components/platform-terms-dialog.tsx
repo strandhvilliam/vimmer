@@ -8,6 +8,7 @@ import {
 import { Button } from "@vimmer/ui/components/button";
 import { X } from "lucide-react";
 import React from "react";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 
 export default function PlatformTermsDialog({
   termsOpen,
@@ -36,132 +37,125 @@ export default function PlatformTermsDialog({
           <div className="max-w-4xl mx-auto px-6 py-12">
             <DialogHeader className="mb-8">
               <DialogTitle className="text-3xl">
-                Vimmer Platform Terms of Service
+                Blikka App Terms of Service
               </DialogTitle>
               <DialogDescription className="text-lg">
-                Terms and conditions for using the Vimmer platform
+                Terms and conditions for using the Blikka app
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-8 pb-24">
-              <section>
-                <h3 className="font-semibold text-xl mb-4">
-                  1. Platform Usage
-                </h3>
-                <ul className="list-disc pl-5 space-y-3 text-base text-gray-600">
-                  <li>
-                    By using the Vimmer platform, you agree to these terms of
-                    service
-                  </li>
-                  <li>
-                    The platform is provided "as is" without warranties of any
-                    kind
-                  </li>
-                  <li>
-                    You are responsible for maintaining the security of your
-                    account
-                  </li>
-                  <li>
-                    Vimmer reserves the right to modify or discontinue the
-                    service at any time
-                  </li>
-                </ul>
-              </section>
+            <div className="space-y-2 pb-24">
+              <p>
+                Dessa villkor gäller mellan deltagaren vars uppgifter läggs in i
+                detta system och Fotomaraton Sverige AB (559209-9732)
+                (hädanefter benämnd Arrangören).
+              </p>
+              <p>
+                Dessa villkor är förtydligande och tillägg till arrangörens
+                övriga villkor som gäller för deltagandet.
+              </p>
+              <p>
+                Dessa finns tillgängliga att läsa på{" "}
+                <a
+                  className="text-blue-500 underline"
+                  href="https://stockholmfotomaraton.se/allmanna-villkor"
+                >
+                  stockholmfotomaraton.se/allmanna-villkor
+                </a>
+                .
+              </p>
+              <p className="font-medium pt-4">1. Personuppgifter</p>
+              <p>
+                Personuppgifter kan innebära, men är inte begränsat till, för-
+                och efternamn, mailadress, eventuell platsinformation i
+                metadatan, personuppgifter som finns i bilderna inklusive dess
+                metadata.
+              </p>
+              <ul className="list-disc pl-6">
+                <li>
+                  Genom anmälan godkänner deltagaren att Arrangören hanterar de
+                  personuppgifter som deltagaren eller representant för
+                  deltagaren (den som lämnar in i detta system) har lagt in.
+                </li>
+                <li>
+                  Den som fyller i åt annan person är skyldig att informera och
+                  inhämta godkännande att uppgifterna används enligt dessa
+                  villkor av denna person.
+                </li>
+                <li>
+                  Deltagaren godkänner att ta emot information från Arrangören
+                  om de evenemang som genomförs av Arrangören.
+                </li>
+                <li>
+                  Deltagaren godkänner att bilder och filmer på hen får användas
+                  i Arrangörens och partners marknadsföring kring arrangemang
+                  arrangerade av eller i partnerskap med Arrangören.
+                </li>
+              </ul>
 
-              <section>
-                <h3 className="font-semibold text-xl mb-4">
-                  2. Data Processing and Privacy
-                </h3>
-                <ul className="list-disc pl-5 space-y-3 text-base text-gray-600">
-                  <li>
-                    Vimmer processes your data in accordance with our Privacy
-                    Policy
-                  </li>
-                  <li>
-                    Your photos and personal information are stored securely on
-                    our servers
-                  </li>
-                  <li>
-                    We do not share your personal data with third parties
-                    without consent
-                  </li>
-                  <li>
-                    You can request deletion of your data at any time by
-                    contacting support
-                  </li>
-                </ul>
-              </section>
+              <p className="font-medium pt-4">2. Om deltagarens bilder</p>
+              <ul className="list-disc pl-6">
+                <li>
+                  Deltagande i tävlingen ger arrangören tillstånd att lagra,
+                  använda och publicera deltagarens bilder i samband med dess
+                  utställningar (i alla medier, tryckta, digitala etc), på sin
+                  hemsida, sociala medier och marknadsföring.
+                </li>
+                <li>
+                  Deltagande i tävlingen ger arrangören tillstånd att dela
+                  bilder med Arrangörens partners, vilka i sina kanaler (både
+                  fysiska och digitala) får möjlighet att visa upp deltagande
+                  bilder i sammanhang där det framgår att det handlar om bidrag
+                  till tävlingen Stockholm Fotomaraton. Bilderna får ej användas
+                  i Arrangörens partners marknadsföring, utom när det handlar om
+                  att visa upp Stockholm Fotomaraton eller deras samarbete med
+                  Stockholm Fotomaraton.
+                </li>
+                <li>
+                  Deltagaren ansvarar för att säkerställa godkännande för
+                  användning av bilderna enligt tävlingens regler, av personer
+                  som är identifierbara på bild samt att hen äger rättigheterna
+                  till bilderna.
+                </li>
+                <li>
+                  Deltagare under 18 år Deltagare under 18 år ska ha målsmans
+                  underskrift för deltagande. Underskriften ska på begäran kunna
+                  visas i samband med start.
+                </li>
+              </ul>
 
-              <section>
-                <h3 className="font-semibold text-xl mb-4">
-                  3. Intellectual Property
-                </h3>
-                <ul className="list-disc pl-5 space-y-3 text-base text-gray-600">
-                  <li>You retain all rights to your uploaded photographs</li>
-                  <li>Vimmer does not claim ownership of your content</li>
-                  <li>
-                    The Vimmer platform and its features are protected by
-                    copyright
-                  </li>
-                  <li>
-                    You may not reverse engineer or copy the platform's
-                    functionality
-                  </li>
-                </ul>
-              </section>
+              <p className="font-medium pt-4">3. Vinst och jury</p>
+              <ul className="list-disc pl-6">
+                <li>Juryns beslut kan ej överklagas.</li>
+                <li>Eventuell vinstskatt betalas av vinnaren.</li>
+              </ul>
 
-              <section>
-                <h3 className="font-semibold text-xl mb-4">
-                  4. Limitation of Liability
-                </h3>
-                <ul className="list-disc pl-5 space-y-3 text-base text-gray-600">
-                  <li>
-                    Vimmer is not liable for any damages arising from platform
-                    usage
-                  </li>
-                  <li>
-                    We are not responsible for competition rules or judging
-                    decisions
-                  </li>
-                  <li>
-                    Technical issues or downtime may occur and are not
-                    guaranteed to be resolved
-                  </li>
-                  <li>
-                    Maximum liability is limited to the amount paid for platform
-                    services
-                  </li>
-                </ul>
-              </section>
-
-              <section>
-                <h3 className="font-semibold text-xl mb-4">
-                  5. Contact Information
-                </h3>
-                <div className="text-base text-gray-600">
-                  <p className="mb-2">
-                    For questions about these terms or the platform, contact us
-                    at:
-                  </p>
-                  <p>Email: support@blikka.app</p>
-                  <p>Website: https://blikka.app</p>
-                </div>
-              </section>
+              <p className="font-medium pt-4">
+                4. Regler och villkor, inkl ändring av dessa
+              </p>
+              <ul className="list-disc pl-6">
+                <li>
+                  Alla deltagare måste ta del av och följa tävlingens, vid var
+                  tid gällande, regler. Arrangören har alltid tolkningsföreträde
+                  gällande hur tävlingens regler och villkor bedöms vid
+                  diskussioner om exempelvis vilka funktioner på en kamera eller
+                  telefon som är godkända att tävla med.
+                </li>
+              </ul>
             </div>
           </div>
         </div>
-
         <div className="sticky bottom-0 left-0 right-0 p-4 bg-white border-t">
           <div className="max-w-4xl mx-auto">
-            <Button
+            <PrimaryButton
               onClick={() => {
                 setTermsAccepted(true);
                 setTermsOpen(false);
               }}
-              className="w-full py-6 text-lg font-medium"
+              className="w-full py-2.5 rounded-full text-lg font-medium"
             >
               Accept Platform Terms
-            </Button>
+            </PrimaryButton>
           </div>
         </div>
       </DialogContent>

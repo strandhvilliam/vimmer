@@ -28,6 +28,7 @@ export default $config({
         allowOrigins,
         allowMethods: ["GET", "HEAD", "PUT"],
         allowHeaders: ["*"],
+        exposeHeaders: ["Access-Control-Allow-Origin"],
       },
     });
     const thumbnailBucket = new sst.aws.Bucket("ThumbnailBucket", {

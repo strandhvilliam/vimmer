@@ -26,12 +26,21 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
   validationResults: [],
   validateAndAddPhotos: async (dto: AddPhotoDto) => {
     const { photos } = get();
+
     const { updatedPhotos, validationResults } = await parseAndValidateFiles(
       photos,
       dto.files,
       dto.ruleConfigs,
       dto.orderIndexes,
       dto.maxPhotos,
+      (fileName, thumbnail) =>
+        set(({ photos }) => ({
+          photos: photos.map((photo) =>
+            photo.file.name === fileName
+              ? { ...photo, thumbnail, thumbnailLoading: false }
+              : photo,
+          ),
+        })),
     );
 
     set({

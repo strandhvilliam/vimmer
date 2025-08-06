@@ -12,7 +12,7 @@ import {
 import { useSubmissionQueryState } from "./use-submission-query-state";
 import { FILE_STATUS, UPLOAD_PHASE } from "@/lib/constants";
 
-const DEFAULT_TIMEOUT = 30000; // 30 seconds
+const DEFAULT_TIMEOUT = 1000 * 60 * 3; // 3 minutes
 
 export function useFileUpload() {
   const queryClient = useQueryClient();
@@ -50,7 +50,7 @@ export function useFileUpload() {
         participantId: participantId ?? -1,
       },
       {
-        refetchInterval: 2000,
+        refetchInterval: 5000,
         enabled: !!participantId && isUploading,
       },
     ),
@@ -92,7 +92,13 @@ export function useFileUpload() {
     updateFilePhase(file.key, UPLOAD_PHASE.S3_UPLOAD, 0);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT);
+    const timeoutId = setTimeout(() => {
+      posthog.captureException("file upload timeout", {
+        file: file.key,
+        size: file.file.size,
+      });
+      controller.abort();
+    }, DEFAULT_TIMEOUT);
 
     try {
       const response = await fetch(file.presignedUrl, {
@@ -100,7 +106,8 @@ export function useFileUpload() {
         body: file.file,
         signal: controller.signal,
         headers: {
-          "Content-Type": file.file.type,
+          // "Content-Type": file.file.type,
+          "Content-Type": "image/jpeg",
         },
       });
 
@@ -108,7 +115,7 @@ export function useFileUpload() {
 
       if (!response.ok) {
         const error = new Error(
-          `Upload failed: ${response.status} ${response.statusText}`,
+          `Upload failed: ${response.status} ${response.statusText} filesize: ${file.file.size}`,
         );
         const { code } = classifyError(error, response.status);
 
@@ -160,6 +167,7 @@ export function useFileUpload() {
       // Get final results
       const failedFiles = getFailedFiles();
       const allFiles = getAllFiles();
+
       const completedFiles = allFiles.filter(
         (f) => f.phase === UPLOAD_PHASE.COMPLETED,
       );

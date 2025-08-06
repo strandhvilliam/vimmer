@@ -5,7 +5,6 @@ export function combinePhotos(
   photos: SelectedPhotoV2[],
   presignedSubmissions: PresignedSubmission[],
 ): PhotoWithPresignedUrl[] {
-  console.log({ photos, presignedSubmissions });
   return photos.reduce((acc, photo) => {
     const matchingPresigned = presignedSubmissions?.find(
       (obj) => obj.orderIndex === photo.orderIndex,

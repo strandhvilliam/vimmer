@@ -7,7 +7,7 @@ import {
 import { SelectedPhotoV2 } from "./types";
 import exifr from "exifr";
 import { toast } from "sonner";
-import { generateThumbnail } from "./image-resize";
+import { generateThumbnailWithCallback } from "./image-resize";
 
 interface ParsedAndValidatedPhotos {
   updatedPhotos: {
@@ -27,6 +27,7 @@ export async function parseAndValidateFiles(
   ruleConfigs: RuleConfig<RuleKey>[],
   orderIndexes: number[],
   maxPhotos: number,
+  updateThumbnail?: (fileName: string, thumbnail: string) => void,
 ): Promise<ParsedAndValidatedPhotos> {
   const currentLength = currentPhotos.length;
   const remainingSlots = maxPhotos - currentLength;
@@ -56,10 +57,9 @@ export async function parseAndValidateFiles(
       const orderIndex = sortedOrderIndexes[currentLength + index];
       if (!orderIndex && orderIndex !== 0) return null;
 
-      const exif = await parseExifData(file);
+      let exif = await parseExifData(file);
       if (!exif) {
-        toast.error(`No EXIF data found for image no. ${orderIndex + 1}`);
-        throw new Error(`No EXIF data found for image no. ${orderIndex + 1}`);
+        exif = {};
       }
 
       return {
@@ -102,15 +102,25 @@ export async function parseAndValidateFiles(
   const validationResults = runValidations(ruleConfigs, validationInputs);
 
   // Generate thumbnails asynchronously using proper Zustand pattern
-  validPhotos.forEach(async (photo) => {
+  validPhotos.map(async (photo) => {
     try {
-      const thumbnail = await generateThumbnail(photo.file, 200);
-      const { usePhotoStore } = await import("@/lib/stores/photo-store");
-      usePhotoStore.getState().updateThumbnail(photo.file.name, thumbnail);
+      const thumbnail = await generateThumbnailWithCallback(
+        photo.file,
+        200,
+        (stage) => {
+          // Don't call updateThumbnail on worker-failed, only on final completion
+          if (stage === "fallback-complete") {
+            // Thumbnail generation completed (either worker success or fallback success)
+            // The actual thumbnail will be set in the success block below
+          }
+        },
+      );
+      // Only call updateThumbnail when we have the final thumbnail
+      updateThumbnail?.(photo.file.name, thumbnail);
     } catch (error) {
       console.error("Thumbnail generation failed:", error);
-      const { usePhotoStore } = await import("@/lib/stores/photo-store");
-      usePhotoStore.getState().updateThumbnail(photo.file.name, "");
+      // Set empty thumbnail and stop loading state
+      updateThumbnail?.(photo.file.name, "");
     }
   });
 

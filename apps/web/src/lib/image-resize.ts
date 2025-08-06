@@ -1,3 +1,5 @@
+import posthog from "posthog-js";
+
 export interface ResizeOptions {
   width: number;
   quality?: number;
@@ -100,7 +102,104 @@ export function getImageDimensions(
   });
 }
 
-export async function generateThumbnail(
+// Web Worker instance for thumbnail generation
+let thumbnailWorker: Worker | null = null;
+let workerSupported: boolean | null = null;
+const pendingThumbnails = new Map<
+  string,
+  { resolve: (value: string) => void; reject: (error: Error) => void }
+>();
+
+function initThumbnailWorker(): boolean {
+  if (workerSupported !== null) return workerSupported;
+
+  try {
+    // Check for required APIs
+    if (
+      typeof Worker === "undefined" ||
+      typeof OffscreenCanvas === "undefined"
+    ) {
+      workerSupported = false;
+      return false;
+    }
+
+    thumbnailWorker = new Worker("/thumbnail-worker.js");
+
+    thumbnailWorker.onmessage = (e) => {
+      const { success, thumbnail, error, id } = e.data;
+      const pending = pendingThumbnails.get(id);
+
+      if (pending) {
+        pendingThumbnails.delete(id);
+        if (success) {
+          pending.resolve(thumbnail);
+        } else {
+          pending.reject(new Error(error));
+        }
+      }
+    };
+
+    thumbnailWorker.onerror = () => {
+      workerSupported = false;
+      // Reject all pending thumbnails
+      for (const [id, pending] of pendingThumbnails) {
+        pending.reject(new Error("Worker error"));
+      }
+      pendingThumbnails.clear();
+    };
+
+    workerSupported = true;
+    return true;
+  } catch (error) {
+    console.warn(
+      "Web Worker not supported, falling back to main thread:",
+      error,
+    );
+    posthog.captureException("worker not supported");
+    workerSupported = false;
+    return false;
+  }
+}
+
+async function generateThumbnailWithWorker(
+  file: File,
+  size: number = 200,
+): Promise<string> {
+  if (!initThumbnailWorker() || !thumbnailWorker) {
+    throw new Error("Worker not available");
+  }
+
+  return new Promise((resolve, reject) => {
+    const id = `${file.name}-${Date.now()}-${Math.random()}`;
+    pendingThumbnails.set(id, { resolve, reject });
+
+    // Set timeout to prevent hanging
+    const timeout = setTimeout(() => {
+      pendingThumbnails.delete(id);
+      reject(new Error("Thumbnail generation timeout"));
+    }, 10000);
+
+    const pending = pendingThumbnails.get(id)!;
+    pending.resolve = (value: string) => {
+      clearTimeout(timeout);
+      resolve(value);
+    };
+
+    pending.reject = (error: Error) => {
+      clearTimeout(timeout);
+      reject(error);
+    };
+
+    thumbnailWorker!.postMessage({
+      imageData: file,
+      size,
+      quality: 0.8,
+      id,
+    });
+  });
+}
+
+async function generateThumbnailMainThread(
   file: File,
   size: number = 200,
 ): Promise<string> {
@@ -156,4 +255,52 @@ export async function generateThumbnail(
 
     img.src = URL.createObjectURL(file);
   });
+}
+
+export async function generateThumbnail(
+  file: File,
+  size: number = 200,
+): Promise<string> {
+  try {
+    // Try Web Worker first for better performance
+    return await generateThumbnailWithWorker(file, size);
+  } catch (error) {
+    console.warn(
+      "Web Worker thumbnail generation failed, falling back to main thread:",
+      error,
+    );
+    posthog.capture("no worker thumbnail generation", {
+      error: error instanceof Error ? error.message : error,
+    });
+    // Fallback to main thread implementation
+    return await generateThumbnailMainThread(file, size);
+  }
+}
+
+export async function generateThumbnailWithCallback(
+  file: File,
+  size: number = 200,
+  onProgress?: (
+    stage: "worker-attempt" | "worker-failed" | "fallback-complete",
+  ) => void,
+): Promise<string> {
+  try {
+    onProgress?.("worker-attempt");
+    // Try Web Worker first for better performance
+    const result = await generateThumbnailWithWorker(file, size);
+    return result;
+  } catch (error) {
+    console.warn(
+      "Web Worker thumbnail generation failed, falling back to main thread:",
+      error,
+    );
+    onProgress?.("worker-failed");
+    posthog.capture("no worker thumbnail generation", {
+      error: error instanceof Error ? error.message : error,
+    });
+    // Fallback to main thread implementation
+    const result = await generateThumbnailMainThread(file, size);
+    onProgress?.("fallback-complete");
+    return result;
+  }
 }

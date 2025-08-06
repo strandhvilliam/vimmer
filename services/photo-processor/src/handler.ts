@@ -138,7 +138,7 @@ async function processSubmission(key: string, s3Client: S3Client) {
         status: "uploaded",
         thumbnailKey: variants.thumbnailKey,
         previewKey: variants.previewKey,
-        exif,
+        exif: exif ?? {},
         size,
         mimeType,
         metadata,
@@ -193,7 +193,8 @@ async function parseExifData(
   try {
     const exif = await exifr.parse(file);
     if (!exif) {
-      throw new Error(`No EXIF data found for submission ${submission.id}`);
+      console.error(`No EXIF data found for submission ${submission.id}`);
+      return null;
     }
 
     const dateFields = [
@@ -222,7 +223,7 @@ async function parseExifData(
       `Error parsing EXIF data for submission ${submission.id}:`,
       error,
     );
-    throw error;
+    return null;
   }
 }
 

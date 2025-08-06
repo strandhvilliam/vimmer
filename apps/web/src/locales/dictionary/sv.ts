@@ -13,18 +13,9 @@ export default {
   // Participate page
   "participate.gettingStarted": "Kom igång",
   "participate.chooseLanguage": "Välj språk",
-  "participate.competitionRules": "Tävlingsregler & Info",
-  "participate.rulesWelcome":
-    "Välkommen till vår årliga fototävling! Här är de viktigaste reglerna:",
-  "participate.rulesOriginal":
-    "Alla foton måste vara original och tagna av dig",
-  "participate.rulesFormat": "Foton måste skickas in i JPG- eller PNG-format",
-  "participate.rulesFileSize": "Maximal filstorlek: 10MB per foto",
-  "participate.rulesDeadline": "Sista inlämningsdag: 15 augusti 2025",
-  "participate.rulesAnnouncement":
-    "Vinnare kommer att meddelas den 1 september 2025",
-  "participate.termsAccept": "Jag accepterar",
-  "participate.termsAndConditions": "villkoren",
+  "participate.competitionRules": "Information",
+  "participate.termsAccept": "Jag accepterar organisatörens",
+  "participate.termsAndConditions": "villkor",
   "participate.datesToBeAnnounced": "Datum kommer att meddelas",
 
   // Confirmation page
@@ -37,7 +28,7 @@ export default {
   "confirmation.judgingDescription":
     "Vår expertjury kommer att granska alla bidrag",
   "confirmation.resultsAnnounced": "Resultat meddelas",
-  "confirmation.resultsDescription": "Vinnare kommer att kontaktas via e-post",
+  "confirmation.resultsDescription": "Vinnare kommer att bli kontaktade",
   "confirmation.shareWork": "Dela ditt arbete",
   "confirmation.shareDescription":
     "Du kan dela dina foton efter att resultaten är klara",
@@ -99,4 +90,22 @@ export default {
   "uploadSubmissions.maxPhotosReached": "Maximalt antal foton uppnått",
   "uploadSubmissions.invalidFileType": "Ogiltig filtyp: {extension}",
   "uploadSubmissions.noFileExtension": "INGEN FILÄNDELSE",
+
+  // Upload Instructions Dialog
+  "uploadInstructions.title": "Innan du laddar upp",
+  "uploadInstructions.description":
+    "Läs dessa instruktioner noggrant innan du laddar upp dina foton",
+  "uploadInstructions.localPhotosTitle": "Använd endast lokala foton",
+  "uploadInstructions.localPhotosDescription":
+    "Använd inte foton som är lagrade i molnet. Använd foton som är lagrade lokalt på din telefon eller enhet.",
+  "uploadInstructions.connectionTitle": "Stabil internetanslutning",
+  "uploadInstructions.connectionDescription":
+    "Se till att du har en bra och stabil internetanslutning innan du börjar ladda upp.",
+  "uploadInstructions.doubleCheckTitle": "Dubbelkolla ditt bidrag",
+  "uploadInstructions.doubleCheckDescription":
+    "Innan du skickar in, dubbelkolla dina foton. Du kan inte ändra ditt bidrag efter uppladdning!",
+  "uploadInstructions.patienceTitle": "Ha tålamod under uppladdning",
+  "uploadInstructions.patienceDescription":
+    "Stora foton kan ta tid att ladda upp. Stäng inte webbläsaren eller navigera bort under processen.",
+  "uploadInstructions.gotIt": "Förstått!",
 } as const;

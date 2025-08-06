@@ -18,6 +18,15 @@ import { useTRPC } from "@/trpc/client";
 import { useDomain } from "@/contexts/domain-context";
 import { mapDbRuleConfigsToValidationConfigs } from "@/lib/utils";
 import { useParticipantSubmissionStep } from "@/hooks/use-participant-submission-step";
+import dynamic from "next/dynamic";
+
+const NetworkStatusBanner = dynamic(
+  () =>
+    import("@/components/network-status-banner").then((mod) => ({
+      default: mod.NetworkStatusBanner,
+    })),
+  { ssr: false },
+);
 
 export function SubmissionClientPage() {
   const trpc = useTRPC();
@@ -32,10 +41,23 @@ export function SubmissionClientPage() {
       event.preventDefault();
       return "Are you sure you want to leave? All progress will be lost.";
     };
-    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    const isOnIOS =
+      navigator.userAgent.match(/iPad/i) ||
+      navigator.userAgent.match(/iPhone/i);
+
+    if (isOnIOS) {
+      window.addEventListener("pagehide", handleBeforeUnload);
+    } else {
+      window.addEventListener("beforeunload", handleBeforeUnload);
+    }
 
     return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (isOnIOS) {
+        window.removeEventListener("pagehide", handleBeforeUnload);
+      } else {
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+      }
     };
   }, []);
 
@@ -74,6 +96,7 @@ export function SubmissionClientPage() {
 
   return (
     <div className="max-w-2xl mx-auto py-4">
+      <NetworkStatusBanner />
       <div className="mb-12 px-4 sm:px-0">
         <StepNavigator currentStep={step} handleSetStep={handleSetStep} />
       </div>

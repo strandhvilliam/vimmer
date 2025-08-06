@@ -58,7 +58,11 @@ export async function generatePresignedUrl(
       new PutObjectCommand({
         Key: key,
         Bucket: bucketName,
+        ContentType: "image/jpeg",
       }),
+      {
+        expiresIn: 3600,
+      },
     );
   } catch (error: unknown) {
     console.error(error);

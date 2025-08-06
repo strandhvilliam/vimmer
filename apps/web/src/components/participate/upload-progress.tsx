@@ -25,7 +25,7 @@ import { useFileUpload } from "@/hooks/use-file-upload";
 import { useMemo } from "react";
 
 interface UploadProgressProps {
-  files: PhotoWithPresignedUrl[];
+  files?: PhotoWithPresignedUrl[];
   topics: Topic[];
   expectedCount: number;
   onComplete: () => void;
@@ -58,7 +58,7 @@ export function UploadProgress({
 
   const progress = useMemo(() => {
     const fileStates = Array.from(files.values());
-    const total = fileStates.length;
+    const total = fileStates.length || expectedFilesCount;
     const completed = fileStates.filter((f) => f.phase === "completed").length;
     const failed = fileStates.filter((f) => f.phase === "error").length;
     const uploading = fileStates.filter((f) => f.phase === "s3_upload").length;
@@ -74,7 +74,7 @@ export function UploadProgress({
       processing,
       percentage: total > 0 ? (completed / total) * 100 : 0,
     };
-  }, [files]);
+  }, [files, expectedFilesCount]);
 
   const failedFiles = enhancedFileStates.filter(
     (file) => file.status === "error",
@@ -138,17 +138,33 @@ export function UploadProgress({
 
             <div className="space-y-2 max-h-64 overflow-y-auto">
               <AnimatePresence mode="popLayout">
-                {enhancedFileStates.map((file) => (
-                  <FileProgressItem
-                    key={file.key}
-                    file={file}
-                    topic={
-                      topics.find(
-                        (topic) => topic.orderIndex === file.orderIndex,
-                      )!
-                    }
-                  />
-                ))}
+                {enhancedFileStates.length > 0
+                  ? enhancedFileStates.map((file) => (
+                      <FileProgressItem
+                        key={file.key}
+                        file={file}
+                        topic={
+                          topics.find(
+                            (topic) => topic.orderIndex === file.orderIndex,
+                          )!
+                        }
+                      />
+                    ))
+                  : Array.from({ length: expectedFilesCount }, (_, index) => (
+                      <motion.div
+                        key={`placeholder-${index}`}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                      >
+                        <div className="flex-1 mr-3">
+                          <div className="h-4 bg-muted rounded animate-pulse w-3/4" />
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="w-5 h-5 bg-muted rounded-full animate-pulse" />
+                        </div>
+                      </motion.div>
+                    ))}
               </AnimatePresence>
             </div>
           </CardContent>

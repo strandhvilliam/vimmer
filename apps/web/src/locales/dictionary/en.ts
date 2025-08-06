@@ -13,16 +13,8 @@ export default {
   // Participate page
   "participate.gettingStarted": "Getting Started",
   "participate.chooseLanguage": "Choose Language",
-  "participate.competitionRules": "Competition Rules & Info",
-  "participate.rulesWelcome":
-    "Welcome to our annual photo competition! Here are the key rules:",
-  "participate.rulesOriginal": "All photos must be original and taken by you",
-  "participate.rulesFormat": "Photos must be submitted in JPG or PNG format",
-  "participate.rulesFileSize": "Maximum file size: 10MB per photo",
-  "participate.rulesDeadline": "Submission deadline: August 15, 2025",
-  "participate.rulesAnnouncement":
-    "Winners will be announced on September 1, 2025",
-  "participate.termsAccept": "I accept the",
+  "participate.competitionRules": "Information",
+  "participate.termsAccept": "I accept the organizers",
   "participate.termsAndConditions": "terms and conditions",
   "participate.datesToBeAnnounced": "Dates to be announced",
 
@@ -36,7 +28,7 @@ export default {
   "confirmation.judgingDescription":
     "Our expert jury will review all submissions",
   "confirmation.resultsAnnounced": "Results Announced",
-  "confirmation.resultsDescription": "Winners will be contacted via email",
+  "confirmation.resultsDescription": "Winners will be contacted",
   "confirmation.shareWork": "Share Your Work",
   "confirmation.shareDescription": "You can share your photos after results",
   "confirmation.loadingSubmission": "Loading your submission...",
@@ -98,4 +90,22 @@ export default {
   "uploadSubmissions.maxPhotosReached": "Maximum number of photos reached",
   "uploadSubmissions.invalidFileType": "Invalid file type: {extension}",
   "uploadSubmissions.noFileExtension": "NO FILE EXTENSION",
+
+  // Upload Instructions Dialog
+  "uploadInstructions.title": "Before You Upload",
+  "uploadInstructions.description":
+    "Please read these instructions carefully before uploading your photos",
+  "uploadInstructions.localPhotosTitle": "Use Local Photos Only",
+  "uploadInstructions.localPhotosDescription":
+    "Do not use photos stored in the cloud. Use photos stored locally on your phone or device.",
+  "uploadInstructions.connectionTitle": "Stable Internet Connection",
+  "uploadInstructions.connectionDescription":
+    "Make sure you have a good and stable internet connection before starting the upload.",
+  "uploadInstructions.doubleCheckTitle": "Double-Check Your Submission",
+  "uploadInstructions.doubleCheckDescription":
+    "Before submitting, please double-check your photos. You cannot change your submission after uploading!",
+  "uploadInstructions.patienceTitle": "Be Patient During Upload",
+  "uploadInstructions.patienceDescription":
+    "Large photos may take time to upload. Please don't close the browser or navigate away during the process.",
+  "uploadInstructions.gotIt": "Got it!",
 } as const;

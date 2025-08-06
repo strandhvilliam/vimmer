@@ -14,7 +14,7 @@ import {
   VALIDATION_OUTCOME,
   SEVERITY_LEVELS,
 } from "@vimmer/validation/constants";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@vimmer/ui/components/button";
 import {
   Dialog,
@@ -45,30 +45,41 @@ export function SubmissionItem({
   const [expanded, setExpanded] = useState(false);
   const [showImageDialog, setShowImageDialog] = useState(false);
 
-  const r = validationResults?.sort((a, b) => {
-    if (a.outcome !== b.outcome) {
-      if (a.outcome === VALIDATION_OUTCOME.FAILED) return -1;
-      if (b.outcome === VALIDATION_OUTCOME.FAILED) return 1;
-      if (a.outcome === VALIDATION_OUTCOME.SKIPPED) return -1;
-      if (b.outcome === VALIDATION_OUTCOME.SKIPPED) return 1;
+  const r = useMemo(() => {
+    return validationResults?.sort((a, b) => {
+      if (a.outcome !== b.outcome) {
+        if (a.outcome === VALIDATION_OUTCOME.FAILED) return -1;
+        if (b.outcome === VALIDATION_OUTCOME.FAILED) return 1;
+        if (a.outcome === VALIDATION_OUTCOME.SKIPPED) return -1;
+        if (b.outcome === VALIDATION_OUTCOME.SKIPPED) return 1;
+      }
+
+      if (a.severity !== b.severity) {
+        if (a.severity === SEVERITY_LEVELS.ERROR) return -1;
+        if (b.severity === SEVERITY_LEVELS.ERROR) return 1;
+      }
+
+      return 0;
+    });
+  }, [validationResults]);
+
+  const displayValidation = useMemo(() => {
+    const highestPriorityResult = r?.[0];
+    if (photo?.exif && Object.keys(photo.exif).length === 0) {
+      return {
+        message: "No EXIF data found",
+        outcome: VALIDATION_OUTCOME.FAILED,
+        severity: SEVERITY_LEVELS.WARNING,
+      };
     }
 
-    if (a.severity !== b.severity) {
-      if (a.severity === SEVERITY_LEVELS.ERROR) return -1;
-      if (b.severity === SEVERITY_LEVELS.ERROR) return 1;
-    }
-
-    return 0;
-  });
-
-  const highestPriorityResult = r?.[0];
-
-  const displayValidation = {
-    message: highestPriorityResult?.message,
-    outcome: highestPriorityResult?.outcome,
-    severity: highestPriorityResult?.severity,
-    ruleKey: highestPriorityResult?.ruleKey,
-  };
+    return {
+      message: highestPriorityResult?.message,
+      outcome: highestPriorityResult?.outcome,
+      severity: highestPriorityResult?.severity,
+      ruleKey: highestPriorityResult?.ruleKey,
+    };
+  }, [r, photo?.exif]);
 
   const exifData = photo?.exif || {};
   const relevantExifData = getRelevantExifData(exifData);
@@ -90,7 +101,7 @@ export function SubmissionItem({
             <p className="text-base text-muted-foreground">#{index + 1}</p>
             <p className="font-medium">{topic?.name}</p>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {onUploadClick ? "Click to select photo" : "No photo selected"}
           </p>
         </div>
@@ -181,10 +192,9 @@ export function SubmissionItem({
             transition={{ duration: 0.2 }}
             className="w-full h-full rounded-lg overflow-hidden"
           >
-            {photo.thumbnailLoading || !photo.thumbnail ? (
+            {photo.thumbnailLoading ? (
               <div className="w-full h-full bg-muted/50 border-2 border-dashed rounded-lg flex items-center justify-end pb-3 flex-col gap-1">
                 <motion.div
-                  layout
                   animate={{ rotate: 360 }}
                   transition={{
                     repeatType: "loop",
@@ -203,7 +213,7 @@ export function SubmissionItem({
             ) : (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
-                src={photo.thumbnail}
+                src={photo.thumbnail ?? photo.preview}
                 alt={`Upload preview ${index + 1}`}
                 className="object-cover w-full h-full cursor-pointer"
                 onClick={() => setShowImageDialog(true)}
@@ -291,8 +301,6 @@ function getRelevantExifData(exif: {
 
   // Guard against undefined or null exif data
   if (!exif) return relevantData;
-
-  console.log({ exif });
 
   // Camera info
   if (exif.Make && typeof exif.Make === "string")
