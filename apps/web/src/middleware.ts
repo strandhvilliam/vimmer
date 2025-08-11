@@ -148,11 +148,7 @@ async function handleStaffRoute(request: NextRequest, response: NextResponse) {
   const cookieDomain = request.cookies.get("activeDomain")?.value
   const domainAccessToken = request.cookies.get("domainAccessToken")?.value
 
-  console.log("hostDomain", hostDomain)
-  console.log("cookieDomain", cookieDomain)
-
   const session = getSessionCookie(request)
-  console.log("session", session)
 
   if (!session) {
     const url = new URL("/auth/staff/login", request.url)

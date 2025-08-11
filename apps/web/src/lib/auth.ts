@@ -27,14 +27,14 @@ export const auth = betterAuth({
     enabled: true,
     maxAge: 5 * 60,
   },
-  advanced: {
-    crossSubDomainCookies: {
-      enabled: true,
-      additionalCookies: ["activeDomain", "domainAccessToken"],
-      domain:
-        process.env.NODE_ENV === "production" ? "blikka.app" : "localhost",
-    },
-  },
+  // advanced: {
+  //   crossSubDomainCookies: {
+  //     enabled: true,
+  //     additionalCookies: ["activeDomain", "domainAccessToken"],
+  //     domain:
+  //       process.env.NODE_ENV === "production" ? "blikka.app" : "localhost",
+  //   },
+  // },
   plugins: [
     nextCookies(),
     emailOTP({
