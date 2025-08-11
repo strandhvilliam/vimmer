@@ -58,7 +58,7 @@ export function UploadSubmissionsStep({
     setSubmissionState,
   } = useSubmissionQueryState();
 
-  const { photos, validateAndAddPhotos } = usePhotoStore();
+  const { photos, validateAndAddPhotos, removePhoto } = usePhotoStore();
 
   const { executeUpload } = useFileUpload();
   const { isUploading, setIsUploading } = useUploadStore();
@@ -66,17 +66,11 @@ export function UploadSubmissionsStep({
 
   // Temporarily use any to bypass type checking until API is rebuilt
   const { mutateAsync: generatePresignedSubmissions } = useMutation(
-    trpc.presignedUrls.generatePresignedSubmissionsOnDemand.mutationOptions(),
-    // mutationFn: async (params: {
-    //   domain: string;
-    //   participantRef: string;
-    //   participantId: number;
-    //   competitionClassId: number;
-    // }) => {
-    //   return (
-    //     trpc as any
-    //   ).presignedUrls.generatePresignedSubmissionsOnDemand.mutate(params);
-    // },
+    trpc.presignedUrls.generatePresignedSubmissionsOnDemand.mutationOptions({
+      onError: () => {
+        toast.error("Failed to generate presigned URLs");
+      },
+    }),
   );
 
   const competitionClass = competitionClasses.find(
@@ -85,6 +79,10 @@ export function UploadSubmissionsStep({
 
   const handleCloseInstructionsDialog = () => {
     setSubmissionState({ uploadInstructionsShown: true });
+  };
+
+  const handleCloseUploadProgress = () => {
+    setIsUploading(false);
   };
 
   const handleFileSelect = async (files: FileList | null) => {
@@ -96,19 +94,9 @@ export function UploadSubmissionsStep({
 
     const fileArray = Array.from(files);
 
-    const checkedFiles = fileArray.filter(async (file) => {
-      try {
-        await file.arrayBuffer();
-        return true;
-      } catch (e) {
-        console.log(e);
-        return false;
-      }
-    });
-
-    if (checkedFiles.length > 0) {
+    if (fileArray.length > 0) {
       await validateAndAddPhotos({
-        files: checkedFiles,
+        files: fileArray,
         ruleConfigs: ruleConfigs.map((rule) => {
           if (rule.key === RULE_KEYS.WITHIN_TIMERANGE) {
             return {
@@ -143,6 +131,28 @@ export function UploadSubmissionsStep({
     fileInputRef.current?.click();
   };
 
+  const handleRemovePhoto = async (orderIndex: number) => {
+    if (!competitionClass) return;
+    await removePhoto({
+      photoToRemoveIndex: orderIndex,
+      ruleConfigs: ruleConfigs.map((rule) => {
+        if (rule.key === RULE_KEYS.WITHIN_TIMERANGE) {
+          return {
+            ...rule,
+            params: {
+              ...rule.params,
+              start: marathon.startDate,
+              end: marathon.endDate,
+            },
+          };
+        }
+        return rule;
+      }),
+      orderIndexes: topics.map((topic) => topic.orderIndex),
+      maxPhotos: competitionClass.numberOfPhotos,
+    });
+  };
+
   const handleUpload = async () => {
     if (!domain || !participantRef || !participantId || !competitionClassId) {
       toast.error("Missing required information for upload");
@@ -152,7 +162,6 @@ export function UploadSubmissionsStep({
     try {
       setIsUploading(true);
 
-      // Generate presigned URLs on-demand
       const presignedSubmissions = await generatePresignedSubmissions({
         domain,
         participantRef,
@@ -160,15 +169,25 @@ export function UploadSubmissionsStep({
         competitionClassId,
       });
 
-      // Combine photos with fresh presigned URLs
+      if (!presignedSubmissions || presignedSubmissions.length === 0) {
+        setIsUploading(false);
+        toast.error("Failed to generate upload URLs - no submissions returned");
+        return;
+      }
+
       const combinedPhotos = combinePhotos(photos, presignedSubmissions);
 
-      // Execute upload immediately
+      if (!combinedPhotos || combinedPhotos.length === 0) {
+        setIsUploading(false);
+        toast.error("Failed to prepare photos for upload");
+        return;
+      }
+
       await executeUpload(combinedPhotos);
     } catch (error) {
       console.error("Upload failed:", error);
-      toast.error("Failed to generate upload URLs");
       setIsUploading(false);
+      toast.error("Failed to start upload process");
     }
   };
 
@@ -189,6 +208,7 @@ export function UploadSubmissionsStep({
         expectedCount={competitionClass.numberOfPhotos}
         onComplete={() => onNextStep?.()}
         open={isUploading}
+        onClose={handleCloseUploadProgress}
       />
       <div className="max-w-4xl mx-auto space-y-6">
         <CardHeader className="text-center">
@@ -211,6 +231,7 @@ export function UploadSubmissionsStep({
             topics={topics}
             competitionClass={competitionClass}
             onUploadClick={handleUploadClick}
+            onRemovePhoto={handleRemovePhoto}
           />
           <input
             ref={fileInputRef}

@@ -12,7 +12,17 @@ import {
 import { useSubmissionQueryState } from "./use-submission-query-state";
 import { FILE_STATUS, UPLOAD_PHASE } from "@/lib/constants";
 
-const DEFAULT_TIMEOUT = 1000 * 60 * 3; // 3 minutes
+const DEFAULT_TIMEOUT = 1000 * 60 * 5; // 5 minutes
+const UPLOAD_CONCURRENCY_LIMIT = 3; // Upload 4 files simultaneously
+
+// Utility function to split array into chunks
+function chunk<T>(array: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
+  }
+  return chunks;
+}
 
 export function useFileUpload() {
   const queryClient = useQueryClient();
@@ -50,7 +60,7 @@ export function useFileUpload() {
         participantId: participantId ?? -1,
       },
       {
-        refetchInterval: 5000,
+        refetchInterval: 3000,
         enabled: !!participantId && isUploading,
       },
     ),
@@ -62,6 +72,9 @@ export function useFileUpload() {
       submissions.forEach((submission) => {
         const file = getFile(submission.key);
         if (!file) return;
+
+        // Skip updates if file is currently being processed to prevent race conditions
+        if (isFileLocked(submission.key)) return;
 
         if (
           submission.status === "uploaded" &&
@@ -88,59 +101,88 @@ export function useFileUpload() {
     }
   }, [submissions, isUploading, getFile, updateFilePhase, setFileError]);
 
-  const uploadSingleFile = async (file: UploadFileState): Promise<void> => {
-    updateFilePhase(file.key, UPLOAD_PHASE.S3_UPLOAD, 0);
+  // File locking mechanism to prevent race conditions
+  const fileLocks = new Map<string, boolean>();
+  const lockFile = (key: string) => fileLocks.set(key, true);
+  const unlockFile = (key: string) => fileLocks.delete(key);
+  const isFileLocked = (key: string) => fileLocks.has(key);
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      posthog.captureException("file upload timeout", {
-        file: file.key,
-        size: file.file.size,
-      });
-      controller.abort();
-    }, DEFAULT_TIMEOUT);
+  const uploadSingleFile = async (file: UploadFileState): Promise<void> => {
+    // Check if file is already being processed
+    if (isFileLocked(file.key)) {
+      return;
+    }
+
+    lockFile(file.key);
 
     try {
-      const response = await fetch(file.presignedUrl, {
-        method: "PUT",
-        body: file.file,
-        signal: controller.signal,
-        headers: {
-          // "Content-Type": file.file.type,
-          "Content-Type": "image/jpeg",
-        },
-      });
+      updateFilePhase(file.key, UPLOAD_PHASE.S3_UPLOAD, 0);
 
-      clearTimeout(timeoutId);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        posthog.captureException("file upload timeout", {
+          file: file.key,
+          size: file.file.size,
+        });
+        controller.abort();
+      }, DEFAULT_TIMEOUT);
 
-      if (!response.ok) {
-        const error = new Error(
-          `Upload failed: ${response.status} ${response.statusText} filesize: ${file.file.size}`,
-        );
-        const { code } = classifyError(error, response.status);
+      try {
+        const response = await fetch(file.presignedUrl, {
+          method: "PUT",
+          body: file.file,
+          signal: controller.signal,
+          headers: {
+            // "Content-Type": file.file.type,
+            "Content-Type": "image/jpeg",
+          },
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const error = new Error(
+            `Upload failed: ${response.status} ${response.statusText} filesize: ${file.file.size}`,
+          );
+          const { code } = classifyError(error, response.status);
+
+          setFileError(file.key, {
+            message: error.message,
+            code,
+            timestamp: new Date(),
+            httpStatus: response.status,
+          });
+          return;
+        }
+
+        updateFilePhase(file.key, UPLOAD_PHASE.PROCESSING, 100);
+      } catch (error) {
+        clearTimeout(timeoutId);
+
+        const err =
+          error instanceof Error ? error : new Error("Unknown upload error");
+        const { code } = classifyError(err);
 
         setFileError(file.key, {
-          message: error.message,
+          message: err.message,
           code,
           timestamp: new Date(),
-          httpStatus: response.status,
         });
-        return;
       }
+    } finally {
+      unlockFile(file.key);
+    }
+  };
 
-      updateFilePhase(file.key, UPLOAD_PHASE.PROCESSING, 100);
-    } catch (error) {
-      clearTimeout(timeoutId);
+  // Controlled concurrency upload function
+  const uploadWithConcurrencyLimit = async (
+    files: UploadFileState[],
+  ): Promise<void> => {
+    const fileChunks = chunk(files, UPLOAD_CONCURRENCY_LIMIT);
 
-      const err =
-        error instanceof Error ? error : new Error("Unknown upload error");
-      const { code } = classifyError(err);
-
-      setFileError(file.key, {
-        message: err.message,
-        code,
-        timestamp: new Date(),
-      });
+    for (const fileChunk of fileChunks) {
+      const uploadPromises = fileChunk.map(uploadSingleFile);
+      await Promise.allSettled(uploadPromises);
     }
   };
 
@@ -155,14 +197,13 @@ export function useFileUpload() {
     initializeFiles(photos, participantId);
 
     try {
-      const uploadPromises = photos.map(async (photo) => {
-        const file = getFile(photo.key);
-        if (file) {
-          await uploadSingleFile(file);
-        }
-      });
+      // Get all files to upload
+      const filesToUpload = photos
+        .map((photo) => getFile(photo.key))
+        .filter((file): file is UploadFileState => file !== undefined);
 
-      await Promise.allSettled(uploadPromises);
+      // Use controlled concurrency instead of uploading all files at once
+      await uploadWithConcurrencyLimit(filesToUpload);
 
       // Get final results
       const failedFiles = getFailedFiles();
@@ -242,34 +283,40 @@ export function useFileUpload() {
       return;
     }
 
-    failedFiles.forEach((file) => {
+    // Filter out files that are currently being processed to prevent conflicts
+    const retryableFiles = failedFiles.filter(
+      (file) => !isFileLocked(file.key),
+    );
+
+    if (retryableFiles.length === 0) {
+      return;
+    }
+
+    retryableFiles.forEach((file) => {
       resetFileForRetry(file.key);
       incrementRetryCount(file.key);
     });
 
     try {
-      const submissionUpdates = failedFiles.map((file) => ({
+      const submissionUpdates = retryableFiles.map((file) => ({
         id: file.submissionId,
         data: { status: "pending" as const },
       }));
 
       await updateMultipleSubmissions(submissionUpdates);
 
-      // Upload failed files concurrently
-      const uploadPromises = failedFiles.map(async (failedFile) => {
-        const file = getFile(failedFile.key);
-        if (file) {
-          await uploadSingleFile(file);
-        }
-      });
+      // Get files to retry and upload with controlled concurrency
+      const filesToRetry = retryableFiles
+        .map((failedFile) => getFile(failedFile.key))
+        .filter((file): file is UploadFileState => file !== undefined);
 
-      await Promise.allSettled(uploadPromises);
+      await uploadWithConcurrencyLimit(filesToRetry);
 
       const newFailedFiles = getFailedFiles();
-      const retriedSuccessfully = failedFiles.length - newFailedFiles.length;
+      const retriedSuccessfully = retryableFiles.length - newFailedFiles.length;
 
       posthog.capture("file_upload_retry", {
-        total_retried: failedFiles.length,
+        total_retried: retryableFiles.length,
         successful_retries: retriedSuccessfully,
         failed_retries: newFailedFiles.length,
       });

@@ -19,10 +19,10 @@ import { Button } from "@vimmer/ui/components/button";
 import { Progress } from "@vimmer/ui/components/progress";
 import { AnimatePresence, motion } from "motion/react";
 import { FileProgressItem } from "@/components/participate/file-progress-item";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { AlertTriangle, RefreshCw, X } from "lucide-react";
 import { useUploadStore } from "@/lib/stores/upload-store";
 import { useFileUpload } from "@/hooks/use-file-upload";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 interface UploadProgressProps {
   files?: PhotoWithPresignedUrl[];
@@ -30,6 +30,7 @@ interface UploadProgressProps {
   expectedCount: number;
   onComplete: () => void;
   open?: boolean;
+  onClose?: () => void;
 }
 
 export function UploadProgress({
@@ -37,9 +38,11 @@ export function UploadProgress({
   expectedCount: expectedFilesCount,
   onComplete,
   open = true,
+  onClose,
 }: UploadProgressProps) {
   const files = useUploadStore((state) => state.files);
   const { retryFailedFiles } = useFileUpload();
+  const [elapsedTime, setElapsedTime] = useState(0);
 
   const enhancedFileStates: FileState[] = useMemo(() => {
     const fileStates = Array.from(files.values());
@@ -83,6 +86,28 @@ export function UploadProgress({
   const allUploadsComplete = progress.completed === expectedFilesCount;
   const hasFailures = failedFiles.length > 0;
   const canRetry = hasFailures;
+
+  useEffect(() => {
+    if (!open) return;
+
+    const interval = setInterval(() => {
+      setElapsedTime((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [open]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const handleRetryFailedFiles = () => {
+    setElapsedTime(0);
+    retryFailedFiles();
+  };
+
   return (
     <Dialog open={open}>
       <DialogContent
@@ -92,13 +117,29 @@ export function UploadProgress({
         <DialogTitle className="sr-only">Uploading Photos</DialogTitle>
         <Card className="w-full">
           <CardHeader>
-            <CardTitle className="text-center text-xl font-rocgrotesk">
-              {allUploadsComplete
-                ? "Upload Complete"
-                : hasFailures
-                  ? "Upload Issues"
-                  : "Uploading Photos"}
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="text-sm w-8 text-muted-foreground font-mono">
+                {!hasFailures && formatTime(elapsedTime)}
+              </div>
+              <CardTitle className="text-xl font-rocgrotesk flex-1 text-center">
+                {allUploadsComplete
+                  ? "Upload Complete"
+                  : hasFailures
+                    ? "Upload Issues"
+                    : "Uploading Photos"}
+              </CardTitle>
+              <div className="w-8 flex justify-end">
+                {hasFailures && onClose && (
+                  <button
+                    onClick={onClose}
+                    className="p-1 hover:bg-muted rounded-full transition-colors border"
+                    aria-label="Close upload dialog"
+                  >
+                    <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                  </button>
+                )}
+              </div>
+            </div>
           </CardHeader>
 
           <CardContent className="space-y-6">
@@ -177,7 +218,7 @@ export function UploadProgress({
                 className="w-full"
               >
                 <Button
-                  onClick={retryFailedFiles}
+                  onClick={handleRetryFailedFiles}
                   variant="outline"
                   className="w-full"
                 >

@@ -30,7 +30,7 @@ interface Props {
   validationResults?: ValidationResult[];
   topic?: Topic;
   index: number;
-  onRemove?: () => void;
+  onRemove?: (orderIndex: number) => void;
   onUploadClick?: () => void;
 }
 
@@ -222,7 +222,7 @@ export function SubmissionItem({
           </motion.div>
           <button
             type="button"
-            onClick={onRemove}
+            onClick={() => onRemove?.(photo.orderIndex)}
             className="absolute top-2 right-2 p-1 bg-black/50 rounded-full hover:bg-black/75 transition-colors"
           >
             <X className="w-4 h-4 text-white" />

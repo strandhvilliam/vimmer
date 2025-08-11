@@ -8,14 +8,16 @@ interface Props {
   topics: Topic[];
   competitionClass: CompetitionClass;
   onUploadClick?: () => void;
+  onRemovePhoto?: (orderIndex: number) => void;
 }
 
 export function SubmissionsList({
   topics,
   competitionClass,
   onUploadClick,
+  onRemovePhoto,
 }: Props) {
-  const { photos, removePhoto, validationResults } = usePhotoStore();
+  const { photos, validationResults } = usePhotoStore();
   const remainingSlots = competitionClass.numberOfPhotos - photos.length;
 
   return (
@@ -35,7 +37,7 @@ export function SubmissionsList({
                 (result) => result.fileName === photo.file.name,
               )}
               index={index}
-              onRemove={() => removePhoto(photo.orderIndex)}
+              onRemove={onRemovePhoto}
             />
           </motion.div>
         ))}

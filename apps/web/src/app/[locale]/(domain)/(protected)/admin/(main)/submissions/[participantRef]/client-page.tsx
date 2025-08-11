@@ -1,6 +1,7 @@
 "use client";
 
 import { ParticipantHeader } from "@/components/admin/participant-header";
+import { AnimatePresence } from "motion/react";
 import { ParticipantValidationResultsTable } from "@/components/admin/participant-validation-results-table";
 import {
   Tabs,
@@ -90,26 +91,28 @@ export function ParticipantSubmissionClientPage({
 
         <TabsContent value="submissions" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {data.map(({ submission, topic }) => (
-              <PhotoSubmissionCard
-                imageUrl={
-                  submission.thumbnailKey
-                    ? `${thumbnailBaseUrl}/${submission.thumbnailKey}`
-                    : submission.key
-                      ? `${submissionsBaseUrl}/${submission.key}`
-                      : null
-                }
-                key={submission.id}
-                submission={submission}
-                topic={topic}
-                validationResults={validationResults}
-              />
-            ))}
-            {data.length === 0 && (
-              <div className="col-span-full text-center text-muted-foreground py-12">
-                No photos submitted yet
-              </div>
-            )}
+            <AnimatePresence>
+              {data.map(({ submission, topic }) => (
+                <PhotoSubmissionCard
+                  imageUrl={
+                    submission.thumbnailKey
+                      ? `${thumbnailBaseUrl}/${submission.thumbnailKey}`
+                      : submission.key
+                        ? `${submissionsBaseUrl}/${submission.key}`
+                        : null
+                  }
+                  key={submission.id}
+                  submission={submission}
+                  topic={topic}
+                  validationResults={validationResults}
+                />
+              ))}
+              {data.length === 0 && (
+                <div className="col-span-full text-center text-muted-foreground py-12">
+                  No photos submitted yet
+                </div>
+              )}
+            </AnimatePresence>
           </div>
         </TabsContent>
 

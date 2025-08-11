@@ -5,7 +5,7 @@ import { Alert } from "@vimmer/ui/components/alert";
 import { toast } from "sonner";
 import { CloudUpload, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import React from "react";
+import React, { useRef } from "react";
 // import { UploadZone } from "@/components/participate/upload-zone";
 import { usePhotoStore } from "@/lib/stores/photo-store";
 
@@ -16,6 +16,7 @@ import {
   SEVERITY_LEVELS,
   VALIDATION_OUTCOME,
 } from "@vimmer/validation/constants";
+import { COMMON_IMAGE_EXTENSIONS } from "@/lib/constants";
 
 interface UploadSectionProps {
   maxPhotos: number;
@@ -33,6 +34,8 @@ export function UploadSection({
   marathon,
 }: UploadSectionProps) {
   const { photos, validateAndAddPhotos, validationResults } = usePhotoStore();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const allPhotosSelected = photos.length === maxPhotos && photos.length > 0;
 
@@ -166,8 +169,6 @@ export function UploadSection({
                 All photos selected - ready to upload
               </p>
 
-              {renderValidationWarnings()}
-
               <PrimaryButton
                 onClick={onUpload}
                 className="w-full py-3 text-base rounded-full"
@@ -222,17 +223,14 @@ export function UploadSection({
               border-2 border-dashed border-muted-foreground/40 bg-background/60 backdrop-blur-sm rounded-lg p-8 mb-6 transition-colors cursor-pointer hover:border-vimmer-primary hover:bg-muted
               ${photos.length >= maxPhotos ? "opacity-50 pointer-events-none" : ""}
             `}
-            onClick={() => document.getElementById("photo-upload")?.click()}
+            onClick={() => fileInputRef.current?.click()}
           >
             <input
               type="file"
               multiple
-              accept="image/*"
-              disabled={photos.length >= maxPhotos}
+              accept={COMMON_IMAGE_EXTENSIONS.map((ext) => `.${ext}`).join(",")}
               onChange={(e) => {
                 const files = Array.from(e.target.files || []);
-
-                console.log("files", files);
 
                 if (files.length > 0) {
                   validateAndAddPhotos({

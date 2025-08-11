@@ -117,6 +117,14 @@ async function processSubmission(key: string, s3Client: S3Client) {
       return;
     }
 
+    if (
+      participant.submissions.find((s) => s.key === key)?.status ===
+      "processing"
+    ) {
+      console.log("File is already being processed, skipping", key);
+      return;
+    }
+
     console.log("Processing file", key);
 
     const { submission } = await prepareSubmission(participant, key);
