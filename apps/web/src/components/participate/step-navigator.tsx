@@ -1,33 +1,33 @@
-import { PARTICIPANT_SUBMISSION_STEPS } from "@/lib/constants";
-import { CheckIcon } from "lucide-react";
-import { motion } from "motion/react";
-import { cn } from "@vimmer/ui/lib/utils";
-import { useI18n } from "@/locales/client";
+import { PARTICIPANT_SUBMISSION_STEPS } from "@/lib/constants"
+import { CheckIcon } from "lucide-react"
+import { motion } from "motion/react"
+import { cn } from "@vimmer/ui/lib/utils"
+import { useI18n } from "@/locales/client"
 
 interface Props {
-  currentStep: number;
-  handleSetStep: (s: number) => void;
+  currentStep: number
+  handleSetStep: (s: number) => void
 }
 
 export function StepNavigator({ currentStep, handleSetStep }: Props) {
-  const t = useI18n();
+  const t = useI18n()
 
   const getStepLabel = (step: number) => {
     switch (step) {
       case PARTICIPANT_SUBMISSION_STEPS.ParticipantNumberStep:
-        return t("steps.number");
+        return t("steps.number")
       case PARTICIPANT_SUBMISSION_STEPS.ParticipantDetailsStep:
-        return t("steps.details");
+        return t("steps.details")
       case PARTICIPANT_SUBMISSION_STEPS.ClassSelectionStep:
-        return t("steps.class");
+        return t("steps.class")
       case PARTICIPANT_SUBMISSION_STEPS.DeviceSelectionStep:
-        return t("steps.device");
+        return t("steps.device")
       case PARTICIPANT_SUBMISSION_STEPS.UploadSubmissionStep:
-        return t("steps.upload");
+        return t("steps.upload")
       default:
-        return "";
+        return ""
     }
-  };
+  }
 
   return (
     <nav className="mb-8">
@@ -38,7 +38,7 @@ export function StepNavigator({ currentStep, handleSetStep }: Props) {
             className={cn(
               "flex flex-col items-center",
               step !== PARTICIPANT_SUBMISSION_STEPS.UploadSubmissionStep &&
-                "flex-1",
+                "flex-1"
             )}
           >
             <div className="flex items-center w-full">
@@ -63,7 +63,7 @@ export function StepNavigator({ currentStep, handleSetStep }: Props) {
                   "w-8 h-8 sm:w-10 sm:h-10",
                   "hover:cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2",
                   "focus:ring-primary transition-shadow relative z-10 bg-background",
-                  step <= currentStep ? "shadow-md" : "",
+                  step <= currentStep ? "shadow-md" : ""
                 )}
                 transition={{ duration: 0.2 }}
               >
@@ -101,7 +101,7 @@ export function StepNavigator({ currentStep, handleSetStep }: Props) {
                 "hidden sm:block text-sm mt-2 font-medium truncate max-w-[80px] text-center",
                 step <= currentStep
                   ? "text-foreground"
-                  : "text-muted-foreground",
+                  : "text-muted-foreground"
               )}
               transition={{ duration: 0.2, delay: 0.1 }}
             >
@@ -111,5 +111,5 @@ export function StepNavigator({ currentStep, handleSetStep }: Props) {
         ))}
       </ol>
     </nav>
-  );
+  )
 }

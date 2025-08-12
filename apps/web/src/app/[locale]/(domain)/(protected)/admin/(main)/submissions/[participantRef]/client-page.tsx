@@ -1,26 +1,27 @@
-"use client";
+"use client"
 
-import { ParticipantHeader } from "@/components/admin/participant-header";
-import { AnimatePresence } from "motion/react";
-import { ParticipantValidationResultsTable } from "@/components/admin/participant-validation-results-table";
+import { ParticipantHeader } from "@/components/admin/participant-header"
+import { AnimatePresence } from "motion/react"
+import { ParticipantValidationResultsTable } from "@/components/admin/participant-validation-results-table"
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@vimmer/ui/components/tabs";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { useTRPC } from "@/trpc/client";
-import { useDomain } from "@/contexts/domain-context";
-import { ParticipantContactSheetTab } from "@/components/admin/participant-contact-sheet-tab";
-import { PhotoSubmissionCard } from "@/components/admin/submission-card";
+} from "@vimmer/ui/components/tabs"
+import { toast } from "sonner"
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
+import { useTRPC } from "@/trpc/client"
+import { useDomain } from "@/contexts/domain-context"
+import { ParticipantContactSheetTab } from "@/components/admin/participant-contact-sheet-tab"
+import { PhotoSubmissionCard } from "@/components/admin/submission-card"
 
 interface ParticipantSubmissionClientPageProps {
-  variantsGeneratorUrl: string;
-  participantRef: string;
-  thumbnailBaseUrl: string;
-  submissionsBaseUrl: string;
-  contactSheetBucketUrl: string;
+  variantsGeneratorUrl: string
+  participantRef: string
+  thumbnailBaseUrl: string
+  submissionsBaseUrl: string
+  contactSheetBucketUrl: string
 }
 
 export function ParticipantSubmissionClientPage({
@@ -30,33 +31,34 @@ export function ParticipantSubmissionClientPage({
   submissionsBaseUrl,
   contactSheetBucketUrl,
 }: ParticipantSubmissionClientPageProps) {
-  const { domain } = useDomain();
-  const trpc = useTRPC();
+  const { domain } = useDomain()
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
 
   const { data: participant } = useSuspenseQuery(
     trpc.participants.getByReference.queryOptions({
       reference: participantRef,
       domain,
-    }),
-  );
+    })
+  )
 
   const { data: topics } = useSuspenseQuery(
     trpc.topics.getByDomain.queryOptions({
       domain,
-    }),
-  );
+    })
+  )
 
   const data = participant?.submissions
     .map((s) => ({
       submission: s,
       topic: topics.find((t) => t.id === s.topicId),
     }))
-    .sort((a, b) => (a.topic?.orderIndex ?? 0) - (b.topic?.orderIndex ?? 0));
+    .sort((a, b) => (a.topic?.orderIndex ?? 0) - (b.topic?.orderIndex ?? 0))
 
-  const validationResults = participant?.validationResults || [];
+  const validationResults = participant?.validationResults || []
 
   if (!data || !participant) {
-    return <div>Participant not found</div>;
+    return <div>Participant not found</div>
   }
 
   return (
@@ -67,6 +69,13 @@ export function ParticipantSubmissionClientPage({
         validationResults={validationResults}
       />
 
+      <button
+        onClick={async () => {
+          window.location.reload()
+        }}
+      >
+        revalidate
+      </button>
       <Tabs defaultValue="submissions">
         <TabsList className="bg-background rounded-none p-0 h-auto border-b border-muted-foreground/25 w-full flex justify-start">
           <TabsTrigger
@@ -131,5 +140,5 @@ export function ParticipantSubmissionClientPage({
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

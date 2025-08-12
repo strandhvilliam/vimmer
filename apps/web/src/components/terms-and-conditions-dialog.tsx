@@ -4,13 +4,13 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@vimmer/ui/components/dialog";
-import { Button } from "@vimmer/ui/components/button";
-import { X } from "lucide-react";
-import React from "react";
-import { useTRPC } from "@/trpc/client";
-import { useDomain } from "@/contexts/domain-context";
-import { useQuery } from "@tanstack/react-query";
+} from "@vimmer/ui/components/dialog"
+import { Button } from "@vimmer/ui/components/button"
+import { X } from "lucide-react"
+import React from "react"
+import { useTRPC } from "@/trpc/client"
+import { useDomain } from "@/contexts/domain-context"
+import { useQuery } from "@tanstack/react-query"
 
 export default function TermsAndConditionsDialog({
   termsOpen,
@@ -18,21 +18,19 @@ export default function TermsAndConditionsDialog({
   termsAccepted,
   setTermsAccepted,
 }: {
-  termsOpen: boolean;
-  setTermsOpen: (open: boolean) => void;
-  termsAccepted: boolean;
-  setTermsAccepted: (accepted: boolean) => void;
+  termsOpen: boolean
+  setTermsOpen: (open: boolean) => void
+  termsAccepted: boolean
+  setTermsAccepted: (accepted: boolean) => void
 }) {
-  const trpc = useTRPC();
-  const { domain } = useDomain();
+  const trpc = useTRPC()
+  const { domain } = useDomain()
 
   const { data: termsData, isLoading } = useQuery(
     trpc.terms.getByDomain.queryOptions({
       domain,
-    }),
-  );
-
-  console.log({ termsData });
+    })
+  )
 
   return (
     <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
@@ -79,8 +77,8 @@ export default function TermsAndConditionsDialog({
           <div className="max-w-4xl mx-auto">
             <Button
               onClick={() => {
-                setTermsAccepted(true);
-                setTermsOpen(false);
+                setTermsAccepted(true)
+                setTermsOpen(false)
               }}
               className="w-full py-6 text-lg font-medium"
             >
@@ -90,5 +88,5 @@ export default function TermsAndConditionsDialog({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

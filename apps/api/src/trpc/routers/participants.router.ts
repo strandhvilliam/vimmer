@@ -6,8 +6,8 @@ import {
   getParticipantsByDomainQuery,
   incrementUploadCounterMutation,
   updateParticipantMutation,
-} from "@vimmer/api/db/queries/participants.queries";
-import { createTRPCRouter, publicProcedure } from "..";
+} from "@vimmer/api/db/queries/participants.queries"
+import { createTRPCRouter, publicProcedure } from ".."
 import {
   createParticipantSchema,
   deleteParticipantSchema,
@@ -16,8 +16,9 @@ import {
   getParticipantsByDomainSchema,
   incrementUploadCounterSchema,
   updateParticipantSchema,
-} from "@vimmer/api/schemas/participants.schemas";
-import { TRPCError } from "@trpc/server";
+} from "@vimmer/api/schemas/participants.schemas"
+import { TRPCError } from "@trpc/server"
+import { invalidateCloudfrontByDomain } from "@vimmer/api/utils/invalidate-cloudfront-domain"
 
 export const participantsRouter = createTRPCRouter({
   getByDomain: publicProcedure
@@ -25,7 +26,7 @@ export const participantsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return getParticipantsByDomainQuery(ctx.db, {
         domain: input.domain,
-      });
+      })
     }),
 
   getById: publicProcedure
@@ -33,15 +34,15 @@ export const participantsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const data = await getParticipantByIdQuery(ctx.db, {
         id: input.id,
-      });
+      })
 
       if (!data) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Participant not found",
-        });
+        })
       }
-      return data;
+      return data
     }),
 
   getByReference: publicProcedure
@@ -50,7 +51,7 @@ export const participantsRouter = createTRPCRouter({
       return getParticipantByReferenceQuery(ctx.db, {
         reference: input.reference,
         domain: input.domain,
-      });
+      })
     }),
 
   create: publicProcedure
@@ -58,7 +59,7 @@ export const participantsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return createParticipantMutation(ctx.db, {
         data: input.data,
-      });
+      })
     }),
 
   update: publicProcedure
@@ -67,15 +68,27 @@ export const participantsRouter = createTRPCRouter({
       return updateParticipantMutation(ctx.db, {
         id: input.id,
         data: input.data,
-      });
+      })
     }),
 
   delete: publicProcedure
     .input(deleteParticipantSchema)
     .mutation(async ({ ctx, input }) => {
-      return deleteParticipantMutation(ctx.db, {
+      const participant = await getParticipantByIdQuery(ctx.db, {
         id: input.id,
-      });
+      })
+
+      if (!participant) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Participant not found",
+        })
+      }
+
+      await deleteParticipantMutation(ctx.db, {
+        id: input.id,
+      })
+      await invalidateCloudfrontByDomain(participant.domain)
     }),
 
   incrementUploadCounter: publicProcedure
@@ -84,6 +97,6 @@ export const participantsRouter = createTRPCRouter({
       return incrementUploadCounterMutation(ctx.supabase, {
         participantId: input.participantId,
         totalExpected: input.totalExpected,
-      });
+      })
     }),
-});
+})

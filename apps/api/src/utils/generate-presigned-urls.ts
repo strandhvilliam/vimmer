@@ -1,56 +1,55 @@
-import { S3Client } from "@aws-sdk/client-s3";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { and, eq, inArray, not } from "drizzle-orm";
-import type { Database } from "../db";
+import { S3Client } from "@aws-sdk/client-s3"
+import { PutObjectCommand } from "@aws-sdk/client-s3"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
+import { and, eq, inArray, not } from "drizzle-orm"
+import type { Database } from "../db"
 import {
   marathons,
   competitionClasses,
   topics,
   submissions,
   participants,
-} from "../db/schema";
-import type { Submission, Topic, NewSubmission } from "../db/types";
-import { TRPCError } from "@trpc/server";
+} from "../db/schema"
+import type { Submission, Topic, NewSubmission } from "../db/types"
+import { TRPCError } from "@trpc/server"
 
 export interface PresignedSubmission {
-  presignedUrl: string;
-  key: string;
-  orderIndex: number;
-  topicId: number;
-  submissionId: number;
+  presignedUrl: string
+  key: string
+  orderIndex: number
+  topicId: number
+  submissionId: number
 }
 
 export interface GeneratePresignedUrlsParams {
-  participantRef: string;
-  domain: string;
-  participantId: number;
-  competitionClassId: number;
+  participantRef: string
+  domain: string
+  participantId: number
+  competitionClassId: number
 }
 
 export function formatSubmissionKey({
   ref,
   index,
   domain,
-  version = 1,
 }: {
-  domain: string;
-  ref: string;
-  index: number;
-  version?: number;
+  domain: string
+  ref: string
+  index: number
 }) {
-  const trimmedRef = ref.trim();
-  const isOnlyDigits = /^\d+$/.test(trimmedRef);
-  const displayRef = isOnlyDigits ? trimmedRef.padStart(4, "0") : trimmedRef;
-  const displayIndex = (index + 1).toString().padStart(2, "0");
-  const fileName = `${displayRef}_${displayIndex}_v${version}.jpg`;
-  return `${domain}/${displayRef}/${displayIndex}/${fileName}`;
+  const trimmedRef = ref.trim()
+  const isOnlyDigits = /^\d+$/.test(trimmedRef)
+  const displayRef = isOnlyDigits ? trimmedRef.padStart(4, "0") : trimmedRef
+  const displayIndex = (index + 1).toString().padStart(2, "0")
+  const generatedDateTime = new Date().toISOString().replace(/[:.]/g, "-")
+  const fileName = `${displayRef}_${displayIndex}_${generatedDateTime}.jpg`
+  return `${domain}/${displayRef}/${displayIndex}/${fileName}`
 }
 
 export async function generatePresignedUrl(
   s3Client: S3Client,
   key: string,
-  bucketName: string,
+  bucketName: string
 ) {
   try {
     return await getSignedUrl(
@@ -62,11 +61,11 @@ export async function generatePresignedUrl(
       }),
       {
         expiresIn: 3600,
-      },
-    );
+      }
+    )
   } catch (error: unknown) {
-    console.error(error);
-    throw new Error(`Failed to generate presigned URL for submission ${key}`);
+    console.error(error)
+    throw new Error(`Failed to generate presigned URL for submission ${key}`)
   }
 }
 
@@ -74,66 +73,66 @@ export class PresignedSubmissionService {
   constructor(
     private readonly db: Database,
     private readonly s3: S3Client,
-    private readonly submissionBucketName: string,
+    private readonly submissionBucketName: string
   ) {}
 
   async generatePresignedSubmissions(
     participantRef: string,
     domain: string,
     participantId: number,
-    competitionClassId: number,
+    competitionClassId: number
   ): Promise<PresignedSubmission[]> {
     const marathon = await this.db.query.marathons.findFirst({
       where: eq(marathons.domain, domain),
-    });
+    })
 
     if (!marathon) {
       throw new TRPCError({
         code: "NOT_FOUND",
         message: "Marathon not found",
-      });
+      })
     }
 
     const competitionClassesList =
       await this.db.query.competitionClasses.findMany({
         where: eq(competitionClasses.marathonId, marathon.id),
-      });
+      })
 
     const competitionClass = competitionClassesList.find(
-      (cc) => cc.id === competitionClassId,
-    );
+      (cc) => cc.id === competitionClassId
+    )
 
     if (!competitionClass) {
       throw new TRPCError({
         code: "NOT_FOUND",
         message: "Competition class not found",
-      });
+      })
     }
 
     const orderedTopics = await this.db.query.topics.findMany({
       where: eq(topics.marathonId, marathon.id),
       orderBy: (topics, { asc }) => [asc(topics.orderIndex)],
-    });
+    })
 
     // add start index handling
     const submissionKeys = this.generateSubmissionKeys(
       participantRef,
       domain,
-      competitionClass.numberOfPhotos,
-    );
+      competitionClass.numberOfPhotos
+    )
 
     const participant = await this.db.query.participants.findFirst({
       where: eq(participants.id, participantId),
       with: {
         submissions: true,
       },
-    });
+    })
 
     if (!participant) {
       throw new TRPCError({
         code: "NOT_FOUND",
         message: "Participant not found",
-      });
+      })
     }
 
     if (participant.submissions.length < competitionClass.numberOfPhotos) {
@@ -142,8 +141,8 @@ export class PresignedSubmissionService {
         submissionKeys,
         orderedTopics,
         marathon.id,
-        participantId,
-      );
+        participantId
+      )
     }
 
     if (participant.submissions.length > competitionClass.numberOfPhotos) {
@@ -153,33 +152,30 @@ export class PresignedSubmissionService {
         .where(
           and(
             eq(submissions.marathonId, marathon.id),
-            not(inArray(submissions.key, submissionKeys)),
-          ),
-        );
+            not(inArray(submissions.key, submissionKeys))
+          )
+        )
       const newParticipants = await this.db.query.submissions.findMany({
         where: inArray(submissions.key, submissionKeys),
-      });
-      return this.generatePresignedObjects(newParticipants, orderedTopics);
+      })
+      return this.generatePresignedObjects(newParticipants, orderedTopics)
     }
 
-    return this.generatePresignedObjects(
-      participant.submissions,
-      orderedTopics,
-    );
+    return this.generatePresignedObjects(participant.submissions, orderedTopics)
   }
 
   private generateSubmissionKeys(
     participantRef: string,
     domain: string,
-    numberOfPhotos: number,
+    numberOfPhotos: number
   ): string[] {
     return Array.from({ length: numberOfPhotos }).map((_, index) => {
       return formatSubmissionKey({
         ref: participantRef,
         index,
         domain,
-      });
-    });
+      })
+    })
   }
 
   private async handleNewSubmissions(
@@ -187,26 +183,25 @@ export class PresignedSubmissionService {
     submissionKeys: string[],
     orderedTopics: Topic[],
     marathonId: number,
-    participantId: number,
+    participantId: number
   ): Promise<PresignedSubmission[]> {
     await this.db
       .update(participants)
       .set({ uploadCount: 0 })
-      .where(eq(participants.id, participantId));
+      .where(eq(participants.id, participantId))
 
     const keysToCreate = submissionKeys.filter(
-      (key) =>
-        !existingSubmissions.some((submission) => submission.key === key),
-    );
+      (key) => !existingSubmissions.some((submission) => submission.key === key)
+    )
 
     const submissionsToCreate: NewSubmission[] = keysToCreate.map((key) => {
-      const originalIndex = submissionKeys.findIndex((k) => k === key);
-      const topicId = orderedTopics[originalIndex]?.id;
+      const originalIndex = submissionKeys.findIndex((k) => k === key)
+      const topicId = orderedTopics[originalIndex]?.id
 
       if (!topicId) {
         throw new Error(
-          `Unable to determine topic id for submission at index ${originalIndex}`,
-        );
+          `Unable to determine topic id for submission at index ${originalIndex}`
+        )
       }
 
       return {
@@ -215,42 +210,42 @@ export class PresignedSubmissionService {
         participantId,
         topicId,
         status: "initialized",
-      };
-    });
+      }
+    })
 
-    await this.db.insert(submissions).values(submissionsToCreate);
+    await this.db.insert(submissions).values(submissionsToCreate)
 
     const allSubmissions = await this.db.query.submissions.findMany({
       where: eq(submissions.participantId, participantId),
-    });
+    })
 
-    return this.generatePresignedObjects(allSubmissions, orderedTopics);
+    return this.generatePresignedObjects(allSubmissions, orderedTopics)
   }
 
   private async generatePresignedObjects(
     submissionsList: Submission[],
-    orderedTopics: Topic[],
+    orderedTopics: Topic[]
   ): Promise<PresignedSubmission[]> {
     const presignedObjects = await Promise.all(
       submissionsList.map(async (submission) => {
         const orderIndex = orderedTopics.findIndex(
-          (t) => t.id === submission.topicId,
-        );
+          (t) => t.id === submission.topicId
+        )
         const presignedUrl = await generatePresignedUrl(
           this.s3,
           submission.key,
-          this.submissionBucketName,
-        );
+          this.submissionBucketName
+        )
         return {
           presignedUrl,
           key: submission.key,
           orderIndex,
           topicId: submission.topicId,
           submissionId: submission.id,
-        };
-      }),
-    );
+        }
+      })
+    )
 
-    return presignedObjects.sort((a, b) => a.orderIndex - b.orderIndex);
+    return presignedObjects.sort((a, b) => a.orderIndex - b.orderIndex)
   }
 }

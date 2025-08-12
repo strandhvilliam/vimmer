@@ -1,77 +1,77 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { ChevronRight, ImageIcon, Info } from "lucide-react";
-import { Button } from "@vimmer/ui/components/button";
-import { Checkbox } from "@vimmer/ui/components/checkbox";
-import ReactCountryFlag from "react-country-flag";
+import { useState, useEffect } from "react"
+import { ChevronRight, ImageIcon, Info } from "lucide-react"
+import { Button } from "@vimmer/ui/components/button"
+import { Checkbox } from "@vimmer/ui/components/checkbox"
+import ReactCountryFlag from "react-country-flag"
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@vimmer/ui/components/accordion";
-import { useRouter } from "next/navigation";
-import { PrimaryButton } from "@vimmer/ui/components/primary-button";
-import { cn } from "@vimmer/ui/lib/utils";
-import Link from "next/link";
-import { format } from "date-fns";
-import { useTRPC } from "@/trpc/client";
-import { useQuery } from "@tanstack/react-query";
-import { useDomain } from "@/contexts/domain-context";
-import { useMarathonIsConfigured } from "@/hooks/use-marathon-is-configured";
-import { MarathonNotConfigured } from "@/components/participate/marathon-not-configured";
-import TermsAndConditionsDialog from "@/components/terms-and-conditions-dialog";
-import PlatformTermsDialog from "@/components/platform-terms-dialog";
-import { useChangeLocale, useCurrentLocale, useI18n } from "@/locales/client";
-import { MarkdownContent } from "@/components/markdown-content";
+} from "@vimmer/ui/components/accordion"
+import { useRouter } from "next/navigation"
+import { PrimaryButton } from "@vimmer/ui/components/primary-button"
+import { cn } from "@vimmer/ui/lib/utils"
+import Link from "next/link"
+import { format } from "date-fns"
+import { useTRPC } from "@/trpc/client"
+import { useQuery } from "@tanstack/react-query"
+import { useDomain } from "@/contexts/domain-context"
+import { useMarathonIsConfigured } from "@/hooks/use-marathon-is-configured"
+import { MarathonNotConfigured } from "@/components/participate/marathon-not-configured"
+import TermsAndConditionsDialog from "@/components/terms-and-conditions-dialog"
+import PlatformTermsDialog from "@/components/platform-terms-dialog"
+import { useChangeLocale, useCurrentLocale, useI18n } from "@/locales/client"
+import { MarkdownContent } from "@/components/markdown-content"
 
 export function ParticipateClientPage() {
-  const router = useRouter();
-  const trpc = useTRPC();
-  const { domain } = useDomain();
-  const t = useI18n();
-  const changeLocale = useChangeLocale();
-  const locale = useCurrentLocale();
+  const router = useRouter()
+  const trpc = useTRPC()
+  const { domain } = useDomain()
+  const t = useI18n()
+  const changeLocale = useChangeLocale()
+  const locale = useCurrentLocale()
 
   const { data: marathon } = useQuery(
     trpc.marathons.getByDomain.queryOptions({
       domain,
-    }),
-  );
+    })
+  )
 
-  const { isConfigured, requiredActions } = useMarathonIsConfigured();
+  const { isConfigured, requiredActions } = useMarathonIsConfigured()
 
   const [organizerTermsAccepted, setOrganizerTermsAccepted] =
-    useState<boolean>(false);
-  const [organizerTermsOpen, setOrganizerTermsOpen] = useState<boolean>(false);
+    useState<boolean>(false)
+  const [organizerTermsOpen, setOrganizerTermsOpen] = useState<boolean>(false)
   const [platformTermsAccepted, setPlatformTermsAccepted] =
-    useState<boolean>(false);
-  const [platformTermsOpen, setPlatformTermsOpen] = useState<boolean>(false);
+    useState<boolean>(false)
+  const [platformTermsOpen, setPlatformTermsOpen] = useState<boolean>(false)
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (organizerTermsAccepted || platformTermsAccepted) {
-        e.preventDefault();
-        e.returnValue = "";
+        e.preventDefault()
+        e.returnValue = ""
       }
-    };
+    }
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload)
 
     return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [organizerTermsAccepted, platformTermsAccepted]);
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+    }
+  }, [organizerTermsAccepted, platformTermsAccepted])
 
   const handleBeginSubmission = () => {
-    if (organizerTermsAccepted && platformTermsAccepted) {
-      router.push("/submission");
+    if (/*organizerTermsAccepted && */ platformTermsAccepted) {
+      router.push("/submission")
     }
-  };
+  }
 
   if (!marathon) {
-    return null;
+    return null
   }
 
   if (!isConfigured) {
@@ -80,7 +80,7 @@ export function ParticipateClientPage() {
         marathon={marathon}
         requiredActions={requiredActions}
       />
-    );
+    )
   }
 
   return (
@@ -136,7 +136,7 @@ export function ParticipateClientPage() {
                   variant="outline"
                   className={cn(
                     "flex-1 flex items-center justify-center gap-2 py-4 border-2",
-                    locale === "en" && "border-foreground",
+                    locale === "en" && "border-foreground"
                   )}
                   onClick={() => changeLocale("en")}
                 >
@@ -147,7 +147,7 @@ export function ParticipateClientPage() {
                   variant="outline"
                   className={cn(
                     "flex-1 flex items-center justify-center gap-2 py-4 border-2",
-                    locale === "sv" && "border-foreground",
+                    locale === "sv" && "border-foreground"
                   )}
                   onClick={() => changeLocale("sv")}
                 >
@@ -157,41 +157,43 @@ export function ParticipateClientPage() {
               </div>
             </section>
 
-            <section className="mb-5">
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="rules" className="border-gray-200">
-                  <AccordionTrigger
-                    className="font-semibold text-sm py-3"
-                    onClick={() => {
-                      setTimeout(() => {
-                        window.scrollTo({
-                          top: document.documentElement.scrollHeight,
-                          behavior: "smooth",
-                        });
-                      }, 150);
-                    }}
-                  >
-                    <div className="flex items-center gap-2 font-medium">
-                      <Info size={16} className="" />
-                      {t("participate.competitionRules")}
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="text-sm font-medium space-y-2">
-                    {marathon.description ? (
-                      <MarkdownContent content={marathon.description} />
-                    ) : (
-                      <div className="text-muted-foreground italic">
-                        No description available. Please contact the organizer
-                        for more information.
+            {marathon.description && (
+              <section className="mb-5">
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="rules" className="border-gray-200">
+                    <AccordionTrigger
+                      className="font-semibold text-sm py-3"
+                      onClick={() => {
+                        setTimeout(() => {
+                          window.scrollTo({
+                            top: document.documentElement.scrollHeight,
+                            behavior: "smooth",
+                          })
+                        }, 150)
+                      }}
+                    >
+                      <div className="flex items-center gap-2 font-medium">
+                        <Info size={16} className="" />
+                        {t("participate.competitionRules")}
                       </div>
-                    )}
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </section>
+                    </AccordionTrigger>
+                    <AccordionContent className="text-sm font-medium space-y-2">
+                      {marathon.description ? (
+                        <MarkdownContent content={marathon.description} />
+                      ) : (
+                        <div className="text-muted-foreground italic">
+                          No description available. Please contact the organizer
+                          for more information.
+                        </div>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </section>
+            )}
 
             <section className="mb-6 space-y-4">
-              <div className="flex items-start space-x-2">
+              {/* <div className="flex items-start space-x-2">
                 <Checkbox
                   id="organizer-terms"
                   checked={organizerTermsAccepted}
@@ -212,7 +214,7 @@ export function ParticipateClientPage() {
                     {t("participate.termsAndConditions")}
                   </button>
                 </label>
-              </div>
+              </div> */}
 
               <div className="flex items-start space-x-2">
                 <Checkbox
@@ -229,7 +231,7 @@ export function ParticipateClientPage() {
                     onClick={() => setPlatformTermsOpen(true)}
                     className="underline font-semibold"
                   >
-                    Blikka App Terms of Service
+                    {t("participate.termsAndConditions")}
                   </button>
                 </label>
               </div>
@@ -251,7 +253,7 @@ export function ParticipateClientPage() {
 
             <PrimaryButton
               onClick={handleBeginSubmission}
-              disabled={!organizerTermsAccepted || !platformTermsAccepted}
+              disabled={/*!organizerTermsAccepted || */ !platformTermsAccepted}
               className="w-full py-3 text-base  text-white rounded-full"
             >
               {t("begin")}
@@ -261,5 +263,5 @@ export function ParticipateClientPage() {
         </main>
       </div>
     </div>
-  );
+  )
 }

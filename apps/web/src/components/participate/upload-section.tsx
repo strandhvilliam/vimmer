@@ -1,66 +1,66 @@
-import { PrimaryButton } from "@vimmer/ui/components/primary-button";
-import { Card, CardContent } from "@vimmer/ui/components/card";
-import { Skeleton } from "@vimmer/ui/components/skeleton";
-import { Alert } from "@vimmer/ui/components/alert";
-import { toast } from "sonner";
-import { CloudUpload, AlertTriangle } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
-import React, { useRef } from "react";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button"
+import { Card, CardContent } from "@vimmer/ui/components/card"
+import { Skeleton } from "@vimmer/ui/components/skeleton"
+import { Alert } from "@vimmer/ui/components/alert"
+import { toast } from "sonner"
+import { CloudUpload, AlertTriangle } from "lucide-react"
+import { motion, AnimatePresence } from "motion/react"
+import React, { useRef } from "react"
 // import { UploadZone } from "@/components/participate/upload-zone";
-import { usePhotoStore } from "@/lib/stores/photo-store";
+import { usePhotoStore } from "@/lib/stores/photo-store"
 
-import { Marathon, Topic } from "@vimmer/api/db/types";
-import { RuleConfig, RuleKey } from "@vimmer/validation/types";
+import { Marathon, Topic } from "@vimmer/api/db/types"
+import { RuleConfig, RuleKey } from "@vimmer/validation/types"
 import {
   RULE_KEYS,
   SEVERITY_LEVELS,
   VALIDATION_OUTCOME,
-} from "@vimmer/validation/constants";
-import { COMMON_IMAGE_EXTENSIONS } from "@/lib/constants";
+} from "@vimmer/validation/constants"
+import { COMMON_IMAGE_EXTENSIONS } from "@/lib/constants"
 
 interface UploadSectionProps {
-  maxPhotos: number;
-  onUpload: () => void;
-  ruleConfigs: RuleConfig<RuleKey>[];
-  topics: Topic[];
-  marathon: Marathon;
+  maxPhotos: number
+  ruleConfigs: RuleConfig<RuleKey>[]
+  topics: Topic[]
+  marathon: Marathon
+  onUploadClick: () => void
 }
 
 export function UploadSection({
   maxPhotos,
-  onUpload,
   ruleConfigs,
   topics,
   marathon,
+  onUploadClick,
 }: UploadSectionProps) {
-  const { photos, validateAndAddPhotos, validationResults } = usePhotoStore();
+  const { photos, validateAndAddPhotos, validationResults } = usePhotoStore()
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const allPhotosSelected = photos.length === maxPhotos && photos.length > 0;
+  const allPhotosSelected = photos.length === maxPhotos && photos.length > 0
 
   const hasValidationErrors = validationResults.some(
     (result) =>
       result.outcome === VALIDATION_OUTCOME.FAILED &&
-      result.severity === SEVERITY_LEVELS.ERROR,
-  );
+      result.severity === SEVERITY_LEVELS.ERROR
+  )
 
   const hasValidationWarnings = validationResults.some(
     (result) =>
       result.outcome === VALIDATION_OUTCOME.FAILED &&
-      result.severity === SEVERITY_LEVELS.WARNING,
-  );
+      result.severity === SEVERITY_LEVELS.WARNING
+  )
 
   const errorMessages = validationResults
     .filter(
       (result) =>
         result.outcome === VALIDATION_OUTCOME.FAILED &&
-        result.severity === SEVERITY_LEVELS.ERROR,
+        result.severity === SEVERITY_LEVELS.ERROR
     )
     .map((result) => ({
       message: result.message,
       fileName: result.fileName,
-    }));
+    }))
 
   const warningMessages = validationResults
     .reduce(
@@ -69,25 +69,25 @@ export function UploadSection({
           result.outcome === VALIDATION_OUTCOME.FAILED &&
           result.severity === SEVERITY_LEVELS.WARNING
         ) {
-          const existingMessage = acc.find((m) => m.message === result.message);
+          const existingMessage = acc.find((m) => m.message === result.message)
           if (!existingMessage) {
             acc.push({
               message: result.message,
               fileName: result.fileName,
-            });
+            })
           }
         }
-        return acc;
+        return acc
       },
-      [] as { message: string; fileName: string | undefined }[],
+      [] as { message: string; fileName: string | undefined }[]
     )
     .map((result) => ({
       message: result.message,
       fileName: result.fileName,
-    }));
+    }))
 
   const renderValidationWarnings = () => {
-    if (!hasValidationWarnings) return null;
+    if (!hasValidationWarnings) return null
     return (
       <Alert className="bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/50 dark:border-amber-800 dark:text-amber-200 w-full">
         <AlertTriangle className="h-4 w-4" />
@@ -112,8 +112,8 @@ export function UploadSection({
           </div>
         </div>
       </Alert>
-    );
-  };
+    )
+  }
 
   return (
     <AnimatePresence mode="wait">
@@ -162,19 +162,22 @@ export function UploadSection({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <Card className="border-2 border-dashed border-muted-foreground/40 bg-background/40 backdrop-blur-sm rounded-lg p-8 mb-6 transition-colors">
+          <Card className="border-2 border-dashed border-green-200 bg-green-50/50 backdrop-blur-sm rounded-lg p-8 mb-6 transition-colors">
             <CardContent className="flex flex-col items-center justify-center space-y-6">
-              <CloudUpload className="h-20 w-20 text-primary" />
-              <p className="text-base text-center text-muted-foreground max-w-md">
-                All photos selected - ready to upload
-              </p>
-
-              <PrimaryButton
-                onClick={onUpload}
-                className="w-full py-3 text-base rounded-full"
-              >
-                Upload Now
-              </PrimaryButton>
+              <div className="relative">
+                <CloudUpload className="h-20 w-20 text-green-600" />
+                <div className="absolute -top-2 -right-2 bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center">
+                  ✓
+                </div>
+              </div>
+              <div className="text-center space-y-2">
+                <p className="text-lg font-semibold text-green-800">
+                  All photos selected!
+                </p>
+                <p className="text-sm text-green-700 max-w-md">
+                  {maxPhotos} photos ready for upload.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
@@ -223,14 +226,18 @@ export function UploadSection({
               border-2 border-dashed border-muted-foreground/40 bg-background/60 backdrop-blur-sm rounded-lg p-8 mb-6 transition-colors cursor-pointer hover:border-vimmer-primary hover:bg-muted
               ${photos.length >= maxPhotos ? "opacity-50 pointer-events-none" : ""}
             `}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={(e) => {
+              e.preventDefault()
+              onUploadClick()
+            }}
           >
-            <input
+            {/* <input
               type="file"
+              ref={fileInputRef}
               multiple
               accept={COMMON_IMAGE_EXTENSIONS.map((ext) => `.${ext}`).join(",")}
               onChange={(e) => {
-                const files = Array.from(e.target.files || []);
+                const files = Array.from(e.target.files || [])
 
                 if (files.length > 0) {
                   validateAndAddPhotos({
@@ -244,24 +251,23 @@ export function UploadSection({
                             start: marathon.startDate,
                             end: marathon.endDate,
                           },
-                        };
+                        }
                       }
-                      return rule;
+                      return rule
                     }),
                     orderIndexes: topics.map((topic) => topic.orderIndex),
                     maxPhotos,
-                  });
+                  })
                 } else {
-                  toast.error("No files selected");
+                  toast.error("No files selected")
                 }
               }}
               className="hidden"
               id="photo-upload"
-            />
+            /> */}
             <div className="text-center flex flex-col justify-center items-center">
               <PrimaryButton
                 className="flex items-center justify-center p-4 rounded-full mb-4"
-                onClick={() => document.getElementById("photo-upload")?.click()}
                 disabled={photos.length >= maxPhotos}
               >
                 <CloudUpload className="w-10 h-10 text-white" />
@@ -276,7 +282,6 @@ export function UploadSection({
               <PrimaryButton
                 disabled={photos.length >= maxPhotos}
                 className="mt-4"
-                onClick={() => document.getElementById("photo-upload")?.click()}
               >
                 Select Photos
               </PrimaryButton>
@@ -304,5 +309,5 @@ export function UploadSection({
       )}
       {renderValidationWarnings()}
     </AnimatePresence>
-  );
+  )
 }

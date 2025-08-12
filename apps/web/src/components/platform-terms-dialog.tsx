@@ -4,11 +4,11 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@vimmer/ui/components/dialog";
-import { Button } from "@vimmer/ui/components/button";
-import { X } from "lucide-react";
-import React from "react";
-import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+} from "@vimmer/ui/components/dialog"
+import { Button } from "@vimmer/ui/components/button"
+import { X } from "lucide-react"
+import React from "react"
+import { PrimaryButton } from "@vimmer/ui/components/primary-button"
 
 export default function PlatformTermsDialog({
   termsOpen,
@@ -16,10 +16,10 @@ export default function PlatformTermsDialog({
   termsAccepted,
   setTermsAccepted,
 }: {
-  termsOpen: boolean;
-  setTermsOpen: (open: boolean) => void;
-  termsAccepted: boolean;
-  setTermsAccepted: (accepted: boolean) => void;
+  termsOpen: boolean
+  setTermsOpen: (open: boolean) => void
+  termsAccepted: boolean
+  setTermsAccepted: (accepted: boolean) => void
 }) {
   return (
     <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
@@ -118,9 +118,9 @@ export default function PlatformTermsDialog({
                   till bilderna.
                 </li>
                 <li>
-                  Deltagare under 18 år Deltagare under 18 år ska ha målsmans
-                  underskrift för deltagande. Underskriften ska på begäran kunna
-                  visas i samband med start.
+                  Deltagare under 18 år ska ha målsmans underskrift för
+                  deltagande. Underskriften ska på begäran kunna visas i samband
+                  med start.
                 </li>
               </ul>
 
@@ -149,8 +149,8 @@ export default function PlatformTermsDialog({
           <div className="max-w-4xl mx-auto">
             <PrimaryButton
               onClick={() => {
-                setTermsAccepted(true);
-                setTermsOpen(false);
+                setTermsAccepted(true)
+                setTermsOpen(false)
               }}
               className="w-full py-2.5 rounded-full text-lg font-medium"
             >
@@ -160,5 +160,5 @@ export default function PlatformTermsDialog({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
