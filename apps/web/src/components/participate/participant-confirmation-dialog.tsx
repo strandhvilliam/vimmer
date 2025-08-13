@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@vimmer/ui/components/dialog"
@@ -65,10 +66,13 @@ export function ParticipantConfirmationDialog({
         hideCloseButton
         className="bg-transparent border-none shadow-none top-[40%]"
       >
-        <DialogHeader className="text-center">
-          <DialogTitle className="text-lg font-medium">
+        <DialogHeader className="text-center flex flex-col items-center">
+          <DialogTitle className="text-lg font-medium mb-2">
             Confirm Participant Number
           </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            Please re-enter the participant number to confirm your participation
+          </DialogDescription>
         </DialogHeader>
 
         <form className="flex flex-col gap-4 py-4">
@@ -79,7 +83,7 @@ export function ParticipantConfirmationDialog({
             value={enteredRef}
             onChange={(e) => handleInputChange(e.target.value)}
             className={cn(
-              "text-center text-4xl h-16 font-bold font-mono tracking-widest",
+              "text-center !text-4xl h-16 font-bold font-mono tracking-widest",
               geistMono.className,
               showError && "border-red-500 focus-visible:ring-red-500"
             )}

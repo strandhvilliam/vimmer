@@ -32,6 +32,12 @@ export default {
   "confirmation.shareWork": "Share Your Work",
   "confirmation.shareDescription": "You can share your photos after results",
   "confirmation.loadingSubmission": "Loading your submission...",
+  "confirmation.menu": "Menu",
+  "confirmation.startAgain": "Start again",
+  "confirmation.newParticipant": "New participant",
+  "confirmation.waitSeconds": "Wait ({seconds}s)",
+  "confirmation.photoPlaceholder": "Photo {id}",
+  "confirmation.secondsSuffix": "({seconds}s)",
 
   // Verification page
   "verification.almostThere": "Almost there!",
@@ -108,4 +114,4 @@ export default {
   "uploadInstructions.patienceDescription":
     "Large photos may take time to upload. Please don't close the browser or navigate away during the process.",
   "uploadInstructions.gotIt": "Got it!",
-} as const;
+} as const

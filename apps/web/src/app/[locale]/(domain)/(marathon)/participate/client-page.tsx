@@ -226,7 +226,7 @@ export function ParticipateClientPage() {
                   className="mt-1"
                 />
                 <label htmlFor="platform-terms" className="text-sm font-medium">
-                  I accept the{" "}
+                  {t("participate.termsAccept")}{" "}
                   <button
                     onClick={() => setPlatformTermsOpen(true)}
                     className="underline font-semibold"

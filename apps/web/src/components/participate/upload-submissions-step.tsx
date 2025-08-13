@@ -36,7 +36,6 @@ import { UploadInstructionsDialog } from "@/components/participate/upload-instru
 import { ParticipantConfirmationDialog } from "@/components/participate/participant-confirmation-dialog"
 import { PrimaryButton } from "@vimmer/ui/components/primary-button"
 import { motion } from "motion/react"
-import { CheckCircleIcon, CheckIcon } from "lucide-react"
 
 interface Props extends StepNavigationHandlers {
   competitionClasses: CompetitionClass[]

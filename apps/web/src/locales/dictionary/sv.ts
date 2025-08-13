@@ -14,7 +14,7 @@ export default {
   "participate.gettingStarted": "Kom igång",
   "participate.chooseLanguage": "Välj språk",
   "participate.competitionRules": "Information",
-  "participate.termsAccept": "Jag accepterar organisatörens",
+  "participate.termsAccept": "Jag accepterar arrangörens",
   "participate.termsAndConditions": "villkor",
   "participate.datesToBeAnnounced": "Datum kommer att meddelas",
 
@@ -33,6 +33,12 @@ export default {
   "confirmation.shareDescription":
     "Du kan dela dina foton efter att resultaten är klara",
   "confirmation.loadingSubmission": "Laddar ditt bidrag...",
+  "confirmation.menu": "Meny",
+  "confirmation.startAgain": "Börja om",
+  "confirmation.newParticipant": "Ny deltagare",
+  "confirmation.waitSeconds": "Vänta ({seconds}s)",
+  "confirmation.photoPlaceholder": "Foto {id}",
+  "confirmation.secondsSuffix": "({seconds}s)",
 
   // Verification page
   "verification.almostThere": "Nästan klar!",
@@ -108,4 +114,4 @@ export default {
   "uploadInstructions.patienceDescription":
     "Stora foton kan ta tid att ladda upp. Stäng inte webbläsaren eller navigera bort under processen.",
   "uploadInstructions.gotIt": "Förstått!",
-} as const;
+} as const
