@@ -50,7 +50,8 @@ export const presignedUrlsRouter = createTRPCRouter({
         input.participantRef,
         input.domain,
         input.participantId,
-        input.competitionClassId
+        input.competitionClassId,
+        input.preconvertedExifData ?? []
       )
     }),
   generatePresignedSubmissionsOnDemand: publicProcedure
@@ -82,7 +83,8 @@ export const presignedUrlsRouter = createTRPCRouter({
         input.participantRef,
         input.domain,
         input.participantId,
-        input.competitionClassId
+        input.competitionClassId,
+        input.preconvertedExifData ?? []
       )
     }),
   generateZipSubmissionsPresignedUrls: publicProcedure

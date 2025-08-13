@@ -1,4 +1,4 @@
-import React from "react";
+import React from "react"
 import {
   Body,
   Button,
@@ -11,15 +11,15 @@ import {
   Preview,
   Section,
   Text,
-} from "@react-email/components";
-import { Tailwind } from "@react-email/tailwind";
+} from "@react-email/components"
+import { Tailwind } from "@react-email/tailwind"
 
 interface OTPEmailProps {
-  otp: string;
-  username?: string;
-  expiryMinutes?: number;
-  companyName?: string;
-  companyLogoUrl?: string;
+  otp: string
+  username?: string
+  expiryMinutes?: number
+  companyName?: string
+  companyLogoUrl?: string
 }
 
 export const OTPEmail = ({
@@ -29,7 +29,7 @@ export const OTPEmail = ({
   companyName = "Your Company",
   companyLogoUrl = "https://example.com/logo.png",
 }: OTPEmailProps) => {
-  const previewText = `Your verification code: ${otp}`;
+  const previewText = `Your verification code: ${otp}`
 
   return (
     <Html>
@@ -64,7 +64,7 @@ export const OTPEmail = ({
             <Section className="mb-8 text-center">
               <div className="inline-block rounded-lg bg-gray-100 px-8 py-6">
                 <Text className="text-3xl font-bold tracking-widest text-gray-800">
-                  {otp.split("").join(" ")}
+                  {otp.split("").join("")}
                 </Text>
               </div>
             </Section>
@@ -91,5 +91,5 @@ export const OTPEmail = ({
         </Body>
       </Tailwind>
     </Html>
-  );
-};
+  )
+}

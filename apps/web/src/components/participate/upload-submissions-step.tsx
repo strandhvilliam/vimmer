@@ -2,6 +2,14 @@
 
 import { Button } from "@vimmer/ui/components/button"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@vimmer/ui/components/dialog"
+import {
   CardContent,
   CardFooter,
   CardHeader,
@@ -21,6 +29,7 @@ import { useFileUpload } from "@/hooks/use-file-upload"
 import { useUploadStore } from "@/lib/stores/upload-store"
 import { CompetitionClass, Marathon, Topic } from "@vimmer/api/db/types"
 import { useRef, useState } from "react"
+import { Loader2 } from "lucide-react"
 import { COMMON_IMAGE_EXTENSIONS } from "@/lib/constants"
 import {
   RULE_KEYS,
@@ -36,6 +45,29 @@ import { UploadInstructionsDialog } from "@/components/participate/upload-instru
 import { ParticipantConfirmationDialog } from "@/components/participate/participant-confirmation-dialog"
 import { PrimaryButton } from "@vimmer/ui/components/primary-button"
 import { motion } from "motion/react"
+import { parseExifData } from "@/lib/parse-exif-data"
+
+const convertHeic = async (file: File) => {
+  try {
+    const heic2any = await import("heic2any")
+    const heic = await heic2any.default({
+      blob: file,
+      toType: "image/jpeg",
+      quality: 1,
+    })
+    const blob = Array.isArray(heic) ? heic : [heic]
+    return new File(
+      blob,
+      file.name.replace(".heic", ".jpg").replace(".heif", ".jpg"),
+      {
+        type: "image/jpeg",
+      }
+    )
+  } catch (error) {
+    console.error(`Failed to convert HEIC file ${file.name}`, error)
+    return undefined
+  }
+}
 
 interface Props extends StepNavigationHandlers {
   competitionClasses: CompetitionClass[]
@@ -72,6 +104,14 @@ export function UploadSubmissionsStep({
   const { isUploading, setIsUploading } = useUploadStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false)
+  const [isConvertingHeic, setIsConvertingHeic] = useState(false)
+  const [isCancellingConversion, setIsCancellingConversion] = useState(false)
+  const [conversionTotal, setConversionTotal] = useState(0)
+  const [conversionDone, setConversionDone] = useState(0)
+  const [currentConvertingName, setCurrentConvertingName] = useState<
+    string | null
+  >(null)
+  const cancelConvertRef = useRef<{ canceled: boolean }>({ canceled: false })
 
   // Temporarily use any to bypass type checking until API is rebuilt
   const { mutateAsync: generatePresignedSubmissions } = useMutation(
@@ -101,31 +141,90 @@ export function UploadSubmissionsStep({
     }
     if (!competitionClass) return
 
-    const fileArray = Array.from(files)
+    let fileArray = Array.from(files)
 
-    if (fileArray.length > 0) {
-      await validateAndAddPhotos({
-        files: fileArray,
-        ruleConfigs: ruleConfigs.map((rule) => {
-          if (rule.key === RULE_KEYS.WITHIN_TIMERANGE) {
-            return {
-              ...rule,
-              params: {
-                ...rule.params,
-                start: marathon.startDate,
-                end: marathon.endDate,
-              },
-            }
-          }
-          return rule
-        }),
-        orderIndexes: topics.map((topic) => topic.orderIndex),
-        maxPhotos: competitionClass.numberOfPhotos,
-      })
-    } else {
+    const isHeicFile = (file: File) =>
+      file.type === "image/heic" ||
+      file.type === "image/heif" ||
+      /\.heic$/i.test(file.name) ||
+      /\.heif$/i.test(file.name)
+
+    const preconvertedExifData: { name: string; exif: any }[] = []
+    if (fileArray.some((file) => isHeicFile(file))) {
+      const nonHeicFiles = fileArray.filter((f) => !isHeicFile(f))
+      const heicFiles = fileArray.filter((f) => isHeicFile(f))
+
+      setIsConvertingHeic(true)
+      setIsCancellingConversion(false)
+      setConversionTotal(heicFiles.length)
+      setConversionDone(0)
+      cancelConvertRef.current.canceled = false
+      try {
+        const converted: File[] = []
+        for (let i = 0; i < heicFiles.length; i++) {
+          const file = heicFiles[i]!
+          setCurrentConvertingName(file.name)
+          if (cancelConvertRef.current.canceled) break
+          const exif = await parseExifData(file)
+          preconvertedExifData.push({
+            name: file.name.replace(".heic", ".jpg").replace(".heif", ".jpg"),
+            exif,
+          })
+          const result = await convertHeic(file)
+          if (cancelConvertRef.current.canceled) break
+          if (result) converted.push(result)
+          setConversionDone(i + 1)
+        }
+
+        if (cancelConvertRef.current.canceled) {
+          // User canceled: keep state clean and exit without adding photos
+          setIsCancellingConversion(false)
+          setIsConvertingHeic(false)
+          setConversionDone(0)
+          setConversionTotal(0)
+          setCurrentConvertingName(null)
+          toast.message("HEIC conversion canceled")
+          return
+        }
+
+        fileArray = [...nonHeicFiles, ...converted]
+      } catch (error) {
+        console.error("Failed to convert HEIC files", error)
+        toast.error("Failed to convert HEIC files")
+        setIsCancellingConversion(false)
+        setIsConvertingHeic(false)
+        return
+      } finally {
+        setIsCancellingConversion(false)
+        setIsConvertingHeic(false)
+        setCurrentConvertingName(null)
+      }
+    }
+
+    if (fileArray.length === 0) {
       toast.error(t("uploadSubmissions.noFilesSelected"))
       return
     }
+
+    await validateAndAddPhotos({
+      files: fileArray,
+      ruleConfigs: ruleConfigs.map((rule) => {
+        if (rule.key === RULE_KEYS.WITHIN_TIMERANGE) {
+          return {
+            ...rule,
+            params: {
+              ...rule.params,
+              start: marathon.startDate,
+              end: marathon.endDate,
+            },
+          }
+        }
+        return rule
+      }),
+      orderIndexes: topics.map((topic) => topic.orderIndex),
+      maxPhotos: competitionClass.numberOfPhotos,
+      preconvertedExifData,
+    })
   }
 
   const handleUploadClick = () => {
@@ -187,6 +286,13 @@ export function UploadSubmissionsStep({
         participantRef,
         participantId,
         competitionClassId,
+        preconvertedExifData: photos
+          .map((photo) => ({
+            orderIndex: photo.orderIndex,
+            exif: photo.preconvertedExif,
+          }))
+          .filter((p) => p.exif)
+          .sort((a, b) => a.orderIndex - b.orderIndex),
       })
 
       if (!presignedSubmissions || presignedSubmissions.length === 0) {
@@ -222,6 +328,43 @@ export function UploadSubmissionsStep({
 
   return (
     <>
+      {/* HEIC conversion overlay */}
+      <Dialog open={isConvertingHeic}>
+        <DialogContent hideCloseButton className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-rocgrotesk">
+              Converting HEIC photos
+            </DialogTitle>
+            <DialogDescription>
+              {isCancellingConversion
+                ? "Cancelling..."
+                : `This can take a moment. ${conversionDone}/${conversionTotal}${
+                    currentConvertingName ? ` - ${currentConvertingName}` : ""
+                  }`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-3 py-2">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <div className="text-sm text-muted-foreground">
+              {isCancellingConversion
+                ? "Stopping conversion"
+                : `Converting ${conversionDone} of ${conversionTotal}`}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                cancelConvertRef.current.canceled = true
+                setIsCancellingConversion(true)
+              }}
+              disabled={isCancellingConversion}
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <UploadInstructionsDialog
         open={!uploadInstructionsShown}
         onClose={handleCloseInstructionsDialog}

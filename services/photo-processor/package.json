@@ -10,12 +10,15 @@
     "@vimmer/image-processing": "workspace:*",
     "@vimmer/supabase": "workspace:*",
     "@vimmer/validation": "workspace:*",
+    "file-type": "^21.0.0",
+    "heic-convert": "^2.1.0",
     "posthog-node": "^5.1.1"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@vimmer/typescript-config": "workspace:*",
-    "@vimmer/eslint-config": "workspace:*"
+    "@types/heic-convert": "^2.1.0",
+    "@vimmer/eslint-config": "workspace:*",
+    "@vimmer/typescript-config": "workspace:*"
   },
   "peerDependencies": {
     "typescript": "^5.7.2"

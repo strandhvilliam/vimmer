@@ -1,4 +1,5 @@
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs"
+import { fileTypeFromBuffer } from "file-type"
 import {
   GetObjectCommand,
   PutObjectCommand,
@@ -17,6 +18,7 @@ import { updateSubmissionByKeyMutation } from "@vimmer/api/db/queries/submission
 import { incrementUploadCounterMutation } from "@vimmer/api/db/queries/participants.queries"
 import { createClient } from "@vimmer/supabase/lambda"
 import { Participant, Submission } from "@vimmer/api/db/types"
+import heicConvert from "heic-convert"
 
 const IMAGE_VARIANTS = {
   thumbnail: { width: 200, prefix: "thumbnail" },
@@ -109,8 +111,10 @@ async function processSubmission(key: string, s3Client: S3Client) {
       key
     )
 
+    const fileBuffer = file
+
     if (s3Metadata?.isresized === "true") {
-      console.log("File only resized, skipping", key)
+      console.log("File already resized, skipping", key)
       return
     }
 
@@ -122,11 +126,12 @@ async function processSubmission(key: string, s3Client: S3Client) {
       return
     }
 
-    console.log("Processing file", key)
-
     const { submission } = await prepareSubmission(participant, key)
-    const exif = await parseExifData(file, submission)
-    const sharpInstance = sharp(file)
+    const exif =
+      submission.mimeType === "image/heic"
+        ? submission.exif
+        : await parseExifData(fileBuffer, submission)
+    const sharpInstance = sharp(fileBuffer)
 
     const [metadata, variants] = await Promise.all([
       parseMetadata(sharpInstance),
@@ -142,7 +147,7 @@ async function processSubmission(key: string, s3Client: S3Client) {
       try {
         const newThumbnailKey = await generateThumbnailFromExif(
           s3Client,
-          file,
+          fileBuffer,
           key
         )
 
@@ -517,3 +522,30 @@ async function generateThumbnailFromExif(
     return undefined
   }
 }
+
+// async function convertHeicToJpg(
+//   s3Client: S3Client,
+//   key: string,
+//   file: Uint8Array<ArrayBufferLike>
+// ) {
+//   const buffer = new Uint8Array(file.buffer)
+
+//   const outputBuffer = await heicConvert({
+//     buffer: buffer.buffer,
+//     format: "JPEG", // output format
+//     quality: 1, // the jpeg compression quality, between 0 and 1
+//   })
+
+//   await s3Client.send(
+//     new PutObjectCommand({
+//       Bucket: Resource.SubmissionBucket.name,
+//       Key: key,
+//       Body: new Uint8Array(outputBuffer),
+//       ContentType: "image/jpeg",
+//       Metadata: {
+//         isresized: "true",
+//       },
+//     })
+//   )
+//   return buffer
+// }

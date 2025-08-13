@@ -8,6 +8,7 @@ interface AddPhotoDto {
   ruleConfigs: RuleConfig<RuleKey>[]
   orderIndexes: number[]
   maxPhotos: number
+  preconvertedExifData: { name: string; exif: any }[]
 }
 
 interface RemovePhotoDto {
@@ -37,6 +38,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
       dto.ruleConfigs,
       dto.orderIndexes,
       dto.maxPhotos,
+      dto.preconvertedExifData,
       (fileName, thumbnail) =>
         set(({ photos }) => ({
           photos: photos.map((photo) =>
@@ -86,6 +88,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
         dto.ruleConfigs,
         dto.orderIndexes,
         dto.maxPhotos,
+        [],
         (fileName, thumbnail) =>
           set(({ photos }) => ({
             photos: photos.map((photo) =>

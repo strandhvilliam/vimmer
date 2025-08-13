@@ -26,6 +26,7 @@ export interface GeneratePresignedUrlsParams {
   domain: string
   participantId: number
   competitionClassId: number
+  preconvertedExifData: { orderIndex: number; exif: any }[]
 }
 
 export function formatSubmissionKey({
@@ -80,7 +81,8 @@ export class PresignedSubmissionService {
     participantRef: string,
     domain: string,
     participantId: number,
-    competitionClassId: number
+    competitionClassId: number,
+    preconvertedExifData: { orderIndex: number; exif: any }[]
   ): Promise<PresignedSubmission[]> {
     const marathon = await this.db.query.marathons.findFirst({
       where: eq(marathons.domain, domain),
@@ -141,7 +143,8 @@ export class PresignedSubmissionService {
         submissionKeys,
         orderedTopics,
         marathon.id,
-        participantId
+        participantId,
+        preconvertedExifData
       )
     }
 
@@ -155,13 +158,42 @@ export class PresignedSubmissionService {
             not(inArray(submissions.key, submissionKeys))
           )
         )
-      const newParticipants = await this.db.query.submissions.findMany({
+
+      const newSubmissions = await this.db.query.submissions.findMany({
         where: inArray(submissions.key, submissionKeys),
       })
-      return this.generatePresignedObjects(newParticipants, orderedTopics)
+      return this.generatePresignedObjects(newSubmissions, orderedTopics)
+    }
+
+    if (preconvertedExifData.length > 0) {
+      for (const submission of participant.submissions) {
+        const parsedKey = this.parseKey(submission.key)
+        if (!parsedKey) continue
+
+        const preconvertedExif = preconvertedExifData.find(
+          (p) => p.orderIndex === parseInt(parsedKey.orderIndex) - 1
+        )
+        if (preconvertedExif) {
+          await this.db
+            .update(submissions)
+            .set({
+              exif: preconvertedExif.exif,
+              mimeType: "image/heic", // only heic files are preconverted
+            })
+            .where(eq(submissions.id, submission.id))
+        }
+      }
     }
 
     return this.generatePresignedObjects(participant.submissions, orderedTopics)
+  }
+
+  private parseKey(key: string) {
+    const [domain, participantRef, orderIndex, fileName] = key.split("/")
+    if (!domain || !participantRef || !orderIndex || !fileName) {
+      return null
+    }
+    return { domain, participantRef, orderIndex, fileName }
   }
 
   private generateSubmissionKeys(
@@ -183,7 +215,8 @@ export class PresignedSubmissionService {
     submissionKeys: string[],
     orderedTopics: Topic[],
     marathonId: number,
-    participantId: number
+    participantId: number,
+    preconvertedExifData: { orderIndex: number; exif: any }[]
   ): Promise<PresignedSubmission[]> {
     await this.db
       .update(participants)
@@ -197,6 +230,9 @@ export class PresignedSubmissionService {
     const submissionsToCreate: NewSubmission[] = keysToCreate.map((key) => {
       const originalIndex = submissionKeys.findIndex((k) => k === key)
       const topicId = orderedTopics[originalIndex]?.id
+      const preconvertedExif = preconvertedExifData.find(
+        (p) => p.orderIndex === originalIndex
+      )
 
       if (!topicId) {
         throw new Error(
@@ -210,6 +246,8 @@ export class PresignedSubmissionService {
         participantId,
         topicId,
         status: "initialized",
+        exif: preconvertedExif ? preconvertedExif.exif : undefined,
+        mimeType: preconvertedExif ? "image/heic" : undefined,
       }
     })
 
