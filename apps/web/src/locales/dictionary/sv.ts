@@ -40,10 +40,18 @@ export default {
   "confirmation.photoPlaceholder": "Foto {id}",
   "confirmation.secondsSuffix": "({seconds}s)",
 
+  "confirmation.1":
+    "Vi verifierar alla bildserier medan ni sover gott. (Spara era bilder i en vecka i fall vi hittar något fel)",
+  "confirmation.2": "Bilderna går till tryck redan i början av nästa vecka",
+  "confirmation.3":
+    "Jury möts {juryDate}. Först {resultsDate} får ni dela era tävlingsbilder utanför vår grupp på Facebook",
+  "confirmation.4":
+    "Boka in {prizeDate} redan nu då årets prisgala är planerad!",
+
   // Verification page
   "verification.almostThere": "Nästan klar!",
   "verification.showQrCode":
-    "Visa denna QR-kod för en besättningsmedlem för att verifiera ditt bidrag.",
+    "Visa denna QR-kod för en crew-medlem för att verifiera ditt bidrag.",
   "verification.refreshAvailable": "Uppdatering tillgänglig om {seconds}s",
 
   // Submission steps - Step Navigator
@@ -62,10 +70,12 @@ export default {
   "participantNumber.createFailed": "Misslyckades med att skapa deltagare",
   "participantNumber.required": "Deltagarnummer krävs.",
   "participantNumber.numbersOnly": "Endast siffror är tillåtna.",
+  "participantNumber.descriptionAlreadyExists":
+    "Du kan inte ändra ditt deltagarnummer. Kontakta en crew-medlem om du har några frågor.",
 
   // Submission steps - Participant Details Step
   "participantDetails.title": "Dina uppgifter",
-  "participantDetails.description": "Vänligen ange din personliga information",
+  "participantDetails.description": "Vänligen ange din följande uppgifter",
   "participantDetails.firstName": "Förnamn",
   "participantDetails.lastName": "Efternamn",
   "participantDetails.email": "E-postadress",
@@ -80,10 +90,11 @@ export default {
   "classSelection.description": "Välj den klass du vill tävla i",
   "classSelection.continue": "Fortsätt",
   "classSelection.back": "Tillbaka",
+  "classSelection.numberOfPhotos": "Antal foton",
 
   // Submission steps - Device Selection Step
   "deviceSelection.title": "Välj din enhet",
-  "deviceSelection.description": "Välj den enhet du har använt under maratonet",
+  "deviceSelection.description": "Välj den enhet du har använt under tävlingen",
   "deviceSelection.continue": "Fortsätt",
   "deviceSelection.back": "Tillbaka",
 
@@ -96,6 +107,18 @@ export default {
   "uploadSubmissions.maxPhotosReached": "Maximalt antal foton uppnått",
   "uploadSubmissions.invalidFileType": "Ogiltig filtyp: {extension}",
   "uploadSubmissions.noFileExtension": "INGEN FILÄNDELSE",
+  "uploadSubmissions.noFilesSelected": "Inga filer valda",
+  "uploadSubmissions.missingRequiredInfo":
+    "Saknar nödvändig information för uppladdning",
+  "uploadSubmissions.failedPresigned":
+    "Misslyckades med att skapa presigned-URL:er",
+  "uploadSubmissions.failedNoSubmissions":
+    "Misslyckades att skapa uppladdnings-URL:er - inga bidrag returnerades",
+  "uploadSubmissions.failedPreparePhotos":
+    "Misslyckades att förbereda foton för uppladdning",
+  "uploadSubmissions.failedToStartUpload":
+    "Misslyckades att starta uppladdningsprocessen",
+  "uploadSubmissions.finalizeAndSubmit": "Slutför och skicka in",
 
   // Upload Instructions Dialog
   "uploadInstructions.title": "Innan du laddar upp",
@@ -114,4 +137,84 @@ export default {
   "uploadInstructions.patienceDescription":
     "Stora foton kan ta tid att ladda upp. Stäng inte webbläsaren eller navigera bort under processen.",
   "uploadInstructions.gotIt": "Förstått!",
+
+  // Upload Common
+  "uploadCommon.countSummary": "{current} av {max} foton uppladdade",
+
+  // Upload Section
+  "uploadSection.warningTitle": "Varning",
+  "uploadSection.warningIntro":
+    "Vi har upptäckt vissa problem med dina foton. Prata med en crew-medlem innan du fortsätter med uppladdningen.",
+  "uploadSection.noExifTitle": "Ingen EXIF-data hittades",
+  "uploadSection.noExifDescription":
+    "Vissa foton saknar EXIF-data. Vissa molntjänster kan ta bort denna data, försök att ladda upp från lokal lagring istället.",
+  "uploadSection.validationErrorsTitle": "Valideringsfel",
+  "uploadSection.validationErrorsFix":
+    "Åtgärda dessa problem innan du fortsätter",
+  "uploadSection.allPhotosSelectedTitle": "Alla foton valda!",
+  "uploadSection.photosReady": "{count} foton redo för uppladdning.",
+  "uploadSection.clickToSelect": "Klicka för att välja dina foton",
+  "uploadSection.selectPhotos": "Välj foton",
+
+  // Upload Zone
+  "uploadZone.dragAndDrop":
+    "Dra och släpp dina foton här, eller klicka för att välja",
+  "uploadZone.selectPhotos": "Välj foton",
+
+  // Upload Progress
+  "uploadProgress.titleUploading": "Laddar upp foton",
+  "uploadProgress.titleComplete": "Uppladdning klar",
+  "uploadProgress.titleIssues": "Problem vid uppladdning",
+  "uploadProgress.overallProgress": "Total framsteg",
+  "uploadProgress.completedOfTotal": "{completed} av {total} klara",
+  "uploadProgress.failedSuffix": "({count} misslyckades)",
+  "uploadProgress.failedUploads.one": "1 uppladdning misslyckades",
+  "uploadProgress.failedUploads.other": "{count} uppladdningar misslyckades",
+  "uploadProgress.checkConnection":
+    "Kontrollera din anslutning och försök igen",
+  "uploadProgress.retryFailed": "Försök igen med misslyckade ({count})",
+  "uploadProgress.continue": "Fortsätt",
+  "uploadProgress.closeDialogAria": "Stäng uppladdningsdialog",
+  "uploadProgress.error.network": "Nätverksfel - kontrollera din anslutning",
+  "uploadProgress.error.timeout":
+    "Uppladdningen tog för lång tid - försök igen",
+  "uploadProgress.error.fileTooLarge": "Filen är för stor",
+  "uploadProgress.error.unauthorized":
+    "Ej auktoriserad uppladdning - uppdatera och försök igen",
+  "uploadProgress.error.rateLimited":
+    "För många försök - vänta innan du försöker igen",
+  "uploadProgress.error.serverError": "Serverfel - försök igen senare",
+  "uploadProgress.error.invalidFileType":
+    "Ogiltig filtyp - endast bilder tillåtna",
+  "uploadProgress.error.generic": "Uppladdning misslyckades",
+
+  // Upload Error Fallback
+  "uploadError.title": "Kunde inte förbereda bidrag",
+  "uploadError.contactCrew": "Kontakta en crew-medlem för hjälp",
+  "uploadError.goBack": "Gå tillbaka",
+
+  // Submission Item
+  "submissionItem.clickToSelect": "Klicka för att välja foto",
+  "submissionItem.noPhotoSelected": "Inget foto valt",
+  "submissionItem.photoDetails": "Metadata",
+  "submissionItem.loading": "Laddar",
+  "submissionItem.previewEllipsis": "Förhandsvisning...",
+  "submissionItem.taken": "Tagen:",
+  "submissionItem.file": "Fil:",
+  "submissionItem.photoPreviewTitle": "Förhandsvisning - {topic}",
+  "submissionItem.uploadPreviewAlt": "Uppladdningsförhandsvisning {index}",
+  "submissionItem.fullPreviewAlt": "Full förhandsvisning {index}",
+
+  // Participant Confirmation Dialog
+  "participantConfirmation.title": "Bekräfta deltagarnummer",
+  "participantConfirmation.description":
+    "Ange deltagarnumret igen för att bekräfta din anmälan. Om du har problem, kontakta en crew-medlem.",
+  "participantConfirmation.mismatch": "Deltagarnumret stämmer inte",
+  "participantConfirmation.cancel": "Avbryt",
+  "participantConfirmation.confirmUpload": "Skicka in",
+
+  // Platform Terms Dialog
+  "platformTerms.title": "Blikka App användarvillkor",
+  "platformTerms.description": "Villkor för användning av Blikka-appen",
+  "platformTerms.accept": "Acceptera plattformens villkor",
 } as const

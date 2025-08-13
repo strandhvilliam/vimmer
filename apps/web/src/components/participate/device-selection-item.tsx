@@ -1,18 +1,18 @@
-import { DeviceGroup } from "@vimmer/api/db/types";
-import { Card, CardTitle } from "@vimmer/ui/components/card";
-import { cn } from "@vimmer/ui/lib/utils";
-import { CheckCircle2 } from "lucide-react";
-import { motion } from "motion/react";
-import { Icon } from "@iconify/react";
+import { DeviceGroup } from "@vimmer/api/db/types"
+import { Card, CardTitle } from "@vimmer/ui/components/card"
+import { cn } from "@vimmer/ui/lib/utils"
+import { CheckCircle2 } from "lucide-react"
+import { motion } from "motion/react"
+import { Icon } from "@iconify/react"
 
 export function DeviceSelectionItem({
   deviceGroup,
   isSelected,
   onSelect,
 }: {
-  deviceGroup: DeviceGroup;
-  isSelected: boolean;
-  onSelect: () => void;
+  deviceGroup: DeviceGroup
+  isSelected: boolean
+  onSelect: () => void
 }) {
   const getDeviceIcon = (icon: string) => {
     switch (icon) {
@@ -23,7 +23,7 @@ export function DeviceSelectionItem({
             className="w-16 h-16"
             style={{ transform: "rotate(-5deg)" }}
           />
-        );
+        )
       case "camera":
       default:
         return (
@@ -32,9 +32,9 @@ export function DeviceSelectionItem({
             className="w-16 h-16"
             style={{ transform: "rotate(-5deg)" }}
           />
-        );
+        )
     }
-  };
+  }
 
   return (
     <motion.div
@@ -49,7 +49,7 @@ export function DeviceSelectionItem({
       <Card
         className={cn(
           "relative cursor-pointer overflow-hidden transition-all duration-200",
-          isSelected && "ring-2 ring-primary/20 shadow-lg",
+          isSelected && "ring-2 ring-primary/20 shadow-lg"
         )}
         onClick={onSelect}
       >
@@ -57,15 +57,15 @@ export function DeviceSelectionItem({
           className="flex items-center p-4"
           animate={{
             backgroundColor: isSelected
-              ? "rgba(var(--primary), 0.03)"
-              : "transparent",
+              ? "rgba(24,24,27, 0.03)"
+              : "rgba(24,24,27, 0)",
           }}
           transition={{ duration: 0.2 }}
         >
           <motion.div
             className={cn(
               "flex items-center justify-center w-20 h-20 rounded-2xl transition-colors duration-200",
-              isSelected ? "bg-primary/10" : "bg-muted/50",
+              isSelected ? "bg-primary/10" : "bg-muted/50"
             )}
             layout
             transition={{
@@ -77,7 +77,7 @@ export function DeviceSelectionItem({
             <motion.div
               className={cn(
                 "transition-colors duration-200",
-                isSelected ? "text-primary" : "text-foreground/80",
+                isSelected ? "text-primary" : "text-foreground/80"
               )}
               whileHover={{ scale: 1.1, rotate: 0 }}
               initial={{ rotate: -5 }}
@@ -116,5 +116,5 @@ export function DeviceSelectionItem({
         </motion.div>
       </Card>
     </motion.div>
-  );
+  )
 }

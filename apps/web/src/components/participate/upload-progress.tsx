@@ -1,36 +1,37 @@
-"use client";
+"use client"
 
-import { FileState, PhotoWithPresignedUrl } from "@/lib/types";
-import { Topic } from "@vimmer/api/db/types";
+import { FileState, PhotoWithPresignedUrl } from "@/lib/types"
+import { Topic } from "@vimmer/api/db/types"
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@vimmer/ui/components/card";
+} from "@vimmer/ui/components/card"
 import {
   Dialog,
   DialogContent,
   DialogTitle,
-} from "@vimmer/ui/components/dialog";
-import { PrimaryButton } from "@vimmer/ui/components/primary-button";
-import { Button } from "@vimmer/ui/components/button";
-import { Progress } from "@vimmer/ui/components/progress";
-import { AnimatePresence, motion } from "motion/react";
-import { FileProgressItem } from "@/components/participate/file-progress-item";
-import { AlertTriangle, RefreshCw, X } from "lucide-react";
-import { useUploadStore } from "@/lib/stores/upload-store";
-import { useFileUpload } from "@/hooks/use-file-upload";
-import { useMemo, useState, useEffect } from "react";
+} from "@vimmer/ui/components/dialog"
+import { PrimaryButton } from "@vimmer/ui/components/primary-button"
+import { Button } from "@vimmer/ui/components/button"
+import { Progress } from "@vimmer/ui/components/progress"
+import { AnimatePresence, motion } from "motion/react"
+import { FileProgressItem } from "@/components/participate/file-progress-item"
+import { AlertTriangle, RefreshCw, X } from "lucide-react"
+import { useUploadStore } from "@/lib/stores/upload-store"
+import { useFileUpload } from "@/hooks/use-file-upload"
+import { useMemo, useState, useEffect } from "react"
+import { useI18n } from "@/locales/client"
 
 interface UploadProgressProps {
-  files?: PhotoWithPresignedUrl[];
-  topics: Topic[];
-  expectedCount: number;
-  onComplete: () => void;
-  open?: boolean;
-  onClose?: () => void;
+  files?: PhotoWithPresignedUrl[]
+  topics: Topic[]
+  expectedCount: number
+  onComplete: () => void
+  open?: boolean
+  onClose?: () => void
 }
 
 export function UploadProgress({
@@ -40,12 +41,13 @@ export function UploadProgress({
   open = true,
   onClose,
 }: UploadProgressProps) {
-  const files = useUploadStore((state) => state.files);
-  const { retryFailedFiles } = useFileUpload();
-  const [elapsedTime, setElapsedTime] = useState(0);
+  const t = useI18n()
+  const files = useUploadStore((state) => state.files)
+  const { retryFailedFiles } = useFileUpload()
+  const [elapsedTime, setElapsedTime] = useState(0)
 
   const enhancedFileStates: FileState[] = useMemo(() => {
-    const fileStates = Array.from(files.values());
+    const fileStates = Array.from(files.values())
     return fileStates.map((f) => ({
       ...f,
       status:
@@ -56,18 +58,16 @@ export function UploadProgress({
             : f.phase === "s3_upload"
               ? ("uploading" as const)
               : ("pending" as const),
-    }));
-  }, [files]);
+    }))
+  }, [files])
 
   const progress = useMemo(() => {
-    const fileStates = Array.from(files.values());
-    const total = fileStates.length || expectedFilesCount;
-    const completed = fileStates.filter((f) => f.phase === "completed").length;
-    const failed = fileStates.filter((f) => f.phase === "error").length;
-    const uploading = fileStates.filter((f) => f.phase === "s3_upload").length;
-    const processing = fileStates.filter(
-      (f) => f.phase === "processing",
-    ).length;
+    const fileStates = Array.from(files.values())
+    const total = fileStates.length || expectedFilesCount
+    const completed = fileStates.filter((f) => f.phase === "completed").length
+    const failed = fileStates.filter((f) => f.phase === "error").length
+    const uploading = fileStates.filter((f) => f.phase === "s3_upload").length
+    const processing = fileStates.filter((f) => f.phase === "processing").length
 
     return {
       total,
@@ -76,37 +76,42 @@ export function UploadProgress({
       uploading,
       processing,
       percentage: total > 0 ? (completed / total) * 100 : 0,
-    };
-  }, [files, expectedFilesCount]);
+    }
+  }, [files, expectedFilesCount])
 
   const failedFiles = enhancedFileStates.filter(
-    (file) => file.status === "error",
-  );
+    (file) => file.status === "error"
+  )
 
-  const allUploadsComplete = progress.completed === expectedFilesCount;
-  const hasFailures = failedFiles.length > 0;
-  const canRetry = hasFailures;
+  const allUploadsComplete = progress.completed === expectedFilesCount
+  const hasFailures = failedFiles.length > 0
+  const canRetry = hasFailures
+  const failedSummaryText = hasFailures
+    ? failedFiles.length === 1
+      ? t("uploadProgress.failedUploads.one")
+      : t("uploadProgress.failedUploads.other", { count: failedFiles.length })
+    : ""
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) return
 
     const interval = setInterval(() => {
-      setElapsedTime((prev) => prev + 1);
-    }, 1000);
+      setElapsedTime((prev) => prev + 1)
+    }, 1000)
 
-    return () => clearInterval(interval);
-  }, [open]);
+    return () => clearInterval(interval)
+  }, [open])
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, "0")}`
+  }
 
   const handleRetryFailedFiles = () => {
-    setElapsedTime(0);
-    retryFailedFiles();
-  };
+    setElapsedTime(0)
+    retryFailedFiles()
+  }
 
   return (
     <Dialog open={open}>
@@ -114,7 +119,9 @@ export function UploadProgress({
         hideCloseButton
         className="p-0 border-none bg-transparent shadow-none max-w-md"
       >
-        <DialogTitle className="sr-only">Uploading Photos</DialogTitle>
+        <DialogTitle className="sr-only">
+          {t("uploadProgress.titleUploading")}
+        </DialogTitle>
         <Card className="w-full">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -123,17 +130,17 @@ export function UploadProgress({
               </div>
               <CardTitle className="text-xl font-rocgrotesk flex-1 text-center">
                 {allUploadsComplete
-                  ? "Upload Complete"
+                  ? t("uploadProgress.titleComplete")
                   : hasFailures
-                    ? "Upload Issues"
-                    : "Uploading Photos"}
+                    ? t("uploadProgress.titleIssues")
+                    : t("uploadProgress.titleUploading")}
               </CardTitle>
               <div className="w-8 flex justify-end">
                 {hasFailures && onClose && (
                   <button
                     onClick={onClose}
                     className="p-1 hover:bg-muted rounded-full transition-colors border"
-                    aria-label="Close upload dialog"
+                    aria-label={t("uploadProgress.closeDialogAria")}
                   >
                     <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
                   </button>
@@ -145,12 +152,17 @@ export function UploadProgress({
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Overall Progress</span>
+                <span>{t("uploadProgress.overallProgress")}</span>
                 <span>
-                  {progress.completed} of {progress.total} completed
+                  {t("uploadProgress.completedOfTotal", {
+                    completed: progress.completed,
+                    total: progress.total,
+                  })}
                   {progress.failed > 0 && (
                     <span className="text-destructive ml-1">
-                      ({progress.failed} failed)
+                      {t("uploadProgress.failedSuffix", {
+                        count: progress.failed,
+                      })}
                     </span>
                   )}
                 </span>
@@ -167,11 +179,10 @@ export function UploadProgress({
                 <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" />
                 <div className="text-sm">
                   <p className="font-medium text-destructive">
-                    {failedFiles.length} upload
-                    {failedFiles.length === 1 ? "" : "s"} failed
+                    {failedSummaryText}
                   </p>
                   <p className="text-muted-foreground">
-                    Check your connection and try again
+                    {t("uploadProgress.checkConnection")}
                   </p>
                 </div>
               </motion.div>
@@ -186,7 +197,7 @@ export function UploadProgress({
                         file={file}
                         topic={
                           topics.find(
-                            (topic) => topic.orderIndex === file.orderIndex,
+                            (topic) => topic.orderIndex === file.orderIndex
                           )!
                         }
                       />
@@ -223,7 +234,9 @@ export function UploadProgress({
                   className="w-full"
                 >
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  Retry Failed Uploads ({failedFiles.length})
+                  {t("uploadProgress.retryFailed", {
+                    count: failedFiles.length,
+                  })}
                 </Button>
               </motion.div>
             )}
@@ -238,7 +251,7 @@ export function UploadProgress({
                   onClick={onComplete}
                   className="w-full text-lg rounded-full"
                 >
-                  Continue
+                  {t("uploadProgress.continue")}
                 </PrimaryButton>
               </motion.div>
             )}
@@ -246,5 +259,5 @@ export function UploadProgress({
         </Card>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

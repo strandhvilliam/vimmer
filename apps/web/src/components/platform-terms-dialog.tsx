@@ -5,15 +5,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@vimmer/ui/components/dialog"
-import { Button } from "@vimmer/ui/components/button"
 import { X } from "lucide-react"
 import React from "react"
 import { PrimaryButton } from "@vimmer/ui/components/primary-button"
+import { useI18n } from "@/locales/client"
 
 export default function PlatformTermsDialog({
   termsOpen,
   setTermsOpen,
-  termsAccepted,
+  termsAccepted: _termsAccepted,
   setTermsAccepted,
 }: {
   termsOpen: boolean
@@ -21,6 +21,7 @@ export default function PlatformTermsDialog({
   termsAccepted: boolean
   setTermsAccepted: (accepted: boolean) => void
 }) {
+  const t = useI18n()
   return (
     <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
       <DialogContent className="max-w-none w-full h-[100dvh] p-0 rounded-none flex flex-col overflow-hidden">
@@ -37,10 +38,10 @@ export default function PlatformTermsDialog({
           <div className="max-w-4xl mx-auto px-6 py-12">
             <DialogHeader className="mb-8">
               <DialogTitle className="text-3xl">
-                Blikka App Terms of Service
+                {t("platformTerms.title")}
               </DialogTitle>
               <DialogDescription className="text-lg">
-                Terms and conditions for using the Blikka app
+                {t("platformTerms.description")}
               </DialogDescription>
             </DialogHeader>
 
@@ -153,8 +154,9 @@ export default function PlatformTermsDialog({
                 setTermsOpen(false)
               }}
               className="w-full py-2.5 rounded-full text-lg font-medium"
+              disabled={_termsAccepted}
             >
-              Accept Platform Terms
+              {t("platformTerms.accept")}
             </PrimaryButton>
           </div>
         </div>

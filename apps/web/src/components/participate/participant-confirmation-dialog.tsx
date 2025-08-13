@@ -14,6 +14,7 @@ import { PrimaryButton } from "@vimmer/ui/components/primary-button"
 import { cn } from "@vimmer/ui/lib/utils"
 import { geistMono } from "@/lib/fonts"
 import { AlertTriangle } from "lucide-react"
+import { useI18n } from "@/locales/client"
 
 interface ParticipantConfirmationDialogProps {
   open: boolean
@@ -30,6 +31,7 @@ export function ParticipantConfirmationDialog({
 }: ParticipantConfirmationDialogProps) {
   const [enteredRef, setEnteredRef] = useState("")
   const [showError, setShowError] = useState(false)
+  const t = useI18n()
 
   useEffect(() => {
     if (open) {
@@ -68,10 +70,10 @@ export function ParticipantConfirmationDialog({
       >
         <DialogHeader className="text-center flex flex-col items-center">
           <DialogTitle className="text-lg font-medium mb-2">
-            Confirm Participant Number
+            {t("participantConfirmation.title")}
           </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
-            Please re-enter the participant number to confirm your participation
+          <DialogDescription className="text-sm text-muted-foreground text-center">
+            {t("participantConfirmation.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -94,7 +96,7 @@ export function ParticipantConfirmationDialog({
           {showError && (
             <div className="flex items-center justify-center gap-2 text-red-600 text-sm">
               <AlertTriangle className="h-4 w-4" />
-              <span>Participant number doesn&apos;t match</span>
+              <span>{t("participantConfirmation.mismatch")}</span>
             </div>
           )}
 
@@ -105,7 +107,7 @@ export function ParticipantConfirmationDialog({
               variant="outline"
               className="flex-1 h-12 rounded-full"
             >
-              Cancel
+              {t("participantConfirmation.cancel")}
             </Button>
             <PrimaryButton
               type="submit"
@@ -116,7 +118,7 @@ export function ParticipantConfirmationDialog({
               }}
               className="flex-1 h-12 text-base font-medium rounded-full"
             >
-              Confirm & Upload
+              {t("participantConfirmation.confirmUpload")}
             </PrimaryButton>
           </div>
         </form>

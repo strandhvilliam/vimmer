@@ -107,7 +107,9 @@ export function ParticipantNumberStep({ onNextStep, marathon }: Props) {
           {t("participantNumber.title")}
         </CardTitle>
         <CardDescription className="text-center">
-          {t("participantNumber.description")}
+          {participantId
+            ? t("participantNumber.descriptionAlreadyExists")
+            : t("participantNumber.description")}
         </CardDescription>
       </CardHeader>
 
@@ -129,7 +131,7 @@ export function ParticipantNumberStep({ onNextStep, marathon }: Props) {
                     type="text"
                     inputMode="numeric"
                     placeholder="0000"
-                    className="text-center text-4xl h-16 bg-background tracking-widest"
+                    className="text-center !text-4xl h-16 bg-background tracking-widest"
                     disabled={!!participantId}
                     maxLength={4}
                     value={field.state.value}

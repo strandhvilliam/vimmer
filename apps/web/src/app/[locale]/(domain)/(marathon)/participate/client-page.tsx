@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ChevronRight, ImageIcon, Info } from "lucide-react"
+import { ChevronRight, ImageIcon, Info, Play } from "lucide-react"
 import { Button } from "@vimmer/ui/components/button"
 import { Checkbox } from "@vimmer/ui/components/checkbox"
 import ReactCountryFlag from "react-country-flag"
@@ -257,7 +257,7 @@ export function ParticipateClientPage() {
               className="w-full py-3 text-base  text-white rounded-full"
             >
               {t("begin")}
-              <ChevronRight className="ml-2 h-5 w-5" />
+              <Play className="h-4 w-4" />
             </PrimaryButton>
           </div>
         </main>

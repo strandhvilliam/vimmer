@@ -24,6 +24,7 @@ import {
 } from "@vimmer/ui/components/dialog"
 import { Topic } from "@vimmer/supabase/types"
 import { format } from "date-fns"
+import { useI18n } from "@/locales/client"
 
 interface Props {
   photo?: SelectedPhotoV2
@@ -44,6 +45,7 @@ export function SubmissionItem({
 }: Props) {
   const [expanded, setExpanded] = useState(false)
   const [showImageDialog, setShowImageDialog] = useState(false)
+  const t = useI18n()
 
   const r = useMemo(() => {
     return validationResults?.sort((a, b) => {
@@ -67,7 +69,7 @@ export function SubmissionItem({
     const highestPriorityResult = r?.[0]
     if (photo?.exif && Object.keys(photo.exif).length === 0) {
       return {
-        message: "No EXIF data found",
+        message: t("uploadSection.noExifTitle"),
         outcome: VALIDATION_OUTCOME.FAILED,
         severity: SEVERITY_LEVELS.WARNING,
       }
@@ -79,7 +81,7 @@ export function SubmissionItem({
       severity: highestPriorityResult?.severity,
       ruleKey: highestPriorityResult?.ruleKey,
     }
-  }, [r, photo?.exif])
+  }, [r, photo?.exif, t])
 
   const exifData = photo?.exif || {}
   const relevantExifData = getRelevantExifData(exifData)
@@ -102,7 +104,9 @@ export function SubmissionItem({
             <p className="font-medium">{topic?.name}</p>
           </div>
           <p className="text-xs text-muted-foreground">
-            {onUploadClick ? "Click to select photo" : "No photo selected"}
+            {onUploadClick
+              ? t("submissionItem.clickToSelect")
+              : t("submissionItem.noPhotoSelected")}
           </p>
         </div>
         <div className="md:w-[100px] md:h-[100px] w-24 h-24 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/50 shrink-0">
@@ -161,8 +165,11 @@ export function SubmissionItem({
 
           <div className="flex flex-col gap-0.5">
             <p className="text-xs  text-muted-foreground">
-              {takenAt && `Taken: ${format(takenAt, "cccc, HH:mm")}`} |{" "}
-              {photo.file.name && `File: ${photo.file.name}`}
+              {takenAt &&
+                `${t("submissionItem.taken")} ${format(takenAt, "cccc, HH:mm")}`}{" "}
+              |{" "}
+              {photo.file.name &&
+                `${t("submissionItem.file")} ${photo.file.name}`}
             </p>
           </div>
 
@@ -175,7 +182,7 @@ export function SubmissionItem({
                 onClick={() => setExpanded(!expanded)}
               >
                 <Info className="h-3.5 w-3.5" />
-                <span>Photo details</span>
+                <span>{t("submissionItem.photoDetails")}</span>
                 {expanded ? (
                   <ChevronUp className="h-3.5 w-3.5" />
                 ) : (
@@ -206,15 +213,15 @@ export function SubmissionItem({
                   <Loader2 className="h-6 w-6 text-muted-foreground" />
                 </motion.div>
                 <span className="text-[0.6rem] text-muted-foreground text-center">
-                  Loading
-                  <br /> Preview...
+                  {t("submissionItem.loading")}
+                  <br /> {t("submissionItem.previewEllipsis")}
                 </span>
               </div>
             ) : (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={photo.thumbnail ?? photo.preview}
-                alt={`Upload preview ${index + 1}`}
+                alt={t("submissionItem.uploadPreviewAlt", { index: index + 1 })}
                 className="object-cover w-full h-full cursor-pointer"
                 onClick={() => setShowImageDialog(true)}
               />
@@ -259,14 +266,18 @@ export function SubmissionItem({
         <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
           <DialogContent className="max-w-4xl max-h-[90vh] p-0">
             <DialogHeader className="p-6 pb-0">
-              <DialogTitle>Photo Preview - {topic?.name}</DialogTitle>
+              <DialogTitle>
+                {t("submissionItem.photoPreviewTitle", {
+                  topic: topic?.name ?? "",
+                })}
+              </DialogTitle>
             </DialogHeader>
             <div className="p-6 pt-0">
               <div className="w-full max-h-[70vh] overflow-auto">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={photo.preview}
-                  alt={`Full preview ${index + 1}`}
+                  alt={t("submissionItem.fullPreviewAlt", { index: index + 1 })}
                   className="w-full h-auto object-contain"
                 />
               </div>
@@ -287,7 +298,7 @@ function getTimeTaken(exif?: { [key: string]: unknown }): Date | null {
     if (!isNaN(date.getTime())) {
       return date
     }
-  } catch (error) {
+  } catch {
     // Skip if date parsing fails
   }
 
@@ -341,7 +352,7 @@ function getRelevantExifData(exif: {
         relevantData["Date Taken"] = date.toLocaleDateString()
         relevantData["Time Taken"] = date.toLocaleTimeString()
       }
-    } catch (error) {
+    } catch {
       // Skip if date parsing fails
     }
   }

@@ -77,7 +77,7 @@ export function UploadSubmissionsStep({
   const { mutateAsync: generatePresignedSubmissions } = useMutation(
     trpc.presignedUrls.generatePresignedSubmissionsOnDemand.mutationOptions({
       onError: () => {
-        toast.error("Failed to generate presigned URLs")
+        toast.error(t("uploadSubmissions.failedPresigned"))
       },
     })
   )
@@ -96,7 +96,7 @@ export function UploadSubmissionsStep({
 
   const handleFileSelect = async (files: FileList | null) => {
     if (!files || files.length === 0) {
-      toast.error("No files selected")
+      toast.error(t("uploadSubmissions.noFilesSelected"))
       return
     }
     if (!competitionClass) return
@@ -123,18 +123,18 @@ export function UploadSubmissionsStep({
         maxPhotos: competitionClass.numberOfPhotos,
       })
     } else {
-      toast.error("No files selected")
+      toast.error(t("uploadSubmissions.noFilesSelected"))
       return
     }
   }
 
   const handleUploadClick = () => {
     if (!competitionClass) {
-      toast.error("Unable to determine class")
+      toast.error(t("uploadSubmissions.unableToDetermineClass"))
       return
     }
     if (photos.length >= competitionClass.numberOfPhotos) {
-      toast.error("Max photos reached")
+      toast.error(t("uploadSubmissions.maxPhotosReached"))
       return
     }
     fileInputRef.current?.click()
@@ -164,7 +164,7 @@ export function UploadSubmissionsStep({
 
   const handleUpload = async () => {
     if (!domain || !participantRef || !participantId || !competitionClassId) {
-      toast.error("Missing required information for upload")
+      toast.error(t("uploadSubmissions.missingRequiredInfo"))
       return
     }
 
@@ -175,7 +175,7 @@ export function UploadSubmissionsStep({
     setShowConfirmationDialog(false)
 
     if (!domain || !participantRef || !participantId || !competitionClassId) {
-      toast.error("Missing required information for upload")
+      toast.error(t("uploadSubmissions.missingRequiredInfo"))
       return
     }
 
@@ -191,7 +191,7 @@ export function UploadSubmissionsStep({
 
       if (!presignedSubmissions || presignedSubmissions.length === 0) {
         setIsUploading(false)
-        toast.error("Failed to generate upload URLs - no submissions returned")
+        toast.error(t("uploadSubmissions.failedNoSubmissions"))
         return
       }
 
@@ -199,7 +199,7 @@ export function UploadSubmissionsStep({
 
       if (!combinedPhotos || combinedPhotos.length === 0) {
         setIsUploading(false)
-        toast.error("Failed to prepare photos for upload")
+        toast.error(t("uploadSubmissions.failedPreparePhotos"))
         return
       }
 
@@ -207,13 +207,16 @@ export function UploadSubmissionsStep({
     } catch (error) {
       console.error("Upload failed:", error)
       setIsUploading(false)
-      toast.error("Failed to start upload process")
+      toast.error(t("uploadSubmissions.failedToStartUpload"))
     }
   }
 
   if (!competitionClass) {
     return (
-      <UploadErrorFallback error={"Unexpected error"} onPrevStep={onPrevStep} />
+      <UploadErrorFallback
+        error={t("uploadSubmissions.unexpectedError")}
+        onPrevStepAction={onPrevStep}
+      />
     )
   }
 
@@ -304,7 +307,7 @@ export function UploadSubmissionsStep({
                 onClick={handleUpload}
                 className="w-full rounded-full py-4 text-lg font-semibold"
               >
-                Finalize and Submit
+                {t("uploadSubmissions.finalizeAndSubmit")}
               </PrimaryButton>
             </div>
           </motion.div>

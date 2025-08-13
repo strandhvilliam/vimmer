@@ -2,21 +2,18 @@ import { PrimaryButton } from "@vimmer/ui/components/primary-button"
 import { Card, CardContent } from "@vimmer/ui/components/card"
 import { Skeleton } from "@vimmer/ui/components/skeleton"
 import { Alert } from "@vimmer/ui/components/alert"
-import { toast } from "sonner"
 import { CloudUpload, AlertTriangle } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
-import React, { useRef } from "react"
-// import { UploadZone } from "@/components/participate/upload-zone";
+import React from "react"
+import { useI18n } from "@/locales/client"
 import { usePhotoStore } from "@/lib/stores/photo-store"
 
 import { Marathon, Topic } from "@vimmer/api/db/types"
 import { RuleConfig, RuleKey } from "@vimmer/validation/types"
 import {
-  RULE_KEYS,
   SEVERITY_LEVELS,
   VALIDATION_OUTCOME,
 } from "@vimmer/validation/constants"
-import { COMMON_IMAGE_EXTENSIONS } from "@/lib/constants"
 
 interface UploadSectionProps {
   maxPhotos: number
@@ -26,14 +23,10 @@ interface UploadSectionProps {
   onUploadClick: () => void
 }
 
-export function UploadSection({
-  maxPhotos,
-  ruleConfigs,
-  topics,
-  marathon,
-  onUploadClick,
-}: UploadSectionProps) {
-  const { photos, validateAndAddPhotos, validationResults } = usePhotoStore()
+export function UploadSection(props: UploadSectionProps) {
+  const { maxPhotos, onUploadClick } = props
+  const { photos, validationResults } = usePhotoStore()
+  const t = useI18n()
 
   // const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -86,18 +79,27 @@ export function UploadSection({
       fileName: result.fileName,
     }))
 
+  const noExif = photos.some(
+    (photo) => !photo.exif || Object.keys(photo.exif).length === 0
+  )
+
   const renderValidationWarnings = () => {
-    if (!hasValidationWarnings) return null
+    if (!hasValidationWarnings && !noExif) return null
     return (
       <Alert className="bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/50 dark:border-amber-800 dark:text-amber-200 w-full">
         <AlertTriangle className="h-4 w-4" />
         <div className="ml-2">
-          <p className="font-medium">Warning</p>
-          <p className="text-sm mt-1">
-            Some validation warnings were found. You may still upload, but the
-            submission will be marked for manual review.
-          </p>
+          <p className="font-medium">{t("uploadSection.warningTitle")}</p>
+          <p className="text-sm mt-1">{t("uploadSection.warningIntro")}</p>
           <div className="mt-3 space-y-1">
+            {noExif && (
+              <div className="text-xs bg-amber-100 dark:bg-amber-900/30 rounded px-2 py-1">
+                <span className="font-medium">
+                  {t("uploadSection.noExifTitle")}:{" "}
+                </span>
+                <span>{t("uploadSection.noExifDescription")}</span>
+              </div>
+            )}
             {warningMessages.map((warning, index) => (
               <div
                 key={`warning-${index}`}
@@ -116,7 +118,7 @@ export function UploadSection({
   }
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="popLayout">
       {hasValidationErrors ? (
         <motion.div
           key="validation-errors"
@@ -130,7 +132,7 @@ export function UploadSection({
               <AlertTriangle className="h-12 w-12 text-destructive" />
               <div className="text-center space-y-4 max-w-md">
                 <p className="text-base font-medium text-destructive">
-                  Validation Errors
+                  {t("uploadSection.validationErrorsTitle")}
                 </p>
                 <div className="space-y-2">
                   {errorMessages.map((error, index) => (
@@ -148,7 +150,7 @@ export function UploadSection({
                   ))}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Please fix these issues before proceeding
+                  {t("uploadSection.validationErrorsFix")}
                 </p>
               </div>
             </CardContent>
@@ -172,10 +174,10 @@ export function UploadSection({
               </div>
               <div className="text-center space-y-2">
                 <p className="text-lg font-semibold text-green-800">
-                  All photos selected!
+                  {t("uploadSection.allPhotosSelectedTitle")}
                 </p>
                 <p className="text-sm text-green-700 max-w-md">
-                  {maxPhotos} photos ready for upload.
+                  {t("uploadSection.photosReady", { count: maxPhotos })}
                 </p>
               </div>
             </CardContent>
@@ -274,16 +276,19 @@ export function UploadSection({
               </PrimaryButton>
 
               <p className="text-muted-foreground mb-2">
-                Click to select your photos
+                {t("uploadSection.clickToSelect")}
               </p>
               <p className="text-sm text-muted-foreground">
-                {photos.length} of {maxPhotos} photos uploaded
+                {t("uploadCommon.countSummary", {
+                  current: photos.length,
+                  max: maxPhotos,
+                })}
               </p>
               <PrimaryButton
                 disabled={photos.length >= maxPhotos}
                 className="mt-4"
               >
-                Select Photos
+                {t("uploadSection.selectPhotos")}
               </PrimaryButton>
             </div>
           </div>

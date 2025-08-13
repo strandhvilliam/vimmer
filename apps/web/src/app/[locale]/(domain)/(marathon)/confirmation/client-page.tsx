@@ -335,44 +335,50 @@ export function ConfirmationClient({
                   {t("confirmation.whatsNext")}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 sm:px-4 px-2">
                 <div className="space-y-4">
-                  <div className="flex gap-4">
-                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <div className="flex gap-2 items-center">
+                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-sm font-bold text-primary">1</span>
                     </div>
                     <div>
-                      <h3 className="font-semibold mb-1">
-                        {t("confirmation.judgingPhase")}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {t("confirmation.judgingDescription")}
+                      <p className="text-sm text-foreground">
+                        {t("confirmation.1")}
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-4">
-                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <div className="flex gap-2 items-center">
+                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-sm font-bold text-primary">2</span>
                     </div>
                     <div>
-                      <h3 className="font-semibold mb-1">
-                        {t("confirmation.resultsAnnounced")}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {t("confirmation.resultsDescription")}
+                      <p className="text-sm text-foreground">
+                        {t("confirmation.2")}
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-4">
-                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <div className="flex gap-2 items-center">
+                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-sm font-bold text-primary">3</span>
                     </div>
                     <div>
-                      <h3 className="font-semibold mb-1">
-                        {t("confirmation.shareWork")}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {t("confirmation.shareDescription")}
+                      <p className="text-sm text-foreground">
+                        {t("confirmation.3", {
+                          juryDate: "31/8",
+                          resultsDate: "1/9",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-sm font-bold text-primary">4</span>
+                    </div>
+                    <div>
+                      <p className="text-sm text-foreground">
+                        {t("confirmation.4", {
+                          prizeDate: "20/8",
+                        })}
                       </p>
                     </div>
                   </div>
