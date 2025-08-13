@@ -1,11 +1,11 @@
-"use client";
+"use client"
 
-import React, { useState } from "react";
-import { CheckCircle, Loader2, RefreshCcw, XCircle } from "lucide-react";
+import React, { useState } from "react"
+import { CheckCircle, Loader2, RefreshCcw, XCircle } from "lucide-react"
 
-import { Button } from "@vimmer/ui/components/button";
-import { PrimaryButton } from "@vimmer/ui/components/primary-button";
-import { toast } from "sonner";
+import { Button } from "@vimmer/ui/components/button"
+import { PrimaryButton } from "@vimmer/ui/components/primary-button"
+import { toast } from "sonner"
 import {
   CompetitionClass,
   DeviceGroup,
@@ -13,31 +13,32 @@ import {
   Submission,
   Topic,
   ValidationResult,
-} from "@vimmer/api/db/types";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTRPC } from "@/trpc/client";
-import { useSession } from "@/contexts/session-context";
-import { PreviewDialog } from "./preview-dialog";
-import { DrawerLayout } from "./drawer-layout";
-import { ValidationAccordion } from "./validation-accordion";
+} from "@vimmer/api/db/types"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useTRPC } from "@/trpc/client"
+import { useSession } from "@/contexts/session-context"
+import { PreviewDialog } from "./preview-dialog"
+import { DrawerLayout } from "./drawer-layout"
+import { ValidationAccordion } from "./validation-accordion"
+import { cn } from "@vimmer/ui/lib/utils"
 
 interface ParticipantInfoSheetProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
   participant:
     | (Participant & {
-        validationResults: ValidationResult[];
-        competitionClass: CompetitionClass | null;
-        deviceGroup: DeviceGroup | null;
-        submissions: Submission[];
+        validationResults: ValidationResult[]
+        competitionClass: CompetitionClass | null
+        deviceGroup: DeviceGroup | null
+        submissions: Submission[]
       })
-    | null;
-  participantLoading: boolean;
-  onParticipantVerified?: () => void;
-  topics: Topic[];
-  baseThumbnailUrl: string;
-  submissionBaseUrl: string;
-  previewBaseUrl: string;
+    | null
+  participantLoading: boolean
+  onParticipantVerified?: () => void
+  topics: Topic[]
+  baseThumbnailUrl: string
+  submissionBaseUrl: string
+  previewBaseUrl: string
 }
 
 export function ParticipantInfoSheet({
@@ -51,33 +52,33 @@ export function ParticipantInfoSheet({
   submissionBaseUrl,
   previewBaseUrl,
 }: ParticipantInfoSheetProps) {
-  const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
-  const queryClient = useQueryClient();
-  const trpc = useTRPC();
-  const { user } = useSession();
+  const [imageDialogOpen, setImageDialogOpen] = useState(false)
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null)
+  const queryClient = useQueryClient()
+  const trpc = useTRPC()
+  const { user } = useSession()
 
   const { mutate: verifyParticipant, isPending: isVerifying } = useMutation(
     trpc.validations.createParticipantVerification.mutationOptions({
       onSuccess: () => {
-        toast.success("Participant verified successfully");
-        onOpenChange(false);
-        onParticipantVerified?.();
+        toast.success("Participant verified successfully")
+        onOpenChange(false)
+        onParticipantVerified?.()
       },
       onError: (error) => {
-        console.error("Error verifying participant:", error);
-        toast.error("Failed to verify participant");
+        console.error("Error verifying participant:", error)
+        toast.error("Failed to verify participant")
       },
       onSettled: () => {
         queryClient.invalidateQueries({
           queryKey: trpc.participants.pathKey(),
-        });
+        })
         queryClient.invalidateQueries({
           queryKey: trpc.validations.pathKey(),
-        });
+        })
       },
-    }),
-  );
+    })
+  )
 
   const {
     mutate: updateValidationResult,
@@ -90,51 +91,51 @@ export function ParticipantInfoSheet({
             trpc.validations.getValidationResultsByParticipantId.queryKey({
               participantId: participant?.id,
             }),
-        });
+        })
       },
       onError: (error) => {
-        console.error("Error overruling validation:", error);
-        toast.error("Failed to overrule validation");
+        console.error("Error overruling validation:", error)
+        toast.error("Failed to overrule validation")
       },
       onSettled: () => {
         queryClient.invalidateQueries({
           queryKey: trpc.validations.pathKey(),
-        });
+        })
         queryClient.invalidateQueries({
           queryKey: trpc.participants.pathKey(),
-        });
+        })
       },
-    }),
-  );
+    })
+  )
 
   const { mutate: runValidations, isPending: isRunningValidations } =
     useMutation(
       trpc.validations.runValidations.mutationOptions({
         onSuccess: () => {
-          toast.success("Validations run successfully");
+          toast.success("Validations run successfully")
         },
         onError: (error) => {
-          console.error("Error running validations:", error);
-          toast.error("Failed to run validations");
+          console.error("Error running validations:", error)
+          toast.error("Failed to run validations")
         },
         onSettled: () => {
           queryClient.invalidateQueries({
             queryKey: trpc.validations.pathKey(),
-          });
+          })
           queryClient.invalidateQueries({
             queryKey: trpc.participants.pathKey(),
-          });
+          })
         },
-      }),
-    );
+      })
+    )
 
   const hasUnresolvedErrors = participant?.validationResults.some(
-    (v) => v.severity === "error" && v.outcome === "failed" && !v.overruled,
-  );
+    (v) => v.severity === "error" && v.outcome === "failed" && !v.overruled
+  )
 
   const hasOverrulableErrors = participant?.validationResults.some(
-    (v) => v.severity === "error" && v.outcome === "failed" && !v.overruled,
-  );
+    (v) => v.severity === "error" && v.outcome === "failed" && !v.overruled
+  )
 
   const renderParticipantLoading = () => (
     <div className="flex flex-col items-center justify-center h-full gap-6 px-8">
@@ -152,7 +153,7 @@ export function ParticipantInfoSheet({
         </div>
       </div>
     </div>
-  );
+  )
 
   const renderParticipantNotFound = () => (
     <div className="flex flex-col items-center justify-center h-full gap-6 px-8">
@@ -171,7 +172,7 @@ export function ParticipantInfoSheet({
         </div>
       </div>
     </div>
-  );
+  )
 
   const renderParticipant = () => (
     <div className="flex flex-col h-full">
@@ -199,14 +200,21 @@ export function ParticipantInfoSheet({
             )}
           </div>
           <div className="flex gap-2 w-full justify-center">
-            <div className="flex items-center space-x-2 text-sm bg-green-100 border border-green-400 rounded-full px-3 py-1">
+            <div
+              className={cn(
+                "flex items-center space-x-2 text-sm border rounded-full px-3 py-1",
+                participant?.status === "verified"
+                  ? "bg-green-100 border-green-400"
+                  : "bg-amber-100 border-amber-400"
+              )}
+            >
               {participant?.status === "verified" ? (
                 <div className="flex items-center space-x-1 text-green-600">
                   <CheckCircle className="h-4 w-4" />
                   <span className="font-medium">Verified</span>
                 </div>
               ) : (
-                <div className="flex items-center space-x-1 text-yellow-600">
+                <div className="flex items-center space-x-1 text-amber-600">
                   <XCircle className="h-4 w-4" />
                   <span className="font-bold">Not Verified</span>
                 </div>
@@ -218,8 +226,8 @@ export function ParticipantInfoSheet({
               size="sm"
               className="text-xs px-2 py-1 h-8 rounded-full border-muted-foreground/40 !bg-background"
               onClick={() => {
-                if (!participant) return;
-                runValidations({ participantId: participant.id });
+                if (!participant) return
+                runValidations({ participantId: participant.id })
               }}
               disabled={isRunningValidations}
             >
@@ -243,8 +251,8 @@ export function ParticipantInfoSheet({
               submissionBaseUrl={submissionBaseUrl}
               previewBaseUrl={previewBaseUrl}
               onThumbnailClick={(url) => {
-                setImageDialogOpen(true);
-                setSelectedImageUrl(url);
+                setImageDialogOpen(true)
+                setSelectedImageUrl(url)
               }}
               onOverrule={(validationId) =>
                 updateValidationResult({
@@ -262,21 +270,20 @@ export function ParticipantInfoSheet({
       </div>
 
       {/* Footer */}
-      <div className="border-t bg-background/80 backdrop-blur-sm px-4 py-4 flex justify-center">
+      <div className="border-t  bg-background/80 backdrop-blur-sm px-4 py-4 flex justify-center">
         <PrimaryButton
           onClick={() => {
-            if (!participant) return;
-            if (!user?.id) return;
+            if (!participant) return
+            if (!user?.id) return
 
             if (hasOverrulableErrors) {
-              // Overrule all failed error validations first
               const failedErrorValidations =
                 participant.validationResults.filter(
                   (v) =>
                     v.severity === "error" &&
                     v.outcome === "failed" &&
-                    !v.overruled,
-                );
+                    !v.overruled
+                )
 
               failedErrorValidations.forEach((validation) => {
                 updateValidationResult({
@@ -284,10 +291,9 @@ export function ParticipantInfoSheet({
                   data: {
                     overruled: true,
                   },
-                });
-              });
+                })
+              })
 
-              // Then verify the participant
               setTimeout(() => {
                 verifyParticipant({
                   data: {
@@ -295,8 +301,8 @@ export function ParticipantInfoSheet({
                     staffId: user.id,
                     notes: "",
                   },
-                });
-              }, 100);
+                })
+              }, 100)
             } else {
               verifyParticipant({
                 data: {
@@ -304,7 +310,7 @@ export function ParticipantInfoSheet({
                   staffId: user.id,
                   notes: "",
                 },
-              });
+              })
             }
           }}
           disabled={
@@ -312,7 +318,7 @@ export function ParticipantInfoSheet({
             isVerifying ||
             isUpdatingValidationResult
           }
-          className="w-full max-w-sm p-4 text-base"
+          className="w-full max-w-sm p-4 text-base shadow-sm rounded-full"
         >
           {isVerifying || isUpdatingValidationResult ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -321,12 +327,15 @@ export function ParticipantInfoSheet({
           ) : hasOverrulableErrors ? (
             "Overrule all and verify"
           ) : (
-            "Verify Participant"
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4" />
+              Verify Participant
+            </div>
           )}
         </PrimaryButton>
       </div>
     </div>
-  );
+  )
 
   return (
     <>
@@ -347,5 +356,5 @@ export function ParticipantInfoSheet({
         imageUrl={selectedImageUrl}
       />
     </>
-  );
+  )
 }

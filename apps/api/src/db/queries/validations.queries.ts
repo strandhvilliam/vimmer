@@ -3,7 +3,6 @@ import type { Database } from "@vimmer/api/db";
 import {
   validationResults,
   participantVerifications,
-  ruleConfigs,
   marathons,
 } from "@vimmer/api/db/schema";
 import type {
@@ -55,7 +54,7 @@ export async function getValidationResultsByDomainQuery(
 
 export async function getParticipantVerificationsByStaffIdQuery(
   db: Database,
-  { staffId }: { staffId: string },
+  { staffId, domain }: { staffId: string; domain: string },
 ) {
   const result = await db.query.participantVerifications.findMany({
     where: eq(participantVerifications.staffId, staffId),
@@ -66,6 +65,7 @@ export async function getParticipantVerificationsByStaffIdQuery(
           deviceGroup: true,
           validationResults: true,
           submissions: true,
+          marathon: true,
         },
       },
     },
@@ -74,7 +74,12 @@ export async function getParticipantVerificationsByStaffIdQuery(
     ],
   });
 
-  return result;
+  return result
+    .filter((v) => v.participant.marathon.domain === domain)
+    .map((v) => ({
+      ...v,
+      participant: { ...v.participant, marathon: undefined },
+    }));
 }
 
 export async function createValidationResultMutation(
@@ -195,6 +200,72 @@ export async function clearNonEnabledRuleResultsMutation(
         notInArray(validationResults.ruleKey, ruleKeys),
       ),
     );
+}
+
+export async function getAllParticipantVerificationsQuery(
+  db: Database,
+  {
+    domain,
+    page,
+    pageSize,
+    search,
+  }: {
+    domain: string;
+    page: number;
+    pageSize: number;
+    search?: string;
+  },
+) {
+  const offset = (page - 1) * pageSize;
+
+  // First get all verifications for the domain to apply search and pagination
+  const allVerifications = await db.query.participantVerifications.findMany({
+    with: {
+      participant: {
+        with: {
+          competitionClass: true,
+          deviceGroup: true,
+          validationResults: true,
+          submissions: true,
+          marathon: true,
+        },
+      },
+    },
+    orderBy: (participantVerifications, { desc }) => [
+      desc(participantVerifications.createdAt),
+    ],
+  });
+
+  // Filter by domain and search in memory (for now, can optimize later)
+  let filteredVerifications = allVerifications.filter(
+    (v) => v.participant.marathon.domain === domain,
+  );
+
+  // Apply search filter if provided (participant number only)
+  if (search) {
+    const lowerSearch = search.toLowerCase();
+    filteredVerifications = filteredVerifications.filter((v) =>
+      v.participant.reference.toLowerCase().includes(lowerSearch),
+    );
+  }
+
+  const totalCount = filteredVerifications.length;
+
+  // Apply pagination
+  const paginatedResults = filteredVerifications
+    .slice(offset, offset + pageSize)
+    .map((v) => ({
+      ...v,
+      participant: { ...v.participant, marathon: undefined },
+    }));
+
+  return {
+    data: paginatedResults,
+    totalCount,
+    page,
+    pageSize,
+    totalPages: Math.ceil(totalCount / pageSize),
+  };
 }
 
 export async function clearAllValidationResultsMutation(

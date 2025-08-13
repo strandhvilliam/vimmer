@@ -1,55 +1,77 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect } from "react"
-import { QrCodeIcon, PenIcon, UsersIcon, LogOutIcon } from "lucide-react"
-import { Button } from "@vimmer/ui/components/button"
-import { PrimaryButton } from "@vimmer/ui/components/primary-button"
-import { DotPattern } from "@vimmer/ui/components/dot-pattern"
-import QrScanDrawer from "@/components/staff/qr-scan-drawer"
-import { VerifiedParticipantsSheet } from "@/components/staff/verified-participants-sheet"
-import { ParticipantInfoSheet } from "@/components/staff/participant-info-sheet"
-import { toast } from "sonner"
-import { authClient } from "@/lib/auth-client"
-import { useRouter } from "next/navigation"
-import { useSession } from "@/contexts/session-context"
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/client"
-import { useDomain } from "@/contexts/domain-context"
-import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs"
-import { ManualEntryOverlay } from "@/components/staff/manual-entry-overlay"
+import React, { useState, useEffect } from "react";
+import { QrCodeIcon, PenIcon, UsersIcon, LogOutIcon } from "lucide-react";
+import { Button } from "@vimmer/ui/components/button";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { DotPattern } from "@vimmer/ui/components/dot-pattern";
+import QrScanDrawer from "@/components/staff/qr-scan-drawer";
+import { VerifiedParticipantsSheet } from "@/components/staff/verified-participants-sheet";
+import { ParticipantInfoSheet } from "@/components/staff/participant-info-sheet";
+import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
+import { useSession } from "@/contexts/session-context";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
+import { useDomain } from "@/contexts/domain-context";
+import {
+  parseAsString,
+  parseAsStringEnum,
+  parseAsInteger,
+  useQueryState,
+} from "nuqs";
+import { ManualEntryOverlay } from "@/components/staff/manual-entry-overlay";
 
 export function StaffClientPage({
   baseThumbnailUrl,
   baseSubmissionUrl,
   basePreviewUrl,
 }: {
-  baseThumbnailUrl: string
-  baseSubmissionUrl: string
-  basePreviewUrl: string
+  baseThumbnailUrl: string;
+  baseSubmissionUrl: string;
+  basePreviewUrl: string;
 }) {
-  const trpc = useTRPC()
-  const { user } = useSession()
-  const { domain } = useDomain()
+  const trpc = useTRPC();
+  const { user } = useSession();
+  const { domain } = useDomain();
 
   const [activeParticipantReference, setActiveParticipantReference] =
-    useQueryState("reference", parseAsString)
+    useQueryState("reference", parseAsString);
 
-  const { data: verifications } = useSuspenseQuery(
+  const [searchQuery, setSearchQuery] = useQueryState("vpg", parseAsString);
+
+  const { data: ownVerifications } = useSuspenseQuery(
     trpc.validations.getParticipantVerificationsByStaffId.queryOptions(
       {
         staffId: user?.id ?? "",
+        domain,
       },
       {
         enabled: !!user?.id,
-      }
-    )
-  )
+      },
+    ),
+  );
+
+  const { data: searchResultData, isLoading: searchLoading } = useQuery(
+    trpc.validations.getAllParticipantVerifications.queryOptions(
+      {
+        domain,
+        page: 1,
+        pageSize: 1,
+        search: searchQuery || undefined,
+      },
+      {
+        enabled: !!searchQuery && searchQuery.trim() !== "",
+      },
+    ),
+  );
 
   const { data: topics } = useSuspenseQuery(
     trpc.topics.getPublicByDomain.queryOptions({
       domain,
-    })
-  )
+    }),
+  );
 
   const { data: participantData, isLoading: participantDataLoading } = useQuery(
     trpc.participants.getByReference.queryOptions(
@@ -60,11 +82,11 @@ export function StaffClientPage({
       {
         enabled:
           !!activeParticipantReference && activeParticipantReference !== "",
-      }
-    )
-  )
+      },
+    ),
+  );
 
-  const [isLogoutLoading, setIsLogoutLoading] = useState(false)
+  const [isLogoutLoading, setIsLogoutLoading] = useState(false);
 
   const [openSheet, setOpenSheet] = useQueryState(
     "sheet",
@@ -73,44 +95,44 @@ export function StaffClientPage({
       "qr-scan",
       "manual-entry",
       "verified-list",
-    ])
-  )
+    ]),
+  );
 
-  const router = useRouter()
+  const router = useRouter();
 
   const openSheetSafely = async (
     targetSheet:
       | "participant-info"
       | "qr-scan"
       | "manual-entry"
-      | "verified-list"
+      | "verified-list",
   ) => {
     if (openSheet && openSheet !== targetSheet) {
-      await setOpenSheet(null)
-      setTimeout(() => setOpenSheet(targetSheet), 100)
+      await setOpenSheet(null);
+      setTimeout(() => setOpenSheet(targetSheet), 100);
     } else {
-      await setOpenSheet(targetSheet)
+      await setOpenSheet(targetSheet);
     }
-  }
+  };
 
   useEffect(() => {
     if (openSheet === "participant-info" && !activeParticipantReference) {
-      setOpenSheet(null)
+      setOpenSheet(null);
     }
-  }, [openSheet, activeParticipantReference, setOpenSheet])
+  }, [openSheet, activeParticipantReference, setOpenSheet]);
 
   const handleLogout = async () => {
     try {
-      setIsLogoutLoading(true)
-      await authClient.signOut()
-      router.push("/auth/staff/login")
+      setIsLogoutLoading(true);
+      await authClient.signOut();
+      router.push("/auth/staff/login");
     } catch (error) {
-      console.error(error)
-      toast.error("Failed to logout")
+      console.error(error);
+      toast.error("Failed to logout");
     } finally {
-      setIsLogoutLoading(false)
+      setIsLogoutLoading(false);
     }
-  }
+  };
 
   return (
     <>
@@ -175,24 +197,29 @@ export function StaffClientPage({
         open={openSheet === "qr-scan"}
         onOpenChange={(open) => !open && setOpenSheet(null)}
         onScanAction={async (qrCode) => {
-          await setActiveParticipantReference(qrCode.reference)
-          await openSheetSafely("participant-info")
+          await setActiveParticipantReference(qrCode.reference);
+          await openSheetSafely("participant-info");
         }}
       />
       <ManualEntryOverlay
         open={openSheet === "manual-entry"}
         onOpenChange={(open) => !open && setOpenSheet(null)}
         onEnterAction={async (args) => {
-          await setActiveParticipantReference(args.reference)
-          await openSheetSafely("participant-info")
+          await setActiveParticipantReference(args.reference);
+          await openSheetSafely("participant-info");
         }}
       />
       <VerifiedParticipantsSheet
         open={openSheet === "verified-list"}
         onOpenChange={(open) => !open && setOpenSheet(null)}
-        verifications={verifications}
+        ownVerifications={ownVerifications}
+        searchResult={searchResultData?.data?.[0] || null}
         topics={topics}
         baseThumbnailUrl={baseThumbnailUrl}
+        submissionBaseUrl={baseSubmissionUrl}
+        previewBaseUrl={basePreviewUrl}
+        isSearchLoading={searchLoading}
+        onSearch={(reference) => setSearchQuery(reference)}
       />
       <ParticipantInfoSheet
         open={openSheet === "participant-info"}
@@ -205,5 +232,5 @@ export function StaffClientPage({
         previewBaseUrl={basePreviewUrl}
       />
     </>
-  )
+  );
 }

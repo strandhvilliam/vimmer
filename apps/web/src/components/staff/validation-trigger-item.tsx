@@ -1,23 +1,24 @@
-import { Topic, Submission, ValidationResult } from "@vimmer/api/db/types";
-import { AccordionTrigger } from "@vimmer/ui/components/accordion";
+import { Topic, Submission, ValidationResult } from "@vimmer/api/db/types"
+import { AccordionTrigger } from "@vimmer/ui/components/accordion"
+import { format } from "date-fns"
 import {
   ImageIcon,
   XIcon,
   AlertTriangle,
   CheckCircleIcon,
   FileQuestion,
-} from "lucide-react";
-import { useState } from "react";
+} from "lucide-react"
+import { useEffect, useState } from "react"
 
 interface ValidationTriggerItemProps {
-  topic?: Topic;
-  orderIndex?: number;
-  submission?: Submission | null;
-  validations: ValidationResult[];
-  thumbnailUrl?: string | null;
-  title?: string;
-  isGlobal?: boolean;
-  onThumbnailClick?: () => void;
+  topic?: Topic
+  orderIndex?: number
+  submission?: Submission | null
+  validations: ValidationResult[]
+  thumbnailUrl?: string | null
+  title?: string
+  isGlobal?: boolean
+  onThumbnailClick?: () => void
 }
 
 export function ValidationTriggerItem({
@@ -30,25 +31,23 @@ export function ValidationTriggerItem({
   isGlobal = false,
   onThumbnailClick,
 }: ValidationTriggerItemProps) {
-  const [isBroken, setIsBroken] = useState(false);
+  const [isBroken, setIsBroken] = useState(false)
   const errorCount = validations.filter(
-    (v) => v.severity === "error" && v.outcome === "failed",
-  ).length;
+    (v) => v.severity === "error" && v.outcome === "failed"
+  ).length
   const warningCount = validations.filter(
-    (v) => v.severity === "warning" && v.outcome === "failed",
-  ).length;
-  const passedCount = validations.filter((v) => v.outcome === "passed").length;
-  const skippedCount = validations.filter(
-    (v) => v.outcome === "skipped",
-  ).length;
+    (v) => v.severity === "warning" && v.outcome === "failed"
+  ).length
+  const passedCount = validations.filter((v) => v.outcome === "passed").length
+  const skippedCount = validations.filter((v) => v.outcome === "skipped").length
 
   return (
     <AccordionTrigger className="flex items-center gap-3 w-full text-left p-3 hover:bg-muted/40 transition-all rounded-lg hover:no-underline group">
       {!isGlobal && (
         <div
           onClick={(e) => {
-            e.stopPropagation();
-            onThumbnailClick?.();
+            e.stopPropagation()
+            onThumbnailClick?.()
           }}
           className="w-14 h-14 rounded-lg overflow-hidden bg-muted/40 flex-shrink-0 shadow-sm group-hover:shadow-md transition-shadow"
         >
@@ -58,8 +57,8 @@ export function ValidationTriggerItem({
               <img
                 src={thumbnailUrl}
                 alt={topic?.name}
-                onError={(e) => {
-                  setIsBroken(true);
+                onError={() => {
+                  setIsBroken(true)
                 }}
                 className="w-full h-full object-cover"
               />
@@ -76,10 +75,10 @@ export function ValidationTriggerItem({
         </div>
       )}
 
-      <div className="flex-1 min-w-0 space-y-1.5">
+      <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center gap-2">
           {!isGlobal && (
-            <div className="w-5 h-5 rounded-full bg-muted  flex items-center justify-center">
+            <div className="w-5 h-5 rounded-full bg-muted  flex items-center justify-center shadow">
               <span className="text-xs font-bold text-primary">
                 {(orderIndex ?? 0) + 1}
               </span>
@@ -95,6 +94,12 @@ export function ValidationTriggerItem({
             </h5>
           )}
         </div>
+        {!isGlobal && !!submission && (
+          <span className="text-xs font-normal text-muted-foreground">
+            Captured:{" "}
+            {format(new Date(submission.createdAt), "yyyy-MM-dd HH:mm")}
+          </span>
+        )}
         <div className="flex items-center gap-1.5 flex-wrap">
           {validations.length > 0 ? (
             <>
@@ -104,22 +109,16 @@ export function ValidationTriggerItem({
                   <span>{errorCount}</span>
                 </div>
               )}
-              {warningCount > 0 && (
+              {warningCount + skippedCount > 0 && (
                 <div className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
                   <AlertTriangle className="w-3 h-3" />
-                  <span>{warningCount}</span>
+                  <span>{warningCount + skippedCount}</span>
                 </div>
               )}
               {passedCount > 0 && (
                 <div className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
                   <CheckCircleIcon className="w-3 h-3" />
                   <span>{passedCount}</span>
-                </div>
-              )}
-              {skippedCount > 0 && (
-                <div className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
-                  <FileQuestion className="w-3 h-3" />
-                  <span>{skippedCount}</span>
                 </div>
               )}
             </>
@@ -135,5 +134,5 @@ export function ValidationTriggerItem({
         </div>
       </div>
     </AccordionTrigger>
-  );
+  )
 }

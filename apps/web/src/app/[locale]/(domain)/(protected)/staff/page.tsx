@@ -19,6 +19,7 @@ export default async function StaffPage() {
   batchPrefetch([
     trpc.validations.getParticipantVerificationsByStaffId.queryOptions({
       staffId: session.user.id,
+      domain,
     }),
     trpc.topics.getPublicByDomain.queryOptions({
       domain,
