@@ -9,8 +9,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@vimmer/ui/components/tabs"
-import { toast } from "sonner"
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import { useTRPC } from "@/trpc/client"
 import { useDomain } from "@/contexts/domain-context"
 import { ParticipantContactSheetTab } from "@/components/admin/participant-contact-sheet-tab"
@@ -33,7 +32,6 @@ export function ParticipantSubmissionClientPage({
 }: ParticipantSubmissionClientPageProps) {
   const { domain } = useDomain()
   const trpc = useTRPC()
-  const queryClient = useQueryClient()
 
   const { data: participant } = useSuspenseQuery(
     trpc.participants.getByReference.queryOptions({
@@ -69,13 +67,6 @@ export function ParticipantSubmissionClientPage({
         validationResults={validationResults}
       />
 
-      <button
-        onClick={async () => {
-          window.location.reload()
-        }}
-      >
-        revalidate
-      </button>
       <Tabs defaultValue="submissions">
         <TabsList className="bg-background rounded-none p-0 h-auto border-b border-muted-foreground/25 w-full flex justify-start">
           <TabsTrigger

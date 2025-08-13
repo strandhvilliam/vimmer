@@ -17,7 +17,6 @@ import { getSession } from "@/lib/auth"
 
 export async function AppSidebar() {
   const session = await getSession()
-  console.log("session123", session)
   prefetch(
     trpc.users.getMarathonsByUserId.queryOptions({
       userId: session?.user.id ?? "",

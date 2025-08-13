@@ -22,9 +22,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@vimmer/ui/components/dialog"
-import { Topic } from "@vimmer/supabase/types"
 import { format } from "date-fns"
 import { useI18n } from "@/locales/client"
+import { Topic } from "@vimmer/api/db/types"
 
 interface Props {
   photo?: SelectedPhotoV2

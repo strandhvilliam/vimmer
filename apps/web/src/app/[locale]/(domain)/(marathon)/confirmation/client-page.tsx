@@ -75,7 +75,7 @@ export function ConfirmationClient({
   )
 
   const { data: topics } = useSuspenseQuery(
-    trpc.topics.getByDomain.queryOptions({
+    trpc.topics.getPublicByDomain.queryOptions({
       domain,
     })
   )

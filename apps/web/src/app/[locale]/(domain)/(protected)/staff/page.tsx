@@ -20,7 +20,7 @@ export default async function StaffPage() {
     trpc.validations.getParticipantVerificationsByStaffId.queryOptions({
       staffId: session.user.id,
     }),
-    trpc.topics.getByDomain.queryOptions({
+    trpc.topics.getPublicByDomain.queryOptions({
       domain,
     }),
   ])

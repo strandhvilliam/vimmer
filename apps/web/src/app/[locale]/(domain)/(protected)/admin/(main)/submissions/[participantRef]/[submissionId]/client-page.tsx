@@ -31,7 +31,6 @@ export function SubmissionDetailClient({
 }: SubmissionDetailClientProps) {
   const { domain } = useDomain()
   const trpc = useTRPC()
-  const queryClient = useQueryClient()
 
   const { data: participant } = useSuspenseQuery(
     trpc.participants.getByReference.queryOptions({
