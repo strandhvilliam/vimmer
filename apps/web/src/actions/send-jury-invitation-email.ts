@@ -31,7 +31,7 @@ export const sendInvitationEmailAction = actionClient
       return `https://${domain}.blikka.app`;
     };
 
-    const { data, error } = await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: "Blikka Support <support@vimmer.photo>",
       to: [parsedInput.email],
       subject: `Invitation to review ${parsedInput.marathonName} submissions`,
@@ -49,7 +49,6 @@ export const sendInvitationEmailAction = actionClient
     if (error) {
       throw new Error(error.message);
     }
-    console.log(data);
 
     return { success: true };
   });

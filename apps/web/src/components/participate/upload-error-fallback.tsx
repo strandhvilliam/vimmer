@@ -1,26 +1,26 @@
-"use client"
+"use client";
 
-import { AlertOctagon } from "lucide-react"
-import { motion } from "motion/react"
+import { AlertOctagon } from "lucide-react";
+import { motion } from "motion/react";
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@vimmer/ui/components/card"
-import { Button } from "@vimmer/ui/components/button"
-import React from "react"
-import { useI18n } from "@/locales/client"
+} from "@vimmer/ui/components/card";
+import { Button } from "@vimmer/ui/components/button";
+import React from "react";
+import { useI18n } from "@/locales/client";
 
 export function UploadErrorFallback({
   error,
   onPrevStepAction,
 }: {
-  error: string
-  onPrevStepAction?: () => void
+  error: string;
+  onPrevStepAction?: () => void;
 }) {
-  const t = useI18n()
+  const t = useI18n();
   return (
     <div className="max-w-4xl mx-auto min-h-[80vh] flex flex-col justify-center py-12 px-4">
       <Card className="overflow-hidden">
@@ -56,5 +56,5 @@ export function UploadErrorFallback({
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }

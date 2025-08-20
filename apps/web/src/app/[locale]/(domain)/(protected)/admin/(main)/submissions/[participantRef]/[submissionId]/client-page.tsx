@@ -1,26 +1,26 @@
-"use client"
+"use client";
 
-import { notFound } from "next/navigation"
+import { notFound } from "next/navigation";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@vimmer/ui/components/tabs"
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/client"
-import { SubmissionPreviewCard } from "@/components/admin/submission-preview-card"
-import { SubmissionValidationSteps } from "@/components/admin/submission-validation-steps"
-import { SubmissionExifDataDisplay } from "@/components/admin/submission-exif-data-display"
-import { SubmissionDetails } from "@/components/admin/submission-details"
-import { SubmissionHeader } from "@/components/admin/submission-header"
-import { useDomain } from "@/contexts/domain-context"
+} from "@vimmer/ui/components/tabs";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
+import { SubmissionPreviewCard } from "@/components/admin/submission-preview-card";
+import { SubmissionValidationSteps } from "@/components/admin/submission-validation-steps";
+import { SubmissionExifDataDisplay } from "@/components/admin/submission-exif-data-display";
+import { SubmissionDetails } from "@/components/admin/submission-details";
+import { SubmissionHeader } from "@/components/admin/submission-header";
+import { useDomain } from "@/contexts/domain-context";
 
 interface SubmissionDetailClientProps {
-  previewBaseUrl: string
-  submissionBaseUrl: string
-  participantRef: string
-  submissionId: string
+  previewBaseUrl: string;
+  submissionBaseUrl: string;
+  participantRef: string;
+  submissionId: string;
 }
 
 export function SubmissionDetailClient({
@@ -29,41 +29,41 @@ export function SubmissionDetailClient({
   participantRef,
   submissionId,
 }: SubmissionDetailClientProps) {
-  const { domain } = useDomain()
-  const trpc = useTRPC()
+  const { domain } = useDomain();
+  const trpc = useTRPC();
 
   const { data: participant } = useSuspenseQuery(
     trpc.participants.getByReference.queryOptions({
       domain,
       reference: participantRef,
-    })
-  )
+    }),
+  );
 
   const { data: topics } = useSuspenseQuery(
     trpc.topics.getByDomain.queryOptions({
       domain,
-    })
-  )
+    }),
+  );
 
   const submission = participant?.submissions.find(
-    (s) => s.id === parseInt(submissionId)
-  )
-  const topic = topics.find((t) => t.id === submission?.topicId)
+    (s) => s.id === parseInt(submissionId),
+  );
+  const topic = topics.find((t) => t.id === submission?.topicId);
 
   const submissionValidationResults =
     participant?.validationResults?.filter(
       (result) =>
         result.fileName &&
         submission?.key &&
-        result.fileName.includes(submission.key)
-    ) || []
+        result.fileName.includes(submission.key),
+    ) || [];
 
   const hasIssues = submissionValidationResults.some(
-    (result) => result.outcome === "failed"
-  )
+    (result) => result.outcome === "failed",
+  );
 
   if (!submission || !topic || !participant) {
-    notFound()
+    notFound();
   }
 
   return (
@@ -132,5 +132,5 @@ export function SubmissionDetailClient({
         />
       </div>
     </>
-  )
+  );
 }

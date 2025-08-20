@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { createContext, useContext, useEffect, type ReactNode } from "react"
-import mqtt from "mqtt"
-import { useTRPC } from "@/trpc/client"
-import { useQueryClient } from "@tanstack/react-query"
+import { createContext, useContext, useEffect, type ReactNode } from "react";
+import mqtt from "mqtt";
+import { useTRPC } from "@/trpc/client";
+import { useQueryClient } from "@tanstack/react-query";
 
-type RealtimeContextType = {}
+type RealtimeContextType = {};
 
-const RealtimeContext = createContext<RealtimeContextType | null>(null)
+const RealtimeContext = createContext<RealtimeContextType | null>(null);
 
 function createConnection(endpoint: string, authorizer: string) {
   return mqtt.connect(
@@ -18,108 +18,108 @@ function createConnection(endpoint: string, authorizer: string) {
       username: "", // Must be empty for the authorizer
       password: "PLACEHOLDER_TOKEN", // Passed as the token to the authorizer
       clientId: `client_${window.crypto.randomUUID()}`,
-    }
-  )
+    },
+  );
 }
 
 export function RealtimeProvider({
   children,
   realtimeConfig,
 }: {
-  children: ReactNode
+  children: ReactNode;
   realtimeConfig: {
-    endpoint: string
-    authorizer: string
-    topic: string
-  }
+    endpoint: string;
+    authorizer: string;
+    topic: string;
+  };
 }) {
-  const trpc = useTRPC()
-  const queryClient = useQueryClient()
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
   useEffect(() => {
     if (!window.crypto.randomUUID) {
-      return
+      return;
     }
 
     const connection = createConnection(
       realtimeConfig.endpoint,
-      realtimeConfig.authorizer
-    )
+      realtimeConfig.authorizer,
+    );
 
     connection.on("connect", async () => {
       try {
-        await connection.subscribeAsync(realtimeConfig.topic, { qos: 1 })
+        await connection.subscribeAsync(realtimeConfig.topic, { qos: 1 });
       } catch (e) {
-        console.error(e)
+        console.error(e);
       }
-    })
+    });
     connection.on("message", (_fullTopic, payload) => {
-      const message = new TextDecoder("utf8").decode(new Uint8Array(payload))
-      const { query } = JSON.parse(message)
+      const message = new TextDecoder("utf8").decode(new Uint8Array(payload));
+      const { query } = JSON.parse(message);
 
       // maybe use pathfilter instead
       switch (query) {
         case trpc.competitionClasses.pathKey()[0][0]:
           queryClient.invalidateQueries({
             queryKey: trpc.competitionClasses.pathKey(),
-          })
-          break
+          });
+          break;
         case trpc.deviceGroups.pathKey()[0][0]:
           queryClient.invalidateQueries({
             queryKey: trpc.deviceGroups.pathKey(),
-          })
-          break
+          });
+          break;
         case trpc.marathons.pathKey()[0][0]:
           queryClient.invalidateQueries({
             queryKey: trpc.marathons.pathKey(),
-          })
-          break
+          });
+          break;
         case trpc.jury.pathKey()[0][0]:
           queryClient.invalidateQueries({
             queryKey: trpc.jury.pathKey(),
-          })
-          break
+          });
+          break;
         case trpc.validations.pathKey()[0][0]:
           queryClient.invalidateQueries({
             queryKey: trpc.validations.pathKey(),
-          })
-          break
+          });
+          break;
         case trpc.participants.pathKey()[0][0]:
           queryClient.invalidateQueries({
             queryKey: trpc.participants.pathKey(),
-          })
-          break
+          });
+          break;
         case trpc.submissions.pathKey()[0][0]:
           queryClient.invalidateQueries({
             queryKey: trpc.submissions.pathKey(),
-          })
-          break
+          });
+          break;
         case trpc.topics.pathKey()[0][0]:
           queryClient.invalidateQueries({
             queryKey: trpc.topics.pathKey(),
-          })
-          break
+          });
+          break;
         case trpc.rules.pathKey()[0][0]:
           queryClient.invalidateQueries({
             queryKey: trpc.rules.pathKey(),
-          })
-          break
+          });
+          break;
         case trpc.users.pathKey()[0][0]:
           queryClient.invalidateQueries({
             queryKey: trpc.users.pathKey(),
-          })
-          break
+          });
+          break;
       }
-    })
-    connection.on("error", console.error)
+    });
+    connection.on("error", console.error);
 
-    connection.connect()
+    connection.connect();
 
     return () => {
-      connection.end()
-    }
-  }, [realtimeConfig, trpc, queryClient])
+      connection.end();
+    };
+  }, [realtimeConfig, trpc, queryClient]);
 
   return (
     <RealtimeContext.Provider value={{}}>{children}</RealtimeContext.Provider>
-  )
+  );
 }

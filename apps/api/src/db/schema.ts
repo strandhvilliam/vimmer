@@ -3,23 +3,24 @@ import {
   foreignKey,
   bigint,
   timestamp,
+  smallint,
   text,
-  integer,
   jsonb,
-  unique,
   boolean,
+  index,
+  integer,
+  unique,
   pgSequence,
   pgEnum,
-  smallint,
-} from "drizzle-orm/pg-core";
-import { relations, sql } from "drizzle-orm";
+} from "drizzle-orm/pg-core"
+import { relations, sql } from "drizzle-orm"
 
 export const uploadStatus = pgEnum("upload_status", [
   "initialized",
   "processing",
   "error",
   "completed",
-]);
+])
 
 export const participantsIdSeq1 = pgSequence("participants_id_seq1", {
   startWith: "1",
@@ -28,7 +29,7 @@ export const participantsIdSeq1 = pgSequence("participants_id_seq1", {
   maxValue: "9223372036854775807",
   cache: "1",
   cycle: false,
-});
+})
 export const submissionsIdSeq1 = pgSequence("submissions_id_seq1", {
   startWith: "1",
   increment: "1",
@@ -36,13 +37,95 @@ export const submissionsIdSeq1 = pgSequence("submissions_id_seq1", {
   maxValue: "9223372036854775807",
   cache: "1",
   cycle: false,
-});
+})
+
+export const juryRatings = pgTable(
+  "jury_ratings",
+  {
+    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "jury_ratings_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
+    invitationId: bigint("invitation_id", { mode: "number" }).notNull(),
+    rating: smallint().notNull(),
+    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
+    participantId: bigint("participant_id", { mode: "number" }).notNull(),
+    notes: text().default(""),
+    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
+    marathonId: bigint("marathon_id", { mode: "number" }).notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.invitationId],
+      foreignColumns: [juryInvitations.id],
+      name: "jury_ratings_invitation_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.marathonId],
+      foreignColumns: [marathons.id],
+      name: "jury_ratings_marathon_id_fkey",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.participantId],
+      foreignColumns: [participants.id],
+      name: "jury_ratings_participant_id_fkey",
+    }).onDelete("cascade"),
+  ]
+)
+
+export const ruleConfigs = pgTable(
+  "rule_configs",
+  {
+    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "rule_configs_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+    ruleKey: text("rule_key").notNull(),
+    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
+    marathonId: bigint("marathon_id", { mode: "number" }).notNull(),
+    params: jsonb(),
+    severity: text().default("warning").notNull(),
+    enabled: boolean().default(false).notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.marathonId],
+      foreignColumns: [marathons.id],
+      name: "rule_configs_marathon_id_fkey",
+    }),
+  ]
+)
 
 export const participants = pgTable(
   "participants",
   {
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "participants_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -61,8 +144,22 @@ export const participants = pgTable(
     firstname: text().default("").notNull(),
     lastname: text().default("").notNull(),
     contactSheetKey: text("contact_sheet_key"),
+    contactSheetSent: boolean("contact_sheet_sent").default(false).notNull(),
   },
   (table) => [
+    index("participants_domain_idx").using(
+      "btree",
+      table.domain.asc().nullsLast().op("text_ops")
+    ),
+    index("participants_reference_domain_idx").using(
+      "btree",
+      table.reference.asc().nullsLast().op("text_ops"),
+      table.domain.asc().nullsLast().op("text_ops")
+    ),
+    index("participants_reference_idx").using(
+      "btree",
+      table.reference.asc().nullsLast().op("text_ops")
+    ),
     foreignKey({
       columns: [table.competitionClassId],
       foreignColumns: [competitionClasses.id],
@@ -80,34 +177,8 @@ export const participants = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ],
-);
-
-export const account = pgTable(
-  "account",
-  {
-    id: text().primaryKey().notNull(),
-    accountId: text().notNull(),
-    providerId: text().notNull(),
-    userId: text().notNull(),
-    accessToken: text(),
-    refreshToken: text(),
-    idToken: text(),
-    accessTokenExpiresAt: timestamp({ mode: "string" }),
-    refreshTokenExpiresAt: timestamp({ mode: "string" }),
-    scope: text(),
-    password: text(),
-    createdAt: timestamp({ mode: "string" }).notNull(),
-    updatedAt: timestamp({ mode: "string" }).notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.userId],
-      foreignColumns: [user.id],
-      name: "account_userId_fkey",
-    }),
-  ],
-);
+  ]
+)
 
 export const juryInvitations = pgTable("jury_invitations", {
   // You can use { mode: "bigint" } if numbers are exceeding js number limitations
@@ -140,39 +211,33 @@ export const juryInvitations = pgTable("jury_invitations", {
   // You can use { mode: "bigint" } if numbers are exceeding js number limitations
   deviceGroupId: bigint("device_group_id", { mode: "number" }),
   notes: text(),
-});
+})
 
-export const ruleConfigs = pgTable(
-  "rule_configs",
+export const account = pgTable(
+  "account",
   {
-    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
-      name: "rule_configs_id_seq",
-      startWith: 1,
-      increment: 1,
-      minValue: 1,
-      maxValue: 9223372036854775807,
-      cache: 1,
-    }),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-      .defaultNow()
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-    ruleKey: text("rule_key").notNull(),
-    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    marathonId: bigint("marathon_id", { mode: "number" }).notNull(),
-    params: jsonb(),
-    severity: text().default("warning").notNull(),
-    enabled: boolean().default(false).notNull(),
+    id: text().primaryKey().notNull(),
+    accountId: text().notNull(),
+    providerId: text().notNull(),
+    userId: text().notNull(),
+    accessToken: text(),
+    refreshToken: text(),
+    idToken: text(),
+    accessTokenExpiresAt: timestamp({ mode: "string" }),
+    refreshTokenExpiresAt: timestamp({ mode: "string" }),
+    scope: text(),
+    password: text(),
+    createdAt: timestamp({ mode: "string" }).notNull(),
+    updatedAt: timestamp({ mode: "string" }).notNull(),
   },
   (table) => [
     foreignKey({
-      columns: [table.marathonId],
-      foreignColumns: [marathons.id],
-      name: "rule_configs_marathon_id_fkey",
+      columns: [table.userId],
+      foreignColumns: [user.id],
+      name: "account_userId_fkey",
     }),
-  ],
-);
+  ]
+)
 
 export const session = pgTable(
   "session",
@@ -194,8 +259,8 @@ export const session = pgTable(
       name: "session_userId_fkey",
     }),
     unique("session_token_key").on(table.token),
-  ],
-);
+  ]
+)
 
 export const userMarathons = pgTable(
   "user_marathons",
@@ -228,8 +293,8 @@ export const userMarathons = pgTable(
       foreignColumns: [user.id],
       name: "user_marathons_user_id_fkey",
     }),
-  ],
-);
+  ]
+)
 
 export const validationResults = pgTable(
   "validation_results",
@@ -257,13 +322,17 @@ export const validationResults = pgTable(
     overruled: boolean().default(false).notNull(),
   },
   (table) => [
+    index("validation_results_participant_id_idx").using(
+      "btree",
+      table.participantId.asc().nullsLast().op("int8_ops")
+    ),
     foreignKey({
       columns: [table.participantId],
       foreignColumns: [participants.id],
       name: "validation_results_participant_id_fkey",
-    }),
-  ],
-);
+    }).onDelete("cascade"),
+  ]
+)
 
 export const verification = pgTable("verification", {
   id: text().primaryKey().notNull(),
@@ -272,32 +341,41 @@ export const verification = pgTable("verification", {
   expiresAt: timestamp({ mode: "string" }).notNull(),
   createdAt: timestamp({ mode: "string" }),
   updatedAt: timestamp({ mode: "string" }),
-});
+})
 
-export const marathons = pgTable("marathons", {
-  // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-  id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
-    name: "marathon_id_seq",
-    startWith: 1,
-    increment: 1,
-    minValue: 1,
-    maxValue: 9223372036854775807,
-    cache: 1,
-  }),
-  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-  domain: text().notNull(),
-  name: text().notNull(),
-  startDate: timestamp("start_date", { withTimezone: true, mode: "string" }),
-  endDate: timestamp("end_date", { withTimezone: true, mode: "string" }),
-  logoUrl: text("logo_url"),
-  description: text(),
-  languages: text().default("en").notNull(),
-  setupCompleted: boolean("setup_completed").default(false),
-  termsAndConditionsKey: text("terms_and_conditions_key"),
-});
+export const marathons = pgTable(
+  "marathons",
+  {
+    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "marathon_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+    domain: text().notNull(),
+    name: text().notNull(),
+    startDate: timestamp("start_date", { withTimezone: true, mode: "string" }),
+    endDate: timestamp("end_date", { withTimezone: true, mode: "string" }),
+    logoUrl: text("logo_url"),
+    description: text(),
+    languages: text().default("en").notNull(),
+    setupCompleted: boolean("setup_completed").default(false),
+    termsAndConditionsKey: text("terms_and_conditions_key"),
+  },
+  (table) => [
+    index("marathons_domain_idx").using(
+      "btree",
+      table.domain.asc().nullsLast().op("text_ops")
+    ),
+  ]
+)
 
 export const competitionClasses = pgTable(
   "competition_classes",
@@ -323,6 +401,10 @@ export const competitionClasses = pgTable(
     description: text(),
   },
   (table) => [
+    index("competition_classes_marathon_id_idx").using(
+      "btree",
+      table.marathonId.asc().nullsLast().op("int8_ops")
+    ),
     foreignKey({
       columns: [table.marathonId],
       foreignColumns: [marathons.id],
@@ -330,8 +412,8 @@ export const competitionClasses = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ],
-);
+  ]
+)
 
 export const deviceGroups = pgTable(
   "device_groups",
@@ -356,6 +438,10 @@ export const deviceGroups = pgTable(
     description: text(),
   },
   (table) => [
+    index("device_groups_marathon_id_idx").using(
+      "btree",
+      table.marathonId.asc().nullsLast().op("int8_ops")
+    ),
     foreignKey({
       columns: [table.marathonId],
       foreignColumns: [marathons.id],
@@ -363,8 +449,8 @@ export const deviceGroups = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ],
-);
+  ]
+)
 
 export const participantVerifications = pgTable(
   "participant_verifications",
@@ -388,18 +474,22 @@ export const participantVerifications = pgTable(
     notes: text(),
   },
   (table) => [
-    foreignKey({
-      columns: [table.participantId],
-      foreignColumns: [participants.id],
-      name: "participant_verification_participant_id_fkey",
-    }),
+    index("participant_verifications_staff_id_idx").using(
+      "btree",
+      table.staffId.asc().nullsLast().op("text_ops")
+    ),
     foreignKey({
       columns: [table.staffId],
       foreignColumns: [user.id],
       name: "participant_verification_staff_id_fkey",
     }),
-  ],
-);
+    foreignKey({
+      columns: [table.participantId],
+      foreignColumns: [participants.id],
+      name: "participant_verifications_participant_id_fkey",
+    }).onDelete("cascade"),
+  ]
+)
 
 export const submissions = pgTable(
   "submissions",
@@ -434,6 +524,18 @@ export const submissions = pgTable(
     status: text().default("initialized").notNull(),
   },
   (table) => [
+    index("submissions_key_idx").using(
+      "btree",
+      table.key.asc().nullsLast().op("text_ops")
+    ),
+    index("submissions_marathon_id_idx").using(
+      "btree",
+      table.marathonId.asc().nullsLast().op("int8_ops")
+    ),
+    index("submissions_participant_id_idx").using(
+      "btree",
+      table.participantId.asc().nullsLast().op("int8_ops")
+    ),
     foreignKey({
       columns: [table.marathonId],
       foreignColumns: [marathons.id],
@@ -453,8 +555,8 @@ export const submissions = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ],
-);
+  ]
+)
 
 export const topics = pgTable(
   "topics",
@@ -490,8 +592,8 @@ export const topics = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ],
-);
+  ]
+)
 
 export const zippedSubmissions = pgTable(
   "zipped_submissions",
@@ -529,9 +631,9 @@ export const zippedSubmissions = pgTable(
       columns: [table.participantId],
       foreignColumns: [participants.id],
       name: "zipped_submissions_participant_id_fkey",
-    }),
-  ],
-);
+    }).onDelete("cascade"),
+  ]
+)
 
 export const user = pgTable(
   "user",
@@ -547,8 +649,8 @@ export const user = pgTable(
     banReason: text(),
     banExpires: timestamp({ mode: "string" }),
   },
-  (table) => [unique("user_email_key").on(table.email)],
-);
+  (table) => [unique("user_email_key").on(table.email)]
+)
 
 export const sponsors = pgTable(
   "sponsors",
@@ -581,45 +683,8 @@ export const sponsors = pgTable(
       foreignColumns: [marathons.id],
       name: "sponsors_marathon_id_fkey",
     }).onDelete("cascade"),
-  ],
-);
-
-export const juryRatings = pgTable(
-  "jury_ratings",
-  {
-    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
-      name: "jury_ratings_id_seq",
-      startWith: 1,
-      increment: 1,
-      minValue: 1,
-      maxValue: 9223372036854775807,
-      cache: 1,
-    }),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-      .defaultNow()
-      .notNull(),
-    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    invitationId: bigint("invitation_id", { mode: "number" }).notNull(),
-    rating: smallint().notNull(),
-    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    participantId: bigint("participant_id", { mode: "number" }).notNull(),
-    notes: text().default(""),
-    marathonId: bigint("marathon_id", { mode: "number" }).notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.invitationId],
-      foreignColumns: [juryInvitations.id],
-      name: "jury_ratings_invitation_id_fkey",
-    }).onDelete("cascade"),
-    foreignKey({
-      columns: [table.participantId],
-      foreignColumns: [participants.id],
-      name: "jury_ratings_participant_id_fkey",
-    }).onDelete("cascade"),
-  ],
-);
+  ]
+)
 
 export const participantsRelations = relations(
   participants,
@@ -640,8 +705,8 @@ export const participantsRelations = relations(
     participantVerifications: many(participantVerifications),
     submissions: many(submissions),
     zippedSubmission: one(zippedSubmissions),
-  }),
-);
+  })
+)
 
 export const competitionClassesRelations = relations(
   competitionClasses,
@@ -652,8 +717,8 @@ export const competitionClassesRelations = relations(
       fields: [competitionClasses.marathonId],
       references: [marathons.id],
     }),
-  }),
-);
+  })
+)
 
 export const deviceGroupsRelations = relations(
   deviceGroups,
@@ -664,8 +729,8 @@ export const deviceGroupsRelations = relations(
       fields: [deviceGroups.marathonId],
       references: [marathons.id],
     }),
-  }),
-);
+  })
+)
 
 export const marathonsRelations = relations(marathons, ({ many }) => ({
   participants: many(participants),
@@ -678,19 +743,19 @@ export const marathonsRelations = relations(marathons, ({ many }) => ({
   zippedSubmissions: many(zippedSubmissions),
   juryInvitations: many(juryInvitations),
   sponsors: many(sponsors),
-}));
+}))
 
 export const userRelations = relations(user, ({ many }) => ({
   userMarathons: many(userMarathons),
   participantVerifications: many(participantVerifications),
-}));
+}))
 
 export const ruleConfigsRelations = relations(ruleConfigs, ({ one }) => ({
   marathon: one(marathons, {
     fields: [ruleConfigs.marathonId],
     references: [marathons.id],
   }),
-}));
+}))
 
 export const userMarathonsRelations = relations(userMarathons, ({ one }) => ({
   marathon: one(marathons, {
@@ -701,7 +766,7 @@ export const userMarathonsRelations = relations(userMarathons, ({ one }) => ({
     fields: [userMarathons.userId],
     references: [user.id],
   }),
-}));
+}))
 
 export const validationResultsRelations = relations(
   validationResults,
@@ -710,8 +775,8 @@ export const validationResultsRelations = relations(
       fields: [validationResults.participantId],
       references: [participants.id],
     }),
-  }),
-);
+  })
+)
 
 export const participantVerificationsRelations = relations(
   participantVerifications,
@@ -724,8 +789,8 @@ export const participantVerificationsRelations = relations(
       fields: [participantVerifications.staffId],
       references: [user.id],
     }),
-  }),
-);
+  })
+)
 
 export const submissionsRelations = relations(submissions, ({ one }) => ({
   marathon: one(marathons, {
@@ -740,7 +805,7 @@ export const submissionsRelations = relations(submissions, ({ one }) => ({
     fields: [submissions.topicId],
     references: [topics.id],
   }),
-}));
+}))
 
 export const topicsRelations = relations(topics, ({ one, many }) => ({
   submissions: many(submissions),
@@ -749,7 +814,7 @@ export const topicsRelations = relations(topics, ({ one, many }) => ({
     fields: [topics.marathonId],
     references: [marathons.id],
   }),
-}));
+}))
 
 export const zippedSubmissionsRelations = relations(
   zippedSubmissions,
@@ -762,8 +827,8 @@ export const zippedSubmissionsRelations = relations(
       fields: [zippedSubmissions.participantId],
       references: [participants.id],
     }),
-  }),
-);
+  })
+)
 
 export const juryInvitationsRelations = relations(
   juryInvitations,
@@ -785,15 +850,15 @@ export const juryInvitationsRelations = relations(
       references: [deviceGroups.id],
     }),
     juryRatings: many(juryRatings),
-  }),
-);
+  })
+)
 
 export const sponsorsRelations = relations(sponsors, ({ one }) => ({
   marathon: one(marathons, {
     fields: [sponsors.marathonId],
     references: [marathons.id],
   }),
-}));
+}))
 
 export const juryRatingsRelations = relations(juryRatings, ({ one }) => ({
   juryInvitation: one(juryInvitations, {
@@ -804,4 +869,4 @@ export const juryRatingsRelations = relations(juryRatings, ({ one }) => ({
     fields: [juryRatings.participantId],
     references: [participants.id],
   }),
-}));
+}))

@@ -1,52 +1,52 @@
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef } from "react";
 
 export interface UseDesktopCountdownRedirectOptions {
-  initialSeconds?: number
-  isEnabled?: boolean
-  onRedirect: () => void
+  initialSeconds?: number;
+  isEnabled?: boolean;
+  onRedirect: () => void;
 }
 
 export interface UseDesktopCountdownRedirectResult {
-  remainingSeconds: number
-  addSeconds: (seconds: number) => void
-  reset: (seconds?: number) => void
+  remainingSeconds: number;
+  addSeconds: (seconds: number) => void;
+  reset: (seconds?: number) => void;
 }
 
 export function useDesktopCountdownRedirect(
-  options: UseDesktopCountdownRedirectOptions
+  options: UseDesktopCountdownRedirectOptions,
 ): UseDesktopCountdownRedirectResult {
-  const { initialSeconds = 15, isEnabled = true, onRedirect } = options
+  const { initialSeconds = 15, isEnabled = true, onRedirect } = options;
   const [remainingSeconds, setRemainingSeconds] =
-    useState<number>(initialSeconds)
+    useState<number>(initialSeconds);
 
-  const redirectRef = useRef(onRedirect)
+  const redirectRef = useRef(onRedirect);
   useEffect(() => {
-    redirectRef.current = onRedirect
-  }, [onRedirect])
+    redirectRef.current = onRedirect;
+  }, [onRedirect]);
 
   useEffect(() => {
-    if (!isEnabled) return
-    if (typeof window === "undefined") return
-    const isDesktop = window.matchMedia("(min-width: 768px)").matches
-    if (!isDesktop) return
+    if (!isEnabled) return;
+    if (typeof window === "undefined") return;
+    const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+    if (!isDesktop) return;
     if (remainingSeconds <= 0) {
-      redirectRef.current()
-      return
+      redirectRef.current();
+      return;
     }
 
     const id = window.setTimeout(() => {
-      setRemainingSeconds((seconds) => Math.max(0, seconds - 1))
-    }, 1000)
-    return () => clearTimeout(id)
-  }, [remainingSeconds, isEnabled])
+      setRemainingSeconds((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+    return () => clearTimeout(id);
+  }, [remainingSeconds, isEnabled]);
 
   function addSeconds(seconds: number) {
-    setRemainingSeconds((current) => current + seconds)
+    setRemainingSeconds((current) => current + seconds);
   }
 
   function reset(seconds: number = initialSeconds) {
-    setRemainingSeconds(seconds)
+    setRemainingSeconds(seconds);
   }
 
-  return { remainingSeconds, addSeconds, reset }
+  return { remainingSeconds, addSeconds, reset };
 }

@@ -1,13 +1,13 @@
-import { HammerIcon } from "lucide-react"
-import { Button } from "@vimmer/ui/components/button"
-import { ValidationStatusBadge } from "@/components/validation-status-badge"
-import { ValidationResult } from "@vimmer/api/db/types"
+import { HammerIcon } from "lucide-react";
+import { Button } from "@vimmer/ui/components/button";
+import { ValidationStatusBadge } from "@/components/validation-status-badge";
+import { ValidationResult } from "@vimmer/api/db/types";
 
 interface ValidationItemProps {
-  validation: ValidationResult
-  onOverrule?: (validationId: number) => void
-  isOverruling?: boolean
-  showOverruleButton?: boolean
+  validation: ValidationResult;
+  onOverrule?: (validationId: number) => void;
+  isOverruling?: boolean;
+  showOverruleButton?: boolean;
 }
 
 export function ValidationItem({
@@ -19,13 +19,13 @@ export function ValidationItem({
   const getKeyToName = (key: string) => {
     switch (key.toLowerCase()) {
       case "within_timerange":
-        return "Not within timerange"
+        return "Not within timerange";
       case "same_device":
-        return "Multiple devices used"
+        return "Multiple devices used";
       default:
-        return key.replace(/_/g, " ")
+        return key.replace(/_/g, " ");
     }
-  }
+  };
 
   return (
     <div
@@ -84,5 +84,5 @@ export function ValidationItem({
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -1,77 +1,63 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { ChevronRight, ImageIcon, Info, Play } from "lucide-react"
-import { Button } from "@vimmer/ui/components/button"
-import { Checkbox } from "@vimmer/ui/components/checkbox"
-import ReactCountryFlag from "react-country-flag"
+import { useState } from "react";
+import { ChevronRight, ImageIcon, Info, Play } from "lucide-react";
+import { Button } from "@vimmer/ui/components/button";
+import { Checkbox } from "@vimmer/ui/components/checkbox";
+import ReactCountryFlag from "react-country-flag";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@vimmer/ui/components/accordion"
-import { useRouter } from "next/navigation"
-import { PrimaryButton } from "@vimmer/ui/components/primary-button"
-import { cn } from "@vimmer/ui/lib/utils"
-import Link from "next/link"
-import { format } from "date-fns"
-import { useTRPC } from "@/trpc/client"
-import { useQuery } from "@tanstack/react-query"
-import { useDomain } from "@/contexts/domain-context"
-import { useMarathonIsConfigured } from "@/hooks/use-marathon-is-configured"
-import { MarathonNotConfigured } from "@/components/participate/marathon-not-configured"
-import TermsAndConditionsDialog from "@/components/terms-and-conditions-dialog"
-import PlatformTermsDialog from "@/components/platform-terms-dialog"
-import { useChangeLocale, useCurrentLocale, useI18n } from "@/locales/client"
-import { MarkdownContent } from "@/components/markdown-content"
+} from "@vimmer/ui/components/accordion";
+import { useRouter } from "next/navigation";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { cn } from "@vimmer/ui/lib/utils";
+import Link from "next/link";
+import { format } from "date-fns";
+import { useTRPC } from "@/trpc/client";
+import { useQuery } from "@tanstack/react-query";
+import { useDomain } from "@/contexts/domain-context";
+import { useMarathonIsConfigured } from "@/hooks/use-marathon-is-configured";
+import { MarathonNotConfigured } from "@/components/participate/marathon-not-configured";
+import TermsAndConditionsDialog from "@/components/terms-and-conditions-dialog";
+import PlatformTermsDialog from "@/components/platform-terms-dialog";
+import { useChangeLocale, useCurrentLocale, useI18n } from "@/locales/client";
+import { MarkdownContent } from "@/components/markdown-content";
 
 export function ParticipateClientPage() {
-  const router = useRouter()
-  const trpc = useTRPC()
-  const { domain } = useDomain()
-  const t = useI18n()
-  const changeLocale = useChangeLocale()
-  const locale = useCurrentLocale()
+  const router = useRouter();
+  const trpc = useTRPC();
+  const { domain } = useDomain();
+  const t = useI18n();
+  const changeLocale = useChangeLocale();
+  const locale = useCurrentLocale();
 
   const { data: marathon } = useQuery(
     trpc.marathons.getByDomain.queryOptions({
       domain,
-    })
-  )
+    }),
+  );
 
-  const { isConfigured, requiredActions } = useMarathonIsConfigured()
+  const { isConfigured, requiredActions } = useMarathonIsConfigured();
 
   const [organizerTermsAccepted, setOrganizerTermsAccepted] =
-    useState<boolean>(false)
-  const [organizerTermsOpen, setOrganizerTermsOpen] = useState<boolean>(false)
+    useState<boolean>(false);
+  const [organizerTermsOpen, setOrganizerTermsOpen] = useState<boolean>(false);
   const [platformTermsAccepted, setPlatformTermsAccepted] =
-    useState<boolean>(false)
-  const [platformTermsOpen, setPlatformTermsOpen] = useState<boolean>(false)
-
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (organizerTermsAccepted || platformTermsAccepted) {
-        e.preventDefault()
-        e.returnValue = ""
-      }
-    }
-
-    window.addEventListener("beforeunload", handleBeforeUnload)
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload)
-    }
-  }, [organizerTermsAccepted, platformTermsAccepted])
+    useState<boolean>(false);
+  const [platformTermsOpen, setPlatformTermsOpen] = useState<boolean>(false);
 
   const handleBeginSubmission = () => {
     if (/*organizerTermsAccepted && */ platformTermsAccepted) {
-      router.push("/submission")
+      // router.push("/submission");
+      window.location.replace(`/submission`);
     }
-  }
+  };
 
   if (!marathon) {
-    return null
+    return null;
   }
 
   if (!isConfigured) {
@@ -80,7 +66,7 @@ export function ParticipateClientPage() {
         marathon={marathon}
         requiredActions={requiredActions}
       />
-    )
+    );
   }
 
   return (
@@ -136,7 +122,7 @@ export function ParticipateClientPage() {
                   variant="outline"
                   className={cn(
                     "flex-1 flex items-center justify-center gap-2 py-4 border-2",
-                    locale === "en" && "border-foreground"
+                    locale === "en" && "border-foreground",
                   )}
                   onClick={() => changeLocale("en")}
                 >
@@ -147,7 +133,7 @@ export function ParticipateClientPage() {
                   variant="outline"
                   className={cn(
                     "flex-1 flex items-center justify-center gap-2 py-4 border-2",
-                    locale === "sv" && "border-foreground"
+                    locale === "sv" && "border-foreground",
                   )}
                   onClick={() => changeLocale("sv")}
                 >
@@ -168,8 +154,8 @@ export function ParticipateClientPage() {
                           window.scrollTo({
                             top: document.documentElement.scrollHeight,
                             behavior: "smooth",
-                          })
-                        }, 150)
+                          });
+                        }, 150);
                       }}
                     >
                       <div className="flex items-center gap-2 font-medium">
@@ -263,5 +249,5 @@ export function ParticipateClientPage() {
         </main>
       </div>
     </div>
-  )
+  );
 }

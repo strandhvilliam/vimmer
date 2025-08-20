@@ -1,4 +1,4 @@
-import { SelectedPhotoV2 } from "@/lib/types"
+import { SelectedPhotoV2 } from "@/lib/types";
 import {
   ChevronDown,
   ChevronUp,
@@ -6,33 +6,33 @@ import {
   Info,
   X,
   Loader2,
-} from "lucide-react"
-import { motion } from "motion/react"
-import { ValidationStatusBadge } from "@/components/validation-status-badge"
-import { ValidationResult } from "@vimmer/validation/types"
+} from "lucide-react";
+import { motion } from "motion/react";
+import { ValidationStatusBadge } from "@/components/validation-status-badge";
+import { ValidationResult } from "@vimmer/validation/types";
 import {
   VALIDATION_OUTCOME,
   SEVERITY_LEVELS,
-} from "@vimmer/validation/constants"
-import { useMemo, useState } from "react"
-import { Button } from "@vimmer/ui/components/button"
+} from "@vimmer/validation/constants";
+import { useMemo, useState } from "react";
+import { Button } from "@vimmer/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@vimmer/ui/components/dialog"
-import { format } from "date-fns"
-import { useI18n } from "@/locales/client"
-import { Topic } from "@vimmer/api/db/types"
+} from "@vimmer/ui/components/dialog";
+import { format } from "date-fns";
+import { useI18n } from "@/locales/client";
+import { Topic } from "@vimmer/api/db/types";
 
 interface Props {
-  photo?: SelectedPhotoV2
-  validationResults?: ValidationResult[]
-  topic?: Topic
-  index: number
-  onRemove?: (orderIndex: number) => void
-  onUploadClick?: () => void
+  photo?: SelectedPhotoV2;
+  validationResults?: ValidationResult[];
+  topic?: Topic;
+  index: number;
+  onRemove?: (orderIndex: number) => void;
+  onUploadClick?: () => void;
 }
 
 export function SubmissionItem({
@@ -43,36 +43,36 @@ export function SubmissionItem({
   onRemove,
   onUploadClick,
 }: Props) {
-  const [expanded, setExpanded] = useState(false)
-  const [showImageDialog, setShowImageDialog] = useState(false)
-  const t = useI18n()
+  const [expanded, setExpanded] = useState(false);
+  const [showImageDialog, setShowImageDialog] = useState(false);
+  const t = useI18n();
 
   const r = useMemo(() => {
     return validationResults?.sort((a, b) => {
       if (a.outcome !== b.outcome) {
-        if (a.outcome === VALIDATION_OUTCOME.FAILED) return -1
-        if (b.outcome === VALIDATION_OUTCOME.FAILED) return 1
-        if (a.outcome === VALIDATION_OUTCOME.SKIPPED) return -1
-        if (b.outcome === VALIDATION_OUTCOME.SKIPPED) return 1
+        if (a.outcome === VALIDATION_OUTCOME.FAILED) return -1;
+        if (b.outcome === VALIDATION_OUTCOME.FAILED) return 1;
+        if (a.outcome === VALIDATION_OUTCOME.SKIPPED) return -1;
+        if (b.outcome === VALIDATION_OUTCOME.SKIPPED) return 1;
       }
 
       if (a.severity !== b.severity) {
-        if (a.severity === SEVERITY_LEVELS.ERROR) return -1
-        if (b.severity === SEVERITY_LEVELS.ERROR) return 1
+        if (a.severity === SEVERITY_LEVELS.ERROR) return -1;
+        if (b.severity === SEVERITY_LEVELS.ERROR) return 1;
       }
 
-      return 0
-    })
-  }, [validationResults])
+      return 0;
+    });
+  }, [validationResults]);
 
   const displayValidation = useMemo(() => {
-    const highestPriorityResult = r?.[0]
+    const highestPriorityResult = r?.[0];
     if (photo?.exif && Object.keys(photo.exif).length === 0) {
       return {
         message: t("uploadSection.noExifTitle"),
         outcome: VALIDATION_OUTCOME.FAILED,
         severity: SEVERITY_LEVELS.WARNING,
-      }
+      };
     }
 
     return {
@@ -80,13 +80,13 @@ export function SubmissionItem({
       outcome: highestPriorityResult?.outcome,
       severity: highestPriorityResult?.severity,
       ruleKey: highestPriorityResult?.ruleKey,
-    }
-  }, [r, photo?.exif, t])
+    };
+  }, [r, photo?.exif, t]);
 
-  const exifData = photo?.exif || {}
-  const relevantExifData = getRelevantExifData(exifData)
-  const hasExifData = Object.keys(relevantExifData).length > 0
-  const takenAt = getTimeTaken(photo?.exif)
+  const exifData = photo?.exif || {};
+  const relevantExifData = getRelevantExifData(exifData);
+  const hasExifData = Object.keys(relevantExifData).length > 0;
+  const takenAt = getTimeTaken(photo?.exif);
 
   if (!photo) {
     return (
@@ -113,7 +113,7 @@ export function SubmissionItem({
           <ImageIcon className="w-8 h-8 text-muted-foreground/40" />
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -286,71 +286,71 @@ export function SubmissionItem({
         </Dialog>
       )}
     </div>
-  )
+  );
 }
 
 function getTimeTaken(exif?: { [key: string]: unknown }): Date | null {
-  if (!exif?.DateTimeOriginal) return null
+  if (!exif?.DateTimeOriginal) return null;
 
   try {
-    const dateString = String(exif.DateTimeOriginal)
-    const date = new Date(dateString)
+    const dateString = String(exif.DateTimeOriginal);
+    const date = new Date(dateString);
     if (!isNaN(date.getTime())) {
-      return date
+      return date;
     }
   } catch {
     // Skip if date parsing fails
   }
 
-  return null
+  return null;
 }
 
 function getRelevantExifData(exif: {
-  [key: string]: unknown
+  [key: string]: unknown;
 }): Record<string, string> {
-  const relevantData: Record<string, string> = {}
+  const relevantData: Record<string, string> = {};
 
   // Guard against undefined or null exif data
-  if (!exif) return relevantData
+  if (!exif) return relevantData;
 
   // Camera info
   if (exif.Make && typeof exif.Make === "string")
-    relevantData["Camera Make"] = exif.Make
+    relevantData["Camera Make"] = exif.Make;
   if (exif.Model && typeof exif.Model === "string")
-    relevantData["Camera Model"] = exif.Model
+    relevantData["Camera Model"] = exif.Model;
 
   // Exposure settings
   if (exif.ExposureTime && typeof exif.ExposureTime === "number") {
-    const exposureValue = exif.ExposureTime
+    const exposureValue = exif.ExposureTime;
     relevantData["Exposure"] =
       exposureValue < 1
         ? `1/${Math.round(1 / exposureValue)}s`
-        : `${exposureValue}s`
+        : `${exposureValue}s`;
   }
 
   if (exif.FNumber && typeof exif.FNumber === "number") {
-    relevantData["Aperture"] = `f/${exif.FNumber}`
+    relevantData["Aperture"] = `f/${exif.FNumber}`;
   }
 
   if (
     exif.ISO &&
     (typeof exif.ISO === "number" || typeof exif.ISO === "string")
   ) {
-    relevantData["ISO"] = `ISO ${exif.ISO}`
+    relevantData["ISO"] = `ISO ${exif.ISO}`;
   }
 
   if (exif.FocalLength && typeof exif.FocalLength === "number") {
-    relevantData["Focal Length"] = `${exif.FocalLength}mm`
+    relevantData["Focal Length"] = `${exif.FocalLength}mm`;
   }
 
   // Date & time
   if (exif.DateTimeOriginal) {
     try {
-      const dateString = String(exif.DateTimeOriginal)
-      const date = new Date(dateString)
+      const dateString = String(exif.DateTimeOriginal);
+      const date = new Date(dateString);
       if (!isNaN(date.getTime())) {
-        relevantData["Date Taken"] = date.toLocaleDateString()
-        relevantData["Time Taken"] = date.toLocaleTimeString()
+        relevantData["Date Taken"] = date.toLocaleDateString();
+        relevantData["Time Taken"] = date.toLocaleTimeString();
       }
     } catch {
       // Skip if date parsing fails
@@ -359,7 +359,7 @@ function getRelevantExifData(exif: {
 
   // Lens info
   if (exif.LensModel && typeof exif.LensModel === "string") {
-    relevantData["Lens"] = exif.LensModel
+    relevantData["Lens"] = exif.LensModel;
   }
 
   // GPS
@@ -370,8 +370,8 @@ function getRelevantExifData(exif: {
     typeof exif.longitude === "number"
   ) {
     relevantData["GPS"] =
-      `${exif.latitude.toFixed(6)}, ${exif.longitude.toFixed(6)}`
+      `${exif.latitude.toFixed(6)}, ${exif.longitude.toFixed(6)}`;
   }
 
-  return relevantData
+  return relevantData;
 }

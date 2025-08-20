@@ -30,6 +30,9 @@ import { participants } from "@vimmer/api/db/schema";
 import { invalidateCloudfrontByDomain } from "@vimmer/api/utils/invalidate-cloudfront-domain";
 
 export const marathonsRouter = createTRPCRouter({
+  hello: publicProcedure.query(async ({ ctx }) => {
+    return "hello";
+  }),
   getById: publicProcedure
     .input(getMarathonByIdSchema)
     .query(async ({ ctx, input }) => {

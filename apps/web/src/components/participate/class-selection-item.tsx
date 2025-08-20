@@ -1,25 +1,25 @@
-import { useSubmissionQueryState } from "@/hooks/use-submission-query-state"
-import { useI18n } from "@/locales/client"
-import { CompetitionClass } from "@vimmer/api/db/types"
+import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
+import { useI18n } from "@/locales/client";
+import { CompetitionClass } from "@vimmer/api/db/types";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@vimmer/ui/components/card"
-import { cn } from "@vimmer/ui/lib/utils"
-import { CheckCircle2 } from "lucide-react"
-import { motion } from "motion/react"
+} from "@vimmer/ui/components/card";
+import { cn } from "@vimmer/ui/lib/utils";
+import { CheckCircle2 } from "lucide-react";
+import { motion } from "motion/react";
 
 export function ClassSelectionItem({
   competitionClass,
   isSelected,
 }: {
-  competitionClass: CompetitionClass
-  isSelected: boolean
+  competitionClass: CompetitionClass;
+  isSelected: boolean;
 }) {
-  const { setSubmissionState } = useSubmissionQueryState()
-  const t = useI18n()
+  const { setSubmissionState } = useSubmissionQueryState();
+  const t = useI18n();
 
   return (
     <motion.div
@@ -34,7 +34,7 @@ export function ClassSelectionItem({
       <Card
         className={cn(
           "relative cursor-pointer h-full overflow-hidden transition-all duration-200",
-          isSelected && "ring-2 ring-primary/20 shadow-lg"
+          isSelected && "ring-2 ring-primary/20 shadow-lg",
         )}
         onClick={() =>
           setSubmissionState({ competitionClassId: competitionClass.id })
@@ -52,7 +52,7 @@ export function ClassSelectionItem({
           <motion.div
             className={cn(
               "flex items-center justify-center w-24 h-24 p-4 m-4 text-center rounded-lg",
-              isSelected ? "bg-primary/10" : "bg-muted/50"
+              isSelected ? "bg-primary/10" : "bg-muted/50",
             )}
             layout
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -60,7 +60,7 @@ export function ClassSelectionItem({
             <motion.span
               className={cn(
                 "text-5xl font-bold",
-                isSelected ? "text-primary" : "text-foreground/80"
+                isSelected ? "text-primary" : "text-foreground/80",
               )}
               layout
               transition={{ duration: 0.2 }}
@@ -102,5 +102,5 @@ export function ClassSelectionItem({
         </motion.div>
       </Card>
     </motion.div>
-  )
+  );
 }

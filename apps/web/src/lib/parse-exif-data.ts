@@ -1,10 +1,10 @@
-import exifr from "exifr"
+import exifr from "exifr";
 
 export async function parseExifData(file: File) {
   try {
-    const exif = await exifr.parse(file)
+    const exif = await exifr.parse(file);
     if (!exif) {
-      return null
+      return null;
     }
 
     const dateFields = [
@@ -15,32 +15,32 @@ export async function parseExifData(file: File) {
       "GPSDateTime",
       "GPSDate",
       "DateTime",
-    ]
+    ];
 
     for (const field of dateFields) {
       if (exif[field] && typeof exif[field] === "object") {
         try {
-          exif[field] = exif[field].toISOString()
+          exif[field] = exif[field].toISOString();
         } catch (error) {
-          console.error("Error converting date field to ISO string:", error)
+          console.error("Error converting date field to ISO string:", error);
         }
       }
     }
 
-    return sanitizeExifData(exif)
+    return sanitizeExifData(exif);
   } catch (error) {
-    console.error("Error parsing EXIF data:", error)
-    return null
+    console.error("Error parsing EXIF data:", error);
+    return null;
   }
 }
 
 function sanitizeExifData(obj: any, visited = new WeakSet()): any {
   if (obj === null || obj === undefined) {
-    return obj
+    return obj;
   }
 
   if (visited.has(obj)) {
-    return "[Circular Reference]"
+    return "[Circular Reference]";
   }
 
   if (
@@ -48,45 +48,45 @@ function sanitizeExifData(obj: any, visited = new WeakSet()): any {
     obj instanceof ArrayBuffer ||
     Buffer.isBuffer(obj)
   ) {
-    return `[Binary Data: ${obj.byteLength} bytes]`
+    return `[Binary Data: ${obj.byteLength} bytes]`;
   }
 
   if (typeof obj === "string") {
-    return obj.replace(/[\u0000-\u001F\u007F-\u009F]/g, "")
+    return obj.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
   }
 
   if (typeof obj === "number" || typeof obj === "boolean") {
-    return obj
+    return obj;
   }
 
   if (obj instanceof Date) {
-    return obj.toISOString()
+    return obj.toISOString();
   }
 
   if (Array.isArray(obj)) {
-    visited.add(obj)
-    const result = obj.map((item) => sanitizeExifData(item, visited))
-    visited.delete(obj)
-    return result
+    visited.add(obj);
+    const result = obj.map((item) => sanitizeExifData(item, visited));
+    visited.delete(obj);
+    return result;
   }
 
   if (typeof obj === "object") {
-    visited.add(obj)
-    const result: any = {}
+    visited.add(obj);
+    const result: any = {};
 
     for (const [key, value] of Object.entries(obj)) {
       const sanitizedKey =
         typeof key === "string"
           ? key.replace(/[\u0000-\u001F\u007F-\u009F]/g, "")
-          : key
+          : key;
       if (sanitizedKey) {
-        result[sanitizedKey] = sanitizeExifData(value, visited)
+        result[sanitizedKey] = sanitizeExifData(value, visited);
       }
     }
 
-    visited.delete(obj)
-    return result
+    visited.delete(obj);
+    return result;
   }
 
-  return obj
+  return obj;
 }

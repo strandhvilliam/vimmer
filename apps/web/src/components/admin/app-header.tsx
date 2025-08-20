@@ -2,6 +2,7 @@
 
 import { SidebarTriggerButton } from "./sidebar-trigger-button";
 import { MarathonStatusDisplay } from "./marathon-status-display";
+import { ParticipantQuickSearch } from "./participant-quick-search";
 import { Button } from "@vimmer/ui/components/button";
 import Link from "next/link";
 import { LinkIcon } from "lucide-react";
@@ -55,6 +56,9 @@ export function AppHeader() {
     <div className="z-50 w-full px-4 bg-sidebar">
       <div className="flex h-14 items-center">
         <SidebarTriggerButton />
+        <div className="ml-4">
+          <ParticipantQuickSearch />
+        </div>
         <div className="flex gap-2 ml-auto mr-4 border bg-sidebar-accent rounded-md items-center">
           <Button asChild variant="ghost" size="sm">
             <Link href={staffSiteUrl} className="font-normal text-sm">

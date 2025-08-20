@@ -1,12 +1,14 @@
+import { useTRPC } from "@/trpc/client"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   Participant,
   CompetitionClass,
   DeviceGroup,
   Submission,
-} from "@vimmer/api/db/types";
-import { Card, CardContent } from "@vimmer/ui/components/card";
-import { PrimaryButton } from "@vimmer/ui/components/primary-button";
-import { cn } from "@vimmer/ui/lib/utils";
+} from "@vimmer/api/db/types"
+import { Card, CardContent } from "@vimmer/ui/components/card"
+import { PrimaryButton } from "@vimmer/ui/components/primary-button"
+import { cn } from "@vimmer/ui/lib/utils"
 import {
   AlertTriangle,
   CheckCircle,
@@ -14,15 +16,15 @@ import {
   Shield,
   Upload,
   Loader2,
-} from "lucide-react";
+} from "lucide-react"
 
 interface ParticipantStatusCardProps {
   participant: Participant & {
-    competitionClass: CompetitionClass | null;
-    deviceGroup: DeviceGroup | null;
-    submissions?: Submission[];
-  };
-  handleOpenVerifyDialog: () => void;
+    competitionClass: CompetitionClass | null
+    deviceGroup: DeviceGroup | null
+    submissions?: Submission[]
+  }
+  handleOpenVerifyDialog: () => void
 }
 
 function getStatusConfig(status: string) {
@@ -35,7 +37,7 @@ function getStatusConfig(status: string) {
         color: "text-gray-600",
         bgColor: "bg-gray-100",
         borderColor: "border-gray-200",
-      };
+      }
     case "ready_to_upload":
       return {
         icon: <Upload className="h-5 w-5" />,
@@ -44,7 +46,7 @@ function getStatusConfig(status: string) {
         color: "text-blue-600",
         bgColor: "bg-blue-50",
         borderColor: "border-blue-200",
-      };
+      }
     case "processing":
       return {
         icon: <Loader2 className="h-5 w-5 animate-spin" />,
@@ -53,7 +55,7 @@ function getStatusConfig(status: string) {
         color: "text-yellow-600",
         bgColor: "bg-yellow-50",
         borderColor: "border-yellow-200",
-      };
+      }
     case "completed":
       return {
         icon: <Shield className="h-5 w-5" />,
@@ -62,7 +64,7 @@ function getStatusConfig(status: string) {
         color: "text-orange-600",
         bgColor: "bg-orange-50",
         borderColor: "border-orange-200",
-      };
+      }
     case "verified":
       return {
         icon: <CheckCircle className="h-5 w-5" />,
@@ -71,7 +73,7 @@ function getStatusConfig(status: string) {
         color: "text-green-600",
         bgColor: "bg-green-50",
         borderColor: "border-green-200",
-      };
+      }
     default:
       return {
         icon: <AlertTriangle className="h-5 w-5" />,
@@ -80,7 +82,7 @@ function getStatusConfig(status: string) {
         color: "text-gray-600",
         bgColor: "bg-gray-100",
         borderColor: "border-gray-200",
-      };
+      }
   }
 }
 
@@ -88,13 +90,26 @@ export function ParticipantStatusCard({
   participant,
   handleOpenVerifyDialog,
 }: ParticipantStatusCardProps) {
-  const statusConfig = getStatusConfig(participant.status);
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+  const statusConfig = getStatusConfig(participant.status)
+
+  const { mutate: updateParticipant } = useMutation(
+    trpc.participants.update.mutationOptions({
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.participants.pathKey(),
+        })
+      },
+    })
+  )
+
   return (
     <Card
       className={cn(
         "border-2 items-center flex",
         statusConfig.borderColor,
-        statusConfig.bgColor,
+        statusConfig.bgColor
       )}
     >
       <CardContent className="p-4">
@@ -110,6 +125,22 @@ export function ParticipantStatusCard({
             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
               {statusConfig.description}
             </p>
+            {participant.status === "processing" && (
+              <PrimaryButton
+                className="mt-1 w-fit h-8 text-xs"
+                onClick={() =>
+                  updateParticipant({
+                    id: participant.id,
+                    data: {
+                      status: "completed",
+                    },
+                  })
+                }
+              >
+                <Shield className="h-3.5 w-3.5" />
+                Mark as completed
+              </PrimaryButton>
+            )}
             {participant.status === "completed" && (
               <PrimaryButton
                 className="mt-1 w-fit h-8 text-xs"
@@ -123,5 +154,5 @@ export function ParticipantStatusCard({
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

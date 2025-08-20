@@ -7,20 +7,20 @@ import { SubmissionsParticipantsTabSkeleton } from "@/components/admin/submissio
 export default async function SubmissionsPage() {
   const domain = await getDomain();
 
-  batchPrefetch([
-    trpc.participants.getByDomain.queryOptions({
-      domain,
-    }),
-    trpc.topics.getByDomain.queryOptions({
-      domain,
-    }),
-    trpc.topics.getWithSubmissionCount.queryOptions({
-      domain,
-    }),
-    trpc.marathons.getByDomain.queryOptions({
-      domain,
-    }),
-  ]);
+  // batchPrefetch([
+  //   trpc.participants.getByDomain.queryOptions({
+  //     domain,
+  //   }),
+  //   trpc.topics.getByDomain.queryOptions({
+  //     domain,
+  //   }),
+  //   trpc.topics.getWithSubmissionCount.queryOptions({
+  //     domain,
+  //   }),
+  //   trpc.marathons.getByDomain.queryOptions({
+  //     domain,
+  //   }),
+  // ]);
 
   return (
     <HydrateClient>

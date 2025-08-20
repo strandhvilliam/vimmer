@@ -1,11 +1,28 @@
-"use client"
+"use client";
 
-import React, { useState } from "react"
-import { CheckCircle, Loader2, RefreshCcw, XCircle } from "lucide-react"
+import React, { useEffect, useState } from "react";
+import {
+  CheckCircle,
+  Loader2,
+  Trash2Icon,
+  AlertTriangle,
+  XCircle,
+} from "lucide-react";
 
-import { Button } from "@vimmer/ui/components/button"
-import { PrimaryButton } from "@vimmer/ui/components/primary-button"
-import { toast } from "sonner"
+import { Button } from "@vimmer/ui/components/button";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@vimmer/ui/components/alert-dialog";
+import { Input } from "@vimmer/ui/components/input";
+import { useI18n } from "@/locales/client";
+import { geistMono } from "@/lib/fonts";
+import { toast } from "sonner";
 import {
   CompetitionClass,
   DeviceGroup,
@@ -13,32 +30,31 @@ import {
   Submission,
   Topic,
   ValidationResult,
-} from "@vimmer/api/db/types"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/client"
-import { useSession } from "@/contexts/session-context"
-import { PreviewDialog } from "./preview-dialog"
-import { DrawerLayout } from "./drawer-layout"
-import { ValidationAccordion } from "./validation-accordion"
-import { cn } from "@vimmer/ui/lib/utils"
+} from "@vimmer/api/db/types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
+import { PreviewDialog } from "./preview-dialog";
+import { DrawerLayout } from "./drawer-layout";
+import { ValidationAccordion } from "./validation-accordion";
+import { cn } from "@vimmer/ui/lib/utils";
 
 interface ParticipantInfoSheetProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   participant:
     | (Participant & {
-        validationResults: ValidationResult[]
-        competitionClass: CompetitionClass | null
-        deviceGroup: DeviceGroup | null
-        submissions: Submission[]
+        validationResults: ValidationResult[];
+        competitionClass: CompetitionClass | null;
+        deviceGroup: DeviceGroup | null;
+        submissions: Submission[];
       })
-    | null
-  participantLoading: boolean
-  onParticipantVerified?: () => void
-  topics: Topic[]
-  baseThumbnailUrl: string
-  submissionBaseUrl: string
-  previewBaseUrl: string
+    | null;
+  participantLoading: boolean;
+  onParticipantVerified?: () => void;
+  topics: Topic[];
+  baseThumbnailUrl: string;
+  submissionBaseUrl: string;
+  previewBaseUrl: string;
 }
 
 export function ParticipantInfoSheet({
@@ -52,33 +68,58 @@ export function ParticipantInfoSheet({
   submissionBaseUrl,
   previewBaseUrl,
 }: ParticipantInfoSheetProps) {
-  const [imageDialogOpen, setImageDialogOpen] = useState(false)
-  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null)
-  const queryClient = useQueryClient()
-  const trpc = useTRPC()
-  const { user } = useSession()
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const trpc = useTRPC();
+  const t = useI18n();
 
   const { mutate: verifyParticipant, isPending: isVerifying } = useMutation(
     trpc.validations.createParticipantVerification.mutationOptions({
       onSuccess: () => {
-        toast.success("Participant verified successfully")
-        onOpenChange(false)
-        onParticipantVerified?.()
+        toast.success("Participant verified successfully");
+        onOpenChange(false);
+        onParticipantVerified?.();
       },
       onError: (error) => {
-        console.error("Error verifying participant:", error)
-        toast.error("Failed to verify participant")
+        console.error("Error verifying participant:", error);
+        toast.error("Failed to verify participant");
       },
       onSettled: () => {
         queryClient.invalidateQueries({
           queryKey: trpc.participants.pathKey(),
-        })
+        });
         queryClient.invalidateQueries({
           queryKey: trpc.validations.pathKey(),
-        })
+        });
       },
-    })
-  )
+    }),
+  );
+
+  const { mutate: rejectParticipant, isPending: isRejecting } = useMutation(
+    trpc.participants.delete.mutationOptions({
+      onSuccess: () => {
+        toast.success("Participant rejected");
+        setRejectDialogOpen(false);
+        onOpenChange(false);
+      },
+      onError: (error) => {
+        console.error("Error rejecting participant:", error);
+        toast.error("Failed to reject participant");
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.participants.pathKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.validations.pathKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.submissions.pathKey(),
+        });
+      },
+    }),
+  );
 
   const {
     mutate: updateValidationResult,
@@ -91,51 +132,29 @@ export function ParticipantInfoSheet({
             trpc.validations.getValidationResultsByParticipantId.queryKey({
               participantId: participant?.id,
             }),
-        })
+        });
       },
       onError: (error) => {
-        console.error("Error overruling validation:", error)
-        toast.error("Failed to overrule validation")
+        console.error("Error overruling validation:", error);
+        toast.error("Failed to overrule validation");
       },
       onSettled: () => {
         queryClient.invalidateQueries({
           queryKey: trpc.validations.pathKey(),
-        })
+        });
         queryClient.invalidateQueries({
           queryKey: trpc.participants.pathKey(),
-        })
+        });
       },
-    })
-  )
+    }),
+  );
 
-  const { mutate: runValidations, isPending: isRunningValidations } =
-    useMutation(
-      trpc.validations.runValidations.mutationOptions({
-        onSuccess: () => {
-          toast.success("Validations run successfully")
-        },
-        onError: (error) => {
-          console.error("Error running validations:", error)
-          toast.error("Failed to run validations")
-        },
-        onSettled: () => {
-          queryClient.invalidateQueries({
-            queryKey: trpc.validations.pathKey(),
-          })
-          queryClient.invalidateQueries({
-            queryKey: trpc.participants.pathKey(),
-          })
-        },
-      })
-    )
-
-  const hasUnresolvedErrors = participant?.validationResults.some(
-    (v) => v.severity === "error" && v.outcome === "failed" && !v.overruled
-  )
+  // Keeping validation runner available for future use, not currently rendered
+  // Validation runner kept for potential future use
 
   const hasOverrulableErrors = participant?.validationResults.some(
-    (v) => v.severity === "error" && v.outcome === "failed" && !v.overruled
-  )
+    (v) => v.severity === "error" && v.outcome === "failed" && !v.overruled,
+  );
 
   const renderParticipantLoading = () => (
     <div className="flex flex-col items-center justify-center h-full gap-6 px-8">
@@ -153,7 +172,7 @@ export function ParticipantInfoSheet({
         </div>
       </div>
     </div>
-  )
+  );
 
   const renderParticipantNotFound = () => (
     <div className="flex flex-col items-center justify-center h-full gap-6 px-8">
@@ -172,7 +191,18 @@ export function ParticipantInfoSheet({
         </div>
       </div>
     </div>
-  )
+  );
+
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [confirmReference, setConfirmReference] = useState("");
+  const [showRejectError, setShowRejectError] = useState(false);
+
+  useEffect(() => {
+    if (!rejectDialogOpen) {
+      setConfirmReference("");
+      setShowRejectError(false);
+    }
+  }, [rejectDialogOpen]);
 
   const renderParticipant = () => (
     <div className="flex flex-col h-full">
@@ -205,7 +235,7 @@ export function ParticipantInfoSheet({
                 "flex items-center space-x-2 text-sm border rounded-full px-3 py-1",
                 participant?.status === "verified"
                   ? "bg-green-100 border-green-400"
-                  : "bg-amber-100 border-amber-400"
+                  : "bg-amber-100 border-amber-400",
               )}
             >
               {participant?.status === "verified" ? (
@@ -221,7 +251,7 @@ export function ParticipantInfoSheet({
               )}
             </div>
 
-            <Button
+            {/* <Button
               variant="outline"
               size="sm"
               className="text-xs px-2 py-1 h-8 rounded-full border-muted-foreground/40 !bg-background"
@@ -237,7 +267,117 @@ export function ParticipantInfoSheet({
                 <RefreshCcw className="h-4 w-4" />
               )}
               Run Validations
-            </Button>
+            </Button> */}
+
+            <AlertDialog
+              open={rejectDialogOpen}
+              onOpenChange={(open) => {
+                setRejectDialogOpen(open);
+                if (!open) {
+                  setConfirmReference("");
+                  setShowRejectError(false);
+                }
+              }}
+            >
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="text-xs px-2 py-1 h-8 rounded-full border-muted-foreground/40 !bg-background"
+                  onClick={() => setRejectDialogOpen(true)}
+                  disabled={!participant || isRejecting}
+                >
+                  <Trash2Icon className="h-4 w-4" />
+                  Reject Participant
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-transparent border-none shadow-none top-[40%]">
+                <AlertDialogHeader className="text-center flex flex-col items-center">
+                  <AlertDialogTitle className="text-lg font-medium mb-2">
+                    Confirm Rejection
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-sm text-muted-foreground text-center">
+                    To reject, enter the participant number. The participant
+                    will then have to redo the submission flow from the
+                    beginning.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+
+                <form
+                  className="flex flex-col gap-4 py-4"
+                  onSubmit={(e) => e.preventDefault()}
+                >
+                  <Input
+                    autoFocus
+                    type="text"
+                    inputMode="numeric"
+                    value={confirmReference}
+                    onChange={(e) => {
+                      setConfirmReference(e.target.value);
+                      if (showRejectError) setShowRejectError(false);
+                    }}
+                    className={cn(
+                      "text-center !text-4xl h-16 font-bold font-mono tracking-widest",
+                      geistMono.className,
+                      showRejectError &&
+                        "border-red-500 focus-visible:ring-red-500",
+                    )}
+                    placeholder={
+                      participant?.reference
+                        ? String(participant.reference)
+                        : "0000"
+                    }
+                    enterKeyHint="done"
+                  />
+
+                  {showRejectError && (
+                    <div className="flex items-center justify-center gap-2 text-red-600 text-sm">
+                      <AlertTriangle className="h-4 w-4" />
+                      <span>{t("participantConfirmation.mismatch")}</span>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        setConfirmReference("");
+                        setShowRejectError(false);
+                        setRejectDialogOpen(false);
+                      }}
+                      variant="outline"
+                      className="flex-1 h-12 rounded-full"
+                    >
+                      {t("participantConfirmation.cancel")}
+                    </Button>
+                    <PrimaryButton
+                      type="submit"
+                      disabled={!confirmReference.trim() || isRejecting}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (!participant) return;
+                        if (
+                          confirmReference.trim() !==
+                          String(participant.reference).trim()
+                        ) {
+                          setShowRejectError(true);
+                          return;
+                        }
+                        rejectParticipant({
+                          id: participant.id,
+                        });
+                      }}
+                      className="flex-1 h-12 text-base font-medium rounded-full"
+                    >
+                      {isRejecting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Confirm"
+                      )}
+                    </PrimaryButton>
+                  </div>
+                </form>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
         <div className="space-y-2 pt-2">
@@ -251,8 +391,8 @@ export function ParticipantInfoSheet({
               submissionBaseUrl={submissionBaseUrl}
               previewBaseUrl={previewBaseUrl}
               onThumbnailClick={(url) => {
-                setImageDialogOpen(true)
-                setSelectedImageUrl(url)
+                setImageDialogOpen(true);
+                setSelectedImageUrl(url);
               }}
               onOverrule={(validationId) =>
                 updateValidationResult({
@@ -273,8 +413,7 @@ export function ParticipantInfoSheet({
       <div className="border-t  bg-background/80 backdrop-blur-sm px-4 py-4 flex justify-center">
         <PrimaryButton
           onClick={() => {
-            if (!participant) return
-            if (!user?.id) return
+            if (!participant) return;
 
             if (hasOverrulableErrors) {
               const failedErrorValidations =
@@ -282,8 +421,8 @@ export function ParticipantInfoSheet({
                   (v) =>
                     v.severity === "error" &&
                     v.outcome === "failed" &&
-                    !v.overruled
-                )
+                    !v.overruled,
+                );
 
               failedErrorValidations.forEach((validation) => {
                 updateValidationResult({
@@ -291,26 +430,26 @@ export function ParticipantInfoSheet({
                   data: {
                     overruled: true,
                   },
-                })
-              })
+                });
+              });
 
               setTimeout(() => {
                 verifyParticipant({
                   data: {
                     participantId: participant.id,
-                    staffId: user.id,
+                    staffId: "1",
                     notes: "",
                   },
-                })
-              }, 100)
+                });
+              }, 100);
             } else {
               verifyParticipant({
                 data: {
                   participantId: participant.id,
-                  staffId: user.id,
+                  staffId: "1",
                   notes: "",
                 },
-              })
+              });
             }
           }}
           disabled={
@@ -335,7 +474,7 @@ export function ParticipantInfoSheet({
         </PrimaryButton>
       </div>
     </div>
-  )
+  );
 
   return (
     <>
@@ -356,5 +495,5 @@ export function ParticipantInfoSheet({
         imageUrl={selectedImageUrl}
       />
     </>
-  )
+  );
 }

@@ -1,0 +1,31 @@
+{
+  "name": "@vimmer/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "vimmer": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target node",
+    "start": "node dist/index.js"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "@vimmer/validation": "workspace:*",
+    "@vimmer/supabase": "workspace:*",
+    "@vimmer/email": "workspace:*",
+    "resend": "^4.0.0",
+    "@aws-sdk/client-s3": "^3.850.0",
+    "drizzle-orm": "^0.44.2",
+    "postgres": "^3.4.7"
+  },
+  "module": "src/index.ts"
+}

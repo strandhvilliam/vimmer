@@ -10,8 +10,6 @@ export function NetworkStatusBanner() {
   const isSlowConnection =
     networkState.online && networkState.downlink && networkState.downlink < 1;
 
-  console.log({ networkState });
-
   if (networkState.online && !isSlowConnection) {
     return null;
   }

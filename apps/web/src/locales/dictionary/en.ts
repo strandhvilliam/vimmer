@@ -184,6 +184,9 @@ export default {
   "uploadProgress.error.invalidFileType":
     "Invalid file type - only images allowed",
   "uploadProgress.error.generic": "Upload failed",
+  "uploadProgress.clickToContinue": "Click button below to continue",
+  "uploadProgress.clickToRetry": "Click button below to retry",
+  "uploadProgress.thisMayTakeSeveralMinutes": "This may take several minutes",
 
   // Upload Error Fallback
   "uploadError.title": "Unable to Prepare Submission",
@@ -214,4 +217,4 @@ export default {
   "platformTerms.title": "Blikka App Terms of Service",
   "platformTerms.description": "Terms and conditions for using the Blikka app",
   "platformTerms.accept": "Accept Platform Terms",
-} as const
+} as const;

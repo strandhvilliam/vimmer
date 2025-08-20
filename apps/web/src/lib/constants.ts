@@ -4,9 +4,9 @@ export const PARTICIPANT_SUBMISSION_STEPS = {
   ClassSelectionStep: 3,
   DeviceSelectionStep: 4,
   UploadSubmissionStep: 5,
-} as const
+} as const;
 
-export const PARTICIPANT_REF_LENGTH = 4
+export const PARTICIPANT_REF_LENGTH = 4;
 
 export const COMMON_IMAGE_EXTENSIONS = [
   "jpg",
@@ -27,7 +27,7 @@ export const COMMON_IMAGE_EXTENSIONS = [
   "orf",
   "pef",
   "srw",
-]
+];
 
 export const UPLOAD_PHASE = {
   PRESIGNED: "presigned",
@@ -35,14 +35,14 @@ export const UPLOAD_PHASE = {
   PROCESSING: "processing",
   COMPLETED: "completed",
   ERROR: "error",
-} as const
+} as const;
 
 export const FILE_STATUS = {
   PENDING: "pending",
   UPLOADING: "uploading",
   COMPLETED: "completed",
   ERROR: "error",
-}
+};
 
 export const PARTICIPANT_STATUS = {
   INITIALIZED: "initialized",
@@ -50,4 +50,4 @@ export const PARTICIPANT_STATUS = {
   PROCESSING: "processing",
   COMPLETED: "completed",
   VERIFIED: "verified",
-} as const
+} as const;

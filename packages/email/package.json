@@ -15,6 +15,7 @@
   },
   "exports": {
     "./otp-email": "./src/otp-email.tsx",
+    "./contact-sheet-email": "./src/contact-sheet-email.tsx",
     ".": "./src/index.ts"
   }
 }

@@ -1,20 +1,20 @@
-import { eq, inArray, and, desc } from "drizzle-orm"
-import type { Database } from "@vimmer/api/db"
+import { eq, inArray, and, desc } from "drizzle-orm";
+import type { Database } from "@vimmer/api/db";
 import {
   submissions,
   zippedSubmissions,
   marathons,
   participants,
-} from "@vimmer/api/db/schema"
+} from "@vimmer/api/db/schema";
 import type {
   NewSubmission,
   NewZippedSubmission,
   ZippedSubmission,
-} from "@vimmer/api/db/types"
+} from "@vimmer/api/db/types";
 
 export async function getAllSubmissionKeysForMarathonQuery(
   db: Database,
-  { marathonId }: { marathonId: number }
+  { marathonId }: { marathonId: number },
 ) {
   const result = await db.query.submissions.findMany({
     where: eq(submissions.marathonId, marathonId),
@@ -23,90 +23,101 @@ export async function getAllSubmissionKeysForMarathonQuery(
       thumbnailKey: true,
       previewKey: true,
     },
-  })
+  });
 
-  return result
+  return result;
 }
 
 export async function getSubmissionByIdQuery(
   db: Database,
-  { id }: { id: number }
+  { id }: { id: number },
 ) {
   const result = await db.query.submissions.findFirst({
     where: eq(submissions.id, id),
-  })
+  });
 
-  return result
+  return result;
+}
+
+export async function getSubmissionByKeyQuery(
+  db: Database,
+  { key }: { key: string },
+) {
+  const result = await db.query.submissions.findFirst({
+    where: eq(submissions.key, key),
+  });
+
+  return result;
 }
 
 export async function getZippedSubmissionsByDomainQuery(
   db: Database,
-  { domain }: { domain: string }
+  { domain }: { domain: string },
 ) {
   const result = await db.query.marathons.findFirst({
     where: eq(marathons.domain, domain),
     with: {
       zippedSubmissions: true,
     },
-  })
+  });
 
-  return result?.zippedSubmissions ?? []
+  return result?.zippedSubmissions ?? [];
 }
 
 export async function getZippedSubmissionsByMarathonIdQuery(
   db: Database,
-  { marathonId }: { marathonId: number }
+  { marathonId }: { marathonId: number },
 ) {
   const result = await db.query.zippedSubmissions.findMany({
     where: eq(zippedSubmissions.marathonId, marathonId),
-  })
+  });
 
-  return result
+  return result;
 }
 
 export async function getManySubmissionsByKeysQuery(
   db: Database,
-  { keys }: { keys: string[] }
+  { keys }: { keys: string[] },
 ) {
   const result = await db.query.submissions.findMany({
     where: inArray(submissions.key, keys),
-  })
+  });
 
-  return result
+  return result;
 }
 
 export async function getSubmissionsByParticipantIdQuery(
   db: Database,
-  { participantId }: { participantId: number }
+  { participantId }: { participantId: number },
 ) {
   const result = await db.query.submissions.findMany({
     where: eq(submissions.participantId, participantId),
-  })
+  });
 
-  return result
+  return result;
 }
 
 export async function getSubmissionsForJuryQuery(
   db: Database,
   filters: {
-    domain: string
-    competitionClassId?: number | null
-    deviceGroupId?: number | null
-    topicId?: number | null
-  }
+    domain: string;
+    competitionClassId?: number | null;
+    deviceGroupId?: number | null;
+    topicId?: number | null;
+  },
 ) {
   const marathon = await db.query.marathons.findFirst({
     where: eq(marathons.domain, filters.domain),
-  })
+  });
 
   if (!marathon) {
-    return []
+    return [];
   }
 
   const conditions = [
     eq(submissions.marathonId, marathon.id),
     eq(submissions.status, "uploaded"),
-  ]
+  ];
 
   // Note: For filtering by participant fields, we need to use a join or subquery
   // This is a simplified version - you might need to adjust based on your exact needs
@@ -121,10 +132,10 @@ export async function getSubmissionsForJuryQuery(
       },
       topic: true,
     },
-  })
+  });
 
   // Filter by participant fields if needed
-  let filteredResult = result
+  let filteredResult = result;
 
   if (
     filters.competitionClassId !== null &&
@@ -132,106 +143,109 @@ export async function getSubmissionsForJuryQuery(
   ) {
     filteredResult = filteredResult.filter(
       (s) =>
-        (s.participant as any).competitionClassId === filters.competitionClassId
-    )
+        (s.participant as any).competitionClassId ===
+        filters.competitionClassId,
+    );
   }
 
   if (filters.deviceGroupId !== null && filters.deviceGroupId !== undefined) {
     filteredResult = filteredResult.filter(
-      (s) => (s.participant as any).deviceGroupId === filters.deviceGroupId
-    )
+      (s) => (s.participant as any).deviceGroupId === filters.deviceGroupId,
+    );
   }
 
   if (filters.topicId !== null && filters.topicId !== undefined) {
-    filteredResult = filteredResult.filter((s) => s.topicId === filters.topicId)
+    filteredResult = filteredResult.filter(
+      (s) => s.topicId === filters.topicId,
+    );
   }
 
-  return filteredResult
+  return filteredResult;
 }
 
 export async function createSubmissionMutation(
   db: Database,
-  { data }: { data: NewSubmission }
+  { data }: { data: NewSubmission },
 ) {
   const result = await db
     .insert(submissions)
     .values(data)
-    .returning({ id: submissions.id })
-  return { id: result[0]?.id ?? null }
+    .returning({ id: submissions.id });
+  return { id: result[0]?.id ?? null };
 }
 
 export async function createMultipleSubmissionsMutation(
   db: Database,
-  { data }: { data: NewSubmission[] }
+  { data }: { data: NewSubmission[] },
 ) {
   const result = await db
     .insert(submissions)
     .values(data)
-    .returning({ id: submissions.id })
-  return result.map((r) => ({ id: r.id }))
+    .returning({ id: submissions.id });
+  return result.map((r) => ({ id: r.id }));
 }
 
 export async function updateSubmissionByKeyMutation(
   db: Database,
-  { key, data }: { key: string; data: Partial<NewSubmission> }
+  { key, data }: { key: string; data: Partial<NewSubmission> },
 ) {
   const result = await db
     .update(submissions)
     .set(data)
     .where(eq(submissions.key, key))
-    .returning({ id: submissions.id })
-  return { id: result[0]?.id ?? null }
+    .returning({ id: submissions.id });
+  return { id: result[0]?.id ?? null };
 }
 
 export async function updateSubmissionByIdMutation(
   db: Database,
-  { id, data }: { id: number; data: Partial<NewSubmission> }
+  { id, data }: { id: number; data: Partial<NewSubmission> },
 ) {
   const result = await db
     .update(submissions)
     .set(data)
     .where(eq(submissions.id, id))
-    .returning({ id: submissions.id })
-  return { id: result[0]?.id ?? null }
+    .returning({ id: submissions.id });
+  return { id: result[0]?.id ?? null };
 }
 
 export async function createZippedSubmissionMutation(
   db: Database,
-  { data }: { data: NewZippedSubmission }
+  { data }: { data: NewZippedSubmission },
 ): Promise<ZippedSubmission | null> {
-  const result = await db.insert(zippedSubmissions).values(data).returning()
-  return result?.[0] ?? null
+  const result = await db.insert(zippedSubmissions).values(data).returning();
+  return result?.[0] ?? null;
 }
 
 export async function updateZippedSubmissionMutation(
   db: Database,
-  { id, data }: { id: number; data: Partial<NewZippedSubmission> }
+  { id, data }: { id: number; data: Partial<NewZippedSubmission> },
 ) {
   const result = await db
     .update(zippedSubmissions)
     .set(data)
     .where(eq(zippedSubmissions.id, id))
-    .returning({ id: zippedSubmissions.id })
-  return { id: result[0]?.id ?? null }
+    .returning({ id: zippedSubmissions.id });
+  return { id: result[0]?.id ?? null };
 }
 
 export async function getZippedSubmissionByParticipantRefQuery(
   db: Database,
-  { domain, participantRef }: { domain: string; participantRef: string }
+  { domain, participantRef }: { domain: string; participantRef: string },
 ) {
   const participant = await db.query.participants.findFirst({
     where: and(
       eq(participants.domain, domain),
-      eq(participants.reference, participantRef)
+      eq(participants.reference, participantRef),
     ),
     with: {
       zippedSubmission: true,
     },
-  })
+  });
 
   if (!participant || !participant.zippedSubmission) {
-    return null
+    return null;
   }
 
-  return participant.zippedSubmission
+  return participant.zippedSubmission;
 }

@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { CompetitionClass, Topic } from "@vimmer/api/db/types"
-import { Card, CardContent } from "@vimmer/ui/components/card"
+import { useEffect, useState } from "react";
+import { CompetitionClass, Topic } from "@vimmer/api/db/types";
+import { Card, CardContent } from "@vimmer/ui/components/card";
 
 interface SubmissionPreviewCardProps {
-  competitionClass: CompetitionClass | null
-  topic: Topic
-  imageUrl: string | null
+  competitionClass: CompetitionClass | null;
+  topic: Topic;
+  imageUrl: string | null;
 }
 
 export function SubmissionPreviewCard({
@@ -15,11 +15,11 @@ export function SubmissionPreviewCard({
   topic,
   imageUrl,
 }: SubmissionPreviewCardProps) {
-  const [hasError, setHasError] = useState(false)
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    setHasError(false)
-  }, [imageUrl])
+    setHasError(false);
+  }, [imageUrl]);
 
   return (
     <div className="space-y-4">
@@ -61,5 +61,5 @@ export function SubmissionPreviewCard({
         </div>
       </Card>
     </div>
-  )
+  );
 }

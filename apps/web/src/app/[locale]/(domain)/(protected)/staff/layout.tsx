@@ -7,10 +7,10 @@ export default function StaffLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const sessionPromise = getSession();
+  // const sessionPromise = getSession();
   return (
-    <SessionProvider sessionPromise={sessionPromise}>
-      {children}
-    </SessionProvider>
+    // <SessionProvider sessionPromise={sessionPromise}>
+    children
+    // </SessionProvider>
   );
 }

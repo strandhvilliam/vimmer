@@ -3,6 +3,9 @@
   "module": "src/index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "start": "bun run src/index.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "drizzle-kit": "^0.31.1"
@@ -26,6 +29,7 @@
     "jose": "^6.0.11",
     "mqtt": "^5.13.2",
     "postgres": "^3.4.7",
+    "posthog-node": "^5.6.0",
     "superjson": "^2.2.2"
   },
   "exports": {

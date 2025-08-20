@@ -11,9 +11,10 @@ import {
 } from "@/lib/stores/upload-store";
 import { useSubmissionQueryState } from "./use-submission-query-state";
 import { FILE_STATUS, UPLOAD_PHASE } from "@/lib/constants";
+import { useSubmissionRealtime } from "@/contexts/use-submissions-realtime";
 
-const DEFAULT_TIMEOUT = 1000 * 60 * 5; // 5 minutes
-const UPLOAD_CONCURRENCY_LIMIT = 3; // Upload 4 files simultaneously
+const DEFAULT_TIMEOUT = 1000 * 60 * 6; // 6 minutes
+const UPLOAD_CONCURRENCY_LIMIT = 1;
 
 // Utility function to split array into chunks
 function chunk<T>(array: T[], size: number): T[][] {
@@ -24,7 +25,15 @@ function chunk<T>(array: T[], size: number): T[][] {
   return chunks;
 }
 
-export function useFileUpload() {
+export function useFileUpload({
+  realtimeConfig,
+}: {
+  realtimeConfig: {
+    endpoint: string;
+    authorizer: string;
+    topic: string;
+  };
+}) {
   const queryClient = useQueryClient();
   const trpc = useTRPC();
   const {
@@ -60,11 +69,46 @@ export function useFileUpload() {
         participantId: participantId ?? -1,
       },
       {
-        refetchInterval: 3000,
+        refetchInterval: 10000,
         enabled: !!participantId && isUploading,
       },
     ),
   );
+
+  useSubmissionRealtime({
+    participantId: participantId ?? undefined,
+    realtimeConfig,
+    onEvent: (payload) => {
+      if (!payload.key || Object.keys(payload.key).length === 0) return;
+      const file = getFile(payload.key);
+      if (!file) return;
+
+      //Skip updates if file is currently being processed to prevent race conditions
+      if (isFileLocked(payload.key)) return;
+
+      if (
+        payload.status === "uploaded" &&
+        file.phase !== UPLOAD_PHASE.COMPLETED
+      ) {
+        updateFilePhase(payload.key, UPLOAD_PHASE.COMPLETED);
+      } else if (
+        payload.status === "error" &&
+        file.phase !== UPLOAD_PHASE.ERROR
+      ) {
+        setFileError(payload.key, {
+          message: "Processing failed on server",
+          code: "SERVER_ERROR",
+          timestamp: new Date(),
+        });
+      } else if (
+        payload.status === "processing" &&
+        file.phase === UPLOAD_PHASE.S3_UPLOAD &&
+        file.progress === 100
+      ) {
+        updateFilePhase(payload.key, UPLOAD_PHASE.PROCESSING);
+      }
+    },
+  });
 
   // Update file phases based on submission status changes
   useEffect(() => {

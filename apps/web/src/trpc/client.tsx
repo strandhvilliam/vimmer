@@ -4,7 +4,7 @@ import { createQueryClient } from "./query-client";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
 import { AppRouter } from "@vimmer/api/trpc/routers/_app";
 import { useState } from "react";
-import { createTRPCProxyClient, httpBatchLink } from "@trpc/client";
+import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
 import superjson from "superjson";
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
@@ -28,10 +28,23 @@ export function TRPCReactProvider(props: {
   const [trpcClient] = useState(() =>
     createTRPCProxyClient<AppRouter>({
       links: [
-        // loggerLink({
-        //   enabled: (op) =>
-        //     process.env.NODE_ENV === "development" ||
-        //     (op.direction === "down" && op.result instanceof Error),
+        loggerLink({
+          enabled: (op) =>
+            process.env.NODE_ENV === "development" ||
+            (op.direction === "down" && op.result instanceof Error),
+        }),
+        // retryLink({
+        //   retry(opts) {
+        //     if (opts.error.data && opts.error.data.httpStatus !== 429) {
+        //       return false
+        //     }
+        //     if (opts.op.type !== "query") {
+        //       return false
+        //     }
+        //     return opts.attempts <= 3
+        //   },
+        //   retryDelayMs: (attemptIndex) =>
+        //     Math.min(2000 * 2 ** attemptIndex, 30000),
         // }),
         httpBatchLink({
           transformer: superjson,

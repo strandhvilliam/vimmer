@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   SearchIcon,
@@ -6,10 +6,10 @@ import {
   AlertTriangle,
   X,
   ChevronRightIcon,
-} from "lucide-react"
-import { Input } from "@vimmer/ui/components/input"
-import { Button } from "@vimmer/ui/components/button"
-import * as React from "react"
+} from "lucide-react";
+import { Input } from "@vimmer/ui/components/input";
+import { Button } from "@vimmer/ui/components/button";
+import * as React from "react";
 import {
   CompetitionClass,
   DeviceGroup,
@@ -18,53 +18,53 @@ import {
   Participant,
   Topic,
   Submission,
-} from "@vimmer/api/db/types"
+} from "@vimmer/api/db/types";
 
-import { DrawerTitle } from "@vimmer/ui/components/drawer"
-import { parseAsString, useQueryState } from "nuqs"
-import { DrawerLayout } from "./drawer-layout"
-import { ValidationAccordion } from "./validation-accordion"
-import { format } from "date-fns"
+import { DrawerTitle } from "@vimmer/ui/components/drawer";
+import { parseAsString, useQueryState } from "nuqs";
+import { DrawerLayout } from "./drawer-layout";
+import { ValidationAccordion } from "./validation-accordion";
+import { format } from "date-fns";
 
 interface ParticipantItemProps {
   verification: ParticipantVerification & {
     participant: Participant & {
-      validationResults: ValidationResult[]
-      submissions: Submission[]
-      competitionClass: CompetitionClass | null
-      deviceGroup: DeviceGroup | null
-    }
-  }
-  onClick: () => void
+      validationResults: ValidationResult[];
+      submissions: Submission[];
+      competitionClass: CompetitionClass | null;
+      deviceGroup: DeviceGroup | null;
+    };
+  };
+  onClick: () => void;
 }
 
 interface VerifiedParticipantsSheetProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   ownVerifications: (ParticipantVerification & {
     participant: Participant & {
-      validationResults: ValidationResult[]
-      submissions: Submission[]
-      competitionClass: CompetitionClass | null
-      deviceGroup: DeviceGroup | null
-    }
-  })[]
+      validationResults: ValidationResult[];
+      submissions: Submission[];
+      competitionClass: CompetitionClass | null;
+      deviceGroup: DeviceGroup | null;
+    };
+  })[];
   searchResult?:
     | (ParticipantVerification & {
         participant: Participant & {
-          validationResults: ValidationResult[]
-          submissions: Submission[]
-          competitionClass: CompetitionClass | null
-          deviceGroup: DeviceGroup | null
-        }
+          validationResults: ValidationResult[];
+          submissions: Submission[];
+          competitionClass: CompetitionClass | null;
+          deviceGroup: DeviceGroup | null;
+        };
       })
-    | null
-  topics: Topic[]
-  baseThumbnailUrl: string
-  submissionBaseUrl: string
-  previewBaseUrl: string
-  isSearchLoading?: boolean
-  onSearch?: (reference: string) => void
+    | null;
+  topics: Topic[];
+  baseThumbnailUrl: string;
+  submissionBaseUrl: string;
+  previewBaseUrl: string;
+  isSearchLoading?: boolean;
+  onSearch?: (reference: string) => void;
 }
 
 export function VerifiedParticipantsSheet({
@@ -79,41 +79,41 @@ export function VerifiedParticipantsSheet({
   isSearchLoading = false,
   onSearch,
 }: VerifiedParticipantsSheetProps) {
-  const [query, setQuery] = useQueryState("vpg", parseAsString)
+  const [query, setQuery] = useQueryState("vpg", parseAsString);
   const [participantDrawerOpen, setParticipantDrawerOpen] =
-    React.useState(false)
+    React.useState(false);
   const [selectedParticipant, setSelectedParticipant] = React.useState<
     | (Participant & {
-        validationResults: ValidationResult[]
-        submissions: Submission[]
-        competitionClass: CompetitionClass | null
-        deviceGroup: DeviceGroup | null
+        validationResults: ValidationResult[];
+        submissions: Submission[];
+        competitionClass: CompetitionClass | null;
+        deviceGroup: DeviceGroup | null;
       })
     | null
-  >(null)
+  >(null);
 
   const handleSearch = (value: string) => {
-    setQuery(value)
+    setQuery(value);
     if (value.trim()) {
-      onSearch?.(value.trim())
+      onSearch?.(value.trim());
     }
-  }
+  };
 
   const handleClear = () => {
-    setQuery(null)
-  }
+    setQuery(null);
+  };
 
   const handleParticipantClick = (
     participant: Participant & {
-      validationResults: ValidationResult[]
-      submissions: Submission[]
-      competitionClass: CompetitionClass | null
-      deviceGroup: DeviceGroup | null
-    }
+      validationResults: ValidationResult[];
+      submissions: Submission[];
+      competitionClass: CompetitionClass | null;
+      deviceGroup: DeviceGroup | null;
+    },
   ) => {
-    setSelectedParticipant(participant)
-    setParticipantDrawerOpen(true)
-  }
+    setSelectedParticipant(participant);
+    setParticipantDrawerOpen(true);
+  };
 
   return (
     <>
@@ -128,7 +128,7 @@ export function VerifiedParticipantsSheet({
             {/* Search Description */}
             <p className="text-sm text-muted-foreground text-center mb-3">
               Search to find any verification by participant number. If a
-              reference number is not found. They are not verified yet.
+              participant number is not found. They are not verified yet.
             </p>
 
             {/* Search */}
@@ -283,17 +283,17 @@ export function VerifiedParticipantsSheet({
         )}
       </DrawerLayout>
     </>
-  )
+  );
 }
 
 function ParticipantItem({ verification, onClick }: ParticipantItemProps) {
   const warningsCount = verification.participant.validationResults?.filter(
-    (v) => v.outcome === "failed" && !v.overruled && v.severity === "warning"
-  ).length
+    (v) => v.outcome === "failed" && !v.overruled && v.severity === "warning",
+  ).length;
 
   const errorsCount = verification.participant.validationResults?.filter(
-    (v) => v.outcome === "failed" && !v.overruled && v.severity === "error"
-  ).length
+    (v) => v.outcome === "failed" && !v.overruled && v.severity === "error",
+  ).length;
 
   return (
     <div
@@ -306,7 +306,7 @@ function ParticipantItem({ verification, onClick }: ParticipantItemProps) {
             Finished:{" "}
             {format(
               new Date(verification.participant.createdAt),
-              "yyyy-MM-dd HH:mm"
+              "yyyy-MM-dd HH:mm",
             )}
           </span>
           <div className="text-base text-foreground truncate">
@@ -351,5 +351,5 @@ function ParticipantItem({ verification, onClick }: ParticipantItemProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

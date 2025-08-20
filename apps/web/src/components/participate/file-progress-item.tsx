@@ -1,17 +1,17 @@
-import { FileState } from "@/lib/types"
-import { Topic } from "@vimmer/api/db/types"
-import { CheckCircle2, Loader2, XCircle } from "lucide-react"
-import { motion } from "motion/react"
-import { useI18n } from "@/locales/client"
+import { FileState } from "@/lib/types";
+import { Topic } from "@vimmer/api/db/types";
+import { CheckCircle2, Loader2, XCircle } from "lucide-react";
+import { motion } from "motion/react";
+import { useI18n } from "@/locales/client";
 
 export function FileProgressItem({
   file,
   topic,
 }: {
-  file: FileState
-  topic: Topic
+  file: FileState;
+  topic: Topic;
 }) {
-  const t = useI18n()
+  const t = useI18n();
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
@@ -19,39 +19,39 @@ export function FileProgressItem({
           <motion.div initial={{ scale: 0.5 }} animate={{ scale: 1 }}>
             <CheckCircle2 className="w-5 h-5 text-green-500" />
           </motion.div>
-        )
+        );
       case "error":
-        return <XCircle className="w-5 h-5 text-destructive" />
+        return <XCircle className="w-5 h-5 text-destructive" />;
       case "pending":
       case "uploading":
       default:
-        return <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        return <Loader2 className="w-5 h-5 animate-spin text-primary" />;
     }
-  }
+  };
 
   const getErrorMessage = () => {
-    if (!file.error) return null
+    if (!file.error) return null;
 
     // Use structured error codes for user-friendly messages
     switch (file.error.code) {
       case "NETWORK_ERROR":
-        return t("uploadProgress.error.network")
+        return t("uploadProgress.error.network");
       case "TIMEOUT":
-        return t("uploadProgress.error.timeout")
+        return t("uploadProgress.error.timeout");
       case "FILE_TOO_LARGE":
-        return t("uploadProgress.error.fileTooLarge")
+        return t("uploadProgress.error.fileTooLarge");
       case "UNAUTHORIZED":
-        return t("uploadProgress.error.unauthorized")
+        return t("uploadProgress.error.unauthorized");
       case "RATE_LIMITED":
-        return t("uploadProgress.error.rateLimited")
+        return t("uploadProgress.error.rateLimited");
       case "SERVER_ERROR":
-        return t("uploadProgress.error.serverError")
+        return t("uploadProgress.error.serverError");
       case "INVALID_FILE_TYPE":
-        return t("uploadProgress.error.invalidFileType")
+        return t("uploadProgress.error.invalidFileType");
       default:
-        return file.error.message || t("uploadProgress.error.generic")
+        return file.error.message || t("uploadProgress.error.generic");
     }
-  }
+  };
 
   return (
     <motion.div
@@ -84,5 +84,5 @@ export function FileProgressItem({
         {getStatusIcon(file.status)}
       </div>
     </motion.div>
-  )
+  );
 }

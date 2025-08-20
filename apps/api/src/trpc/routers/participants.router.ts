@@ -4,8 +4,10 @@ import {
   getParticipantByIdQuery,
   getParticipantByReferenceQuery,
   getParticipantsByDomainQuery,
+  getParticipantsByDomainPaginatedQuery,
   incrementUploadCounterMutation,
   updateParticipantMutation,
+  getParticipantsWithoutSubmissionsQuery,
 } from "@vimmer/api/db/queries/participants.queries"
 import { createTRPCRouter, publicProcedure } from ".."
 import {
@@ -14,18 +16,46 @@ import {
   getParticipantByIdSchema,
   getParticipantByReferenceSchema,
   getParticipantsByDomainSchema,
+  getParticipantsByDomainPaginatedSchema,
   incrementUploadCounterSchema,
   updateParticipantSchema,
+  getParticipantsWithoutSubmissionsSchema,
 } from "@vimmer/api/schemas/participants.schemas"
 import { TRPCError } from "@trpc/server"
 import { invalidateCloudfrontByDomain } from "@vimmer/api/utils/invalidate-cloudfront-domain"
+import { publishToRealtime } from "@vimmer/api/utils/publish-to-realtime"
 
 export const participantsRouter = createTRPCRouter({
   getByDomain: publicProcedure
     .input(getParticipantsByDomainSchema)
     .query(async ({ ctx, input }) => {
-      return getParticipantsByDomainQuery(ctx.db, {
+      const data = await getParticipantsByDomainQuery(ctx.db, {
         domain: input.domain,
+      })
+      return data
+    }),
+
+  getParticipantsWithoutSubmissions: publicProcedure
+    .input(getParticipantsWithoutSubmissionsSchema)
+    .query(async ({ ctx, input }) => {
+      return getParticipantsWithoutSubmissionsQuery(ctx.db, {
+        domain: input.domain,
+      })
+    }),
+
+  getByDomainPaginated: publicProcedure
+    .input(getParticipantsByDomainPaginatedSchema)
+    .query(async ({ ctx, input }) => {
+      return getParticipantsByDomainPaginatedQuery(ctx.db, {
+        domain: input.domain,
+        page: input.page,
+        pageSize: input.pageSize,
+        search: input.search,
+        status: input.status,
+        competitionClassId: input.competitionClassId,
+        deviceGroupId: input.deviceGroupId,
+        sortBy: input.sortBy,
+        sortOrder: input.sortOrder,
       })
     }),
 
@@ -88,7 +118,13 @@ export const participantsRouter = createTRPCRouter({
       await deleteParticipantMutation(ctx.db, {
         id: input.id,
       })
-      await invalidateCloudfrontByDomain(participant.domain)
+      await Promise.allSettled([
+        invalidateCloudfrontByDomain(participant.domain),
+        publishToRealtime({
+          participantId: input.id,
+          status: "rejected",
+        }),
+      ])
     }),
 
   incrementUploadCounter: publicProcedure

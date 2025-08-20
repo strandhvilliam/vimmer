@@ -1,6 +1,6 @@
-import { useForm } from "@tanstack/react-form"
-import { X } from "lucide-react"
-import { Button } from "@vimmer/ui/components/button"
+import { useForm } from "@tanstack/react-form";
+import { X } from "lucide-react";
+import { Button } from "@vimmer/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -8,22 +8,22 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@vimmer/ui/components/dialog"
-import { useEffect } from "react"
-import { Input } from "@vimmer/ui/components/input"
-import { Checkbox } from "@vimmer/ui/components/checkbox"
-import { cn } from "@vimmer/ui/lib/utils"
-import { DateTimePicker } from "@vimmer/ui/components/date-time-picker"
-import { PrimaryButton } from "@vimmer/ui/components/primary-button"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { toast } from "sonner"
-import { useTRPC } from "@/trpc/client"
-import { Topic } from "@vimmer/api/db/types"
+} from "@vimmer/ui/components/dialog";
+import { useEffect } from "react";
+import { Input } from "@vimmer/ui/components/input";
+import { Checkbox } from "@vimmer/ui/components/checkbox";
+import { cn } from "@vimmer/ui/lib/utils";
+import { DateTimePicker } from "@vimmer/ui/components/date-time-picker";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useTRPC } from "@/trpc/client";
+import { Topic } from "@vimmer/api/db/types";
 
 interface EditTopicDialogProps {
-  topic: Topic | null
-  isOpen: boolean
-  onOpenChange: (open: boolean) => void
+  topic: Topic | null;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function TopicsEditDialog({
@@ -31,27 +31,27 @@ export function TopicsEditDialog({
   isOpen,
   onOpenChange,
 }: EditTopicDialogProps) {
-  const trpc = useTRPC()
-  const queryClient = useQueryClient()
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
   const { mutate: updateTopic, isPending: isUpdatingTopic } = useMutation(
     trpc.topics.update.mutationOptions({
       onError: (error) => {
         toast.error("Failed to update topic", {
           description: error.message,
-        })
+        });
       },
       onSuccess: () => {
-        toast.success("Topic updated")
-        onOpenChange(false)
+        toast.success("Topic updated");
+        onOpenChange(false);
       },
       onSettled: () => {
         queryClient.invalidateQueries({
           queryKey: trpc.topics.pathKey(),
-        })
+        });
       },
-    })
-  )
+    }),
+  );
 
   const form = useForm({
     defaultValues: {
@@ -62,10 +62,10 @@ export function TopicsEditDialog({
         : (null as Date | null),
     },
     onSubmit: async ({ value }) => {
-      if (!topic) return
+      if (!topic) return;
 
-      let visibility = "private"
-      if (value.visibility) visibility = "public"
+      let visibility = "private";
+      if (value.visibility) visibility = "public";
       // if (value.scheduledStart) visibility = "scheduled"
 
       updateTopic({
@@ -77,22 +77,22 @@ export function TopicsEditDialog({
           //   ? value.scheduledStart.toISOString()
           //   : undefined,
         },
-      })
-      onOpenChange(false)
+      });
+      onOpenChange(false);
     },
-  })
+  });
 
   useEffect(() => {
     if (topic) {
       const newScheduledStart = topic.scheduledStart
         ? new Date(topic.scheduledStart)
-        : null
+        : null;
 
-      form.setFieldValue("name", topic.name)
-      form.setFieldValue("visibility", topic.visibility === "public")
-      form.setFieldValue("scheduledStart", newScheduledStart)
+      form.setFieldValue("name", topic.name);
+      form.setFieldValue("visibility", topic.visibility === "public");
+      form.setFieldValue("scheduledStart", newScheduledStart);
     }
-  }, [topic, form])
+  }, [topic, form]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -105,9 +105,9 @@ export function TopicsEditDialog({
         </DialogHeader>
         <form
           onSubmit={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            form.handleSubmit()
+            e.preventDefault();
+            e.stopPropagation();
+            form.handleSubmit();
           }}
           className="space-y-4"
         >
@@ -116,9 +116,9 @@ export function TopicsEditDialog({
             validators={{
               onChange: ({ value }) => {
                 if (!value || value.length < 1) {
-                  return "Name is required"
+                  return "Name is required";
                 }
-                return undefined
+                return undefined;
               },
             }}
             children={(field) => (
@@ -157,7 +157,7 @@ export function TopicsEditDialog({
                   <div
                     className={cn(
                       "flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm",
-                      scheduledStart && "opacity-50"
+                      scheduledStart && "opacity-50",
                     )}
                   >
                     <div className="space-y-0.5">
@@ -195,8 +195,8 @@ export function TopicsEditDialog({
                     disabled={true}
                     date={field.state.value || undefined}
                     setDate={(date) => {
-                      const newDate = date || null
-                      field.handleChange(newDate)
+                      const newDate = date || null;
+                      field.handleChange(newDate);
                     }}
                   />
                   {field.state.value && (
@@ -205,7 +205,7 @@ export function TopicsEditDialog({
                       variant="outline"
                       size="icon"
                       onClick={() => {
-                        field.handleChange(null)
+                        field.handleChange(null);
                       }}
                     >
                       <X className="h-4 w-4" />
@@ -236,5 +236,5 @@ export function TopicsEditDialog({
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -231,48 +231,31 @@ export function DashboardRecentParticipants() {
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
 
-  const { data: participants } = useSuspenseQuery(
-    trpc.participants.getByDomain.queryOptions({ domain }),
+  const { data: participantsResult } = useSuspenseQuery(
+    trpc.participants.getByDomainPaginated.queryOptions({
+      domain,
+      page: 1,
+      pageSize: 10,
+      sortBy: "createdAt",
+      sortOrder: "desc",
+    }),
   );
 
-  const recentParticipants = participants
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    )
-    .slice(0, 10);
+  const recentParticipants = participantsResult.data;
 
   const handleRefresh = () => {
     startTransition(async () => {
       await queryClient.invalidateQueries({
-        queryKey: trpc.participants.pathKey(),
+        queryKey: trpc.participants.getByDomainPaginated.queryKey({
+          domain,
+          page: 1,
+          pageSize: 10,
+          sortBy: "createdAt",
+          sortOrder: "desc",
+        }),
       });
     });
   };
-
-  if (isPending) {
-    return (
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <div>
-            <CardTitle className="text-xl font-rocgrotesk">
-              Participant Activity
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Most recently registered participants and submission status
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <RefreshCw className="h-4 w-4 text-muted-foreground animate-spin" />
-            <Users className="h-5 w-5 text-muted-foreground" />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <LoadingSkeleton />
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card className="overflow-hidden">

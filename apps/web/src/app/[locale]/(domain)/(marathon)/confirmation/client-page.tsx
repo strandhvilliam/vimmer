@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import { motion, AnimatePresence } from "motion/react"
-import { useState } from "react"
+import { motion, AnimatePresence } from "motion/react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@vimmer/ui/components/card"
-import dynamic from "next/dynamic"
-import { ConfirmationDetailsDialog } from "@/components/participate/confirmation-details-dialog"
-import { ConfirmationData } from "@/lib/types"
-import { useSuspenseQuery } from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/client"
-import { useDomain } from "@/contexts/domain-context"
-import { Icon } from "@iconify/react"
+} from "@vimmer/ui/components/card";
+import dynamic from "next/dynamic";
+import { ConfirmationDetailsDialog } from "@/components/participate/confirmation-details-dialog";
+import { ConfirmationData } from "@/lib/types";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
+import { useDomain } from "@/contexts/domain-context";
+import { Icon } from "@iconify/react";
 import {
   CheckCircle2,
   Trophy,
@@ -22,73 +22,74 @@ import {
   MoreVertical,
   Recycle,
   Clock,
-} from "lucide-react"
-import { useCurrentLocale, useI18n } from "@/locales/client"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { PrimaryButton } from "@vimmer/ui/components/primary-button"
-import { Button } from "@vimmer/ui/components/button"
+} from "lucide-react";
+import { useI18n } from "@/locales/client";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { Button } from "@vimmer/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@vimmer/ui/components/dropdown-menu"
-import { useDesktopCountdownRedirect } from "@/hooks/use-desktop-countdown-redirect"
+} from "@vimmer/ui/components/dropdown-menu";
+import { useDesktopCountdownRedirect } from "@/hooks/use-desktop-countdown-redirect";
 
 interface ConfirmationClientProps {
-  participantRef: string
-  thumbnailsBaseUrl: string
-  previewsBaseUrl: string
+  participantRef: string;
+  thumbnailsBaseUrl: string;
+  previewsBaseUrl: string;
 }
 
 const Confetti = dynamic(
   () => import("react-confetti").then((mod) => mod.default),
   {
     ssr: false,
-  }
-)
+  },
+);
 
 export function ConfirmationClient({
   participantRef,
   thumbnailsBaseUrl,
   previewsBaseUrl,
 }: ConfirmationClientProps) {
-  const { domain } = useDomain()
-  const trpc = useTRPC()
-  const t = useI18n()
-  const locale = useCurrentLocale()
-  const router = useRouter()
+  const { domain } = useDomain();
+  const trpc = useTRPC();
+  const t = useI18n();
   const [selectedImage, setSelectedImage] = useState<ConfirmationData | null>(
-    null
-  )
+    null,
+  );
+
+  const handleRedirect = () => {
+    window.location.replace(`https://${domain}.blikka.app/participate`);
+  };
+
   const { remainingSeconds, addSeconds } = useDesktopCountdownRedirect({
     initialSeconds: 15,
-    onRedirect: () => router.push(`/${locale}/participate`),
-  })
+    onRedirect: handleRedirect,
+  });
 
   const { data: participant } = useSuspenseQuery(
     trpc.participants.getByReference.queryOptions({
       reference: participantRef,
       domain,
-    })
-  )
+    }),
+  );
 
   const { data: topics } = useSuspenseQuery(
     trpc.topics.getPublicByDomain.queryOptions({
       domain,
-    })
-  )
+    }),
+  );
 
   const submissionsWithTopic =
     participant?.submissions.map((submission) => ({
       ...submission,
       topic: topics.find((topic) => topic.id === submission.topicId),
-    })) ?? []
+    })) ?? [];
 
   const uploadedSubmissions = submissionsWithTopic.filter(
-    (submission) => submission.status === "uploaded"
-  )
+    (submission) => submission.status === "uploaded",
+  );
 
   const images: ConfirmationData[] = uploadedSubmissions
     .sort((a, b) => (a.topic?.orderIndex ?? 0) - (b.topic?.orderIndex ?? 0))
@@ -105,10 +106,10 @@ export function ConfirmationClient({
         t("confirmation.photoPlaceholder", { id: submission.id }),
       orderIndex: submission.topic?.orderIndex ?? 0,
       exif: submission.exif as Record<string, unknown>,
-    }))
+    }));
 
   if (!participant) {
-    return null
+    return null;
   }
 
   return (
@@ -125,10 +126,10 @@ export function ConfirmationClient({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
-                <Link href={`/${locale}/participate`}>
+                <button onClick={handleRedirect}>
                   <Recycle className="w-4 h-4" />
                   {t("confirmation.startAgain")}
-                </Link>
+                </button>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -240,7 +241,7 @@ export function ConfirmationClient({
             <Card className="h-full border-primary/20 flex items-center justify-center w-full bg-transparent border-none shadow-none">
               <CardContent className="items-center justify-center flex gap-8 p-0 w-full px-4">
                 <PrimaryButton
-                  onClick={() => router.push(`/${locale}/participate`)}
+                  onClick={handleRedirect}
                   className="w-full py-5 text-base md:text-lg rounded-full m-0"
                 >
                   {t("confirmation.newParticipant")}
@@ -394,5 +395,5 @@ export function ConfirmationClient({
         />
       </div>
     </>
-  )
+  );
 }

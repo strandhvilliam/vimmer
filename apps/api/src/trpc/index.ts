@@ -9,9 +9,9 @@ export type TRPCContext = {
   db: Database;
   supabase: SupabaseClient;
 };
+const supabase = await createClient();
 
 export const createTRPCContext = async (): Promise<TRPCContext> => {
-  const supabase = await createClient();
   return { db, supabase };
 };
 

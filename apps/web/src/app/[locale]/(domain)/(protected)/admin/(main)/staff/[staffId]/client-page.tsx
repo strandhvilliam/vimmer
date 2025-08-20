@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { ScrollArea } from "@vimmer/ui/components/scroll-area"
-import { Avatar, AvatarFallback } from "@vimmer/ui/components/avatar"
-import { Button } from "@vimmer/ui/components/button"
-import { Mail, Trash2, User2Icon, RefreshCw } from "lucide-react"
-import { Badge } from "@vimmer/ui/components/badge"
-import { useState } from "react"
-import { toast } from "sonner"
-import { useRouter } from "next/navigation"
+import { ScrollArea } from "@vimmer/ui/components/scroll-area";
+import { Avatar, AvatarFallback } from "@vimmer/ui/components/avatar";
+import { Button } from "@vimmer/ui/components/button";
+import { Mail, Trash2, User2Icon, RefreshCw } from "lucide-react";
+import { Badge } from "@vimmer/ui/components/badge";
+import { useState } from "react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +17,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@vimmer/ui/components/alert-dialog"
+} from "@vimmer/ui/components/alert-dialog";
 import {
   Table,
   TableBody,
@@ -25,7 +25,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@vimmer/ui/components/table"
+} from "@vimmer/ui/components/table";
 import {
   Pagination,
   PaginationContent,
@@ -33,48 +33,48 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@vimmer/ui/components/pagination"
+} from "@vimmer/ui/components/pagination";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@vimmer/ui/components/popover"
-import { format } from "date-fns"
+} from "@vimmer/ui/components/popover";
+import { format } from "date-fns";
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
   useReactTable,
-} from "@tanstack/react-table"
+} from "@tanstack/react-table";
 import {
   ParticipantVerification,
   Participant,
   ValidationResult,
   CompetitionClass,
   DeviceGroup,
-} from "@vimmer/api/db/types"
+} from "@vimmer/api/db/types";
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
-} from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/client"
-import { useDomain } from "@/contexts/domain-context"
+} from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
+import { useDomain } from "@/contexts/domain-context";
 
 interface StaffDetailsClientProps {
-  staffId: string
+  staffId: string;
 }
 
 type VerificationWithParticipant = ParticipantVerification & {
   participant: Participant & {
-    validationResults: ValidationResult[]
-    competitionClass: CompetitionClass | null
-    deviceGroup: DeviceGroup | null
-  }
-}
+    validationResults: ValidationResult[];
+    competitionClass: CompetitionClass | null;
+    deviceGroup: DeviceGroup | null;
+  };
+};
 
-const columnHelper = createColumnHelper<VerificationWithParticipant>()
+const columnHelper = createColumnHelper<VerificationWithParticipant>();
 
 const columns = [
   columnHelper.accessor(
@@ -83,7 +83,7 @@ const columns = [
       id: "participantName",
       header: "Participant",
       cell: (info) => info.getValue(),
-    }
+    },
   ),
   columnHelper.accessor("participant.reference", {
     header: "Number",
@@ -96,14 +96,14 @@ const columns = [
   columnHelper.accessor("notes", {
     header: "Notes",
     cell: (info) => {
-      const notes = info.getValue()
-      if (!notes) return "—"
+      const notes = info.getValue();
+      if (!notes) return "—";
 
       const truncatedNotes =
-        notes.length > 50 ? `${notes.substring(0, 50)}...` : notes
+        notes.length > 50 ? `${notes.substring(0, 50)}...` : notes;
 
       if (notes.length <= 50) {
-        return <span>{notes}</span>
+        return <span>{notes}</span>;
       }
 
       return (
@@ -122,49 +122,49 @@ const columns = [
             </div>
           </PopoverContent>
         </Popover>
-      )
+      );
     },
   }),
   columnHelper.accessor("createdAt", {
     header: "Accepted At",
     cell: (info) => format(new Date(info.getValue()), "MMM d, yyyy HH:mm"),
   }),
-]
+];
 
 export function StaffDetailsClient({ staffId }: StaffDetailsClientProps) {
-  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false)
-  const router = useRouter()
-  const trpc = useTRPC()
-  const { domain } = useDomain()
-  const queryClient = useQueryClient()
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
+  const router = useRouter();
+  const trpc = useTRPC();
+  const { domain } = useDomain();
+  const queryClient = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: staff } = useSuspenseQuery(
     trpc.users.getStaffMemberById.queryOptions({
       staffId,
       domain,
-    })
-  )
+    }),
+  );
 
   const { data: marathon } = useSuspenseQuery(
     trpc.marathons.getByDomain.queryOptions({
       domain,
-    })
-  )
+    }),
+  );
 
   const { data: verifications } = useSuspenseQuery(
     trpc.validations.getParticipantVerificationsByStaffId.queryOptions({
       staffId,
       domain,
-    })
-  )
+    }),
+  );
 
   const sortedVerifications = verifications.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  )
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
 
   const handleRefresh = async () => {
-    setIsRefreshing(true)
+    setIsRefreshing(true);
     try {
       await Promise.all([
         queryClient.invalidateQueries({
@@ -173,38 +173,38 @@ export function StaffDetailsClient({ staffId }: StaffDetailsClientProps) {
         queryClient.invalidateQueries({
           queryKey: trpc.users.pathKey(),
         }),
-      ])
+      ]);
     } catch (error) {
-      toast.error("Failed to refresh data")
-      console.error("Refresh error:", error)
+      toast.error("Failed to refresh data");
+      console.error("Refresh error:", error);
     } finally {
-      setIsRefreshing(false)
+      setIsRefreshing(false);
     }
-  }
+  };
 
   const { mutate: executeRemove, isPending: isRemoving } = useMutation(
     trpc.users.deleteUserMarathonRelation.mutationOptions({
       onError: (error) => {
-        toast.error("Failed to remove staff member")
-        console.error("Remove error:", error)
+        toast.error("Failed to remove staff member");
+        console.error("Remove error:", error);
       },
       onSuccess: () => {
-        toast.success("Staff member removed successfully")
-        router.push(`/${domain}/staff`)
+        toast.success("Staff member removed successfully");
+        router.push(`/${domain}/staff`);
       },
       onSettled: () => {
-        handleRefresh()
+        handleRefresh();
       },
-    })
-  )
+    }),
+  );
 
   const handleRemove = () => {
     if (!marathon) {
-      console.error("Marathon not found")
-      return
+      console.error("Marathon not found");
+      return;
     }
-    executeRemove({ userId: staffId, marathonId: marathon.id })
-  }
+    executeRemove({ userId: staffId, marathonId: marathon.id });
+  };
 
   const table = useReactTable({
     data: sortedVerifications,
@@ -216,10 +216,10 @@ export function StaffDetailsClient({ staffId }: StaffDetailsClientProps) {
         pageSize: 10,
       },
     },
-  })
+  });
 
   if (!staff) {
-    return <div>Staff member not found</div>
+    return <div>Staff member not found</div>;
   }
 
   return (
@@ -286,7 +286,7 @@ export function StaffDetailsClient({ staffId }: StaffDetailsClientProps) {
                     <TableHead key={header.id}>
                       {flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                     </TableHead>
                   ))}
@@ -300,7 +300,7 @@ export function StaffDetailsClient({ staffId }: StaffDetailsClientProps) {
                         <TableCell key={cell.id}>
                           {flexRender(
                             cell.column.columnDef.cell,
-                            cell.getContext()
+                            cell.getContext(),
                           )}
                         </TableCell>
                       ))}
@@ -326,8 +326,8 @@ export function StaffDetailsClient({ staffId }: StaffDetailsClientProps) {
                   <PaginationPrevious
                     href="#"
                     onClick={(e) => {
-                      e.preventDefault()
-                      table.previousPage()
+                      e.preventDefault();
+                      table.previousPage();
                     }}
                     aria-disabled={!table.getCanPreviousPage()}
                     className={
@@ -349,8 +349,8 @@ export function StaffDetailsClient({ staffId }: StaffDetailsClientProps) {
                   <PaginationNext
                     href="#"
                     onClick={(e) => {
-                      e.preventDefault()
-                      table.nextPage()
+                      e.preventDefault();
+                      table.nextPage();
                     }}
                     aria-disabled={!table.getCanNextPage()}
                     className={
@@ -394,5 +394,5 @@ export function StaffDetailsClient({ staffId }: StaffDetailsClientProps) {
         </AlertDialogContent>
       </AlertDialog>
     </>
-  )
+  );
 }

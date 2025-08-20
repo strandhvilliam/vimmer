@@ -7,7 +7,7 @@ import {
 } from "@trpc/tanstack-react-query";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { AppRouter } from "@vimmer/api/trpc/routers/_app";
-import { createTRPCProxyClient, httpBatchLink } from "@trpc/client";
+import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
 
 import { Resource } from "sst";
 import superjson from "superjson";
@@ -18,6 +18,24 @@ export const getQueryClient = cache(createQueryClient);
 export const createServerApiClient = cache(() => {
   return createTRPCProxyClient<AppRouter>({
     links: [
+      loggerLink({
+        enabled: (op) =>
+          process.env.NODE_ENV === "development" ||
+          (op.direction === "down" && op.result instanceof Error),
+      }),
+      // retryLink({
+      //   retry(opts) {
+      //     if (opts.error.data && opts.error.data.httpStatus !== 429) {
+      //       return false
+      //     }
+      //     if (opts.op.type !== "query") {
+      //       return false
+      //     }
+      //     return opts.attempts <= 3
+      //   },
+      //   retryDelayMs: (attemptIndex) =>
+      //     Math.min(2000 * 2 ** attemptIndex, 30000),
+      // }),
       httpBatchLink({
         transformer: superjson,
         url: Resource.Api.url + "trpc",
@@ -25,11 +43,6 @@ export const createServerApiClient = cache(() => {
           return headers();
         },
       }),
-      // loggerLink({
-      //   enabled: (opts) =>
-      //     process.env.NODE_ENV === "development" ||
-      //     (opts.direction === "down" && opts.result instanceof Error),
-      // }),
     ],
   });
 });

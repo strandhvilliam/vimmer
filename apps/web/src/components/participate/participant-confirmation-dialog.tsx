@@ -1,26 +1,33 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@vimmer/ui/components/dialog"
-import { Button } from "@vimmer/ui/components/button"
-import { Input } from "@vimmer/ui/components/input"
-import { PrimaryButton } from "@vimmer/ui/components/primary-button"
-import { cn } from "@vimmer/ui/lib/utils"
-import { geistMono } from "@/lib/fonts"
-import { AlertTriangle } from "lucide-react"
-import { useI18n } from "@/locales/client"
+} from "@vimmer/ui/components/dialog";
+import { Button } from "@vimmer/ui/components/button";
+import { Input } from "@vimmer/ui/components/input";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { cn } from "@vimmer/ui/lib/utils";
+import { geistMono } from "@/lib/fonts";
+import { AlertTriangle } from "lucide-react";
+import { useI18n } from "@/locales/client";
 
 interface ParticipantConfirmationDialogProps {
-  open: boolean
-  onClose: () => void
-  onConfirm: () => void
-  expectedParticipantRef: string
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  expectedParticipantRef: string;
+}
+
+export function formatParticipantRefForDisplay(
+  ref: string | undefined | null,
+): string {
+  if (!ref) return "";
+  return ref.replace(/^0+/, "") || "0";
 }
 
 export function ParticipantConfirmationDialog({
@@ -29,38 +36,41 @@ export function ParticipantConfirmationDialog({
   onConfirm,
   expectedParticipantRef,
 }: ParticipantConfirmationDialogProps) {
-  const [enteredRef, setEnteredRef] = useState("")
-  const [showError, setShowError] = useState(false)
-  const t = useI18n()
+  const [enteredRef, setEnteredRef] = useState("");
+  const [showError, setShowError] = useState(false);
+  const t = useI18n();
 
   useEffect(() => {
     if (open) {
-      setEnteredRef("")
-      setShowError(false)
+      setEnteredRef("");
+      setShowError(false);
     }
-  }, [open])
+  }, [open]);
 
   const handleSubmit = () => {
-    if (enteredRef.trim() === expectedParticipantRef) {
-      setShowError(false)
-      onConfirm()
+    if (
+      enteredRef.trim().padStart(4, "0") ===
+      expectedParticipantRef.padStart(4, "0")
+    ) {
+      setShowError(false);
+      onConfirm();
     } else {
-      setShowError(true)
+      setShowError(true);
     }
-  }
+  };
 
   const handleCancel = () => {
-    setEnteredRef("")
-    setShowError(false)
-    onClose()
-  }
+    setEnteredRef("");
+    setShowError(false);
+    onClose();
+  };
 
   const handleInputChange = (value: string) => {
-    setEnteredRef(value)
+    setEnteredRef(value);
     if (showError) {
-      setShowError(false)
+      setShowError(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -87,9 +97,10 @@ export function ParticipantConfirmationDialog({
             className={cn(
               "text-center !text-4xl h-16 font-bold font-mono tracking-widest",
               geistMono.className,
-              showError && "border-red-500 focus-visible:ring-red-500"
+              showError && "border-red-500 focus-visible:ring-red-500",
             )}
-            placeholder={expectedParticipantRef}
+            placeholder={formatParticipantRefForDisplay(expectedParticipantRef)}
+            maxLength={4}
             enterKeyHint="done"
           />
 
@@ -113,8 +124,8 @@ export function ParticipantConfirmationDialog({
               type="submit"
               disabled={!enteredRef.trim()}
               onClick={(e) => {
-                e.preventDefault()
-                handleSubmit()
+                e.preventDefault();
+                handleSubmit();
               }}
               className="flex-1 h-12 text-base font-medium rounded-full"
             >
@@ -124,5 +135,5 @@ export function ParticipantConfirmationDialog({
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

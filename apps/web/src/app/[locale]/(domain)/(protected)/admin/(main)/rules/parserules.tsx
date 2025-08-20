@@ -124,9 +124,6 @@ export function parseRules(
     const isValidRuleKey = Object.values(RULE_KEYS).includes(
       rule.ruleKey as RuleKey,
     );
-    if (rule.ruleKey === RULE_KEYS.WITHIN_TIMERANGE) {
-      console.log({ rule });
-    }
     if (!isValidRuleKey) continue;
     const handler = ruleHandlers[rule.ruleKey as RuleKey];
     if (handler) {

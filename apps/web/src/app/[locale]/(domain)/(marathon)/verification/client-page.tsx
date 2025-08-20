@@ -7,8 +7,8 @@ import {
   CardTitle,
   CardHeader,
 } from "@vimmer/ui/components/card";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect } from "react";
+import { notFound } from "next/navigation";
 import { submissionQueryClientParamSerializer } from "@/lib/schemas/submission-query-client-schema";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { useTRPC } from "@/trpc/client";
@@ -19,15 +19,34 @@ import { RefreshCcw } from "lucide-react";
 import { cn } from "@vimmer/ui/lib/utils";
 import { useRefreshTimeout } from "@/hooks/use-refresh-timeout";
 import { useI18n } from "@/locales/client";
+import { useParticipantStatusRealtime } from "@/contexts/use-participant-status-realtime";
 
-export function ClientVerificationPage() {
+export function ClientVerificationPage({
+  realtimeConfig,
+}: {
+  realtimeConfig: {
+    endpoint: string;
+    authorizer: string;
+    topic: string;
+  };
+}) {
   const trpc = useTRPC();
   const { domain } = useDomain();
   const { submissionState } = useSubmissionQueryState();
-  const router = useRouter();
   const t = useI18n();
 
-  const { data: participant, refetch } = useQuery(
+  const handleNavigateOnVerified = useCallback(() => {
+    const params = submissionQueryClientParamSerializer(submissionState);
+    window.location.replace(
+      `https://${domain}.blikka.app/confirmation${params}`,
+    );
+  }, [submissionState, domain]);
+
+  const {
+    data: participant,
+    refetch,
+    isLoading,
+  } = useQuery(
     trpc.participants.getByReference.queryOptions(
       {
         domain,
@@ -38,17 +57,49 @@ export function ClientVerificationPage() {
         refetchOnMount: true,
         refetchOnWindowFocus: true,
         refetchOnReconnect: true,
-        refetchInterval: 5000,
+        refetchInterval: 15000,
       },
     ),
   );
 
+  useParticipantStatusRealtime({
+    participantId: submissionState.participantId ?? undefined,
+    realtimeConfig,
+    onEvent: (payload) => {
+      if (payload.status === "verified") {
+        handleNavigateOnVerified();
+      }
+      if (payload.status === "rejected") {
+        notFound();
+      }
+    },
+  });
+
+  // useRealtime({
+  //   channelName: `participants-${submissionState.participantId}`,
+  //   filter: `id=eq.${submissionState.participantId}`,
+  //   event: "*",
+  //   table: "participants",
+  //   onEvent: (payload) => {
+  //     if (
+  //       payload.eventType === "UPDATE" &&
+  //       payload.new.status === "verified" &&
+  //       payload.new.id === submissionState.participantId
+  //     ) {
+  //       handleNavigateOnVerified()
+  //     }
+  //   },
+  // })
+
   useEffect(() => {
     if (participant?.status === "verified") {
-      const params = submissionQueryClientParamSerializer(submissionState);
-      router.push(`/confirmation${params}`);
+      handleNavigateOnVerified();
     }
-  }, [participant, router, submissionState]);
+
+    if (!isLoading && !participant) {
+      notFound();
+    }
+  }, [participant, handleNavigateOnVerified, isLoading]);
 
   const { refreshTimeout, startTimeout, isActive } = useRefreshTimeout();
 

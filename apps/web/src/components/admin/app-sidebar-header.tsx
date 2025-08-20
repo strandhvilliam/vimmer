@@ -19,6 +19,7 @@ export function AppSidebarHeader() {
   const { data: marathons } = useSuspenseQuery(
     trpc.users.getMarathonsByUserId.queryOptions({ userId: user?.id ?? "" }),
   );
+  console.log({ marathons });
 
   if (!user) {
     return <AppSidebarHeaderSkeleton />;

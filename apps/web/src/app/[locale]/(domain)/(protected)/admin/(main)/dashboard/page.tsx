@@ -20,10 +20,17 @@ export default async function DashboardPage() {
   const domain = await getDomain();
 
   batchPrefetch([
-    trpc.marathons.getByDomain.queryOptions({ domain }),
+    // trpc.marathons.getByDomain.queryOptions({ domain }),
     trpc.competitionClasses.getByDomain.queryOptions({ domain }),
     trpc.deviceGroups.getByDomain.queryOptions({ domain }),
     trpc.participants.getByDomain.queryOptions({ domain }),
+    trpc.participants.getByDomainPaginated.queryOptions({
+      domain,
+      page: 1,
+      pageSize: 10,
+      sortBy: "createdAt",
+      sortOrder: "desc",
+    }),
   ]);
 
   return (

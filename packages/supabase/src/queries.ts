@@ -229,7 +229,6 @@ export async function getTopicsWithSubmissionCountQuery(
     .eq("marathon_id", marathonId)
     .throwOnError();
 
-  console.log(data);
   return data?.map(toCamelCase) ?? [];
 }
 

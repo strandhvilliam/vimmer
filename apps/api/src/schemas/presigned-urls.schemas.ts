@@ -1,4 +1,4 @@
-import { z } from "zod/v4"
+import { z } from "zod/v4";
 
 export const generatePresignedUrlsSchema = z.object({
   participantRef: z.string().min(1),
@@ -8,8 +8,8 @@ export const generatePresignedUrlsSchema = z.object({
   preconvertedExifData: z
     .array(z.object({ orderIndex: z.number(), exif: z.any() }))
     .optional(),
-})
+});
 
 export type GeneratePresignedUrlsInput = z.infer<
   typeof generatePresignedUrlsSchema
->
+>;

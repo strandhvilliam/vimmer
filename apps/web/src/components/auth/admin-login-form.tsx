@@ -1,41 +1,44 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
-import { Button } from "@vimmer/ui/components/button";
-import { Input } from "@vimmer/ui/components/input";
-import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
-import { motion } from "motion/react";
-import { Card, CardContent } from "@vimmer/ui/components/card";
-import Link from "next/link";
-import { toast } from "sonner";
-import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { useState } from "react"
+import { Loader2 } from "lucide-react"
+
+import { Input } from "@vimmer/ui/components/input"
+import { useRouter } from "next/navigation"
+import { motion } from "motion/react"
+import { Card, CardContent } from "@vimmer/ui/components/card"
+import Link from "next/link"
+import { toast } from "sonner"
+import { PrimaryButton } from "@vimmer/ui/components/primary-button"
+import { signInWithPassword } from "@/lib/sign-in"
+import { authClient } from "@/lib/auth-client"
 
 export function AdminLoginForm() {
-  const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setIsLoading(true);
+    e.preventDefault()
+    setIsLoading(true)
 
     try {
-      const { error } = await authClient.emailOtp.sendVerificationOtp({
+      const { data } = await authClient.signIn.email({
         email,
-        type: "sign-in",
-      });
+        password,
+        rememberMe: true,
+      })
 
-      if (error) throw error;
-      router.push(`/auth/admin/verify?email=${encodeURIComponent(email)}`);
+      if (!data) throw new Error("Invalid credentials")
+      router.push("/select-domain")
     } catch (error) {
-      console.error(error);
+      console.error(error)
       toast.error("Something went wrong. Please try again.", {
         description: "Please try again.",
-      });
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   }
 
@@ -45,6 +48,17 @@ export function AdminLoginForm() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.1 }}
     >
+      <button
+        onClick={() =>
+          authClient.signUp.email({
+            email: "emil@stockholmfotomaraton.se",
+            password: "12345678",
+            name: "Emil Gyllenberg",
+          })
+        }
+      >
+        Sign Up
+      </button>
       <Card className="w-full border-0 shadow-none">
         <CardContent className="p-0">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -61,13 +75,26 @@ export function AdminLoginForm() {
               />
             </div>
 
+            <div className="space-y-2">
+              <Input
+                id="password"
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full"
+                disabled={isLoading}
+              />
+            </div>
+
             <PrimaryButton
               type="submit"
               className="w-full rounded-full py-3"
               disabled={isLoading}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Send Login Code
+              Sign In
             </PrimaryButton>
           </form>
 
@@ -85,5 +112,5 @@ export function AdminLoginForm() {
         </CardContent>
       </Card>
     </motion.div>
-  );
+  )
 }

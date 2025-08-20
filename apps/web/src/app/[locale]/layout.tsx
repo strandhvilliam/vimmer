@@ -1,36 +1,36 @@
-import "@vimmer/ui/globals.css"
-import type { Metadata } from "next"
-import { Providers } from "./providers"
-import { DotPattern } from "@vimmer/ui/components/dot-pattern"
-import { Toaster } from "@vimmer/ui/components/sonner"
-import { getDomain } from "@/lib/get-domain"
-import { Resource } from "sst"
+import "@vimmer/ui/globals.css";
+import type { Metadata } from "next";
+import { Providers } from "./providers";
+import { DotPattern } from "@vimmer/ui/components/dot-pattern";
+import { Toaster } from "@vimmer/ui/components/sonner";
+import { getDomain } from "@/lib/get-domain";
+import { Resource } from "sst";
 
 export const metadata: Metadata = {
   title: "Blikka",
   description: "Upload your submissions",
-}
+};
 
 export const generateStaticParams = async () => {
-  return [{ locale: "en" }]
-}
+  return [{ locale: "en" }];
+};
 
 interface RootLayoutProps {
   params: Promise<{
-    locale: string
-  }>
-  children: React.ReactNode
+    locale: string;
+  }>;
+  children: React.ReactNode;
 }
 
 export default async function RootLayout({
   params,
   children,
 }: RootLayoutProps) {
-  const { locale } = await params
+  const { locale } = await params;
 
-  let domain: string | null = null
+  let domain: string | null = null;
   try {
-    domain = await getDomain()
+    domain = await getDomain();
   } catch (_) {
     // expected error
   }
@@ -49,5 +49,5 @@ export default async function RootLayout({
         </Providers>
       </body>
     </html>
-  )
+  );
 }

@@ -14,19 +14,19 @@ interface LayoutProps {
 export default async function DashboardLayout({ children }: LayoutProps) {
   const domain = await getDomain();
   const queryClient = getQueryClient();
-  const data = await queryClient.fetchQuery(
-    trpc.marathons.getByDomain.queryOptions({
-      domain,
-    }),
-  );
+  // const data = await queryClient.fetchQuery(
+  //   trpc.marathons.getByDomain.queryOptions({
+  //     domain,
+  //   }),
+  // );
 
-  if (!data) {
-    notFound();
-  }
+  // if (!data) {
+  //   notFound();
+  // }
 
-  if (!data.setupCompleted) {
-    redirect(`/admin/onboarding`);
-  }
+  // if (!data.setupCompleted) {
+  //   redirect(`/admin/onboarding`);
+  // }
 
   return (
     <SidebarProvider>

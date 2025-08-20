@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   Dialog,
@@ -6,21 +6,21 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@vimmer/ui/components/dialog"
-import { useI18n } from "@/locales/client"
-import { CheckCircle, Wifi, RefreshCw, AlertTriangle } from "lucide-react"
-import { PrimaryButton } from "@vimmer/ui/components/primary-button"
+} from "@vimmer/ui/components/dialog";
+import { useI18n } from "@/locales/client";
+import { CheckCircle, Wifi, RefreshCw, AlertTriangle } from "lucide-react";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 
 interface UploadInstructionsDialogProps {
-  open: boolean
-  onClose: () => void
+  open: boolean;
+  onClose: () => void;
 }
 
 export function UploadInstructionsDialog({
   open,
   onClose,
 }: UploadInstructionsDialogProps) {
-  const t = useI18n()
+  const t = useI18n();
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -94,5 +94,5 @@ export function UploadInstructionsDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

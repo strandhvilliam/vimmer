@@ -8,6 +8,7 @@ import { ClientVerificationPage } from "./client-page";
 import { notFound, redirect } from "next/navigation";
 import { getDomain } from "@/lib/get-domain";
 import { batchPrefetch, getQueryClient, trpc } from "@/trpc/server";
+import { Resource } from "sst";
 
 export default async function VerificationPage({
   searchParams,
@@ -41,5 +42,13 @@ export default async function VerificationPage({
     redirect(`/confirmation${redirectParams}`);
   }
 
-  return <ClientVerificationPage />;
+  return (
+    <ClientVerificationPage
+      realtimeConfig={{
+        endpoint: Resource.Realtime.endpoint,
+        authorizer: Resource.Realtime.authorizer,
+        topic: `${Resource.App.name}/${Resource.App.stage}/participant-status`,
+      }}
+    />
+  );
 }

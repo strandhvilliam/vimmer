@@ -10,6 +10,7 @@ import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 
 export function StaffLoginForm() {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -18,16 +19,23 @@ export function StaffLoginForm() {
     setIsLoading(true);
 
     try {
-      const { error } = await authClient.emailOtp.sendVerificationOtp({
+      if (password !== "12345") {
+        toast.error("Invalid password", {
+          description: "Please check your password and try again.",
+        });
+        return;
+      }
+
+      const { error } = await authClient.signIn.email({
         email,
-        type: "sign-in",
+        password,
       });
 
       if (error) throw error;
-      router.push(`/auth/staff/verify?email=${encodeURIComponent(email)}`);
+      router.push("/staff");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to send verification code", {
+      toast.error("Failed to sign in", {
         description: "Please try again.",
       });
     } finally {
@@ -53,13 +61,26 @@ export function StaffLoginForm() {
         />
       </div>
 
+      <div className="space-y-2 w-full">
+        <Input
+          id="password"
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          className="w-full h-12"
+          disabled={isLoading}
+        />
+      </div>
+
       <PrimaryButton
         type="submit"
         className="rounded-full py-3 px-12 text-base"
         disabled={isLoading}
       >
         {isLoading && <Loader2 className=" mr-2 h-4 w-4 animate-spin" />}
-        Send Verification Code
+        Sign In
       </PrimaryButton>
     </form>
   );

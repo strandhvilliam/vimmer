@@ -11,14 +11,14 @@ import { ParticipantInfoSheet } from "@/components/staff/participant-info-sheet"
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { useSession } from "@/contexts/session-context";
+// import { useSession } from "@/contexts/session-context"
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { useDomain } from "@/contexts/domain-context";
 import {
   parseAsString,
   parseAsStringEnum,
-  parseAsInteger,
+  // parseAsInteger,
   useQueryState,
 } from "nuqs";
 import { ManualEntryOverlay } from "@/components/staff/manual-entry-overlay";
@@ -33,7 +33,7 @@ export function StaffClientPage({
   basePreviewUrl: string;
 }) {
   const trpc = useTRPC();
-  const { user } = useSession();
+  // const { user } = useSession();
   const { domain } = useDomain();
 
   const [activeParticipantReference, setActiveParticipantReference] =
@@ -44,11 +44,11 @@ export function StaffClientPage({
   const { data: ownVerifications } = useSuspenseQuery(
     trpc.validations.getParticipantVerificationsByStaffId.queryOptions(
       {
-        staffId: user?.id ?? "",
+        staffId: "1",
         domain,
       },
       {
-        enabled: !!user?.id,
+        enabled: true,
       },
     ),
   );
@@ -151,7 +151,7 @@ export function StaffClientPage({
           </Button>
           <h1 className="text-4xl font-bold font-rocgrotesk">Verification</h1>
           <p className="text-muted-foreground text-lg font-rocgrotesk">
-            Staff: {user?.name}
+            Staff: Temporary
           </p>
         </div>
 

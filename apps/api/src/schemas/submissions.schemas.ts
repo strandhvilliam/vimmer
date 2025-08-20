@@ -119,3 +119,7 @@ export const getZippedSubmissionsByParticipantRefSchema = z.object({
   domain: z.string(),
   participantRef: z.string(),
 });
+
+export const verifyS3UploadSchema = z.object({
+  key: z.string().min(1, "S3 key is required"),
+});

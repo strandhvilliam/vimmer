@@ -177,8 +177,6 @@ export function JuryInvitationCreateSheet({
         marathonId: marathon.id,
       };
 
-      console.log({ data });
-
       createJuryInvitation({
         data,
       });

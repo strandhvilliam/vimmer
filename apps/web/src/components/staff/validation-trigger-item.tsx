@@ -1,24 +1,24 @@
-import { Topic, Submission, ValidationResult } from "@vimmer/api/db/types"
-import { AccordionTrigger } from "@vimmer/ui/components/accordion"
-import { format } from "date-fns"
+import { Topic, Submission, ValidationResult } from "@vimmer/api/db/types";
+import { AccordionTrigger } from "@vimmer/ui/components/accordion";
+import { format } from "date-fns";
 import {
   ImageIcon,
   XIcon,
   AlertTriangle,
   CheckCircleIcon,
   FileQuestion,
-} from "lucide-react"
-import { useEffect, useState } from "react"
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface ValidationTriggerItemProps {
-  topic?: Topic
-  orderIndex?: number
-  submission?: Submission | null
-  validations: ValidationResult[]
-  thumbnailUrl?: string | null
-  title?: string
-  isGlobal?: boolean
-  onThumbnailClick?: () => void
+  topic?: Topic;
+  orderIndex?: number;
+  submission?: Submission | null;
+  validations: ValidationResult[];
+  thumbnailUrl?: string | null;
+  title?: string;
+  isGlobal?: boolean;
+  onThumbnailClick?: () => void;
 }
 
 export function ValidationTriggerItem({
@@ -31,23 +31,25 @@ export function ValidationTriggerItem({
   isGlobal = false,
   onThumbnailClick,
 }: ValidationTriggerItemProps) {
-  const [isBroken, setIsBroken] = useState(false)
+  const [isBroken, setIsBroken] = useState(false);
   const errorCount = validations.filter(
-    (v) => v.severity === "error" && v.outcome === "failed"
-  ).length
+    (v) => v.severity === "error" && v.outcome === "failed",
+  ).length;
   const warningCount = validations.filter(
-    (v) => v.severity === "warning" && v.outcome === "failed"
-  ).length
-  const passedCount = validations.filter((v) => v.outcome === "passed").length
-  const skippedCount = validations.filter((v) => v.outcome === "skipped").length
+    (v) => v.severity === "warning" && v.outcome === "failed",
+  ).length;
+  const passedCount = validations.filter((v) => v.outcome === "passed").length;
+  const skippedCount = validations.filter(
+    (v) => v.outcome === "skipped",
+  ).length;
 
   return (
     <AccordionTrigger className="flex items-center gap-3 w-full text-left p-3 hover:bg-muted/40 transition-all rounded-lg hover:no-underline group">
       {!isGlobal && (
         <div
           onClick={(e) => {
-            e.stopPropagation()
-            onThumbnailClick?.()
+            e.stopPropagation();
+            onThumbnailClick?.();
           }}
           className="w-14 h-14 rounded-lg overflow-hidden bg-muted/40 flex-shrink-0 shadow-sm group-hover:shadow-md transition-shadow"
         >
@@ -58,7 +60,7 @@ export function ValidationTriggerItem({
                 src={thumbnailUrl}
                 alt={topic?.name}
                 onError={() => {
-                  setIsBroken(true)
+                  setIsBroken(true);
                 }}
                 className="w-full h-full object-cover"
               />
@@ -97,7 +99,12 @@ export function ValidationTriggerItem({
         {!isGlobal && !!submission && (
           <span className="text-xs font-normal text-muted-foreground">
             Captured:{" "}
-            {format(new Date(submission.createdAt), "yyyy-MM-dd HH:mm")}
+            {format(
+              getCapturedAtDateFromExif(
+                (submission?.exif as { [key: string]: unknown }) ?? {},
+              ) ?? new Date(submission.createdAt),
+              "yyyy-MM-dd HH:mm",
+            )}
           </span>
         )}
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -134,5 +141,23 @@ export function ValidationTriggerItem({
         </div>
       </div>
     </AccordionTrigger>
-  )
+  );
+}
+
+function getCapturedAtDateFromExif(exif: { [key: string]: unknown }) {
+  try {
+    const dateFields = ["DateTimeOriginal", "CreateDate", "DateTime"];
+
+    for (const field of dateFields) {
+      if (exif?.[field] && typeof exif[field] === "string") {
+        try {
+          return new Date(exif[field]);
+        } catch (error) {
+          console.error("Error converting date field to ISO string:", error);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error converting date field to ISO string:", error);
+  }
 }

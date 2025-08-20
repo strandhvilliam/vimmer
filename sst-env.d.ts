@@ -10,6 +10,11 @@ declare module "sst" {
       "type": "sst.aws.Function"
       "url": string
     }
+    "ApiService": {
+      "service": string
+      "type": "sst.aws.Service"
+      "url": string
+    }
     "ContactSheetGeneratorQueue": {
       "type": "sst.aws.Queue"
       "url": string

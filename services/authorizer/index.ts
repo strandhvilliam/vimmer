@@ -9,7 +9,19 @@ export const handler = realtime.authorizer(async (token) => {
   console.log("isValid", isValid);
 
   return {
-    publish: [`${prefix}/revalidate`],
-    subscribe: [`${prefix}/revalidate`],
+    publish: [`*`],
+    subscribe: [`*`],
+  };
+  return {
+    publish: [
+      `${prefix}/revalidate`,
+      `${prefix}/participant-status`,
+      `${prefix}/submissions-status`,
+    ],
+    subscribe: [
+      `${prefix}/revalidate`,
+      `${prefix}/participant-status`,
+      `${prefix}/submissions-status`,
+    ],
   };
 });

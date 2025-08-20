@@ -187,6 +187,9 @@ export default {
   "uploadProgress.error.invalidFileType":
     "Ogiltig filtyp - endast bilder tillåtna",
   "uploadProgress.error.generic": "Uppladdning misslyckades",
+  "uploadProgress.clickToContinue": "Klicka på knappen nedan för att fortsätta",
+  "uploadProgress.clickToRetry": "Klicka på knappen nedan för att försöka igen",
+  "uploadProgress.thisMayTakeSeveralMinutes": "Detta kan ta flera minuter",
 
   // Upload Error Fallback
   "uploadError.title": "Kunde inte förbereda bidrag",
@@ -217,4 +220,4 @@ export default {
   "platformTerms.title": "Blikka App användarvillkor",
   "platformTerms.description": "Villkor för användning av Blikka-appen",
   "platformTerms.accept": "Acceptera plattformens villkor",
-} as const
+} as const;

@@ -1,13 +1,14 @@
-"use client";
+"use client"
 
-import { Card, CardContent } from "@vimmer/ui/components/card";
-import { FileSpreadsheet, FileText } from "lucide-react";
-import { ExportOptions } from "@/components/admin/export-options";
-import { ParticipantArchivesDownload } from "@/components/admin/participant-archives-download";
-import { ContactSheetExport } from "@/components/admin/contact-sheet-export";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { useTRPC } from "@/trpc/client";
-import { useDomain } from "@/contexts/domain-context";
+import { Card, CardContent } from "@vimmer/ui/components/card"
+import { FileSpreadsheet, FileText } from "lucide-react"
+import { ExportOptions } from "@/components/admin/export-options"
+import { ParticipantArchivesDownload } from "@/components/admin/participant-archives-download"
+import { ContactSheetExport } from "@/components/admin/contact-sheet-export"
+import { BulkContactSheetGeneration } from "@/components/admin/bulk-contact-sheet-generation"
+import { useSuspenseQuery } from "@tanstack/react-query"
+import { useTRPC } from "@/trpc/client"
+import { useDomain } from "@/contexts/domain-context"
 
 export const EXPORT_KEYS = {
   ZIP_PREVIEWS: "zip_previews",
@@ -18,42 +19,47 @@ export const EXPORT_KEYS = {
   XLSX_PARTICIPANTS: "xlsx_participants",
   XLSX_SUBMISSIONS: "xlsx_submissions",
   TXT_VALIDATION_RESULTS: "txt_validation_results",
-} as const;
+} as const
 
 export function ExportClientPage() {
-  const { domain } = useDomain();
-  const trpc = useTRPC();
+  const { domain } = useDomain()
+  const trpc = useTRPC()
 
   const { data: marathon } = useSuspenseQuery(
     trpc.marathons.getByDomain.queryOptions({
       domain,
-    }),
-  );
+    })
+  )
 
   const { data: participants } = useSuspenseQuery(
-    trpc.participants.getByDomain.queryOptions({
+    trpc.participants.getParticipantsWithoutSubmissions.queryOptions({
       domain,
-    }),
-  );
+    })
+  )
 
   const { data: zippedSubmissions } = useSuspenseQuery(
     trpc.submissions.getZippedSubmissionsByDomain.queryOptions({
       domain,
-    }),
-  );
+    })
+  )
 
-  const participantCount = participants.length;
-  const zippedSubmissionsCount = zippedSubmissions?.length;
+  const participantCount = participants.length
+  const zippedSubmissionsCount = zippedSubmissions?.length
   const canDownloadZippedSubmissions =
-    participantCount > 0 && participantCount === zippedSubmissionsCount;
+    participantCount > 0 && participantCount === zippedSubmissionsCount
 
   // Contact sheet status calculation
   const participantsWithContactSheets = participants.filter(
-    (p) => p.contactSheetKey,
-  ).length;
+    (p) => p.contactSheetKey
+  ).length
+
+  // Verified participants count for bulk generation
+  const verifiedParticipantsCount = participants.filter(
+    (p) => p.status === "verified" && p.contactSheetKey === null
+  ).length
 
   if (!marathon) {
-    return null;
+    return null
   }
 
   return (
@@ -175,14 +181,21 @@ export function ExportClientPage() {
           </Card>
         </div>
 
-        <ContactSheetExport
-          domain={domain}
-          marathonId={marathon.id}
-          participantsWithContactSheets={participantsWithContactSheets}
-          totalParticipants={participantCount}
-          disabled={participantsWithContactSheets === 0}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <ContactSheetExport
+            domain={domain}
+            marathonId={marathon.id}
+            participantsWithContactSheets={participantsWithContactSheets}
+            totalParticipants={participantCount}
+            disabled={participantsWithContactSheets === 0}
+          />
+
+          <BulkContactSheetGeneration
+            verifiedParticipantsCount={verifiedParticipantsCount}
+            disabled={verifiedParticipantsCount === 0}
+          />
+        </div>
       </div>
     </div>
-  );
+  )
 }

@@ -21,7 +21,6 @@ export function useParticipantSubmissionStep() {
   const handlePrevStep = () => {
     const prevStep = Math.max(step - 1, 1);
     setDirection(-1);
-    console.log({ prevStep });
     setStep(prevStep);
   };
   const handleSetStep = (newStep: number) => {

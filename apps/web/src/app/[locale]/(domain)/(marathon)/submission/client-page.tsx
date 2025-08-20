@@ -1,64 +1,74 @@
-"use client"
+"use client";
 
-import { AnimatedStepWrapper } from "@/components/participate/animated-step-wrapper"
-import { ClassSelectionStep } from "@/components/participate/class-selection-step"
-import { DeviceSelectionStep } from "@/components/participate/device-selection-step"
-import { ParticipantNumberStep } from "@/components/participate/participant-number-step"
-import { ParticipantDetailsStep } from "@/components/participate/participant-details-step"
-import { StepNavigator } from "@/components/participate/step-navigator"
-import { UploadSubmissionsStep } from "@/components/participate/upload-submissions-step"
-import { PARTICIPANT_SUBMISSION_STEPS } from "@/lib/constants"
-import { AnimatePresence } from "motion/react"
-import { notFound, useRouter } from "next/navigation"
-import { useCallback, useEffect } from "react"
-import { submissionQueryClientParamSerializer } from "@/lib/schemas/submission-query-client-schema"
-import { useSubmissionQueryState } from "@/hooks/use-submission-query-state"
-import { useSuspenseQueries } from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/client"
-import { useDomain } from "@/contexts/domain-context"
-import { mapDbRuleConfigsToValidationConfigs } from "@/lib/utils"
-import { useParticipantSubmissionStep } from "@/hooks/use-participant-submission-step"
-import dynamic from "next/dynamic"
+import { AnimatedStepWrapper } from "@/components/participate/animated-step-wrapper";
+import { ClassSelectionStep } from "@/components/participate/class-selection-step";
+import { DeviceSelectionStep } from "@/components/participate/device-selection-step";
+import { ParticipantNumberStep } from "@/components/participate/participant-number-step";
+import { ParticipantDetailsStep } from "@/components/participate/participant-details-step";
+import { StepNavigator } from "@/components/participate/step-navigator";
+import { UploadSubmissionsStep } from "@/components/participate/upload-submissions-step";
+import { PARTICIPANT_SUBMISSION_STEPS } from "@/lib/constants";
+import { AnimatePresence } from "motion/react";
+import { notFound, useRouter } from "next/navigation";
+import { useCallback, useEffect } from "react";
+import { submissionQueryClientParamSerializer } from "@/lib/schemas/submission-query-client-schema";
+import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
+import { useQuery, useSuspenseQueries } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
+import { useDomain } from "@/contexts/domain-context";
+import { mapDbRuleConfigsToValidationConfigs } from "@/lib/utils";
+import { useParticipantSubmissionStep } from "@/hooks/use-participant-submission-step";
+import dynamic from "next/dynamic";
 
 const NetworkStatusBanner = dynamic(
   () =>
     import("@/components/network-status-banner").then((mod) => ({
       default: mod.NetworkStatusBanner,
     })),
-  { ssr: false }
-)
+  { ssr: false },
+);
 
-export function SubmissionClientPage() {
-  const trpc = useTRPC()
-  const router = useRouter()
+export function SubmissionClientPage({
+  realtimeConfig,
+}: {
+  realtimeConfig: {
+    endpoint: string;
+    authorizer: string;
+    topic: string;
+  };
+}) {
+  const trpc = useTRPC();
+  const router = useRouter();
   const { handleNextStep, handlePrevStep, handleSetStep, step, direction } =
-    useParticipantSubmissionStep()
-  const { submissionState } = useSubmissionQueryState()
-  const { domain } = useDomain()
+    useParticipantSubmissionStep();
+  const { submissionState, setSubmissionState } = useSubmissionQueryState();
+  const { domain } = useDomain();
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault()
-      return "Are you sure you want to leave? All progress will be lost."
-    }
+      console.log("beforeunload", step);
+      event.preventDefault();
+      return "Are you sure you want to leave? All progress will be lost.";
+    };
 
     const isOnIOS =
-      navigator.userAgent.match(/iPad/i) || navigator.userAgent.match(/iPhone/i)
+      navigator.userAgent.match(/iPad/i) ||
+      navigator.userAgent.match(/iPhone/i);
 
     if (isOnIOS) {
-      window.addEventListener("pagehide", handleBeforeUnload)
+      window.addEventListener("pagehide", handleBeforeUnload);
     } else {
-      window.addEventListener("beforeunload", handleBeforeUnload)
+      window.addEventListener("beforeunload", handleBeforeUnload);
     }
 
     return () => {
       if (isOnIOS) {
-        window.removeEventListener("pagehide", handleBeforeUnload)
+        window.removeEventListener("pagehide", handleBeforeUnload);
       } else {
-        window.removeEventListener("beforeunload", handleBeforeUnload)
+        window.removeEventListener("beforeunload", handleBeforeUnload);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   const [
     { data: marathon },
@@ -82,15 +92,15 @@ export function SubmissionClientPage() {
         domain,
       }),
     ],
-  })
+  });
 
   const handleNavigateToVerification = useCallback(() => {
-    const params = submissionQueryClientParamSerializer(submissionState)
-    router.push(`/verification${params}`)
-  }, [router, submissionState])
+    const params = submissionQueryClientParamSerializer(submissionState);
+    router.push(`/verification${params}`);
+  }, [router, submissionState]);
 
   if (!marathon) {
-    notFound()
+    notFound();
   }
 
   return (
@@ -152,6 +162,7 @@ export function SubmissionClientPage() {
             direction={direction}
           >
             <UploadSubmissionsStep
+              realtimeConfig={realtimeConfig}
               marathon={marathon}
               competitionClasses={competitionClasses}
               topics={topics}
@@ -163,5 +174,5 @@ export function SubmissionClientPage() {
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }

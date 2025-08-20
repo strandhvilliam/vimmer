@@ -5,6 +5,7 @@ import { Topic } from "@vimmer/api/db/types"
 import {
   Card,
   CardContent,
+  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -19,11 +20,14 @@ import { Button } from "@vimmer/ui/components/button"
 import { Progress } from "@vimmer/ui/components/progress"
 import { AnimatePresence, motion } from "motion/react"
 import { FileProgressItem } from "@/components/participate/file-progress-item"
-import { AlertTriangle, RefreshCw, X } from "lucide-react"
+import { AlertTriangle, RefreshCcw, RefreshCw, X } from "lucide-react"
 import { useUploadStore } from "@/lib/stores/upload-store"
 import { useFileUpload } from "@/hooks/use-file-upload"
 import { useMemo, useState, useEffect } from "react"
 import { useI18n } from "@/locales/client"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useTRPC } from "@/trpc/client"
+import { useSubmissionQueryState } from "@/hooks/use-submission-query-state"
 
 interface UploadProgressProps {
   files?: PhotoWithPresignedUrl[]
@@ -32,6 +36,11 @@ interface UploadProgressProps {
   onComplete: () => void
   open?: boolean
   onClose?: () => void
+  realtimeConfig: {
+    endpoint: string
+    authorizer: string
+    topic: string
+  }
 }
 
 export function UploadProgress({
@@ -40,11 +49,28 @@ export function UploadProgress({
   onComplete,
   open = true,
   onClose,
+  realtimeConfig,
 }: UploadProgressProps) {
+  const queryClient = useQueryClient()
+  const trpc = useTRPC()
   const t = useI18n()
   const files = useUploadStore((state) => state.files)
-  const { retryFailedFiles } = useFileUpload()
+  const { retryFailedFiles } = useFileUpload({ realtimeConfig })
   const [elapsedTime, setElapsedTime] = useState(0)
+  const { submissionState } = useSubmissionQueryState()
+
+  const { mutate: verifyS3Upload } = useMutation(
+    trpc.submissions.verifyS3Upload.mutationOptions({
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.submissions.pathKey(),
+        })
+        queryClient.invalidateQueries({
+          queryKey: trpc.participants.pathKey(),
+        })
+      },
+    })
+  )
 
   const enhancedFileStates: FileState[] = useMemo(() => {
     const fileStates = Array.from(files.values())
@@ -60,6 +86,18 @@ export function UploadProgress({
               : ("pending" as const),
     }))
   }, [files])
+
+  const handleRefresh = () => {
+    if (elapsedTime > 60) {
+      for (const file of files.values()) {
+        if (file.phase === "s3_upload" || file.phase === "processing") {
+          verifyS3Upload({
+            key: file.key,
+          })
+        }
+      }
+    }
+  }
 
   const progress = useMemo(() => {
     const fileStates = Array.from(files.values())
@@ -128,13 +166,22 @@ export function UploadProgress({
               <div className="text-sm w-8 text-muted-foreground font-mono">
                 {!hasFailures && formatTime(elapsedTime)}
               </div>
-              <CardTitle className="text-xl font-rocgrotesk flex-1 text-center">
-                {allUploadsComplete
-                  ? t("uploadProgress.titleComplete")
-                  : hasFailures
-                    ? t("uploadProgress.titleIssues")
-                    : t("uploadProgress.titleUploading")}
-              </CardTitle>
+              <div className="flex flex-col items-center">
+                <CardTitle className="text-xl font-rocgrotesk flex-1 text-center">
+                  {allUploadsComplete
+                    ? t("uploadProgress.titleComplete")
+                    : hasFailures
+                      ? t("uploadProgress.titleIssues")
+                      : t("uploadProgress.titleUploading")}
+                </CardTitle>
+                <CardDescription>
+                  {allUploadsComplete
+                    ? t("uploadProgress.clickToContinue")
+                    : hasFailures
+                      ? t("uploadProgress.clickToRetry")
+                      : t("uploadProgress.thisMayTakeSeveralMinutes")}
+                </CardDescription>
+              </div>
               <div className="w-8 flex justify-end">
                 {hasFailures && onClose && (
                   <button
@@ -143,6 +190,15 @@ export function UploadProgress({
                     aria-label={t("uploadProgress.closeDialogAria")}
                   >
                     <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                  </button>
+                )}
+                {!hasFailures && (
+                  <button
+                    onClick={handleRefresh}
+                    className="p-1 hover:bg-muted rounded-full transition-colors border"
+                    aria-label={t("uploadProgress.closeDialogAria")}
+                  >
+                    <RefreshCcw className="w-4 h-4 text-muted-foreground hover:text-foreground" />
                   </button>
                 )}
               </div>

@@ -1,18 +1,18 @@
-import { Suspense } from "react"
-import { StaffDetailsClient } from "./client-page"
-import { getDomain } from "@/lib/get-domain"
-import { HydrateClient, batchPrefetch, trpc } from "@/trpc/server"
-import { StaffDetailsSkeleton } from "@/components/admin/staff-details-skeleton"
+import { Suspense } from "react";
+import { StaffDetailsClient } from "./client-page";
+import { getDomain } from "@/lib/get-domain";
+import { HydrateClient, batchPrefetch, trpc } from "@/trpc/server";
+import { StaffDetailsSkeleton } from "@/components/admin/staff-details-skeleton";
 
 interface PageProps {
   params: Promise<{
-    staffId: string
-  }>
+    staffId: string;
+  }>;
 }
 
 export default async function StaffDetailsPage({ params }: PageProps) {
-  const domain = await getDomain()
-  const { staffId } = await params
+  const domain = await getDomain();
+  const { staffId } = await params;
 
   batchPrefetch([
     trpc.users.getStaffMemberById.queryOptions({
@@ -26,7 +26,7 @@ export default async function StaffDetailsPage({ params }: PageProps) {
       staffId,
       domain,
     }),
-  ])
+  ]);
 
   return (
     <HydrateClient>
@@ -34,5 +34,5 @@ export default async function StaffDetailsPage({ params }: PageProps) {
         <StaffDetailsClient staffId={staffId} />
       </Suspense>
     </HydrateClient>
-  )
+  );
 }
