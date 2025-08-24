@@ -56,10 +56,7 @@ export function JuryClientPage({ token }: { token: string }) {
     })
   }
 
-  if (
-    invitation.status === "in_progress" ||
-    invitation.status === "completed"
-  ) {
+  if (invitation.status === "in_progress") {
     redirect(`/jury/review?token=${invitation.token}`)
   }
 
