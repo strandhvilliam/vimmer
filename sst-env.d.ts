@@ -10,11 +10,6 @@ declare module "sst" {
       "type": "sst.aws.Function"
       "url": string
     }
-    "ApiService": {
-      "service": string
-      "type": "sst.aws.Service"
-      "url": string
-    }
     "ContactSheetGeneratorQueue": {
       "type": "sst.aws.Queue"
       "url": string
@@ -22,11 +17,6 @@ declare module "sst" {
     "ContactSheetsBucket": {
       "name": string
       "type": "sst.aws.Bucket"
-    }
-    "DownloadPresignedFunction": {
-      "name": string
-      "type": "sst.aws.Function"
-      "url": string
     }
     "ExportsBucket": {
       "name": string

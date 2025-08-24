@@ -6,7 +6,7 @@ export default $config({
       name: "vimmer",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
-    };
+    }
   },
   async run() {
     const env = {
@@ -17,10 +17,11 @@ export default $config({
       REVALIDATE_SECRET: process.env.REVALIDATE_SECRET!,
       DATABASE_URL: process.env.DATABASE_URL!,
       JURY_JWT_SECRET: process.env.JURY_JWT_SECRET!,
-    };
+      TEMP_ENV: "true",
+    }
 
     const allowOrigins =
-      process.env.SUBMISSION_BUCKETS_ALLOW_ORIGINS?.split(",") ?? [];
+      process.env.SUBMISSION_BUCKETS_ALLOW_ORIGINS?.split(",") ?? []
 
     const submissionBucket = new sst.aws.Bucket("SubmissionBucket", {
       access: "cloudfront",
@@ -30,7 +31,7 @@ export default $config({
         allowHeaders: ["*"],
         exposeHeaders: ["Access-Control-Allow-Origin"],
       },
-    });
+    })
     const thumbnailBucket = new sst.aws.Bucket("ThumbnailBucket", {
       access: "cloudfront",
       cors: {
@@ -38,7 +39,7 @@ export default $config({
         allowMethods: ["PUT"],
         allowHeaders: ["*"],
       },
-    });
+    })
     const previewBucket = new sst.aws.Bucket("PreviewBucket", {
       access: "cloudfront",
       cors: {
@@ -46,7 +47,7 @@ export default $config({
         allowMethods: ["PUT"],
         allowHeaders: ["*"],
       },
-    });
+    })
     const marathonSettingsBucket = new sst.aws.Bucket(
       "MarathonSettingsBucket",
       {
@@ -54,20 +55,20 @@ export default $config({
         cors: {
           allowOrigins,
         },
-      },
-    );
+      }
+    )
 
     const contactSheetsBucket = new sst.aws.Bucket("ContactSheetsBucket", {
       access: "public",
-    });
+    })
 
     const realtime = new sst.aws.Realtime("Realtime", {
       authorizer: "services/authorizer/index.handler",
-    });
+    })
 
     const exportsBucket = new sst.aws.Bucket("ExportsBucket", {
       access: "public",
-    });
+    })
 
     const submissionsRouter = new sst.aws.Router("SubmissionsRouter", {
       routes: {
@@ -75,7 +76,7 @@ export default $config({
           bucket: submissionBucket,
         },
       },
-    });
+    })
 
     const thumbnailsRouter = new sst.aws.Router("ThumbnailsRouter", {
       routes: {
@@ -83,7 +84,7 @@ export default $config({
           bucket: thumbnailBucket,
         },
       },
-    });
+    })
 
     const previewsRouter = new sst.aws.Router("PreviewsRouter", {
       routes: {
@@ -91,7 +92,7 @@ export default $config({
           bucket: previewBucket,
         },
       },
-    });
+    })
 
     const marathonSettingsRouter = new sst.aws.Router(
       "MarathonSettingsRouter",
@@ -101,13 +102,14 @@ export default $config({
             bucket: marathonSettingsBucket,
           },
         },
-      },
-    );
+      }
+    )
 
     const api = new sst.aws.Function("Api", {
       handler: "./apps/api/src/index.handler",
       url: true,
       timeout: "60 seconds",
+      memory: "2 GB",
       environment: {
         POSTHOG_API_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY!,
         POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
@@ -132,7 +134,7 @@ export default $config({
           resources: ["*"],
         },
       ],
-    });
+    })
 
     const variantGenerator = new sst.aws.Function("VariantsGenerator", {
       handler: "./services/variants-generator/index.handler",
@@ -154,82 +156,82 @@ export default $config({
           resources: [previewBucket.arn, exportsBucket.arn],
         },
       ],
-    });
+    })
 
-    const vpc = new sst.aws.Vpc("VimmerVPC");
-    const cluster = new sst.aws.Cluster("VimmerCluster", { vpc });
+    const vpc = new sst.aws.Vpc("VimmerVPC")
+    const cluster = new sst.aws.Cluster("VimmerCluster", { vpc })
 
-    const apiService = new sst.aws.Service("ApiService", {
-      cluster,
-      scaling: {
-        min: 2,
-        max: 10,
-        cpuUtilization: 50,
-        memoryUtilization: 50,
-        requestCount: 200,
-      },
-      memory: "4 GB",
-      cpu: "2 vCPU",
-      image: {
-        dockerfile: "./apps/api/Dockerfile",
-      },
-      environment: {
-        POSTHOG_API_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY!,
-        POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
-        SUBMISSION_DISTRIBUTION_ID: submissionsRouter.distributionID,
-        PREVIEW_DISTRIBUTION_ID: previewsRouter.distributionID,
-        THUMBNAIL_DISTRIBUTION_ID: thumbnailsRouter.distributionID,
-        IS_CONTAINER: "true",
-        ...env,
-      },
-      link: [
-        realtime,
-        submissionBucket,
-        exportsBucket,
-        marathonSettingsBucket,
-        thumbnailBucket,
-        previewBucket,
-        contactSheetsBucket,
-      ],
+    // const apiService = new sst.aws.Service("ApiService", {
+    //   cluster,
+    //   scaling: {
+    //     min: 2,
+    //     max: 10,
+    //     cpuUtilization: 50,
+    //     memoryUtilization: 50,
+    //     requestCount: 200,
+    //   },
+    //   memory: "4 GB",
+    //   cpu: "2 vCPU",
+    //   image: {
+    //     dockerfile: "./apps/api/Dockerfile",
+    //   },
+    //   environment: {
+    //     POSTHOG_API_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY!,
+    //     POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
+    //     SUBMISSION_DISTRIBUTION_ID: submissionsRouter.distributionID,
+    //     PREVIEW_DISTRIBUTION_ID: previewsRouter.distributionID,
+    //     THUMBNAIL_DISTRIBUTION_ID: thumbnailsRouter.distributionID,
+    //     IS_CONTAINER: "true",
+    //     ...env,
+    //   },
+    //   link: [
+    //     realtime,
+    //     submissionBucket,
+    //     exportsBucket,
+    //     marathonSettingsBucket,
+    //     thumbnailBucket,
+    //     previewBucket,
+    //     contactSheetsBucket,
+    //   ],
 
-      permissions: [
-        {
-          effect: "allow",
-          actions: ["cloudfront:CreateInvalidation"],
-          resources: ["*"],
-        },
-      ],
-      health: {
-        command: [
-          "CMD-SHELL",
-          "curl -f http://127.0.0.1:3222/health || exit 1",
-        ],
-        interval: "10 seconds",
-        timeout: "5 seconds",
-        retries: 3,
-        startPeriod: "10 seconds",
-      },
-      dev: {
-        url: "http://localhost:3222/",
-        command: "bun run apps/api/src/index.ts",
-      },
-      loadBalancer: {
-        domain: "api.blikka.app",
-        health: {
-          "3222/http": {
-            path: "/health",
-            interval: "10 seconds",
-            healthyThreshold: 2,
-            unhealthyThreshold: 2,
-          },
-        },
-        rules: [
-          { listen: "80/http", redirect: "443/https" },
-          { listen: "443/https", forward: "3222/http" },
-        ],
-      },
-      // Port your app listens on
-    });
+    //   permissions: [
+    //     {
+    //       effect: "allow",
+    //       actions: ["cloudfront:CreateInvalidation"],
+    //       resources: ["*"],
+    //     },
+    //   ],
+    //   health: {
+    //     command: [
+    //       "CMD-SHELL",
+    //       "curl -f http://127.0.0.1:3222/health || exit 1",
+    //     ],
+    //     interval: "10 seconds",
+    //     timeout: "5 seconds",
+    //     retries: 3,
+    //     startPeriod: "10 seconds",
+    //   },
+    //   dev: {
+    //     url: "http://localhost:3222/",
+    //     command: "bun run apps/api/src/index.ts",
+    //   },
+    //   loadBalancer: {
+    //     domain: "api.blikka.app",
+    //     health: {
+    //       "3222/http": {
+    //         path: "/health",
+    //         interval: "10 seconds",
+    //         healthyThreshold: 2,
+    //         unhealthyThreshold: 2,
+    //       },
+    //     },
+    //     rules: [
+    //       { listen: "80/http", redirect: "443/https" },
+    //       { listen: "443/https", forward: "3222/http" },
+    //     ],
+    //   },
+    //   // Port your app listens on
+    // });
 
     // const exportSubmissionsTask = new sst.aws.Task("ExportSubmissionsTask", {
     //   cluster,
@@ -310,8 +312,8 @@ export default $config({
         dev: {
           command: "bun run services/generate-participant-zip/index.ts",
         },
-      },
-    );
+      }
+    )
 
     // new sst.aws.Function("ExportCaller", {
     //   handler: "services/export-caller/index.handler",
@@ -324,36 +326,38 @@ export default $config({
     //   url: true,
     // });
 
-    new sst.aws.Function("DownloadPresignedFunction", {
-      handler: "services/download-presigned/index.handler",
-      environment: env,
-      url: true,
-      link: [exportsBucket],
-    });
+    // new sst.aws.Function("DownloadPresignedFunction", {
+    //   handler: "services/download-presigned/index.handler",
+    //   environment: env,
+    //   url: true,
+    //   link: [exportsBucket],
+    // })
 
-    const processSubmissionDlq = new sst.aws.Queue("ProcessSubmissionDlq");
-    const validateSubmissionDlq = new sst.aws.Queue("ValidateSubmissionDlq");
+    const processSubmissionDlq = new sst.aws.Queue("ProcessSubmissionDlq")
+    const validateSubmissionDlq = new sst.aws.Queue("ValidateSubmissionDlq")
 
     const processSubmissionQueue = new sst.aws.Queue("ProcessPhotoQueue", {
+      visibilityTimeout: "5 minutes",
       dlq: {
         retry: 5,
         queue: processSubmissionDlq.arn,
       },
-    });
+    })
 
     const validateSubmissionQueue = new sst.aws.Queue(
       "ValidateSubmissionQueue",
       {
         dlq: validateSubmissionDlq.arn,
-      },
-    );
+      }
+    )
 
     const contactSheetGeneratorQueue = new sst.aws.Queue(
-      "ContactSheetGeneratorQueue",
-    );
+      "ContactSheetGeneratorQueue"
+    )
 
     contactSheetGeneratorQueue.subscribe({
       handler: "./services/contact-sheet-generator/index.handler",
+      memory: "4 GB",
       link: [
         contactSheetsBucket,
         marathonSettingsBucket,
@@ -379,7 +383,7 @@ export default $config({
           ],
         },
       ],
-    });
+    })
 
     validateSubmissionQueue.subscribe({
       handler: "./services/photo-validator/index.handler",
@@ -389,7 +393,7 @@ export default $config({
         POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
       },
       link: [api],
-    });
+    })
 
     processSubmissionQueue.subscribe({
       handler: "./services/photo-processor/index.handler",
@@ -422,7 +426,7 @@ export default $config({
           ],
         },
       ],
-    });
+    })
 
     submissionBucket.notify({
       notifications: [
@@ -432,7 +436,7 @@ export default $config({
           events: ["s3:ObjectCreated:*"],
         },
       ],
-    });
+    })
 
     new sst.aws.Nextjs("WebApp", {
       path: "./apps/web",
@@ -450,7 +454,7 @@ export default $config({
         previewsRouter,
         marathonSettingsRouter,
         api,
-        apiService,
+        // apiService,
         realtime,
         // exportSubmissionsTask,
         generateParticipantZipTask,
@@ -469,6 +473,6 @@ export default $config({
             ? process.env.BETTER_AUTH_URL!
             : "http://localhost:3000",
       },
-    });
+    })
   },
-});
+})

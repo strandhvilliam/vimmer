@@ -38,7 +38,7 @@ export const participantsRouter = createTRPCRouter({
   getParticipantsWithoutSubmissions: publicProcedure
     .input(getParticipantsWithoutSubmissionsSchema)
     .query(async ({ ctx, input }) => {
-      return getParticipantsWithoutSubmissionsQuery(ctx.db, {
+      return await getParticipantsWithoutSubmissionsQuery(ctx.db, {
         domain: input.domain,
       })
     }),
@@ -46,7 +46,7 @@ export const participantsRouter = createTRPCRouter({
   getByDomainPaginated: publicProcedure
     .input(getParticipantsByDomainPaginatedSchema)
     .query(async ({ ctx, input }) => {
-      return getParticipantsByDomainPaginatedQuery(ctx.db, {
+      return await getParticipantsByDomainPaginatedQuery(ctx.db, {
         domain: input.domain,
         page: input.page,
         pageSize: input.pageSize,
@@ -78,7 +78,7 @@ export const participantsRouter = createTRPCRouter({
   getByReference: publicProcedure
     .input(getParticipantByReferenceSchema)
     .query(async ({ ctx, input }) => {
-      return getParticipantByReferenceQuery(ctx.db, {
+      return await getParticipantByReferenceQuery(ctx.db, {
         reference: input.reference,
         domain: input.domain,
       })
@@ -87,7 +87,7 @@ export const participantsRouter = createTRPCRouter({
   create: publicProcedure
     .input(createParticipantSchema)
     .mutation(async ({ ctx, input }) => {
-      return createParticipantMutation(ctx.db, {
+      return await createParticipantMutation(ctx.db, {
         data: input.data,
       })
     }),
@@ -95,7 +95,7 @@ export const participantsRouter = createTRPCRouter({
   update: publicProcedure
     .input(updateParticipantSchema)
     .mutation(async ({ ctx, input }) => {
-      return updateParticipantMutation(ctx.db, {
+      return await updateParticipantMutation(ctx.db, {
         id: input.id,
         data: input.data,
       })
@@ -130,7 +130,7 @@ export const participantsRouter = createTRPCRouter({
   incrementUploadCounter: publicProcedure
     .input(incrementUploadCounterSchema)
     .mutation(async ({ ctx, input }) => {
-      return incrementUploadCounterMutation(ctx.supabase, {
+      return await incrementUploadCounterMutation(ctx.supabase, {
         participantId: input.participantId,
         totalExpected: input.totalExpected,
       })

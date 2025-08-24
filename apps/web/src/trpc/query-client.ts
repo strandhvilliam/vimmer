@@ -5,10 +5,10 @@ export const createQueryClient = () =>
   new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 0,
+        staleTime: 1000 * 60,
       },
       dehydrate: {
-        serializeData: SuperJSON.serialize,
+        // serializeData: SuperJSON.serialize,
         shouldDehydrateQuery: (query) =>
           defaultShouldDehydrateQuery(query) ||
           query.state.status === "pending",
@@ -16,8 +16,8 @@ export const createQueryClient = () =>
           return false
         },
       },
-      hydrate: {
-        deserializeData: SuperJSON.deserialize,
-      },
+      // hydrate: {
+      //   deserializeData: SuperJSON.deserialize,
+      // },
     },
   })

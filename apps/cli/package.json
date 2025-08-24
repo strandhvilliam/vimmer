@@ -18,14 +18,16 @@
     "typescript": "^5.7.2"
   },
   "dependencies": {
-    "commander": "^12.1.0",
-    "@vimmer/validation": "workspace:*",
-    "@vimmer/supabase": "workspace:*",
-    "@vimmer/email": "workspace:*",
-    "resend": "^4.0.0",
     "@aws-sdk/client-s3": "^3.850.0",
+    "@aws-sdk/client-sqs": "^3.872.0",
+    "@vimmer/api": "workspace:*",
+    "@vimmer/email": "workspace:*",
+    "@vimmer/supabase": "workspace:*",
+    "@vimmer/validation": "workspace:*",
+    "commander": "^12.1.0",
     "drizzle-orm": "^0.44.2",
-    "postgres": "^3.4.7"
+    "postgres": "^3.4.7",
+    "resend": "^4.0.0"
   },
   "module": "src/index.ts"
 }

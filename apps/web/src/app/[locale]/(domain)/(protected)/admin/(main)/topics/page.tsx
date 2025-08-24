@@ -1,23 +1,23 @@
-import { Metadata } from "next";
-import { Suspense } from "react";
-import { TopicsClientWrapper } from "@/components/admin/topics-client-wrapper";
-import { TopicsTableSkeleton } from "@/components/admin/topics-table-skeleton";
-import { TopicsHeader } from "@/components/admin/topics-header";
-import { HydrateClient, batchPrefetch, trpc } from "@/trpc/server";
-import { getDomain } from "@/lib/get-domain";
+import { Metadata } from "next"
+import { Suspense } from "react"
+import { TopicsClientWrapper } from "@/components/admin/topics-client-wrapper"
+import { TopicsTableSkeleton } from "@/components/admin/topics-table-skeleton"
+import { TopicsHeader } from "@/components/admin/topics-header"
+import { HydrateClient, batchPrefetch, trpc } from "@/trpc/server"
+import { getDomain } from "@/lib/get-domain"
 
 export const metadata: Metadata = {
   title: "Topics Management",
   description:
     "Manage and organize your marathon topics, control their visibility and scheduling.",
-};
+}
 
 export default async function TopicsPage() {
-  const domain = await getDomain();
+  const domain = await getDomain()
   batchPrefetch([
-    trpc.marathons.getByDomain.queryOptions({
-      domain,
-    }),
+    // trpc.marathons.getByDomain.queryOptions({
+    //   domain,
+    // }),
     trpc.topics.getByDomain.queryOptions({
       domain,
     }),
@@ -27,7 +27,7 @@ export default async function TopicsPage() {
     trpc.topics.getWithSubmissionCount.queryOptions({
       domain,
     }),
-  ]);
+  ])
 
   return (
     <HydrateClient>
@@ -48,5 +48,5 @@ export default async function TopicsPage() {
         </div>
       </div>
     </HydrateClient>
-  );
+  )
 }

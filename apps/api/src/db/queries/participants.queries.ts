@@ -22,7 +22,7 @@ export async function getParticipantByIdQuery(
       competitionClass: true,
       deviceGroup: true,
       validationResults: true,
-      zippedSubmission: true,
+      zippedSubmissions: true,
     },
   })
 
@@ -38,7 +38,7 @@ export async function getParticipantsWithoutSubmissionsQuery(
     with: {
       competitionClass: true,
       deviceGroup: true,
-      zippedSubmission: true,
+      zippedSubmissions: true,
     },
   })
 
@@ -59,7 +59,7 @@ export async function getParticipantByReferenceQuery(
       competitionClass: true,
       deviceGroup: true,
       validationResults: true,
-      zippedSubmission: true,
+      zippedSubmissions: true,
     },
   })
 
@@ -81,7 +81,7 @@ export async function getParticipantsByDomainQuery(
       competitionClass: true,
       deviceGroup: true,
       validationResults: true,
-      zippedSubmission: true,
+      zippedSubmissions: true,
     },
   })
 
@@ -210,7 +210,7 @@ export async function getParticipantsByDomainPaginatedQuery(
       competitionClass: true,
       deviceGroup: true,
       validationResults: true,
-      zippedSubmission: true,
+      zippedSubmissions: true,
     },
     orderBy,
     limit: pageSize,

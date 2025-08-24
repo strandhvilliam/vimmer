@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { redirect } from "next/navigation"
 
 export default async function AdminIndexPage() {
-  redirect(`/admin/dashboard`);
+  redirect(`/admin/submissions`)
 }

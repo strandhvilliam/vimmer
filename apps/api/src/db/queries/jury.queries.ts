@@ -1,118 +1,119 @@
-import { eq, and, desc } from "drizzle-orm";
-import type { Database } from "@vimmer/api/db";
+import { eq, and, desc, lt } from "drizzle-orm"
+import type { Database } from "@vimmer/api/db"
 import {
   submissions,
   participants,
   marathons,
   juryInvitations,
   juryRatings,
-} from "@vimmer/api/db/schema";
+} from "@vimmer/api/db/schema"
 import type {
   CompetitionClass,
   DeviceGroup,
   NewJuryInvitation,
   Participant,
   Submission,
-} from "@vimmer/api/db/types";
-import { TRPCError } from "@trpc/server";
-import { jwtVerify } from "jose";
-import { z } from "zod";
+  Topic,
+} from "@vimmer/api/db/types"
+import { TRPCError } from "@trpc/server"
+import { jwtVerify } from "jose"
+import { z } from "zod"
 
-export async function getJurySubmissionsQuery(
-  db: Database,
-  filters: {
-    domain: string;
-    competitionClassId?: number | null;
-    deviceGroupId?: number | null;
-    topicId?: number | null;
-  },
-) {
-  const marathon = await db
-    .select({ id: marathons.id })
-    .from(marathons)
-    .where(eq(marathons.domain, filters.domain))
-    .limit(1);
+// export async function getJurySubmissionsQuery(
+//   db: Database,
+//   filters: {
+//     domain: string
+//     competitionClassId?: number | null
+//     deviceGroupId?: number | null
+//     topicId?: number | null
+//   }
+// ) {
+//   const marathon = await db
+//     .select({ id: marathons.id })
+//     .from(marathons)
+//     .where(eq(marathons.domain, filters.domain))
+//     .limit(1)
 
-  if (!marathon.length) {
-    return [];
-  }
+//   if (!marathon.length) {
+//     return []
+//   }
 
-  const marathonId = marathon[0]!.id;
+//   const marathonId = marathon[0]!.id
 
-  const conditions = [
-    eq(submissions.marathonId, marathonId),
-    eq(submissions.status, "uploaded"),
-  ];
+//   const conditions = [
+//     eq(submissions.marathonId, marathonId),
+//     eq(submissions.status, "uploaded"),
+//   ]
 
-  if (
-    filters.competitionClassId !== null &&
-    filters.competitionClassId !== undefined
-  ) {
-    conditions.push(
-      eq(participants.competitionClassId, filters.competitionClassId),
-    );
-  }
+//   if (
+//     filters.competitionClassId !== null &&
+//     filters.competitionClassId !== undefined
+//   ) {
+//     conditions.push(
+//       eq(participants.competitionClassId, filters.competitionClassId)
+//     )
+//   }
 
-  if (filters.deviceGroupId !== null && filters.deviceGroupId !== undefined) {
-    conditions.push(eq(participants.deviceGroupId, filters.deviceGroupId));
-  }
+//   if (filters.deviceGroupId !== null && filters.deviceGroupId !== undefined) {
+//     conditions.push(eq(participants.deviceGroupId, filters.deviceGroupId))
+//   }
 
-  if (filters.topicId !== null && filters.topicId !== undefined) {
-    conditions.push(eq(submissions.topicId, filters.topicId));
-  }
+//   if (filters.topicId !== null && filters.topicId !== undefined) {
+//     conditions.push(eq(submissions.topicId, filters.topicId))
+//   }
 
-  const result = await db.query.submissions.findMany({
-    where: and(...conditions),
-    with: {
-      participant: {
-        with: {
-          competitionClass: true,
-          deviceGroup: true,
-        },
-      },
-      topic: true,
-    },
-  });
+//   const result = await db.query.submissions.findMany({
+//     where: and(...conditions),
+//     with: {
+//       participant: {
+//         with: {
+//           competitionClass: true,
+//           deviceGroup: true,
+//         },
+//       },
+//       topic: true,
+//     },
+//   })
 
-  return result;
-}
+//   return result
+// }
 
 export async function getJuryInvitationsByMarathonIdQuery(
   db: Database,
-  { id }: { id: number },
+  { id }: { id: number }
 ) {
   const result = await db.query.juryInvitations.findMany({
     where: eq(juryInvitations.marathonId, id),
     orderBy: [desc(juryInvitations.createdAt)],
-  });
-  return result;
+  })
+  return result
 }
 
 export async function getJuryInvitationByIdQuery(
   db: Database,
-  { id }: { id: number },
+  { id }: { id: number }
 ) {
   const result = await db.query.juryInvitations.findFirst({
     where: eq(juryInvitations.id, id),
-  });
-  return result ?? null;
+  })
+  return result ?? null
 }
 
 export async function getJuryInvitationsByDomainQuery(
   db: Database,
-  { domain }: { domain: string },
+  { domain }: { domain: string }
 ) {
   const marathon = await db
     .select({ id: marathons.id })
     .from(marathons)
     .where(eq(marathons.domain, domain))
-    .limit(1);
+    .limit(1)
 
   if (!marathon.length) {
-    return [];
+    return []
   }
 
-  const marathonId = marathon[0]!.id;
+  const marathonId = marathon[0]!.id
 
   const result = await db.query.juryInvitations.findMany({
     where: eq(juryInvitations.marathonId, marathonId),
@@ -122,51 +123,51 @@ export async function getJuryInvitationsByDomainQuery(
       deviceGroup: true,
       topic: true,
     },
-  });
+  })
 
-  return result;
+  return result
 }
 
 export async function createJuryInvitationMutation(
   db: Database,
-  { data }: { data: NewJuryInvitation },
+  { data }: { data: NewJuryInvitation }
 ) {
   const result = await db
     .insert(juryInvitations)
     .values(data)
-    .returning({ id: juryInvitations.id });
+    .returning({ id: juryInvitations.id })
 
   if (!result[0]?.id) {
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
       message: "Failed to create jury invitation",
-    });
+    })
   }
 
-  return result[0].id;
+  return result[0].id
 }
 
 export async function updateJuryInvitationMutation(
   db: Database,
-  { id, data }: { id: number; data: Partial<NewJuryInvitation> },
+  { id, data }: { id: number; data: Partial<NewJuryInvitation> }
 ) {
   const result = await db
     .update(juryInvitations)
     .set(data)
     .where(eq(juryInvitations.id, id))
-    .returning({ id: juryInvitations.id });
-  return result[0]?.id ?? null;
+    .returning({ id: juryInvitations.id })
+  return result[0]?.id ?? null
 }
 
 export async function deleteJuryInvitationMutation(
   db: Database,
-  { id }: { id: number },
+  { id }: { id: number }
 ) {
   const result = await db
     .delete(juryInvitations)
     .where(eq(juryInvitations.id, id))
-    .returning({ id: juryInvitations.id });
-  return result[0]?.id ?? null;
+    .returning({ id: juryInvitations.id })
+  return result[0]?.id ?? null
 }
 
 const TokenPayloadSchema = z.object({
@@ -174,48 +175,45 @@ const TokenPayloadSchema = z.object({
   invitationId: z.number(),
   iat: z.number(),
   exp: z.number(),
-});
+})
 
 async function verifyJuryToken(token: string) {
   try {
-    const secret = process.env.JURY_JWT_SECRET;
+    const secret = process.env.JURY_JWT_SECRET
     if (!secret) {
-      throw new Error("JWT SECRET is not set");
+      throw new Error("JWT SECRET is not set")
     }
-    const { payload } = await jwtVerify(
-      token,
-      new TextEncoder().encode(secret),
-    );
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(secret))
 
-    const parsed = TokenPayloadSchema.safeParse(payload);
+    const parsed = TokenPayloadSchema.safeParse(payload)
     if (parsed.success) {
-      return parsed.data;
+      return parsed.data
     }
-    return null;
+    return null
   } catch {
-    return null;
+    return null
   }
 }
 
 export async function verifyJuryTokenAndGetDataQuery(
   db: Database,
-  { token }: { token: string },
+  { token }: { token: string }
 ) {
-  const tokenPayload = await verifyJuryToken(token);
+  const tokenPayload = await verifyJuryToken(token)
 
   if (!tokenPayload) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Invalid token",
-    });
+    })
   }
 
-  const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(Date.now() / 1000)
   if (tokenPayload.exp < now) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Token expired",
-    });
+    })
   }
 
   const invitation = await db.query.juryInvitations.findFirst({
@@ -224,219 +222,209 @@ export async function verifyJuryTokenAndGetDataQuery(
       competitionClass: true,
       deviceGroup: true,
       topic: true,
+      marathon: true,
     },
-  });
+  })
 
   if (!invitation) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Invitation not found",
-    });
+    })
   }
 
   const marathon = await db.query.marathons.findFirst({
     where: eq(marathons.domain, tokenPayload.domain),
-  });
+  })
 
   if (!marathon || invitation.marathonId !== marathon.id) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Marathon not found",
-    });
+    })
   }
 
-  const invitationExpiry = new Date(invitation.expiresAt);
+  const invitationExpiry = new Date(invitation.expiresAt)
   if (invitationExpiry < new Date()) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Invitation expired",
-    });
+    })
   }
 
-  const submissions = await getJurySubmissionsQuery(db, {
-    domain: tokenPayload.domain,
-    competitionClassId: invitation.competitionClassId,
-    deviceGroupId: invitation.deviceGroupId,
-    topicId: invitation.topicId,
-  });
-
-  return {
-    invitation,
-    marathon,
-    submissions,
-  };
+  return invitation
 }
 
-export async function getJuryParticipantsQuery(
-  db: Database,
-  { token }: { token: string },
-) {
-  const tokenPayload = await verifyJuryToken(token);
+// export async function getJuryParticipantsQuery(
+//   db: Database,
+//   { token }: { token: string }
+// ) {
+//   const tokenPayload = await verifyJuryToken(token)
 
-  if (!tokenPayload) {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "Invalid token",
-    });
-  }
+//   if (!tokenPayload) {
+//     throw new TRPCError({
+//       code: "UNAUTHORIZED",
+//       message: "Invalid token",
+//     })
+//   }
 
-  const now = Math.floor(Date.now() / 1000);
-  if (tokenPayload.exp < now) {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "Token expired",
-    });
-  }
+//   const now = Math.floor(Date.now() / 1000)
+//   if (tokenPayload.exp < now) {
+//     throw new TRPCError({
+//       code: "UNAUTHORIZED",
+//       message: "Token expired",
+//     })
+//   }
 
-  const invitation = await db.query.juryInvitations.findFirst({
-    where: eq(juryInvitations.id, tokenPayload.invitationId),
-    with: {
-      competitionClass: true,
-      deviceGroup: true,
-      topic: true,
-    },
-  });
+//   const invitation = await db.query.juryInvitations.findFirst({
+//     where: eq(juryInvitations.id, tokenPayload.invitationId),
+//     with: {
+//       competitionClass: true,
+//       deviceGroup: true,
+//       topic: true,
+//     },
+//   })
 
-  if (!invitation) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Invitation not found",
-    });
-  }
+//   if (!invitation) {
+//     throw new TRPCError({
+//       code: "NOT_FOUND",
+//       message: "Invitation not found",
+//     })
+//   }
 
-  const marathon = await db.query.marathons.findFirst({
-    where: eq(marathons.domain, tokenPayload.domain),
-  });
+//   const marathon = await db.query.marathons.findFirst({
+//     where: eq(marathons.domain, tokenPayload.domain),
+//   })
 
-  if (!marathon || invitation.marathonId !== marathon.id) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Marathon not found",
-    });
-  }
+//   if (!marathon || invitation.marathonId !== marathon.id) {
+//     throw new TRPCError({
+//       code: "NOT_FOUND",
+//       message: "Marathon not found",
+//     })
+//   }
 
-  const invitationExpiry = new Date(invitation.expiresAt);
-  if (invitationExpiry < new Date()) {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "Invitation expired",
-    });
-  }
+//   const invitationExpiry = new Date(invitation.expiresAt)
+//   if (invitationExpiry < new Date()) {
+//     throw new TRPCError({
+//       code: "UNAUTHORIZED",
+//       message: "Invitation expired",
+//     })
+//   }
 
-  const marathonId = marathon.id;
+//   const marathonId = marathon.id
 
-  const conditions = [
-    eq(submissions.marathonId, marathonId),
-    eq(submissions.status, "uploaded"),
-  ];
+//   const conditions = [
+//     eq(submissions.marathonId, marathonId),
+//     eq(submissions.status, "uploaded"),
+//   ]
 
-  if (
-    invitation.competitionClassId !== null &&
-    invitation.competitionClassId !== undefined
-  ) {
-    conditions.push(
-      eq(participants.competitionClassId, invitation.competitionClassId),
-    );
-  }
+//   if (
+//     invitation.competitionClassId !== null &&
+//     invitation.competitionClassId !== undefined
+//   ) {
+//     conditions.push(
+//       eq(participants.competitionClassId, invitation.competitionClassId)
+//     )
+//   }
 
-  if (
-    invitation.deviceGroupId !== null &&
-    invitation.deviceGroupId !== undefined
-  ) {
-    conditions.push(eq(participants.deviceGroupId, invitation.deviceGroupId));
-  }
+//   if (
+//     invitation.deviceGroupId !== null &&
+//     invitation.deviceGroupId !== undefined
+//   ) {
+//     conditions.push(eq(participants.deviceGroupId, invitation.deviceGroupId))
+//   }
 
-  if (invitation.topicId !== null && invitation.topicId !== undefined) {
-    conditions.push(eq(submissions.topicId, invitation.topicId));
-  }
+//   if (invitation.topicId !== null && invitation.topicId !== undefined) {
+//     conditions.push(eq(submissions.topicId, invitation.topicId))
+//   }
 
-  const result = await db.query.submissions.findMany({
-    where: and(...conditions),
-    with: {
-      participant: {
-        with: {
-          competitionClass: true,
-          deviceGroup: true,
-        },
-      },
-      topic: true,
-    },
-    orderBy: [desc(submissions.id)],
-  });
+//   const result = await db.query.submissions.findMany({
+//     where: and(...conditions),
+//     with: {
+//       participant: {
+//         with: {
+//           competitionClass: true,
+//           deviceGroup: true,
+//         },
+//       },
+//       topic: true,
+//     },
+//     orderBy: [desc(submissions.id)],
+//   })
 
-  // Group submissions by participant and count them
-  const participantMap = new Map<
-    number,
-    {
-      id: number;
-      reference: string;
-      firstname: string;
-      lastname: string;
-      competitionClass: CompetitionClass | null;
-      deviceGroup: DeviceGroup | null;
-      submissionCount: number;
-      submissions: Submission[];
-    }
-  >();
+//   // Group submissions by participant and count them
+//   const participantMap = new Map<
+//     number,
+//     {
+//       id: number
+//       reference: string
+//       firstname: string
+//       lastname: string
+//       competitionClass: CompetitionClass | null
+//       deviceGroup: DeviceGroup | null
+//       submissionCount: number
+//       submissions: Submission[]
+//     }
+//   >()
 
-  result.forEach((submission) => {
-    if (!submission.previewKey || !submission.participant) return;
+//   result.forEach((submission) => {
+//     if (!submission.previewKey || !submission.participant) return
 
-    const participantId = submission.participant.id;
-    if (!participantMap.has(participantId)) {
-      participantMap.set(participantId, {
-        id: participantId,
-        reference: submission.participant.reference,
-        firstname: submission.participant.firstname,
-        lastname: submission.participant.lastname,
-        competitionClass: submission.participant.competitionClass,
-        deviceGroup: submission.participant.deviceGroup,
-        submissionCount: 0,
-        submissions: [],
-      });
-    }
+//     const participantId = submission.participant.id
+//     if (!participantMap.has(participantId)) {
+//       participantMap.set(participantId, {
+//         id: participantId,
+//         reference: submission.participant.reference,
+//         firstname: submission.participant.firstname,
+//         lastname: submission.participant.lastname,
+//         competitionClass: submission.participant.competitionClass,
+//         deviceGroup: submission.participant.deviceGroup,
+//         submissionCount: 0,
+//         submissions: [],
+//       })
+//     }
 
-    const participant = participantMap.get(participantId);
-    if (!participant) {
-      throw new Error("Participant not found");
-    }
-    participant.submissionCount++;
-    participant.submissions.push(submission);
-  });
+//     const participant = participantMap.get(participantId)
+//     if (!participant) {
+//       throw new Error("Participant not found")
+//     }
+//     participant.submissionCount++
+//     participant.submissions.push(submission)
+//   })
 
-  const ratings = await db.query.juryRatings.findMany({
-    where: and(
-      eq(juryRatings.invitationId, invitation.id),
-      eq(juryRatings.marathonId, invitation.marathonId),
-    ),
-  });
+//   const ratings = await db.query.juryRatings.findMany({
+//     where: and(
+//       eq(juryRatings.invitationId, invitation.id),
+//       eq(juryRatings.marathonId, invitation.marathonId)
+//     ),
+//   })
 
-  return {
-    participants: Array.from(participantMap.values()),
-    invitation,
-    ratings,
-  };
-}
+//   return {
+//     participants: Array.from(participantMap.values()),
+//     invitation,
+//     ratings,
+//   }
+// }
 
 export async function getJuryParticipantSubmissionsQuery(
   db: Database,
-  { token, participantId }: { token: string; participantId: number },
+  { token, participantId }: { token: string; participantId: number }
 ) {
-  const tokenPayload = await verifyJuryToken(token);
+  const tokenPayload = await verifyJuryToken(token)
 
   if (!tokenPayload) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Invalid token",
-    });
+    })
   }
 
-  const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(Date.now() / 1000)
   if (tokenPayload.exp < now) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Token expired",
-    });
+    })
   }
 
   const invitation = await db.query.juryInvitations.findFirst({
@@ -446,60 +434,60 @@ export async function getJuryParticipantSubmissionsQuery(
       deviceGroup: true,
       topic: true,
     },
-  });
+  })
 
   if (!invitation) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Invitation not found",
-    });
+    })
   }
 
   const marathon = await db.query.marathons.findFirst({
     where: eq(marathons.domain, tokenPayload.domain),
-  });
+  })
 
   if (!marathon || invitation.marathonId !== marathon.id) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Marathon not found",
-    });
+    })
   }
 
-  const invitationExpiry = new Date(invitation.expiresAt);
+  const invitationExpiry = new Date(invitation.expiresAt)
   if (invitationExpiry < new Date()) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Invitation expired",
-    });
+    })
   }
 
-  const marathonId = marathon.id;
+  const marathonId = marathon.id
 
   const conditions = [
     eq(submissions.marathonId, marathonId),
     eq(submissions.status, "uploaded"),
     eq(submissions.participantId, participantId),
-  ];
+  ]
 
   if (
     invitation.competitionClassId !== null &&
     invitation.competitionClassId !== undefined
   ) {
     conditions.push(
-      eq(participants.competitionClassId, invitation.competitionClassId),
-    );
+      eq(participants.competitionClassId, invitation.competitionClassId)
+    )
   }
 
   if (
     invitation.deviceGroupId !== null &&
     invitation.deviceGroupId !== undefined
   ) {
-    conditions.push(eq(participants.deviceGroupId, invitation.deviceGroupId));
+    conditions.push(eq(participants.deviceGroupId, invitation.deviceGroupId))
   }
 
   if (invitation.topicId !== null && invitation.topicId !== undefined) {
-    conditions.push(eq(submissions.topicId, invitation.topicId));
+    conditions.push(eq(submissions.topicId, invitation.topicId))
   }
 
   const result = await db.query.submissions.findMany({
@@ -514,15 +502,15 @@ export async function getJuryParticipantSubmissionsQuery(
       topic: true,
     },
     orderBy: [desc(submissions.id)],
-  });
+  })
 
   // Filter out submissions without preview images
-  const validSubmissions = result.filter((submission) => submission.previewKey);
+  const validSubmissions = result.filter((submission) => submission.previewKey)
 
   return {
     submissions: validSubmissions,
     invitation,
-  };
+  }
 }
 
 export async function createJuryRatingMutation(
@@ -532,34 +520,34 @@ export async function createJuryRatingMutation(
     participantId,
     rating,
     notes,
-  }: { token: string; participantId: number; rating: number; notes?: string },
+  }: { token: string; participantId: number; rating: number; notes?: string }
 ) {
-  const tokenPayload = await verifyJuryToken(token);
+  const tokenPayload = await verifyJuryToken(token)
 
   if (!tokenPayload) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Invalid token",
-    });
+    })
   }
 
-  const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(Date.now() / 1000)
   if (tokenPayload.exp < now) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Token expired",
-    });
+    })
   }
 
   const invitation = await db.query.juryInvitations.findFirst({
     where: eq(juryInvitations.id, tokenPayload.invitationId),
-  });
+  })
 
   if (!invitation) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Invitation not found",
-    });
+    })
   }
 
   const result = await db
@@ -571,16 +559,16 @@ export async function createJuryRatingMutation(
       notes: notes || "",
       marathonId: invitation.marathonId,
     })
-    .returning({ id: juryRatings.id });
+    .returning({ id: juryRatings.id })
 
   if (!result[0]?.id) {
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
       message: "Failed to create jury rating",
-    });
+    })
   }
 
-  return result[0].id;
+  return result[0].id
 }
 
 export async function updateJuryRatingMutation(
@@ -590,34 +578,41 @@ export async function updateJuryRatingMutation(
     participantId,
     rating,
     notes,
-  }: { token: string; participantId: number; rating: number; notes?: string },
+    finalRanking,
+  }: {
+    token: string
+    participantId: number
+    rating: number
+    notes?: string
+    finalRanking?: number
+  }
 ) {
-  const tokenPayload = await verifyJuryToken(token);
+  const tokenPayload = await verifyJuryToken(token)
 
   if (!tokenPayload) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Invalid token",
-    });
+    })
   }
 
-  const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(Date.now() / 1000)
   if (tokenPayload.exp < now) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Token expired",
-    });
+    })
   }
 
   const invitation = await db.query.juryInvitations.findFirst({
     where: eq(juryInvitations.id, tokenPayload.invitationId),
-  });
+  })
 
   if (!invitation) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Invitation not found",
-    });
+    })
   }
 
   const result = await db
@@ -625,90 +620,91 @@ export async function updateJuryRatingMutation(
     .set({
       rating,
       notes: notes || "",
+      finalRanking,
     })
     .where(
       and(
         eq(juryRatings.invitationId, tokenPayload.invitationId),
-        eq(juryRatings.participantId, participantId),
-      ),
+        eq(juryRatings.participantId, participantId)
+      )
     )
-    .returning({ id: juryRatings.id });
+    .returning({ id: juryRatings.id })
 
-  return result[0]?.id ?? null;
+  return result[0]?.id ?? null
 }
 
 export async function getJuryRatingQuery(
   db: Database,
-  { token, participantId }: { token: string; participantId: number },
+  { token, participantId }: { token: string; participantId: number }
 ) {
-  const tokenPayload = await verifyJuryToken(token);
+  const tokenPayload = await verifyJuryToken(token)
 
   if (!tokenPayload) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Invalid token",
-    });
+    })
   }
 
-  const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(Date.now() / 1000)
   if (tokenPayload.exp < now) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Token expired",
-    });
+    })
   }
 
   const invitation = await db.query.juryInvitations.findFirst({
     where: eq(juryInvitations.id, tokenPayload.invitationId),
-  });
+  })
 
   if (!invitation) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Invitation not found",
-    });
+    })
   }
 
   const result = await db.query.juryRatings.findFirst({
     where: and(
       eq(juryRatings.invitationId, tokenPayload.invitationId),
-      eq(juryRatings.participantId, participantId),
+      eq(juryRatings.participantId, participantId)
     ),
-  });
+  })
 
-  return result ?? null;
+  return result ?? null
 }
 
 export async function deleteJuryRatingMutation(
   db: Database,
-  { token, participantId }: { token: string; participantId: number },
+  { token, participantId }: { token: string; participantId: number }
 ) {
-  const tokenPayload = await verifyJuryToken(token);
+  const tokenPayload = await verifyJuryToken(token)
 
   if (!tokenPayload) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Invalid token",
-    });
+    })
   }
 
-  const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(Date.now() / 1000)
   if (tokenPayload.exp < now) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Token expired",
-    });
+    })
   }
 
   const invitation = await db.query.juryInvitations.findFirst({
     where: eq(juryInvitations.id, tokenPayload.invitationId),
-  });
+  })
 
   if (!invitation) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Invitation not found",
-    });
+    })
   }
 
   const result = await db
@@ -716,10 +712,553 @@ export async function deleteJuryRatingMutation(
     .where(
       and(
         eq(juryRatings.invitationId, tokenPayload.invitationId),
-        eq(juryRatings.participantId, participantId),
-      ),
+        eq(juryRatings.participantId, participantId)
+      )
     )
-    .returning({ id: juryRatings.id });
+    .returning({ id: juryRatings.id })
 
-  return result[0]?.id ?? null;
+  return result[0]?.id ?? null
+}
+
+export async function getJurySubmissionsFromTokenQuery(
+  db: Database,
+  {
+    token,
+    cursor,
+    ratingFilter,
+  }: { token: string; cursor?: number; ratingFilter?: number[] }
+) {
+  const tokenPayload = await verifyJuryToken(token)
+
+  if (!tokenPayload) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Invalid token",
+    })
+  }
+
+  const now = Math.floor(Date.now() / 1000)
+  if (tokenPayload.exp < now) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Token expired",
+    })
+  }
+
+  const invitation = await db.query.juryInvitations.findFirst({
+    where: eq(juryInvitations.id, tokenPayload.invitationId),
+  })
+
+  if (!invitation) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Invitation not found",
+    })
+  }
+
+  if (invitation.inviteType === "topic") {
+    if (!invitation.topicId) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Topic not found",
+      })
+    }
+
+    let topicSubmissions: (Submission & {
+      topic: Topic | null
+      participant: Pick<
+        Participant,
+        "id" | "createdAt" | "reference" | "status" | "contactSheetKey"
+      > & {
+        competitionClass: CompetitionClass | null
+        deviceGroup: DeviceGroup | null
+      }
+    })[] = []
+    const limit = 50
+
+    let cursorSubmission: Submission | null = null
+
+    if (cursor) {
+      const [sub] = await db
+        .select()
+        .from(submissions)
+        .where(eq(submissions.id, cursor))
+        .limit(1)
+
+      if (sub) {
+        cursorSubmission = sub
+      }
+    }
+
+    // For now, implement a simpler approach - filter after the query
+    if (cursorSubmission) {
+      topicSubmissions = await db.query.submissions.findMany({
+        where: and(
+          eq(submissions.marathonId, invitation.marathonId),
+          eq(submissions.topicId, invitation.topicId),
+          lt(submissions.createdAt, cursorSubmission.createdAt)
+        ),
+        with: {
+          topic: true,
+          participant: {
+            columns: {
+              id: true,
+              createdAt: true,
+              reference: true,
+              status: true,
+              contactSheetKey: true,
+            },
+            with: {
+              competitionClass: true,
+              deviceGroup: true,
+            },
+          },
+        },
+        limit: limit * 3, // Get more to account for filtering
+        orderBy: [desc(submissions.createdAt)],
+      })
+    } else {
+      topicSubmissions = await db.query.submissions.findMany({
+        where: and(
+          eq(submissions.marathonId, invitation.marathonId),
+          eq(submissions.topicId, invitation.topicId)
+        ),
+        with: {
+          topic: true,
+          participant: {
+            columns: {
+              id: true,
+              createdAt: true,
+              reference: true,
+              status: true,
+              contactSheetKey: true,
+            },
+            with: {
+              competitionClass: true,
+              deviceGroup: true,
+            },
+          },
+        },
+        limit: limit * 3, // Get more to account for filtering
+        orderBy: [desc(submissions.createdAt)],
+      })
+    }
+
+    // Apply rating filter if provided
+    if (ratingFilter && ratingFilter.length > 0) {
+      // Get all ratings for this invitation
+      const allRatings = await db.query.juryRatings.findMany({
+        where: eq(juryRatings.invitationId, invitation.id),
+      })
+
+      const ratingMap = new Map()
+      allRatings.forEach((rating) => {
+        ratingMap.set(rating.participantId, rating.rating)
+      })
+
+      // Filter submissions based on participant ratings
+      topicSubmissions = topicSubmissions.filter((submission) => {
+        if (!submission.participant) return false
+
+        const rating = ratingMap.get(submission.participant.id) || 0
+        return ratingFilter.includes(rating)
+      })
+
+      // Take only the limit we need after filtering
+      topicSubmissions = topicSubmissions.slice(0, limit + 1)
+    }
+
+    let nextCursor: number | null = null
+
+    if (topicSubmissions.length > limit) {
+      const nextSubmission = topicSubmissions.at(-1)
+      nextCursor = nextSubmission!.id
+    }
+
+    const mapped = topicSubmissions.map((submission) => {
+      const { participant, ...rest } = submission
+      return {
+        ...participant,
+        submission: rest,
+      }
+    })
+
+    return {
+      participants: mapped,
+      nextCursor,
+    }
+  } else if (invitation.inviteType === "class") {
+    if (!invitation.competitionClassId) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Class not found",
+      })
+    }
+
+    let participantsInCompetitionClass: (Pick<
+      Participant,
+      "id" | "createdAt" | "reference" | "status" | "contactSheetKey"
+    > & {
+      competitionClass: CompetitionClass | null
+      deviceGroup: DeviceGroup | null
+    })[] = []
+    const limit = 50
+
+    let cursorSubmission: Submission | null = null
+
+    if (cursor) {
+      const [sub] = await db
+        .select()
+        .from(submissions)
+        .where(eq(submissions.id, cursor))
+        .limit(1)
+
+      if (sub) {
+        cursorSubmission = sub
+      }
+    }
+
+    // For now, implement a simpler approach - filter after the query
+    if (cursorSubmission) {
+      participantsInCompetitionClass = await db.query.participants.findMany({
+        columns: {
+          id: true,
+          createdAt: true,
+          reference: true,
+          status: true,
+          contactSheetKey: true,
+        },
+        where: and(
+          eq(participants.marathonId, invitation.marathonId),
+          eq(participants.competitionClassId, invitation.competitionClassId),
+          lt(participants.createdAt, cursorSubmission.createdAt)
+        ),
+        with: {
+          competitionClass: true,
+          deviceGroup: true,
+        },
+        limit: limit * 3, // Get more to account for filtering
+        orderBy: [desc(participants.createdAt)],
+      })
+    } else {
+      participantsInCompetitionClass = await db.query.participants.findMany({
+        where: and(
+          eq(participants.marathonId, invitation.marathonId),
+          eq(participants.competitionClassId, invitation.competitionClassId)
+        ),
+        with: {
+          competitionClass: true,
+          deviceGroup: true,
+        },
+        limit: limit * 3, // Get more to account for filtering
+        orderBy: [desc(participants.createdAt)],
+      })
+    }
+
+    // Apply rating filter if provided
+    if (ratingFilter && ratingFilter.length > 0) {
+      // Get all ratings for this invitation
+      const allRatings = await db.query.juryRatings.findMany({
+        where: eq(juryRatings.invitationId, invitation.id),
+      })
+
+      const ratingMap = new Map()
+      allRatings.forEach((rating) => {
+        ratingMap.set(rating.participantId, rating.rating)
+      })
+
+      // Filter submissions based on participant ratings
+      participantsInCompetitionClass = participantsInCompetitionClass.filter(
+        (participant) => {
+          if (!participant) return false
+
+          const rating = ratingMap.get(participant.id) || 0
+          return ratingFilter.includes(rating)
+        }
+      )
+
+      // Take only the limit we need after filtering
+      participantsInCompetitionClass = participantsInCompetitionClass.slice(
+        0,
+        limit + 1
+      )
+    }
+
+    let nextCursor: number | null = null
+
+    if (participantsInCompetitionClass.length > limit) {
+      const nextSubmission = participantsInCompetitionClass.pop()
+      nextCursor = nextSubmission!.id
+    }
+
+    const mapped = participantsInCompetitionClass.map((participant) => {
+      return {
+        ...participant,
+        submission: null as unknown as Submission & {
+          topic: Topic | null
+        },
+      }
+    })
+
+    return {
+      participants: mapped,
+      nextCursor,
+    }
+  } else {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Invitation type not found",
+    })
+  }
+}
+
+export async function getJuryRatingsByInvitationQuery(
+  db: Database,
+  { token }: { token: string }
+) {
+  const tokenPayload = await verifyJuryToken(token)
+
+  if (!tokenPayload) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Invalid token",
+    })
+  }
+
+  const now = Math.floor(Date.now() / 1000)
+  if (tokenPayload.exp < now) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Token expired",
+    })
+  }
+
+  const invitation = await db.query.juryInvitations.findFirst({
+    where: eq(juryInvitations.id, tokenPayload.invitationId),
+  })
+
+  if (!invitation) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Invitation not found",
+    })
+  }
+
+  const ratings = await db.query.juryRatings.findMany({
+    where: and(
+      eq(juryRatings.invitationId, invitation.id),
+      eq(juryRatings.marathonId, invitation.marathonId)
+    ),
+    columns: {
+      participantId: true,
+      rating: true,
+      notes: true,
+    },
+  })
+
+  return { ratings }
+}
+
+export async function getJuryParticipantCountQuery(
+  db: Database,
+  { token, ratingFilter }: { token: string; ratingFilter?: number[] }
+) {
+  const tokenPayload = await verifyJuryToken(token)
+
+  if (!tokenPayload) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Invalid token",
+    })
+  }
+
+  const now = Math.floor(Date.now() / 1000)
+  if (tokenPayload.exp < now) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Token expired",
+    })
+  }
+
+  const invitation = await db.query.juryInvitations.findFirst({
+    where: eq(juryInvitations.id, tokenPayload.invitationId),
+  })
+
+  if (!invitation) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Invitation not found",
+    })
+  }
+
+  // Get all unique participants from submissions
+  const conditions = [eq(submissions.marathonId, invitation.marathonId)]
+  if (invitation.topicId) {
+    conditions.push(eq(submissions.topicId, invitation.topicId))
+  }
+  let participantIds = await db
+    .selectDistinct({ participantId: submissions.participantId })
+    .from(submissions)
+    .where(
+      and(
+        eq(submissions.marathonId, invitation.marathonId),
+        invitation.topicId
+          ? eq(submissions.topicId, invitation.topicId)
+          : undefined,
+        ...conditions
+      )
+    )
+
+  if (ratingFilter && ratingFilter.length > 0) {
+    // Get all ratings for this invitation
+    const allRatings = await db.query.juryRatings.findMany({
+      where: eq(juryRatings.invitationId, invitation.id),
+    })
+
+    const ratingMap = new Map()
+    allRatings.forEach((rating) => {
+      ratingMap.set(rating.participantId, rating.rating)
+    })
+
+    // Filter participants based on ratings
+    participantIds = participantIds.filter((participant) => {
+      const rating = ratingMap.get(participant.participantId) || 0
+      return ratingFilter.includes(rating)
+    })
+  }
+
+  return { value: participantIds.length }
+}
+
+export async function getJuryInvitationStatisticsQuery(
+  db: Database,
+  { token }: { token: string }
+) {
+  const tokenPayload = await verifyJuryToken(token)
+
+  if (!tokenPayload) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Invalid token",
+    })
+  }
+
+  const now = Math.floor(Date.now() / 1000)
+  if (tokenPayload.exp < now) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Token expired",
+    })
+  }
+
+  const invitation = await db.query.juryInvitations.findFirst({
+    where: eq(juryInvitations.id, tokenPayload.invitationId),
+  })
+
+  if (!invitation) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Invitation not found",
+    })
+  }
+
+  const marathon = await db.query.marathons.findFirst({
+    where: eq(marathons.domain, tokenPayload.domain),
+  })
+
+  if (!marathon || invitation.marathonId !== marathon.id) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Marathon not found",
+    })
+  }
+
+  const invitationExpiry = new Date(invitation.expiresAt)
+  if (invitationExpiry < new Date()) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Invitation expired",
+    })
+  }
+
+  // Get participants count based on invitation filters
+  const submissionConditions = [
+    eq(submissions.marathonId, marathon.id),
+    eq(submissions.status, "uploaded"),
+  ]
+
+  if (
+    invitation.competitionClassId !== null &&
+    invitation.competitionClassId !== undefined
+  ) {
+    submissionConditions.push(
+      eq(participants.competitionClassId, invitation.competitionClassId)
+    )
+  }
+
+  if (
+    invitation.deviceGroupId !== null &&
+    invitation.deviceGroupId !== undefined
+  ) {
+    submissionConditions.push(
+      eq(participants.deviceGroupId, invitation.deviceGroupId)
+    )
+  }
+
+  if (invitation.topicId !== null && invitation.topicId !== undefined) {
+    submissionConditions.push(eq(submissions.topicId, invitation.topicId))
+  }
+
+  // Get unique participants
+  const participantIds = await db
+    .selectDistinct({ participantId: submissions.participantId })
+    .from(submissions)
+    .innerJoin(participants, eq(participants.id, submissions.participantId))
+    .where(and(...submissionConditions))
+
+  const totalParticipants = participantIds.length
+
+  // Get ratings for this invitation
+  const ratings = await db.query.juryRatings.findMany({
+    where: and(
+      eq(juryRatings.invitationId, invitation.id),
+      eq(juryRatings.marathonId, invitation.marathonId)
+    ),
+    with: {
+      participant: {
+        columns: {
+          id: true,
+          reference: true,
+          firstname: true,
+          lastname: true,
+        },
+      },
+    },
+    orderBy: [desc(juryRatings.createdAt)],
+  })
+
+  const ratedParticipants = ratings.length
+  const progressPercentage =
+    totalParticipants > 0 ? (ratedParticipants / totalParticipants) * 100 : 0
+
+  // Calculate rating distribution
+  const ratingDistribution = [1, 2, 3, 4, 5].map((rating) => ({
+    rating,
+    count: ratings.filter((r) => r.rating === rating).length,
+  }))
+
+  // Calculate average rating
+  const averageRating =
+    ratings.length > 0
+      ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+      : 0
+
+  return {
+    totalParticipants,
+    ratedParticipants,
+    progressPercentage,
+    averageRating,
+    ratingDistribution,
+    recentRatings: ratings.slice(0, 5), // Latest 5 ratings
+  }
 }
