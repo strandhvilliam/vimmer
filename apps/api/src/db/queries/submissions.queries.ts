@@ -61,7 +61,26 @@ export async function getZippedSubmissionsByDomainQuery(
     },
   })
 
-  return result?.zippedSubmissions ?? []
+  if (!result?.zippedSubmissions) return []
+
+  // Group by participantId, pick the latest (by createdAt or id)
+  const latestByParticipant = new Map<number, ZippedSubmission>()
+
+  for (const zs of result.zippedSubmissions) {
+    if (!zs.participantId) continue
+    const existing = latestByParticipant.get(zs.participantId)
+    if (
+      !existing ||
+      (zs.createdAt &&
+        existing.createdAt &&
+        new Date(zs.createdAt) > new Date(existing.createdAt)) ||
+      (!zs.createdAt && zs.id > existing.id)
+    ) {
+      latestByParticipant.set(zs.participantId, zs)
+    }
+  }
+
+  return Array.from(latestByParticipant.values())
 }
 
 export async function getZippedSubmissionsByMarathonIdQuery(

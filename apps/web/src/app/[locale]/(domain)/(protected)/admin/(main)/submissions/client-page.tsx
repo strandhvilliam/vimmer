@@ -1,39 +1,39 @@
-"use client"
+"use client";
 
-import React, { Suspense, useState, useEffect } from "react"
+import React, { Suspense, useState, useEffect } from "react";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@vimmer/ui/components/tabs"
-import { SubmissionsParticipantsTabSkeleton } from "@/components/admin/submissions-participants-skeleton"
-import { SubmissionsParticipantsTable } from "@/components/admin/submissions-participants-table"
-import { SubmissionsTopicsTable } from "@/components/admin/submissions-topics-table"
-import { useDomain } from "@/contexts/domain-context"
-import { useSuspenseQuery } from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/client"
+} from "@vimmer/ui/components/tabs";
+import { SubmissionsParticipantsTabSkeleton } from "@/components/admin/submissions-participants-skeleton";
+import { SubmissionsParticipantsTable } from "@/components/admin/submissions-participants-table";
+import { SubmissionsTopicsTable } from "@/components/admin/submissions-topics-table";
+import { useDomain } from "@/contexts/domain-context";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
 
 export function SubmissionsClientPage() {
-  const { domain } = useDomain()
-  const trpc = useTRPC()
+  const { domain } = useDomain();
+  const trpc = useTRPC();
 
   // Pagination state
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Search state
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Filter state
-  const [statusFilters, setStatusFilters] = useState<string[]>([])
-  const [classFilters, setClassFilters] = useState<number[]>([])
-  const [deviceFilters, setDeviceFilters] = useState<number[]>([])
+  const [statusFilters, setStatusFilters] = useState<string[]>([]);
+  const [classFilters, setClassFilters] = useState<number[]>([]);
+  const [deviceFilters, setDeviceFilters] = useState<number[]>([]);
 
   // Reset page to 1 when search term or filters change
   useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm, statusFilters, classFilters, deviceFilters])
+    setCurrentPage(1);
+  }, [searchTerm, statusFilters, classFilters, deviceFilters]);
 
   const {
     data: { data: participants, totalCount, totalPages },
@@ -48,8 +48,8 @@ export function SubmissionsClientPage() {
       deviceGroupId: deviceFilters.length > 0 ? deviceFilters : undefined,
       sortBy: "createdAt",
       sortOrder: "desc",
-    })
-  )
+    }),
+  );
 
   return (
     <div className="container mx-auto py-8 space-y-8">
@@ -107,5 +107,5 @@ export function SubmissionsClientPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

@@ -1,76 +1,76 @@
-"use client"
+"use client";
 
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@vimmer/ui/components/card"
-import { Button } from "@vimmer/ui/components/button"
-import { Badge } from "@vimmer/ui/components/badge"
-import { ScrollIcon, Loader2 } from "lucide-react"
-import { useDomain } from "@/contexts/domain-context"
-import { runBulkSheetGenerationQueue } from "@/actions/run-bulk-sheet-generation-queue"
-import { useAction } from "next-safe-action/hooks"
-import { toast } from "sonner"
-import { useState } from "react"
+} from "@vimmer/ui/components/card";
+import { Button } from "@vimmer/ui/components/button";
+import { Badge } from "@vimmer/ui/components/badge";
+import { ScrollIcon, Loader2 } from "lucide-react";
+import { useDomain } from "@/contexts/domain-context";
+import { runBulkSheetGenerationQueue } from "@/actions/run-bulk-sheet-generation-queue";
+import { useAction } from "next-safe-action/hooks";
+import { toast } from "sonner";
+import { useState } from "react";
 
 interface BulkContactSheetGenerationProps {
-  verifiedParticipantsCount: number
-  disabled?: boolean
+  verifiedParticipantsCount: number;
+  disabled?: boolean;
 }
 
 export function BulkContactSheetGeneration({
   verifiedParticipantsCount,
   disabled = false,
 }: BulkContactSheetGenerationProps) {
-  const { domain } = useDomain()
+  const { domain } = useDomain();
   const [lastResult, setLastResult] = useState<{
-    queued: number
-    failed: number
-    total: number
-    message: string
-  } | null>(null)
+    queued: number;
+    failed: number;
+    total: number;
+    message: string;
+  } | null>(null);
 
   const { execute: runBulkGeneration, isExecuting } = useAction(
     runBulkSheetGenerationQueue,
     {
       onSuccess: (result) => {
         if (result.data) {
-          setLastResult(result.data as any)
+          setLastResult(result.data as any);
           if (result.data.queued > 0) {
             toast.success("Bulk contact sheet generation started", {
               description: result.data.message,
-            })
+            });
           } else {
             toast.info("No participants ready for generation", {
               description: result.data.message,
-            })
+            });
           }
         }
       },
       onError: (error) => {
         toast.error("Failed to start bulk contact sheet generation", {
           description: error.error.serverError || "An unknown error occurred",
-        })
-        console.error("Bulk contact sheet generation failed:", error)
+        });
+        console.error("Bulk contact sheet generation failed:", error);
       },
-    }
-  )
+    },
+  );
 
   const handleBulkGeneration = () => {
-    runBulkGeneration({ domain })
-  }
+    runBulkGeneration({ domain });
+  };
 
   const getStatusColor = () => {
-    if (verifiedParticipantsCount === 0) return "text-gray-500"
-    return "text-blue-600"
-  }
+    if (verifiedParticipantsCount === 0) return "text-gray-500";
+    return "text-blue-600";
+  };
 
   const getStatusText = () => {
-    if (verifiedParticipantsCount === 0) return "No verified participants"
-    return `${verifiedParticipantsCount} verified participants`
-  }
+    if (verifiedParticipantsCount === 0) return "No verified participants";
+    return `${verifiedParticipantsCount} verified participants`;
+  };
 
   return (
     <Card>
@@ -128,5 +128,5 @@ export function BulkContactSheetGeneration({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -8,8 +8,8 @@ import {
   incrementUploadCounterMutation,
   updateParticipantMutation,
   getParticipantsWithoutSubmissionsQuery,
-} from "@vimmer/api/db/queries/participants.queries"
-import { createTRPCRouter, publicProcedure } from ".."
+} from "@vimmer/api/db/queries/participants.queries";
+import { createTRPCRouter, publicProcedure } from "..";
 import {
   createParticipantSchema,
   deleteParticipantSchema,
@@ -20,10 +20,10 @@ import {
   incrementUploadCounterSchema,
   updateParticipantSchema,
   getParticipantsWithoutSubmissionsSchema,
-} from "@vimmer/api/schemas/participants.schemas"
-import { TRPCError } from "@trpc/server"
-import { invalidateCloudfrontByDomain } from "@vimmer/api/utils/invalidate-cloudfront-domain"
-import { publishToRealtime } from "@vimmer/api/utils/publish-to-realtime"
+} from "@vimmer/api/schemas/participants.schemas";
+import { TRPCError } from "@trpc/server";
+import { invalidateCloudfrontByDomain } from "@vimmer/api/utils/invalidate-cloudfront-domain";
+import { publishToRealtime } from "@vimmer/api/utils/publish-to-realtime";
 
 export const participantsRouter = createTRPCRouter({
   getByDomain: publicProcedure
@@ -31,8 +31,8 @@ export const participantsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const data = await getParticipantsByDomainQuery(ctx.db, {
         domain: input.domain,
-      })
-      return data
+      });
+      return data;
     }),
 
   getParticipantsWithoutSubmissions: publicProcedure
@@ -40,7 +40,7 @@ export const participantsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return await getParticipantsWithoutSubmissionsQuery(ctx.db, {
         domain: input.domain,
-      })
+      });
     }),
 
   getByDomainPaginated: publicProcedure
@@ -56,7 +56,7 @@ export const participantsRouter = createTRPCRouter({
         deviceGroupId: input.deviceGroupId,
         sortBy: input.sortBy,
         sortOrder: input.sortOrder,
-      })
+      });
     }),
 
   getById: publicProcedure
@@ -64,15 +64,15 @@ export const participantsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const data = await getParticipantByIdQuery(ctx.db, {
         id: input.id,
-      })
+      });
 
       if (!data) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Participant not found",
-        })
+        });
       }
-      return data
+      return data;
     }),
 
   getByReference: publicProcedure
@@ -81,7 +81,7 @@ export const participantsRouter = createTRPCRouter({
       return await getParticipantByReferenceQuery(ctx.db, {
         reference: input.reference,
         domain: input.domain,
-      })
+      });
     }),
 
   create: publicProcedure
@@ -89,7 +89,7 @@ export const participantsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return await createParticipantMutation(ctx.db, {
         data: input.data,
-      })
+      });
     }),
 
   update: publicProcedure
@@ -98,7 +98,7 @@ export const participantsRouter = createTRPCRouter({
       return await updateParticipantMutation(ctx.db, {
         id: input.id,
         data: input.data,
-      })
+      });
     }),
 
   delete: publicProcedure
@@ -106,25 +106,25 @@ export const participantsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const participant = await getParticipantByIdQuery(ctx.db, {
         id: input.id,
-      })
+      });
 
       if (!participant) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Participant not found",
-        })
+        });
       }
 
       await deleteParticipantMutation(ctx.db, {
         id: input.id,
-      })
+      });
       await Promise.allSettled([
         invalidateCloudfrontByDomain(participant.domain),
         publishToRealtime({
           participantId: input.id,
           status: "rejected",
         }),
-      ])
+      ]);
     }),
 
   incrementUploadCounter: publicProcedure
@@ -133,6 +133,6 @@ export const participantsRouter = createTRPCRouter({
       return await incrementUploadCounterMutation(ctx.supabase, {
         participantId: input.participantId,
         totalExpected: input.totalExpected,
-      })
+      });
     }),
-})
+});

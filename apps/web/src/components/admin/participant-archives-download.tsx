@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@vimmer/ui/components/button"
+import { useState } from "react";
+import { Button } from "@vimmer/ui/components/button";
 import {
   FolderOpen,
   Loader2,
@@ -13,31 +13,31 @@ import {
   Info,
   Users,
   ExternalLink,
-} from "lucide-react"
-import { Input } from "@vimmer/ui/components/input"
-import { Label } from "@vimmer/ui/components/label"
-import { Checkbox } from "@vimmer/ui/components/checkbox"
+} from "lucide-react";
+import { Input } from "@vimmer/ui/components/input";
+import { Label } from "@vimmer/ui/components/label";
+import { Checkbox } from "@vimmer/ui/components/checkbox";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@vimmer/ui/components/card"
-import { Badge } from "@vimmer/ui/components/badge"
-import { Separator } from "@vimmer/ui/components/separator"
-import { toast } from "sonner"
-import { useZipSaver } from "@/hooks/use-zip-saver"
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/client"
-import { MultiStepLoader } from "@vimmer/ui/components/multi-step-loader"
-import { Alert, AlertDescription } from "@vimmer/ui/components/alert"
-import { useDomain } from "@/contexts/domain-context"
+} from "@vimmer/ui/components/card";
+import { Badge } from "@vimmer/ui/components/badge";
+import { Separator } from "@vimmer/ui/components/separator";
+import { toast } from "sonner";
+import { useZipSaver } from "@/hooks/use-zip-saver";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
+import { MultiStepLoader } from "@vimmer/ui/components/multi-step-loader";
+import { Alert, AlertDescription } from "@vimmer/ui/components/alert";
+import { useDomain } from "@/contexts/domain-context";
 
 interface ParticipantArchivesDownloadProps {
-  marathonId: number
-  canDownload: boolean
-  participantCount: number
-  zippedSubmissionsCount?: number
+  marathonId: number;
+  canDownload: boolean;
+  participantCount: number;
+  zippedSubmissionsCount?: number;
 }
 
 export function ParticipantArchivesDownload({
@@ -46,44 +46,44 @@ export function ParticipantArchivesDownload({
   participantCount,
   zippedSubmissionsCount,
 }: ParticipantArchivesDownloadProps) {
-  const trpc = useTRPC()
-  const { domain } = useDomain()
-  const [imageWidth, setImageWidth] = useState<string>("1920")
-  const [useOriginalSize, setUseOriginalSize] = useState<boolean>(false)
-  const [showLoader, setShowLoader] = useState(false)
-  const [failedParticipants, setFailedParticipants] = useState<number[]>([])
-  const [showErrorState, setShowErrorState] = useState(false)
-  const [pendingData, setPendingData] = useState<any>(null)
-  const [showMissingParticipants, setShowMissingParticipants] = useState(false)
+  const trpc = useTRPC();
+  const { domain } = useDomain();
+  const [imageWidth, setImageWidth] = useState<string>("1920");
+  const [useOriginalSize, setUseOriginalSize] = useState<boolean>(false);
+  const [showLoader, setShowLoader] = useState(false);
+  const [failedParticipants, setFailedParticipants] = useState<number[]>([]);
+  const [showErrorState, setShowErrorState] = useState(false);
+  const [pendingData, setPendingData] = useState<any>(null);
+  const [showMissingParticipants, setShowMissingParticipants] = useState(false);
 
-  const zipSaver = useZipSaver()
+  const zipSaver = useZipSaver();
 
   const { data: participants } = useQuery(
     trpc.participants.getParticipantsWithoutSubmissions.queryOptions({
       domain,
-    })
-  )
+    }),
+  );
 
   const { data: zippedSubmissions } = useQuery(
     trpc.submissions.getZippedSubmissionsByDomain.queryOptions({
       domain,
-    })
-  )
+    }),
+  );
 
   const missingParticipants =
     participants?.filter(
       (participant) =>
         !zippedSubmissions?.some(
-          (zipped) => zipped.participantId === participant.id
-        )
-    ) || []
+          (zipped) => zipped.participantId === participant.id,
+        ),
+    ) || [];
 
   const loadingStates = [
     { text: "Generating presigned URLs..." },
     { text: "Processing participant archives..." },
     { text: "Preparing download..." },
     { text: "Starting download..." },
-  ]
+  ];
 
   const handleContinueAnyway = async () => {
     if (
@@ -91,11 +91,11 @@ export function ParticipantArchivesDownload({
       Array.isArray(pendingData.presignedUrls) &&
       pendingData.presignedUrls.length > 0
     ) {
-      const width = useOriginalSize ? undefined : parseInt(imageWidth) || 1920
-      setShowErrorState(false)
+      const width = useOriginalSize ? undefined : parseInt(imageWidth) || 1920;
+      setShowErrorState(false);
       try {
-        await zipSaver.savePhotos(pendingData.presignedUrls, domain, width)
-        setShowLoader(false)
+        await zipSaver.savePhotos(pendingData.presignedUrls, domain, width);
+        setShowLoader(false);
 
         if (zipSaver.failedParticipants.length > 0) {
           toast.error(
@@ -103,38 +103,38 @@ export function ParticipantArchivesDownload({
             {
               description:
                 "Some participants failed to process. Check the error details below.",
-            }
-          )
+            },
+          );
         }
       } catch (error) {
-        setShowLoader(false)
+        setShowLoader(false);
         toast.error("Failed to save photos", {
           description:
             error instanceof Error
               ? error.message
               : "An unknown error occurred.",
-        })
+        });
       }
     }
-    setFailedParticipants([])
-    setPendingData(null)
-  }
+    setFailedParticipants([]);
+    setPendingData(null);
+  };
 
   const handleCancelExport = () => {
-    setShowLoader(false)
-    setShowErrorState(false)
-    setFailedParticipants([])
-    setPendingData(null)
-  }
+    setShowLoader(false);
+    setShowErrorState(false);
+    setFailedParticipants([]);
+    setPendingData(null);
+  };
 
   const { mutate: generateZips, isPending: isGenerating } = useMutation(
     trpc.presignedUrls.generateZipSubmissionsPresignedUrls.mutationOptions({
       onSuccess: async (data) => {
         if (data.failedParticipantIds.length > 0) {
-          setFailedParticipants(data.failedParticipantIds)
-          setPendingData(data)
-          setShowErrorState(true)
-          return
+          setFailedParticipants(data.failedParticipantIds);
+          setPendingData(data);
+          setShowErrorState(true);
+          return;
         }
 
         if (
@@ -143,10 +143,10 @@ export function ParticipantArchivesDownload({
         ) {
           const width = useOriginalSize
             ? undefined
-            : parseInt(imageWidth) || 1920
+            : parseInt(imageWidth) || 1920;
           try {
-            await zipSaver.savePhotos(data.presignedUrls, domain, width)
-            setShowLoader(false)
+            await zipSaver.savePhotos(data.presignedUrls, domain, width);
+            setShowLoader(false);
 
             if (zipSaver.failedParticipants.length > 0) {
               toast.error(
@@ -154,36 +154,36 @@ export function ParticipantArchivesDownload({
                 {
                   description:
                     "Some participants failed to process. Check the error details below.",
-                }
-              )
+                },
+              );
             }
           } catch (error) {
-            setShowLoader(false)
+            setShowLoader(false);
             toast.error("Failed to save photos", {
               description:
                 error instanceof Error
                   ? error.message
                   : "An unknown error occurred.",
-            })
+            });
           }
         } else {
-          setShowLoader(false)
+          setShowLoader(false);
         }
       },
       onError: (err) => {
-        setShowLoader(false)
+        setShowLoader(false);
         toast.error("Failed to fetch presigned URLs", {
           description: err.message,
-        })
-        console.error("Failed to fetch presigned URLs", err)
+        });
+        console.error("Failed to fetch presigned URLs", err);
       },
-    })
-  )
+    }),
+  );
 
   const handleDownload = () => {
-    setShowLoader(true)
-    generateZips({ marathonId })
-  }
+    setShowLoader(true);
+    generateZips({ marathonId });
+  };
 
   return (
     <>
@@ -559,5 +559,5 @@ export function ParticipantArchivesDownload({
         </div>
       )}
     </>
-  )
+  );
 }

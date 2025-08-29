@@ -1,40 +1,40 @@
-import type { Database } from "@vimmer/api/db"
-import { competitionClasses, marathons } from "../schema"
-import { eq } from "drizzle-orm"
-import type { NewCompetitionClass } from "../types"
+import type { Database } from "@vimmer/api/db";
+import { competitionClasses, marathons } from "../schema";
+import { eq } from "drizzle-orm";
+import type { NewCompetitionClass } from "../types";
 
 export async function getCompetitionClassByIdQuery(
   db: Database,
-  { id }: { id: number }
+  { id }: { id: number },
 ) {
   const result = await db.query.competitionClasses.findFirst({
     where: eq(competitionClasses.id, id),
-  })
-  return result ?? null
+  });
+  return result ?? null;
 }
 
 export async function getCompetitionClassesByDomainQuery(
   db: Database,
-  { domain }: { domain: string }
+  { domain }: { domain: string },
 ) {
   const result = await db
     .select()
     .from(competitionClasses)
     .innerJoin(marathons, eq(competitionClasses.marathonId, marathons.id))
-    .where(eq(marathons.domain, domain))
+    .where(eq(marathons.domain, domain));
 
-  return result.map((row) => row.competition_classes)
+  return result.map((row) => row.competition_classes);
 }
 
 export async function createCompetitionClass(
   db: Database,
-  { data }: { data: NewCompetitionClass }
+  { data }: { data: NewCompetitionClass },
 ) {
   const result = await db
     .insert(competitionClasses)
     .values(data)
-    .returning({ id: competitionClasses.id })
-  return { id: result[0]?.id ?? null }
+    .returning({ id: competitionClasses.id });
+  return { id: result[0]?.id ?? null };
 }
 
 export async function updateCompetitionClass(
@@ -43,25 +43,25 @@ export async function updateCompetitionClass(
     id,
     data,
   }: {
-    id: number
-    data: Partial<NewCompetitionClass>
-  }
+    id: number;
+    data: Partial<NewCompetitionClass>;
+  },
 ) {
   const result = await db
     .update(competitionClasses)
     .set(data)
     .where(eq(competitionClasses.id, id))
-    .returning({ id: competitionClasses.id })
-  return result[0]?.id ?? null
+    .returning({ id: competitionClasses.id });
+  return result[0]?.id ?? null;
 }
 
 export async function deleteCompetitionClass(
   db: Database,
-  { id }: { id: number }
+  { id }: { id: number },
 ) {
   const result = await db
     .delete(competitionClasses)
     .where(eq(competitionClasses.id, id))
-    .returning({ id: competitionClasses.id })
-  return result[0]?.id ?? null
+    .returning({ id: competitionClasses.id });
+  return result[0]?.id ?? null;
 }

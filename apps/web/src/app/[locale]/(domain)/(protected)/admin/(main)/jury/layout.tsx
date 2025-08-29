@@ -1,16 +1,16 @@
-import React, { Suspense } from "react"
-import { JurySidebar } from "@/components/admin/jury-sidebar"
-import { JurySidebarSkeleton } from "@/components/admin/jury-sidebar-skeleton"
-import { ErrorBoundary } from "react-error-boundary"
-import { getDomain } from "@/lib/get-domain"
-import { batchPrefetch, HydrateClient, trpc } from "@/trpc/server"
+import React, { Suspense } from "react";
+import { JurySidebar } from "@/components/admin/jury-sidebar";
+import { JurySidebarSkeleton } from "@/components/admin/jury-sidebar-skeleton";
+import { ErrorBoundary } from "react-error-boundary";
+import { getDomain } from "@/lib/get-domain";
+import { batchPrefetch, HydrateClient, trpc } from "@/trpc/server";
 
 export default async function JuryLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const domain = await getDomain()
+  const domain = await getDomain();
 
   batchPrefetch([
     trpc.jury.getJuryInvitationsByDomain.queryOptions({
@@ -28,7 +28,7 @@ export default async function JuryLayout({
     trpc.deviceGroups.getByDomain.queryOptions({
       domain,
     }),
-  ])
+  ]);
 
   return (
     <HydrateClient>
@@ -43,5 +43,5 @@ export default async function JuryLayout({
         </div>
       </div>
     </HydrateClient>
-  )
+  );
 }

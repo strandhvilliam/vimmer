@@ -17,6 +17,7 @@ import {
 } from "@tanstack/react-query"
 import { JurySidebar } from "./jury-sidebar"
 import { parseAsArrayOf, parseAsInteger, useQueryState } from "nuqs"
+import { toast } from "sonner"
 
 interface ParticipantSubmissionsProps {
   token: string
@@ -193,6 +194,9 @@ export function SubmissionViewer({
         queryClient.invalidateQueries({
           queryKey: trpc.jury.getJuryRatingsByInvitation.queryKey(),
         })
+        queryClient.invalidateQueries({
+          queryKey: trpc.jury.getJurySubmissionsFromToken.infiniteQueryKey(),
+        })
       },
     })
   )
@@ -205,6 +209,12 @@ export function SubmissionViewer({
         })
         queryClient.invalidateQueries({
           queryKey: trpc.jury.getJuryRatingsByInvitation.queryKey(),
+        })
+        queryClient.invalidateQueries({
+          queryKey: trpc.jury.getJurySubmissionsFromToken.queryKey(),
+        })
+        queryClient.invalidateQueries({
+          queryKey: trpc.jury.getJurySubmissionsFromToken.infiniteQueryKey(),
         })
       },
     })
@@ -248,6 +258,11 @@ export function SubmissionViewer({
             })
           } else {
             await updateRatingMutation.mutateAsync(data)
+            if (!selectedRatings.includes(newRating)) {
+              toast.info(
+                "New rating not included in filtering. Going to previous participant"
+              )
+            }
           }
         } else if (newRating > 0 || newNotes.trim()) {
           // Create new rating if rating > 0 or has notes
@@ -263,9 +278,10 @@ export function SubmissionViewer({
       currentParticipantId,
       token,
       existingRating,
-      updateRatingMutation,
-      createRatingMutation,
       deleteRatingMutation,
+      updateRatingMutation,
+      selectedRatings,
+      createRatingMutation,
     ]
   )
 
@@ -580,8 +596,8 @@ export function SubmissionViewer({
         </div>
       </div>
 
-      <div className="flex flex-1 relative">
-        <div className="flex-1 relative flex items-center justify-center overflow-hidden">
+      <div className="flex flex-1 relative h-[calc(100vh-8rem)]">
+        <div className="flex-1 relative flex items-start justify-center overflow-hidden">
           <div className="relative w-full h-full flex items-start justify-center">
             {imageUrl && !imageErrors.has(imageId) ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -593,7 +609,7 @@ export function SubmissionViewer({
                     : currentParticipant?.submission?.topic?.name ||
                       "Submission"
                 }
-                className="object-contain transition-opacity duration-300 w-full h-full"
+                className="object-contain transition-opacity duration-300 max-w-full max-h-full"
                 onError={() => handleImageError(imageId)}
               />
             ) : (

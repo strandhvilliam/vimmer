@@ -12,8 +12,8 @@ import {
   unique,
   pgSequence,
   pgEnum,
-} from "drizzle-orm/pg-core"
-import { sql } from "drizzle-orm"
+} from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const inviteType = pgEnum("invite_type", [
   "topic",
@@ -21,13 +21,13 @@ export const inviteType = pgEnum("invite_type", [
   "custom",
   "all",
   "device",
-])
+]);
 export const uploadStatus = pgEnum("upload_status", [
   "initialized",
   "processing",
   "error",
   "completed",
-])
+]);
 
 export const participantsIdSeq1 = pgSequence("participants_id_seq1", {
   startWith: "1",
@@ -36,7 +36,7 @@ export const participantsIdSeq1 = pgSequence("participants_id_seq1", {
   maxValue: "9223372036854775807",
   cache: "1",
   cycle: false,
-})
+});
 export const submissionsIdSeq1 = pgSequence("submissions_id_seq1", {
   startWith: "1",
   increment: "1",
@@ -44,22 +44,20 @@ export const submissionsIdSeq1 = pgSequence("submissions_id_seq1", {
   maxValue: "9223372036854775807",
   cache: "1",
   cycle: false,
-})
+});
 
 export const juryRatings = pgTable(
   "jury_ratings",
   {
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" })
-      .primaryKey()
-      .generatedByDefaultAsIdentity({
-        name: "jury_ratings_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 9223372036854775807,
-        cache: 1,
-      }),
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "jury_ratings_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -89,23 +87,21 @@ export const juryRatings = pgTable(
       foreignColumns: [participants.id],
       name: "jury_ratings_participant_id_fkey",
     }).onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const ruleConfigs = pgTable(
   "rule_configs",
   {
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" })
-      .primaryKey()
-      .generatedByDefaultAsIdentity({
-        name: "rule_configs_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 9223372036854775807,
-        cache: 1,
-      }),
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "rule_configs_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -123,23 +119,21 @@ export const ruleConfigs = pgTable(
       foreignColumns: [marathons.id],
       name: "rule_configs_marathon_id_fkey",
     }),
-  ]
-)
+  ],
+);
 
 export const juryInvitations = pgTable(
   "jury_invitations",
   {
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" })
-      .primaryKey()
-      .generatedByDefaultAsIdentity({
-        name: "jury_invitations_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 9223372036854775807,
-        cache: 1,
-      }),
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "jury_invitations_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -184,23 +178,21 @@ export const juryInvitations = pgTable(
       foreignColumns: [topics.id],
       name: "jury_invitations_topic_id_fkey",
     }).onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const participants = pgTable(
   "participants",
   {
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" })
-      .primaryKey()
-      .generatedByDefaultAsIdentity({
-        name: "participants_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 9223372036854775807,
-        cache: 1,
-      }),
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "participants_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -224,16 +216,16 @@ export const participants = pgTable(
   (table) => [
     index("participants_domain_idx").using(
       "btree",
-      table.domain.asc().nullsLast().op("text_ops")
+      table.domain.asc().nullsLast().op("text_ops"),
     ),
     index("participants_reference_domain_idx").using(
       "btree",
       table.reference.asc().nullsLast().op("text_ops"),
-      table.domain.asc().nullsLast().op("text_ops")
+      table.domain.asc().nullsLast().op("text_ops"),
     ),
     index("participants_reference_idx").using(
       "btree",
-      table.reference.asc().nullsLast().op("text_ops")
+      table.reference.asc().nullsLast().op("text_ops"),
     ),
     foreignKey({
       columns: [table.competitionClassId],
@@ -252,8 +244,8 @@ export const participants = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const account = pgTable(
   "account",
@@ -278,8 +270,8 @@ export const account = pgTable(
       foreignColumns: [user.id],
       name: "account_userId_fkey",
     }),
-  ]
-)
+  ],
+);
 
 export const session = pgTable(
   "session",
@@ -301,23 +293,21 @@ export const session = pgTable(
       name: "session_userId_fkey",
     }),
     unique("session_token_key").on(table.token),
-  ]
-)
+  ],
+);
 
 export const userMarathons = pgTable(
   "user_marathons",
   {
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" })
-      .primaryKey()
-      .generatedByDefaultAsIdentity({
-        name: "user_marathons_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 9223372036854775807,
-        cache: 1,
-      }),
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "user_marathons_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -337,23 +327,21 @@ export const userMarathons = pgTable(
       foreignColumns: [user.id],
       name: "user_marathons_user_id_fkey",
     }),
-  ]
-)
+  ],
+);
 
 export const validationResults = pgTable(
   "validation_results",
   {
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" })
-      .primaryKey()
-      .generatedByDefaultAsIdentity({
-        name: "validation_results_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 9223372036854775807,
-        cache: 1,
-      }),
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "validation_results_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -370,15 +358,15 @@ export const validationResults = pgTable(
   (table) => [
     index("validation_results_participant_id_idx").using(
       "btree",
-      table.participantId.asc().nullsLast().op("int8_ops")
+      table.participantId.asc().nullsLast().op("int8_ops"),
     ),
     foreignKey({
       columns: [table.participantId],
       foreignColumns: [participants.id],
       name: "validation_results_participant_id_fkey",
     }).onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const verification = pgTable("verification", {
   id: text().primaryKey().notNull(),
@@ -387,22 +375,20 @@ export const verification = pgTable("verification", {
   expiresAt: timestamp({ mode: "string" }).notNull(),
   createdAt: timestamp({ mode: "string" }),
   updatedAt: timestamp({ mode: "string" }),
-})
+});
 
 export const marathons = pgTable(
   "marathons",
   {
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" })
-      .primaryKey()
-      .generatedByDefaultAsIdentity({
-        name: "marathon_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 9223372036854775807,
-        cache: 1,
-      }),
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "marathon_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -420,25 +406,23 @@ export const marathons = pgTable(
   (table) => [
     index("marathons_domain_idx").using(
       "btree",
-      table.domain.asc().nullsLast().op("text_ops")
+      table.domain.asc().nullsLast().op("text_ops"),
     ),
-  ]
-)
+  ],
+);
 
 export const competitionClasses = pgTable(
   "competition_classes",
   {
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" })
-      .primaryKey()
-      .generatedByDefaultAsIdentity({
-        name: "competition_class_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 9223372036854775807,
-        cache: 1,
-      }),
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "competition_class_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -453,7 +437,7 @@ export const competitionClasses = pgTable(
   (table) => [
     index("competition_classes_marathon_id_idx").using(
       "btree",
-      table.marathonId.asc().nullsLast().op("int8_ops")
+      table.marathonId.asc().nullsLast().op("int8_ops"),
     ),
     foreignKey({
       columns: [table.marathonId],
@@ -462,23 +446,21 @@ export const competitionClasses = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const deviceGroups = pgTable(
   "device_groups",
   {
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" })
-      .primaryKey()
-      .generatedByDefaultAsIdentity({
-        name: "device_group_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 9223372036854775807,
-        cache: 1,
-      }),
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "device_group_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -492,7 +474,7 @@ export const deviceGroups = pgTable(
   (table) => [
     index("device_groups_marathon_id_idx").using(
       "btree",
-      table.marathonId.asc().nullsLast().op("int8_ops")
+      table.marathonId.asc().nullsLast().op("int8_ops"),
     ),
     foreignKey({
       columns: [table.marathonId],
@@ -501,23 +483,21 @@ export const deviceGroups = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const participantVerifications = pgTable(
   "participant_verifications",
   {
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" })
-      .primaryKey()
-      .generatedByDefaultAsIdentity({
-        name: "participant_verification_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 9223372036854775807,
-        cache: 1,
-      }),
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "participant_verification_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -530,7 +510,7 @@ export const participantVerifications = pgTable(
   (table) => [
     index("participant_verifications_staff_id_idx").using(
       "btree",
-      table.staffId.asc().nullsLast().op("text_ops")
+      table.staffId.asc().nullsLast().op("text_ops"),
     ),
     foreignKey({
       columns: [table.staffId],
@@ -542,23 +522,21 @@ export const participantVerifications = pgTable(
       foreignColumns: [participants.id],
       name: "participant_verifications_participant_id_fkey",
     }).onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const submissions = pgTable(
   "submissions",
   {
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" })
-      .primaryKey()
-      .generatedByDefaultAsIdentity({
-        name: "submissions_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 9223372036854775807,
-        cache: 1,
-      }),
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "submissions_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -582,15 +560,15 @@ export const submissions = pgTable(
   (table) => [
     index("submissions_key_idx").using(
       "btree",
-      table.key.asc().nullsLast().op("text_ops")
+      table.key.asc().nullsLast().op("text_ops"),
     ),
     index("submissions_marathon_id_idx").using(
       "btree",
-      table.marathonId.asc().nullsLast().op("int8_ops")
+      table.marathonId.asc().nullsLast().op("int8_ops"),
     ),
     index("submissions_participant_id_idx").using(
       "btree",
-      table.participantId.asc().nullsLast().op("int8_ops")
+      table.participantId.asc().nullsLast().op("int8_ops"),
     ),
     foreignKey({
       columns: [table.marathonId],
@@ -611,23 +589,21 @@ export const submissions = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const topics = pgTable(
   "topics",
   {
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" })
-      .primaryKey()
-      .generatedByDefaultAsIdentity({
-        name: "topics_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 9223372036854775807,
-        cache: 1,
-      }),
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "topics_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -650,23 +626,21 @@ export const topics = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const zippedSubmissions = pgTable(
   "zipped_submissions",
   {
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" })
-      .primaryKey()
-      .generatedByDefaultAsIdentity({
-        name: "zipped_submissions_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 9223372036854775807,
-        cache: 1,
-      }),
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "zipped_submissions_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -692,8 +666,8 @@ export const zippedSubmissions = pgTable(
       foreignColumns: [participants.id],
       name: "zipped_submissions_participant_id_fkey",
     }).onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const user = pgTable(
   "user",
@@ -709,23 +683,21 @@ export const user = pgTable(
     banReason: text(),
     banExpires: timestamp({ mode: "string" }),
   },
-  (table) => [unique("user_email_key").on(table.email)]
-)
+  (table) => [unique("user_email_key").on(table.email)],
+);
 
 export const sponsors = pgTable(
   "sponsors",
   {
     // You can use { mode: "bigint" } if numbers are exceeding js number limitations
-    id: bigint({ mode: "number" })
-      .primaryKey()
-      .generatedByDefaultAsIdentity({
-        name: "sponsors_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 9223372036854775807,
-        cache: 1,
-      }),
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({
+      name: "sponsors_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 9223372036854775807,
+      cache: 1,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -745,5 +717,5 @@ export const sponsors = pgTable(
       foreignColumns: [marathons.id],
       name: "sponsors_marathon_id_fkey",
     }).onDelete("cascade"),
-  ]
-)
+  ],
+);

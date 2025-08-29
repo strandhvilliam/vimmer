@@ -1,10 +1,10 @@
-import { DashboardCards } from "@/components/admin/dashboard-cards"
-import { DashboardRecentParticipants } from "@/components/admin/dashboard-recent-participants"
-import { DashboardTimeSeriesChart } from "@/components/admin/dashboard-time-series-chart"
-import { DashboardGpsMapChart } from "@/components/admin/dashboard-gps-map-chart"
-import { DeviceGroupChart } from "@/components/admin/device-group-chart"
-import { DashboardClassChart } from "@/components/admin/dashboard-class-chart"
-import { Suspense } from "react"
+import { DashboardCards } from "@/components/admin/dashboard-cards";
+import { DashboardRecentParticipants } from "@/components/admin/dashboard-recent-participants";
+import { DashboardTimeSeriesChart } from "@/components/admin/dashboard-time-series-chart";
+import { DashboardGpsMapChart } from "@/components/admin/dashboard-gps-map-chart";
+import { DeviceGroupChart } from "@/components/admin/device-group-chart";
+import { DashboardClassChart } from "@/components/admin/dashboard-class-chart";
+import { Suspense } from "react";
 import {
   DashboardCardsSkeleton,
   DeviceGroupChartSkeleton,
@@ -12,13 +12,13 @@ import {
   TimeSeriesChartSkeleton,
   GpsMapChartSkeleton,
   RecentParticipantsTableSkeleton,
-} from "@/components/admin/loading-skeletons"
-import { getDomain } from "@/lib/get-domain"
-import { batchPrefetch, HydrateClient, trpc } from "@/trpc/server"
-import { redirect } from "next/navigation"
+} from "@/components/admin/loading-skeletons";
+import { getDomain } from "@/lib/get-domain";
+import { batchPrefetch, HydrateClient, trpc } from "@/trpc/server";
+import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
-  redirect("/admin/submissions")
+  redirect("/admin/submissions");
   // const domain = await getDomain()
 
   // // batchPrefetch([

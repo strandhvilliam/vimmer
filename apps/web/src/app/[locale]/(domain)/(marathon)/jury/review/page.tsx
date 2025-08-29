@@ -26,9 +26,9 @@ export default async function ReviewPage({
       <Suspense fallback={<div>Loading...</div>}>
         <ReviewClientPage
           token={token}
-          previewBaseUrl={Resource.SubmissionsRouter.url}
+          previewBaseUrl={"https://d1kohskzoo8ek1.cloudfront.net"}
           thumbnailBaseUrl={Resource.ThumbnailsRouter.url}
-          submissionBaseUrl={Resource.SubmissionsRouter.url}
+          submissionBaseUrl={"https://d1kohskzoo8ek1.cloudfront.net"}
         />
       </Suspense>
     </HydrateClient>

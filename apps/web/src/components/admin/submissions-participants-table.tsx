@@ -83,7 +83,7 @@ type TableRowParticipant = Participant & {
   validationResults: ValidationResult[]
   competitionClass?: CompetitionClass | null
   deviceGroup?: DeviceGroup | null
-  zippedSubmission?: ZippedSubmission | null
+  zippedSubmissions?: ZippedSubmission[]
 }
 
 const columnHelper = createColumnHelper<TableRowParticipant>()
@@ -217,7 +217,7 @@ const columns = [
   columnHelper.accessor(
     (row) => ({
       status: row.status,
-      zippedSubmission: row.zippedSubmission,
+      zippedSubmission: row.zippedSubmissions,
       validationResults: row.validationResults || [],
     }),
     {
@@ -231,7 +231,7 @@ const columns = [
           (result) => result.outcome === "failed"
         )
 
-        if (failedResults.length === 0 && zippedSubmission?.zipKey) {
+        if (failedResults.length === 0 && zippedSubmission?.[0]?.zipKey) {
           return null
         }
 
@@ -242,7 +242,8 @@ const columns = [
           (result) => result.severity === "warning"
         ).length
 
-        const isMissingZip = !zippedSubmission?.zipKey && status === "verified"
+        const isMissingZip =
+          !zippedSubmission?.[0]?.zipKey && status === "verified"
 
         return (
           <TooltipProvider>

@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { Suspense } from "react"
-import { ParticipantList } from "../_components/participant-list"
-import { ParticipantListLoading } from "../_components/participant-loading"
-import { SubmissionViewer } from "../_components/submission-viewer"
-import { JuryHeader, JuryHeaderSkeleton } from "../_components/jury-header"
-import { useTRPC } from "@/trpc/client"
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
-import { useJuryViewedParticipantsStore } from "../_components/use-jury-viewed-participants"
-import { useDomain } from "@/contexts/domain-context"
-import { parseAsArrayOf, parseAsInteger, useQueryState } from "nuqs"
+import { Suspense } from "react";
+import { ParticipantList } from "../_components/participant-list";
+import { ParticipantListLoading } from "../_components/participant-loading";
+import { SubmissionViewer } from "../_components/submission-viewer";
+import { JuryHeader, JuryHeaderSkeleton } from "../_components/jury-header";
+import { useTRPC } from "@/trpc/client";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useJuryViewedParticipantsStore } from "../_components/use-jury-viewed-participants";
+import { useDomain } from "@/contexts/domain-context";
+import { parseAsArrayOf, parseAsInteger, useQueryState } from "nuqs";
 
 interface ReviewClientPageProps {
-  token: string
-  previewBaseUrl: string
-  submissionBaseUrl: string
-  thumbnailBaseUrl: string
+  token: string;
+  previewBaseUrl: string;
+  submissionBaseUrl: string;
+  thumbnailBaseUrl: string;
 }
 
 export function ReviewClientPage({
@@ -24,21 +24,21 @@ export function ReviewClientPage({
   submissionBaseUrl,
   thumbnailBaseUrl,
 }: ReviewClientPageProps) {
-  const { domain } = useDomain()
-  const trpc = useTRPC()
+  const { domain } = useDomain();
+  const trpc = useTRPC();
   // const { viewedRefs, addViewedRefs } = useJuryViewedParticipantsStore()
   const [selectedParticipantId, setSelectedParticipantId] = useQueryState(
     "selected-participant-id",
-    parseAsInteger
-  )
+    parseAsInteger,
+  );
   const [currentParticipantIndex, setCurrentParticipantIndex] = useQueryState(
     "current-participant-index",
-    parseAsInteger.withDefault(0)
-  )
+    parseAsInteger.withDefault(0),
+  );
   const [selectedRatings, setSelectedRatings] = useQueryState(
     "rating-filter",
-    parseAsArrayOf(parseAsInteger).withDefault([])
-  )
+    parseAsArrayOf(parseAsInteger).withDefault([]),
+  );
 
   // useEffect(() => {
   //   const stored = localStorage.getItem(`jury-selected-participant-${token}`)
@@ -57,12 +57,12 @@ export function ReviewClientPage({
   // }, [selectedParticipantId, token])
 
   const { data: ratingsData, isLoading: isRatingsLoading } = useQuery(
-    trpc.jury.getJuryRatingsByInvitation.queryOptions({ token })
-  )
+    trpc.jury.getJuryRatingsByInvitation.queryOptions({ token }),
+  );
 
   const { data: invitationData } = useQuery(
-    trpc.jury.verifyTokenAndGetInitialData.queryOptions({ token })
-  )
+    trpc.jury.verifyTokenAndGetInitialData.queryOptions({ token }),
+  );
 
   const {
     data,
@@ -79,44 +79,44 @@ export function ReviewClientPage({
       },
       {
         getNextPageParam: (lastPage) => lastPage?.nextCursor,
-      }
-    )
-  )
+      },
+    ),
+  );
 
   const { data: totalParticipants } = useQuery(
     trpc.jury.getJuryParticipantCount.queryOptions({
       token,
       ratingFilter: selectedRatings.length > 0 ? selectedRatings : undefined,
-    })
-  )
+    }),
+  );
 
   const handleParticipantSelect = (
     participantId: number,
-    reference: string
+    reference: string,
   ) => {
     // addViewedRefs([reference], domain, token)
-    setSelectedParticipantId(participantId)
-  }
+    setSelectedParticipantId(participantId);
+  };
 
   const handleBackToList = () => {
-    setCurrentParticipantIndex(0)
-    setSelectedParticipantId(null)
-  }
+    setCurrentParticipantIndex(0);
+    setSelectedParticipantId(null);
+  };
 
   const toggleRatingFilter = (rating: number) => {
     setSelectedRatings((prev) =>
       prev.includes(rating)
         ? prev.filter((r) => r !== rating)
-        : [...prev, rating]
-    )
-  }
+        : [...prev, rating],
+    );
+  };
 
   // const viewedParticipants = viewedRefs.filter(
   //   (ref) => ref.startsWith(domain) && ref.endsWith(token)
   // )
   // const viewedCount = viewedParticipants.length
 
-  const isLoading = isRatingsLoading || isParticipantsLoading
+  const isLoading = isRatingsLoading || isParticipantsLoading;
 
   return (
     <main className="min-h-screen bg-neutral-950">
@@ -165,5 +165,5 @@ export function ReviewClientPage({
         />
       )}
     </main>
-  )
+  );
 }

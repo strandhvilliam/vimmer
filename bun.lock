@@ -328,6 +328,18 @@
         "typescript": "^5",
       },
     },
+    "services/batch-contact-sheet-generator": {
+      "name": "@vimmer/batch-contact-sheet-generator",
+      "version": "1.0.0",
+      "dependencies": {
+        "@vimmer/api": "workspace:*",
+        "sharp": "^0.34.3",
+      },
+      "devDependencies": {
+        "@types/aws-lambda": "8.10.146",
+        "typescript": "^5.7.2",
+      },
+    },
     "services/contact-sheet-generator": {
       "name": "contact-sheet-generator",
       "dependencies": {
@@ -1342,6 +1354,8 @@
     "@unrs/resolver-binding-win32-x64-msvc": ["@unrs/resolver-binding-win32-x64-msvc@1.11.1", "", { "os": "win32", "cpu": "x64" }, "sha512-lrW200hZdbfRtztbygyaq/6jP6AKE8qQN2KvPcJ+x7wiD038YtnYtZ82IMNJ69GJibV7bwL3y9FgK+5w/pYt6g=="],
 
     "@vimmer/api": ["@vimmer/api@workspace:apps/api"],
+
+    "@vimmer/batch-contact-sheet-generator": ["@vimmer/batch-contact-sheet-generator@workspace:services/batch-contact-sheet-generator"],
 
     "@vimmer/cli": ["@vimmer/cli@workspace:apps/cli"],
 

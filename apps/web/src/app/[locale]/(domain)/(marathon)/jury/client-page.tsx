@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   Card,
@@ -6,7 +6,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@vimmer/ui/components/card"
+} from "@vimmer/ui/components/card";
 import {
   Mail,
   Clock,
@@ -14,50 +14,50 @@ import {
   PlayCircleIcon,
   UserIcon,
   Tag,
-} from "lucide-react"
-import { updateInvitationStatusAction } from "./_actions/jury-actions"
-import { useAction } from "next-safe-action/hooks"
-import { toast } from "sonner"
-import { DotPattern } from "@vimmer/ui/components/dot-pattern"
-import { PrimaryButton } from "@vimmer/ui/components/primary-button"
-import { redirect, useRouter } from "next/navigation"
-import { useTRPC } from "@/trpc/client"
-import { useSuspenseQuery } from "@tanstack/react-query"
+} from "lucide-react";
+import { updateInvitationStatusAction } from "./_actions/jury-actions";
+import { useAction } from "next-safe-action/hooks";
+import { toast } from "sonner";
+import { DotPattern } from "@vimmer/ui/components/dot-pattern";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { redirect, useRouter } from "next/navigation";
+import { useTRPC } from "@/trpc/client";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 export function JuryClientPage({ token }: { token: string }) {
-  const trpc = useTRPC()
-  const router = useRouter()
+  const trpc = useTRPC();
+  const router = useRouter();
 
   const { data: invitation } = useSuspenseQuery(
     trpc.jury.verifyTokenAndGetInitialData.queryOptions({
       token,
-    })
-  )
+    }),
+  );
 
   const { execute: updateStatus, isExecuting } = useAction(
     updateInvitationStatusAction,
     {
       onSuccess: () => {
-        toast.success("Welcome! You can now start reviewing submissions.")
-        router.push(`/jury/review?token=${invitation.token}`)
+        toast.success("Welcome! You can now start reviewing submissions.");
+        router.push(`/jury/review?token=${invitation.token}`);
       },
       onError: ({ error }) => {
         toast.error(
-          error.serverError || "Failed to get started. Please try again."
-        )
+          error.serverError || "Failed to get started. Please try again.",
+        );
       },
-    }
-  )
+    },
+  );
 
   const handleGetStarted = () => {
     updateStatus({
       invitationId: invitation.id,
       status: "in_progress",
-    })
-  }
+    });
+  };
 
   if (invitation.status === "in_progress") {
-    redirect(`/jury/review?token=${invitation.token}`)
+    redirect(`/jury/review?token=${invitation.token}`);
   }
 
   if (invitation.status === "completed") {
@@ -117,7 +117,7 @@ export function JuryClientPage({ token }: { token: string }) {
           </Card>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -173,7 +173,7 @@ export function JuryClientPage({ token }: { token: string }) {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
-                      }
+                      },
                     )}
                   </p>
                 </div>
@@ -242,5 +242,5 @@ export function JuryClientPage({ token }: { token: string }) {
         </Card>
       </div>
     </div>
-  )
+  );
 }

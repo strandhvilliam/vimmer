@@ -302,7 +302,8 @@ export default $config({
           exportsBucket,
           api,
         ],
-        memory: "2 GB",
+        memory: "4 GB",
+        cpu: "2 vCPU",
         permissions: [
           {
             actions: ["s3:GetObject", "s3:PutObject"],

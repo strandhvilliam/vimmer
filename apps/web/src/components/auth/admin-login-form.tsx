@@ -10,8 +10,8 @@ import { Card, CardContent } from "@vimmer/ui/components/card"
 import Link from "next/link"
 import { toast } from "sonner"
 import { PrimaryButton } from "@vimmer/ui/components/primary-button"
-import { signInWithPassword } from "@/lib/sign-in"
 import { authClient } from "@/lib/auth-client"
+import { Button } from "@vimmer/ui/components/button"
 
 export function AdminLoginForm() {
   const [email, setEmail] = useState("")
@@ -24,14 +24,13 @@ export function AdminLoginForm() {
     setIsLoading(true)
 
     try {
-      const { data } = await authClient.signIn.email({
+      const { error } = await authClient.emailOtp.sendVerificationOtp({
         email,
-        password,
-        rememberMe: true,
+        type: "sign-in",
       })
 
-      if (!data) throw new Error("Invalid credentials")
-      router.push("/select-domain")
+      if (error) throw error
+      router.push(`/auth/admin/verify?email=${encodeURIComponent(email)}`)
     } catch (error) {
       console.error(error)
       toast.error("Something went wrong. Please try again.", {
@@ -48,17 +47,6 @@ export function AdminLoginForm() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.1 }}
     >
-      <button
-        onClick={() =>
-          authClient.signUp.email({
-            email: "emil@stockholmfotomaraton.se",
-            password: "12345678",
-            name: "Emil Gyllenberg",
-          })
-        }
-      >
-        Sign Up
-      </button>
       <Card className="w-full border-0 shadow-none">
         <CardContent className="p-0">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -75,26 +63,13 @@ export function AdminLoginForm() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Input
-                id="password"
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full"
-                disabled={isLoading}
-              />
-            </div>
-
             <PrimaryButton
               type="submit"
-              className="w-full rounded-full py-3"
+              className="w-full"
               disabled={isLoading}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
+              Send Login Code
             </PrimaryButton>
           </form>
 

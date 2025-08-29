@@ -12,14 +12,14 @@ import {
   Img,
   Button,
   Link,
-} from "@react-email/components"
+} from "@react-email/components";
 
 interface ContactSheetEmailProps {
-  participantName: string
-  marathonName: string
-  participantReference: string
-  replyToEmail: string
-  marathonLogoUrl?: string
+  participantName: string;
+  marathonName: string;
+  participantReference: string;
+  replyToEmail: string;
+  marathonLogoUrl?: string;
 }
 
 export const ContactSheetEmail = ({
@@ -237,5 +237,5 @@ export const ContactSheetEmail = ({
         </Body>
       </Tailwind>
     </Html>
-  )
-}
+  );
+};

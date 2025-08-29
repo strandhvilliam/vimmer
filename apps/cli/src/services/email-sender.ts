@@ -1,19 +1,19 @@
-import { Resend, type CreateEmailOptions } from "resend"
-import type { EmailParticipant, EmailResult } from "../types/email.js"
-import { downloadContactSheet, getContactSheetFilename } from "./s3-client.js"
-import { ContactSheetEmail } from "@vimmer/email/contact-sheet-email"
+import { Resend, type CreateEmailOptions } from "resend";
+import type { EmailParticipant, EmailResult } from "../types/email.js";
+import { downloadContactSheet, getContactSheetFilename } from "./s3-client.js";
+import { ContactSheetEmail } from "@vimmer/email/contact-sheet-email";
 
 function getResendClient() {
   if (!process.env.RESEND_API_KEY) {
-    throw new Error("RESEND_API_KEY environment variable is required")
+    throw new Error("RESEND_API_KEY environment variable is required");
   }
-  return new Resend(process.env.RESEND_API_KEY)
+  return new Resend(process.env.RESEND_API_KEY);
 }
 
 function createContactSheetEmailHtml(
   participantName: string,
   marathonName: string,
-  participantReference: string
+  participantReference: string,
 ): string {
   return `
 <!DOCTYPE html>
@@ -54,58 +54,58 @@ function createContactSheetEmailHtml(
     </div>
   </div>
 </body>
-</html>`
+</html>`;
 }
 
 export async function sendContactSheetEmail(
   participant: EmailParticipant,
   marathonName: string,
-  fromEmail?: string
+  fromEmail?: string,
 ): Promise<EmailResult> {
   try {
     console.log(
-      `📧 Sending email to ${participant.email} (${participant.reference})`
-    )
+      `📧 Sending email to ${participant.email} (${participant.reference})`,
+    );
 
     // Download contact sheet attachment - required for email to be sent
-    let attachment = null
+    let attachment = null;
     if (participant.contactSheetKey) {
       const contactSheetBuffer = await downloadContactSheet(
-        participant.contactSheetKey
-      )
+        participant.contactSheetKey,
+      );
       if (contactSheetBuffer) {
         attachment = {
           filename: getContactSheetFilename(
             participant.contactSheetKey,
-            participant.reference
+            participant.reference,
           ),
           content: contactSheetBuffer,
-        }
+        };
       } else {
         console.error(
-          `❌ Could not download contact sheet for ${participant.reference}`
-        )
+          `❌ Could not download contact sheet for ${participant.reference}`,
+        );
         return {
           success: false,
           participantId: participant.id,
           email: participant.email,
           error: "Failed to download contact sheet from S3",
-        }
+        };
       }
     } else {
-      console.error(`❌ No contact sheet key for ${participant.reference}`)
+      console.error(`❌ No contact sheet key for ${participant.reference}`);
       return {
         success: false,
         participantId: participant.id,
         email: participant.email,
         error: "No contact sheet available",
-      }
+      };
     }
 
     // Create email HTML
     const participantName =
       `${participant.firstname} ${participant.lastname}`.trim() ||
-      participant.email
+      participant.email;
 
     const emailJsx = ContactSheetEmail({
       participantName: participantName,
@@ -114,19 +114,19 @@ export async function sendContactSheetEmail(
       replyToEmail: "info@stockholmfotomaraton.se",
       marathonLogoUrl:
         "https://www.stockholmfotomaraton.se/wp-content/uploads/2022/11/Logga-22-png-1024x1024-1.png",
-    })
+    });
 
     // Send email via Resend - attachment is required
     if (!attachment) {
       console.error(
-        `❌ No attachment available for ${participant.reference} - this should not happen`
-      )
+        `❌ No attachment available for ${participant.reference} - this should not happen`,
+      );
       return {
         success: false,
         participantId: participant.id,
         email: participant.email,
         error: "No contact sheet attachment available",
-      }
+      };
     }
 
     const emailData: CreateEmailOptions = {
@@ -139,55 +139,55 @@ export async function sendContactSheetEmail(
       attachments: [attachment],
       react: emailJsx,
       replyTo: "info@stockholmfotomaraton.se",
-    }
+    };
 
-    const resend = getResendClient()
-    const result = await resend.emails.send(emailData)
+    const resend = getResendClient();
+    const result = await resend.emails.send(emailData);
 
     if (result.error) {
       console.error(
         `❌ Failed to send email to ${participant.email}:`,
-        result.error
-      )
+        result.error,
+      );
       return {
         success: false,
         participantId: participant.id,
         email: participant.email,
         error: result.error.message || "Unknown email error",
-      }
+      };
     }
 
     console.log(
-      `✅ Email sent successfully to ${participant.email} (ID: ${result.data?.id})`
-    )
+      `✅ Email sent successfully to ${participant.email} (ID: ${result.data?.id})`,
+    );
     return {
       success: true,
       participantId: participant.id,
       email: participant.email,
-    }
+    };
   } catch (error) {
     const errorMessage =
-      error instanceof Error ? error.message : "Unknown error"
+      error instanceof Error ? error.message : "Unknown error";
     console.error(
       `❌ Failed to send email to ${participant.email}:`,
-      errorMessage
-    )
+      errorMessage,
+    );
     return {
       success: false,
       participantId: participant.id,
       email: participant.email,
       error: errorMessage,
-    }
+    };
   }
 }
 
 export async function sendTestContactSheetEmail(
   toEmail: string,
   marathonName: string = "Test Marathon 2024",
-  fromEmail?: string
+  fromEmail?: string,
 ): Promise<EmailResult> {
   try {
-    console.log(`🧪 Sending test email to ${toEmail}`)
+    console.log(`🧪 Sending test email to ${toEmail}`);
 
     // const emailHtml = createContactSheetEmailHtml(
     //   "Test Participant",
@@ -202,43 +202,46 @@ export async function sendTestContactSheetEmail(
       replyToEmail: "info@stockholmfotomaraton.se",
       marathonLogoUrl:
         "https://www.stockholmfotomaraton.se/wp-content/uploads/2022/11/Logga-22-png-1024x1024-1.png",
-    })
+    });
 
-    const resend = getResendClient()
+    const resend = getResendClient();
     const result = await resend.emails.send({
       from: fromEmail || process.env.FROM_EMAIL || "noreply@blikka.app",
       to: [toEmail],
       subject: `[TEST] Your Contact Sheet from ${marathonName}`,
       react: emailJsx,
-    })
+    });
 
     if (result.error) {
-      console.error(`❌ Failed to send test email to ${toEmail}:`, result.error)
+      console.error(
+        `❌ Failed to send test email to ${toEmail}:`,
+        result.error,
+      );
       return {
         success: false,
         participantId: -1,
         email: toEmail,
         error: result.error.message || "Unknown email error",
-      }
+      };
     }
 
     console.log(
-      `✅ Test email sent successfully to ${toEmail} (ID: ${result.data?.id})`
-    )
+      `✅ Test email sent successfully to ${toEmail} (ID: ${result.data?.id})`,
+    );
     return {
       success: true,
       participantId: -1,
       email: toEmail,
-    }
+    };
   } catch (error) {
     const errorMessage =
-      error instanceof Error ? error.message : "Unknown error"
-    console.error(`❌ Failed to send test email to ${toEmail}:`, errorMessage)
+      error instanceof Error ? error.message : "Unknown error";
+    console.error(`❌ Failed to send test email to ${toEmail}:`, errorMessage);
     return {
       success: false,
       participantId: -1,
       email: toEmail,
       error: errorMessage,
-    }
+    };
   }
 }

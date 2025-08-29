@@ -1,29 +1,29 @@
-import "client-only"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { createQueryClient } from "./query-client"
-import { createTRPCContext } from "@trpc/tanstack-react-query"
-import { AppRouter } from "@vimmer/api/trpc/routers/_app"
-import { useState } from "react"
-import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client"
-import superjson from "superjson"
+import "client-only";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createQueryClient } from "./query-client";
+import { createTRPCContext } from "@trpc/tanstack-react-query";
+import { AppRouter } from "@vimmer/api/trpc/routers/_app";
+import { useState } from "react";
+import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
+import superjson from "superjson";
 
-let clientQueryClientSingleton: QueryClient | undefined = undefined
+let clientQueryClientSingleton: QueryClient | undefined = undefined;
 
 const getQueryClient = () => {
   if (typeof window === "undefined") {
-    return createQueryClient()
+    return createQueryClient();
   } else {
-    return (clientQueryClientSingleton ??= createQueryClient())
+    return (clientQueryClientSingleton ??= createQueryClient());
   }
-}
+};
 
-export const { useTRPC, TRPCProvider } = createTRPCContext<AppRouter>()
+export const { useTRPC, TRPCProvider } = createTRPCContext<AppRouter>();
 
 export function TRPCReactProvider(props: {
-  children: React.ReactNode
-  domain: string | null
+  children: React.ReactNode;
+  domain: string | null;
 }) {
-  const queryClient = getQueryClient()
+  const queryClient = getQueryClient();
 
   const [trpcClient] = useState(() =>
     createTRPCProxyClient<AppRouter>({
@@ -59,8 +59,8 @@ export function TRPCReactProvider(props: {
           // },
         }),
       ],
-    })
-  )
+    }),
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -68,5 +68,5 @@ export function TRPCReactProvider(props: {
         {props.children}
       </TRPCProvider>
     </QueryClientProvider>
-  )
+  );
 }

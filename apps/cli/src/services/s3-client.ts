@@ -1,25 +1,25 @@
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3"
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION || "eu-north-1",
-})
+});
 
 export async function downloadContactSheet(
-  contactSheetKey: string
+  contactSheetKey: string,
 ): Promise<Buffer | null> {
   try {
-    console.log(`📥 Downloading contact sheet: ${contactSheetKey}`)
+    console.log(`📥 Downloading contact sheet: ${contactSheetKey}`);
 
     const command = new GetObjectCommand({
       Bucket: "vimmer-production-contactsheetsbucketbucket-sswnzfxo",
       Key: contactSheetKey,
-    })
+    });
 
-    const response = await s3Client.send(command)
+    const response = await s3Client.send(command);
 
     if (!response.Body) {
-      console.log(`⚠️  No body found for contact sheet: ${contactSheetKey}`)
-      return null
+      console.log(`⚠️  No body found for contact sheet: ${contactSheetKey}`);
+      return null;
     }
 
     // const chunks: Uint8Array[] = []
@@ -36,25 +36,25 @@ export async function downloadContactSheet(
     //   reader.releaseLock()
     // }
 
-    const buffer = Buffer.from(await response.Body.transformToByteArray())
+    const buffer = Buffer.from(await response.Body.transformToByteArray());
     console.log(
-      `✅ Downloaded contact sheet: ${contactSheetKey} (${buffer.length} bytes)`
-    )
+      `✅ Downloaded contact sheet: ${contactSheetKey} (${buffer.length} bytes)`,
+    );
 
-    return buffer
+    return buffer;
   } catch (error) {
     console.error(
       `❌ Failed to download contact sheet ${contactSheetKey}:`,
-      error
-    )
-    return null
+      error,
+    );
+    return null;
   }
 }
 
 export function getContactSheetFilename(
   contactSheetKey: string,
-  participantReference: string
+  participantReference: string,
 ): string {
-  const extension = contactSheetKey.split(".").pop() || "jpg"
-  return `${participantReference}_contact_sheet.${extension}`
+  const extension = contactSheetKey.split(".").pop() || "jpg";
+  return `${participantReference}_contact_sheet.${extension}`;
 }

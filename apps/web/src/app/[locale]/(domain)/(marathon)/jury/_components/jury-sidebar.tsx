@@ -1,53 +1,53 @@
-"use client"
+"use client";
 
-import { Star, StickyNote, Keyboard } from "lucide-react"
-import { Button } from "@vimmer/ui/components/button"
+import { Star, StickyNote, Keyboard } from "lucide-react";
+import { Button } from "@vimmer/ui/components/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@vimmer/ui/components/card"
-import { Badge } from "@vimmer/ui/components/badge"
-import { Textarea } from "@vimmer/ui/components/textarea"
-import { Label } from "@vimmer/ui/components/label"
-import { useMutationState } from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/client"
+} from "@vimmer/ui/components/card";
+import { Badge } from "@vimmer/ui/components/badge";
+import { Textarea } from "@vimmer/ui/components/textarea";
+import { Label } from "@vimmer/ui/components/label";
+import { useMutationState } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
 
 export interface JuryParticipant {
-  id: number
-  reference: string
-  createdAt: string
-  status?: string | null
-  contactSheetKey?: string | null
+  id: number;
+  reference: string;
+  createdAt: string;
+  status?: string | null;
+  contactSheetKey?: string | null;
   competitionClass?: {
-    id: number
-    name: string
-  } | null
+    id: number;
+    name: string;
+  } | null;
   deviceGroup?: {
-    id: number
-    name: string
-  } | null
+    id: number;
+    name: string;
+  } | null;
   submission?: {
-    id: number
-    createdAt: string
-    previewKey?: string | null
+    id: number;
+    createdAt: string;
+    previewKey?: string | null;
     topic?: {
-      id: number
-      name: string
-    } | null
-  } | null
+      id: number;
+      name: string;
+    } | null;
+  } | null;
 }
 
 interface JurySidebarProps {
-  currentParticipant: JuryParticipant | null | undefined
-  rating: number
-  notes: string
-  isSaving: boolean
-  onRatingClick: (star: number) => void
-  onNotesChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
-  isClassInvitation: boolean
-  participantName: string
+  currentParticipant: JuryParticipant | null | undefined;
+  rating: number;
+  notes: string;
+  isSaving: boolean;
+  onRatingClick: (star: number) => void;
+  onNotesChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  isClassInvitation: boolean;
+  participantName: string;
 }
 
 export function JurySidebar({
@@ -60,7 +60,7 @@ export function JurySidebar({
   isClassInvitation,
   participantName,
 }: JurySidebarProps) {
-  if (!currentParticipant) return null
+  if (!currentParticipant) return null;
 
   return (
     <div className="w-80 bg-neutral-900 border-l border-neutral-800 flex flex-col">
@@ -109,7 +109,7 @@ export function JurySidebar({
               Submitted:{" "}
               {new Date(
                 currentParticipant.submission?.createdAt ||
-                  currentParticipant.createdAt
+                  currentParticipant.createdAt,
               ).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "long",
@@ -212,5 +212,5 @@ export function JurySidebar({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

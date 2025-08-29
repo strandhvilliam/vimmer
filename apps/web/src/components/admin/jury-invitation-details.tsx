@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import React from "react"
-import { RefreshCw, Trash2, Mail, Users, Star, BarChart3 } from "lucide-react"
-import { Button } from "@vimmer/ui/components/button"
+import React from "react";
+import { RefreshCw, Trash2, Mail, Users, Star, BarChart3 } from "lucide-react";
+import { Button } from "@vimmer/ui/components/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@vimmer/ui/components/alert-dialog"
+} from "@vimmer/ui/components/alert-dialog";
 import {
   Card,
   CardContent,
@@ -21,33 +21,33 @@ import {
   CardTitle,
   CardDescription,
   CardFooter,
-} from "@vimmer/ui/components/card"
+} from "@vimmer/ui/components/card";
 import {
   Table,
   TableBody,
   TableCell,
   TableRow,
-} from "@vimmer/ui/components/table"
-import { toast } from "@vimmer/ui/hooks/use-toast"
-import { useDomain } from "@/contexts/domain-context"
+} from "@vimmer/ui/components/table";
+import { toast } from "@vimmer/ui/hooks/use-toast";
+import { useDomain } from "@/contexts/domain-context";
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
-} from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/client"
-import { JuryStatusBadge } from "@/components/admin/jury-status-badge"
-import { JuryInvitationNotFound } from "@/components/admin/jury-invitation-not-found"
-import { format } from "date-fns"
+} from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
+import { JuryStatusBadge } from "@/components/admin/jury-status-badge";
+import { JuryInvitationNotFound } from "@/components/admin/jury-invitation-not-found";
+import { format } from "date-fns";
 
 interface JuryInvitationDetailsProps {
-  invitationId: number
+  invitationId: number;
 }
 
 export function JuryInvitationDetails({
   invitationId,
 }: JuryInvitationDetailsProps) {
-  return <div>Not implemented</div>
+  return <div>Not implemented</div>;
 }
 //   const trpc = useTRPC();
 //   const queryClient = useQueryClient();

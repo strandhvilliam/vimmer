@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import { Button } from "@vimmer/ui/components/button"
-import { Badge } from "@vimmer/ui/components/badge"
-import { Avatar, AvatarFallback } from "@vimmer/ui/components/avatar"
-import { UserIcon } from "lucide-react"
-import { CompleteReviewButton } from "@/components/jury/complete-review-button"
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/client"
-import { JuryInvitation } from "@vimmer/api/db/types"
+import { Button } from "@vimmer/ui/components/button";
+import { Badge } from "@vimmer/ui/components/badge";
+import { Avatar, AvatarFallback } from "@vimmer/ui/components/avatar";
+import { UserIcon } from "lucide-react";
+import { CompleteReviewButton } from "@/components/jury/complete-review-button";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
+import { JuryInvitation } from "@vimmer/api/db/types";
 
 interface FilterDisplayProps {
-  competitionClass: string | null
-  deviceGroup: string | null
-  topic: string | null
+  competitionClass: string | null;
+  deviceGroup: string | null;
+  topic: string | null;
 }
 
 function FilterDisplay({
@@ -20,42 +20,44 @@ function FilterDisplay({
   deviceGroup,
   topic,
 }: FilterDisplayProps) {
-  const hasFilters = competitionClass || deviceGroup || topic
+  const hasFilters = competitionClass || deviceGroup || topic;
 
   if (!hasFilters) {
     return (
       <span className="text-xs text-neutral-500">Viewing all participants</span>
-    )
+    );
   }
 
   const filters = [
     competitionClass && `Class: ${competitionClass}`,
     deviceGroup && `Device: ${deviceGroup}`,
     topic && `Topic: ${topic}`,
-  ].filter(Boolean)
+  ].filter(Boolean);
 
-  return <span className="text-xs text-neutral-500">{filters.join(" • ")}</span>
+  return (
+    <span className="text-xs text-neutral-500">{filters.join(" • ")}</span>
+  );
 }
 
 interface JuryHeaderProps {
-  viewedCount: number
-  token: string
+  viewedCount: number;
+  token: string;
 }
 
 export function JuryHeader({ viewedCount, token }: JuryHeaderProps) {
-  const trpc = useTRPC()
+  const trpc = useTRPC();
 
   const { data: totalParticipants } = useSuspenseQuery(
     trpc.jury.getJuryParticipantCount.queryOptions({
       token,
-    })
-  )
+    }),
+  );
 
   const { data: invitation } = useSuspenseQuery(
     trpc.jury.verifyTokenAndGetInitialData.queryOptions({
       token,
-    })
-  )
+    }),
+  );
 
   return (
     <div className="flex w-full border-b items-center h-16 px-4 justify-between">
@@ -100,7 +102,7 @@ export function JuryHeader({ viewedCount, token }: JuryHeaderProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export function JuryHeaderSkeleton() {
@@ -124,5 +126,5 @@ export function JuryHeaderSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }

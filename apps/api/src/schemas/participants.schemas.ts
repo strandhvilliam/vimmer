@@ -1,12 +1,12 @@
-import { z } from "zod/v4"
+import { z } from "zod/v4";
 
 export const getParticipantsByDomainSchema = z.object({
   domain: z.string(),
-})
+});
 
 export const getParticipantsWithoutSubmissionsSchema = z.object({
   domain: z.string(),
-})
+});
 
 export const getParticipantsByDomainPaginatedSchema = z.object({
   domain: z.string(),
@@ -20,16 +20,16 @@ export const getParticipantsByDomainPaginatedSchema = z.object({
     .enum(["createdAt", "reference", "firstname", "lastname", "uploadCount"])
     .default("createdAt"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
-})
+});
 
 export const getParticipantByIdSchema = z.object({
   id: z.number(),
-})
+});
 
 export const getParticipantByReferenceSchema = z.object({
   reference: z.string(),
   domain: z.string(),
-})
+});
 
 export const createParticipantSchema = z.object({
   data: z.object({
@@ -43,7 +43,7 @@ export const createParticipantSchema = z.object({
     lastname: z.string().default(""),
     status: z.string().default("initialized"),
   }),
-})
+});
 
 export const updateParticipantSchema = z.object({
   id: z.number(),
@@ -58,13 +58,13 @@ export const updateParticipantSchema = z.object({
     status: z.string().optional(),
     uploadCount: z.number().optional(),
   }),
-})
+});
 
 export const deleteParticipantSchema = z.object({
   id: z.number(),
-})
+});
 
 export const incrementUploadCounterSchema = z.object({
   participantId: z.number(),
   totalExpected: z.number(),
-})
+});

@@ -13,8 +13,8 @@ import {
   getJurySubmissionsFromTokenQuery,
   getJuryRatingsByInvitationQuery,
   getJuryParticipantCountQuery,
-} from "@vimmer/api/db/queries/jury.queries"
-import { createTRPCRouter, publicProcedure } from ".."
+} from "@vimmer/api/db/queries/jury.queries";
+import { createTRPCRouter, publicProcedure } from "..";
 import {
   getJuryInvitationsByMarathonIdSchema,
   getJuryInvitationsByDomainSchema,
@@ -31,50 +31,50 @@ import {
   getJurySubmissionsFromTokenSchema,
   getJuryRatingsByInvitationSchema,
   getJuryParticipantCountSchema,
-} from "@vimmer/api/schemas/jury.schemas"
-import { generateJuryToken } from "@vimmer/api/utils/generate-jury-token"
+} from "@vimmer/api/schemas/jury.schemas";
+import { generateJuryToken } from "@vimmer/api/utils/generate-jury-token";
 
 export const juryRouter = createTRPCRouter({
   getJuryInvitationsByMarathonId: publicProcedure
     .input(getJuryInvitationsByMarathonIdSchema)
     .query(async ({ ctx, input }) => {
-      return getJuryInvitationsByMarathonIdQuery(ctx.db, input)
+      return getJuryInvitationsByMarathonIdQuery(ctx.db, input);
     }),
 
   getJuryInvitationsByDomain: publicProcedure
     .input(getJuryInvitationsByDomainSchema)
     .query(async ({ ctx, input }) => {
-      return getJuryInvitationsByDomainQuery(ctx.db, input)
+      return getJuryInvitationsByDomainQuery(ctx.db, input);
     }),
 
   getJuryInvitationById: publicProcedure
     .input(getJuryInvitationByIdSchema)
     .query(async ({ ctx, input }) => {
-      const invitation = await getJuryInvitationByIdQuery(ctx.db, input)
-      return invitation
+      const invitation = await getJuryInvitationByIdQuery(ctx.db, input);
+      return invitation;
     }),
 
   createJuryInvitation: publicProcedure
     .input(createJuryInvitationSchema)
     .mutation(async ({ ctx, input }) => {
-      const { data } = input
+      const { data } = input;
 
       // Validate invite type logic
-      const hasTopicId = data.topicId !== null && data.topicId !== undefined
+      const hasTopicId = data.topicId !== null && data.topicId !== undefined;
       const hasCompetitionClassId =
         data.competitionClassId !== null &&
-        data.competitionClassId !== undefined
+        data.competitionClassId !== undefined;
 
       if (hasTopicId && hasCompetitionClassId) {
         throw new Error(
-          "Cannot create invitation with both topic and competition class. Choose either topic invite or class invite."
-        )
+          "Cannot create invitation with both topic and competition class. Choose either topic invite or class invite.",
+        );
       }
 
       if (!hasTopicId && !hasCompetitionClassId) {
         throw new Error(
-          "Must specify either topicId for topic invite or competitionClassId for class invite."
-        )
+          "Must specify either topicId for topic invite or competitionClassId for class invite.",
+        );
       }
 
       // For topic invites: ensure competition_class_id and device_group_id are null
@@ -84,33 +84,33 @@ export const juryRouter = createTRPCRouter({
           data.competitionClassId !== undefined
         ) {
           throw new Error(
-            "Topic invites cannot have competition class specified."
-          )
+            "Topic invites cannot have competition class specified.",
+          );
         }
         if (data.deviceGroupId !== null && data.deviceGroupId !== undefined) {
-          throw new Error("Topic invites cannot have device group specified.")
+          throw new Error("Topic invites cannot have device group specified.");
         }
       }
 
       // For class invites: ensure topic_id is null
       if (hasCompetitionClassId) {
         if (data.topicId !== null && data.topicId !== undefined) {
-          throw new Error("Class invites cannot have topic specified.")
+          throw new Error("Class invites cannot have topic specified.");
         }
         // deviceGroupId is optional for class invites, so no validation needed
       }
 
       const id = await createJuryInvitationMutation(ctx.db, {
         data,
-      })
-      const token = await generateJuryToken(data.domain, id)
+      });
+      const token = await generateJuryToken(data.domain, id);
       await updateJuryInvitationMutation(ctx.db, {
         id,
         data: {
           token,
         },
-      })
-      return getJuryInvitationByIdQuery(ctx.db, { id })
+      });
+      return getJuryInvitationByIdQuery(ctx.db, { id });
     }),
 
   updateJuryInvitation: publicProcedure
@@ -119,7 +119,7 @@ export const juryRouter = createTRPCRouter({
       return updateJuryInvitationMutation(ctx.db, {
         id: input.id,
         data: input.data,
-      })
+      });
     }),
 
   deleteJuryInvitation: publicProcedure
@@ -127,7 +127,7 @@ export const juryRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return deleteJuryInvitationMutation(ctx.db, {
         id: input.id,
-      })
+      });
     }),
 
   verifyTokenAndGetInitialData: publicProcedure
@@ -135,7 +135,7 @@ export const juryRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return verifyJuryTokenAndGetDataQuery(ctx.db, {
         token: input.token,
-      })
+      });
     }),
 
   getJurySubmissionsFromToken: publicProcedure
@@ -145,7 +145,7 @@ export const juryRouter = createTRPCRouter({
         token: input.token,
         cursor: input.cursor,
         ratingFilter: input.ratingFilter,
-      })
+      });
     }),
 
   createRating: publicProcedure
@@ -156,7 +156,7 @@ export const juryRouter = createTRPCRouter({
         participantId: input.participantId,
         rating: input.rating,
         notes: input.notes,
-      })
+      });
     }),
 
   updateRating: publicProcedure
@@ -168,7 +168,7 @@ export const juryRouter = createTRPCRouter({
         rating: input.rating,
         notes: input.notes,
         finalRanking: input.finalRanking,
-      })
+      });
     }),
 
   getRating: publicProcedure
@@ -177,7 +177,7 @@ export const juryRouter = createTRPCRouter({
       return getJuryRatingQuery(ctx.db, {
         token: input.token,
         participantId: input.participantId,
-      })
+      });
     }),
 
   deleteRating: publicProcedure
@@ -186,7 +186,7 @@ export const juryRouter = createTRPCRouter({
       return deleteJuryRatingMutation(ctx.db, {
         token: input.token,
         participantId: input.participantId,
-      })
+      });
     }),
 
   getJuryRatingsByInvitation: publicProcedure
@@ -194,7 +194,7 @@ export const juryRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return getJuryRatingsByInvitationQuery(ctx.db, {
         token: input.token,
-      })
+      });
     }),
 
   getJuryParticipantCount: publicProcedure
@@ -203,6 +203,6 @@ export const juryRouter = createTRPCRouter({
       return getJuryParticipantCountQuery(ctx.db, {
         token: input.token,
         ratingFilter: input.ratingFilter,
-      })
+      });
     }),
-})
+});

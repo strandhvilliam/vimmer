@@ -1,19 +1,19 @@
-import { env } from "hono/adapter"
-import { HTTPException } from "hono/http-exception"
-import { PostHog } from "posthog-node"
-import { type ErrorHandler } from "hono"
+import { env } from "hono/adapter";
+import { HTTPException } from "hono/http-exception";
+import { PostHog } from "posthog-node";
+import { type ErrorHandler } from "hono";
 
 export const errorHandler: ErrorHandler = (err, c) => {
-  console.log("errorHandler", err)
+  console.log("errorHandler", err);
   const { POSTHOG_API_KEY, POSTHOG_HOST } = env<{
-    POSTHOG_API_KEY: string
-    POSTHOG_HOST: string
-  }>(c)
+    POSTHOG_API_KEY: string;
+    POSTHOG_HOST: string;
+  }>(c);
 
-  console.log("[API_ERROR]:", err)
+  console.log("[API_ERROR]:", err);
   const posthog = new PostHog(POSTHOG_API_KEY, {
     host: POSTHOG_HOST,
-  })
+  });
 
   posthog.captureException(
     new Error(err.message, { cause: err }),
@@ -23,13 +23,13 @@ export const errorHandler: ErrorHandler = (err, c) => {
       method: c.req.method,
       url: c.req.url,
       headers: c.req.header(),
-    }
-  )
-  posthog.shutdown()
+    },
+  );
+  posthog.shutdown();
 
   if (err instanceof HTTPException) {
-    return err.getResponse()
+    return err.getResponse();
   }
 
-  return c.json({ error: err.message }, 500)
-}
+  return c.json({ error: err.message }, 500);
+};

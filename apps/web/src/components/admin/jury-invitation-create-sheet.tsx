@@ -1,17 +1,17 @@
-import { useTRPC } from "@/trpc/client"
+import { useTRPC } from "@/trpc/client";
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
-} from "@tanstack/react-query"
-import { PrimaryButton } from "@vimmer/ui/components/primary-button"
+} from "@tanstack/react-query";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@vimmer/ui/components/select"
+} from "@vimmer/ui/components/select";
 import {
   Sheet,
   SheetContent,
@@ -19,21 +19,21 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
-} from "@vimmer/ui/components/sheet"
-import { Textarea } from "@vimmer/ui/components/textarea"
-import { toast } from "sonner"
-import { sendInvitationEmailAction } from "@/actions/send-jury-invitation-email"
-import { useDomain } from "@/contexts/domain-context"
-import { z } from "zod/v4"
-import { Input } from "@vimmer/ui/components/input"
-import { Send, Users, Tag } from "lucide-react"
-import { addDays } from "date-fns"
-import { useForm } from "@tanstack/react-form"
-import { Tabs, TabsList, TabsTrigger } from "@vimmer/ui/components/tabs"
+} from "@vimmer/ui/components/sheet";
+import { Textarea } from "@vimmer/ui/components/textarea";
+import { toast } from "sonner";
+import { sendInvitationEmailAction } from "@/actions/send-jury-invitation-email";
+import { useDomain } from "@/contexts/domain-context";
+import { z } from "zod/v4";
+import { Input } from "@vimmer/ui/components/input";
+import { Send, Users, Tag } from "lucide-react";
+import { addDays } from "date-fns";
+import { useForm } from "@tanstack/react-form";
+import { Tabs, TabsList, TabsTrigger } from "@vimmer/ui/components/tabs";
 
 interface JuryInvitationCreateSheetProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 const formSchema = z.object({
@@ -55,61 +55,61 @@ const formSchema = z.object({
     .min(1, { message: "Expiry must be at least 1 day." })
     .max(90, { message: "Expiry cannot exceed 90 days." })
     .optional(),
-})
+});
 
-type FormValues = z.infer<typeof formSchema>
+type FormValues = z.infer<typeof formSchema>;
 
 export function JuryInvitationCreateSheet({
   open,
   onOpenChange,
 }: JuryInvitationCreateSheetProps) {
-  const { domain } = useDomain()
-  const trpc = useTRPC()
-  const queryClient = useQueryClient()
+  const { domain } = useDomain();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
   const { data: competitionClasses } = useSuspenseQuery(
     trpc.competitionClasses.getByDomain.queryOptions({
       domain,
-    })
-  )
+    }),
+  );
 
   const { data: topics } = useSuspenseQuery(
     trpc.topics.getByDomain.queryOptions({
       domain,
-    })
-  )
+    }),
+  );
 
   const { data: marathon } = useSuspenseQuery(
     trpc.marathons.getByDomain.queryOptions({
       domain,
-    })
-  )
+    }),
+  );
 
   const { data: deviceGroups } = useSuspenseQuery(
     trpc.deviceGroups.getByDomain.queryOptions({
       domain,
-    })
-  )
+    }),
+  );
 
   const { mutate: createJuryInvitation, isPending: isCreatingJuryInvitation } =
     useMutation(
       trpc.jury.createJuryInvitation.mutationOptions({
         onSuccess: async (invitationData) => {
           if (!invitationData) {
-            toast.error("Failed to send jury invitation")
-            return
+            toast.error("Failed to send jury invitation");
+            return;
           }
           if (!marathon) {
-            toast.error("Failed to send jury invitation")
-            return
+            toast.error("Failed to send jury invitation");
+            return;
           }
 
           const competitionClass = competitionClasses.find(
-            (cls) => cls.id === invitationData.competitionClassId
-          )
+            (cls) => cls.id === invitationData.competitionClassId,
+          );
           const topic = topics.find(
-            (topic) => topic.id === invitationData.topicId
-          )
+            (topic) => topic.id === invitationData.topicId,
+          );
 
           await sendInvitationEmailAction({
             domain,
@@ -125,22 +125,22 @@ export function JuryInvitationCreateSheet({
             displayName: invitationData.displayName,
             inviteType:
               invitationData.inviteType === "topic" ? "topic" : "class",
-          })
-          toast.success("Jury invitation sent")
-          form.reset()
-          onOpenChange(false)
+          });
+          toast.success("Jury invitation sent");
+          form.reset();
+          onOpenChange(false);
         },
         onError: (error) => {
-          console.error(error)
-          toast.error("Failed to send jury invitation")
+          console.error(error);
+          toast.error("Failed to send jury invitation");
         },
         onSettled: () => {
           queryClient.invalidateQueries({
             queryKey: trpc.jury.pathKey(),
-          })
+          });
         },
-      })
-    )
+      }),
+    );
 
   const form = useForm({
     defaultValues: {
@@ -155,39 +155,39 @@ export function JuryInvitationCreateSheet({
     } as FormValues,
     onSubmit: async ({ value }) => {
       if (!marathon) {
-        toast.error("Failed to send jury invitation")
-        return
+        toast.error("Failed to send jury invitation");
+        return;
       }
 
-      let parsedCompetitionClassId: number | undefined
-      let parsedDeviceGroupId: number | undefined
-      let parsedTopicId: number | undefined
+      let parsedCompetitionClassId: number | undefined;
+      let parsedDeviceGroupId: number | undefined;
+      let parsedTopicId: number | undefined;
 
       if (value.inviteType === "topic") {
         // For topic invites, only topicId is required
         if (!value.topicId || value.topicId === "all") {
-          toast.error("Please select a topic for the invitation")
-          return
+          toast.error("Please select a topic for the invitation");
+          return;
         }
-        parsedTopicId = parseInt(value.topicId)
-        parsedCompetitionClassId = undefined
-        parsedDeviceGroupId = undefined
+        parsedTopicId = parseInt(value.topicId);
+        parsedCompetitionClassId = undefined;
+        parsedDeviceGroupId = undefined;
       } else if (value.inviteType === "class") {
         // For class invites, competitionClassId is required
         if (!value.competitionClassId || value.competitionClassId === "all") {
-          toast.error("Please select a competition class for the invitation")
-          return
+          toast.error("Please select a competition class for the invitation");
+          return;
         }
-        parsedCompetitionClassId = parseInt(value.competitionClassId)
+        parsedCompetitionClassId = parseInt(value.competitionClassId);
         parsedDeviceGroupId =
           !value.deviceGroupId || value.deviceGroupId === "all"
             ? undefined
-            : parseInt(value.deviceGroupId)
-        parsedTopicId = undefined
+            : parseInt(value.deviceGroupId);
+        parsedTopicId = undefined;
       }
 
-      const expiresAt = addDays(new Date(), value.expiryDays ?? 14)
-      expiresAt.setHours(23, 59, 59, 999)
+      const expiresAt = addDays(new Date(), value.expiryDays ?? 14);
+      expiresAt.setHours(23, 59, 59, 999);
 
       const data = {
         displayName: value.displayName,
@@ -202,25 +202,25 @@ export function JuryInvitationCreateSheet({
         domain,
         status: "pending",
         marathonId: marathon.id,
-      }
+      };
 
       createJuryInvitation({
         data,
-      })
+      });
     },
 
     validators: {
       onSubmit: formSchema,
     },
-  })
+  });
 
   return (
     <Sheet
       open={open}
       onOpenChange={(isOpen) => {
-        onOpenChange(isOpen)
+        onOpenChange(isOpen);
         if (!isOpen) {
-          form.reset()
+          form.reset();
         }
       }}
     >
@@ -235,8 +235,8 @@ export function JuryInvitationCreateSheet({
 
         <form
           onSubmit={(e) => {
-            e.preventDefault()
-            form.handleSubmit()
+            e.preventDefault();
+            form.handleSubmit();
           }}
           className="space-y-6 py-4"
         >
@@ -244,7 +244,7 @@ export function JuryInvitationCreateSheet({
             name="inviteType"
             validators={{
               onChange: ({ value }) => {
-                return !value ? "Please select an invite type" : undefined
+                return !value ? "Please select an invite type" : undefined;
               },
             }}
           >
@@ -301,11 +301,11 @@ export function JuryInvitationCreateSheet({
             name="email"
             validators={{
               onChange: ({ value }) => {
-                if (!value) return "Email is required"
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+                if (!value) return "Email is required";
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 return !emailRegex.test(value)
                   ? "Invalid email address"
-                  : undefined
+                  : undefined;
               },
             }}
           >
@@ -345,7 +345,7 @@ export function JuryInvitationCreateSheet({
             name="displayName"
             validators={{
               onChange: ({ value }) => {
-                return !value ? "Display name is required" : undefined
+                return !value ? "Display name is required" : undefined;
               },
             }}
           >
@@ -387,7 +387,7 @@ export function JuryInvitationCreateSheet({
                     name="topicId"
                     validators={{
                       onChange: ({ value }) => {
-                        return !value ? "Please select a topic" : undefined
+                        return !value ? "Please select a topic" : undefined;
                       },
                     }}
                   >
@@ -440,7 +440,7 @@ export function JuryInvitationCreateSheet({
                         onChange: ({ value }) => {
                           return !value
                             ? "Please select a competition class"
-                            : undefined
+                            : undefined;
                         },
                       }}
                     >
@@ -530,10 +530,10 @@ export function JuryInvitationCreateSheet({
             name="expiryDays"
             validators={{
               onChange: ({ value }) => {
-                const num = Number(value)
-                if (num < 1) return "Expiry must be at least 1 day"
-                if (num > 90) return "Expiry cannot exceed 90 days"
-                return undefined
+                const num = Number(value);
+                if (num < 1) return "Expiry must be at least 1 day";
+                if (num > 90) return "Expiry cannot exceed 90 days";
+                return undefined;
               },
             }}
           >
@@ -622,5 +622,5 @@ export function JuryInvitationCreateSheet({
         </form>
       </SheetContent>
     </Sheet>
-  )
+  );
 }

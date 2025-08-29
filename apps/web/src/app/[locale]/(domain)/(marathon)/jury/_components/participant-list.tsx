@@ -1,41 +1,41 @@
-"use client"
+"use client";
 
-import { useEffect, useRef } from "react"
-import { Users, Star, Loader2 } from "lucide-react"
-import { Button } from "@vimmer/ui/components/button"
-import { useJuryViewedParticipantsStore } from "./use-jury-viewed-participants"
-import { ParticipantCard } from "./participant-card"
-import { Submission, Topic } from "@vimmer/api/db/types"
+import { useEffect, useRef } from "react";
+import { Users, Star, Loader2 } from "lucide-react";
+import { Button } from "@vimmer/ui/components/button";
+import { useJuryViewedParticipantsStore } from "./use-jury-viewed-participants";
+import { ParticipantCard } from "./participant-card";
+import { Submission, Topic } from "@vimmer/api/db/types";
 
 interface Participant {
-  id: number
-  reference: string
-  competitionClass?: { name: string; numberOfPhotos: number } | null
-  deviceGroup?: { name: string } | null
+  id: number;
+  reference: string;
+  competitionClass?: { name: string; numberOfPhotos: number } | null;
+  deviceGroup?: { name: string } | null;
   submission?: Submission & {
-    topic: Topic | null
-  }
+    topic: Topic | null;
+  };
 }
 
 interface PageData {
-  participants?: Participant[]
-  nextCursor?: number | null | undefined
+  participants?: Participant[];
+  nextCursor?: number | null | undefined;
 }
 
 interface ParticipantListProps {
-  data: { pages: PageData[] } | undefined
-  ratings: { participantId: number; rating: number }[]
-  selectedRatings: number[]
-  toggleRatingFilter: (rating: number) => void
-  onParticipantSelect: (participantId: number, reference: string) => void
-  fetchNextPage: () => void
-  hasNextPage: boolean
-  isFetchingNextPage: boolean
-  error: Error | null
-  totalParticipants: { value: number } | undefined
-  domain: string
-  token: string
-  thumbnailsUrl: string
+  data: { pages: PageData[] } | undefined;
+  ratings: { participantId: number; rating: number }[];
+  selectedRatings: number[];
+  toggleRatingFilter: (rating: number) => void;
+  onParticipantSelect: (participantId: number, reference: string) => void;
+  fetchNextPage: () => void;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+  error: Error | null;
+  totalParticipants: { value: number } | undefined;
+  domain: string;
+  token: string;
+  thumbnailsUrl: string;
 }
 
 export function ParticipantList({
@@ -53,35 +53,35 @@ export function ParticipantList({
   domain,
   token,
 }: ParticipantListProps) {
-  const loadMoreRef = useRef<HTMLDivElement>(null)
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        const first = entries[0]
+        const first = entries[0];
         if (first?.isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage()
+          fetchNextPage();
         }
       },
-      { threshold: 0.1 }
-    )
+      { threshold: 0.1 },
+    );
 
-    const currentRef = loadMoreRef.current
+    const currentRef = loadMoreRef.current;
     if (currentRef) {
-      observer.observe(currentRef)
+      observer.observe(currentRef);
     }
 
     return () => {
       if (currentRef) {
-        observer.unobserve(currentRef)
+        observer.unobserve(currentRef);
       }
-    }
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const handleParticipantClick = (participantId: number, reference: string) => {
-    onParticipantSelect(participantId, reference)
-  }
+    onParticipantSelect(participantId, reference);
+  };
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -130,8 +130,8 @@ export function ParticipantList({
             const rating =
               ratings.find(
                 (r: { participantId: number; rating: number }) =>
-                  r.participantId === participant.id
-              )?.rating ?? 0
+                  r.participantId === participant.id,
+              )?.rating ?? 0;
 
             return (
               <ParticipantCard
@@ -143,8 +143,8 @@ export function ParticipantList({
                 }
                 thumbnailUrl={`${thumbnailsUrl}/${participant.submission?.thumbnailKey}`}
               />
-            )
-          })
+            );
+          });
         })}
       </div>
 
@@ -212,13 +212,13 @@ export function ParticipantList({
             {data?.pages.reduce(
               (total: number, page: PageData) =>
                 total + (page.participants?.length || 0),
-              0
+              0,
             ) || 0}{" "}
             participant
             {(data?.pages.reduce(
               (total: number, page: PageData) =>
                 total + (page.participants?.length || 0),
-              0
+              0,
             ) || 0) !== 1
               ? "s"
               : ""}{" "}
@@ -228,5 +228,5 @@ export function ParticipantList({
         </div>
       )}
     </div>
-  )
+  );
 }

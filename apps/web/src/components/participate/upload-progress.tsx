@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { FileState, PhotoWithPresignedUrl } from "@/lib/types"
-import { Topic } from "@vimmer/api/db/types"
+import { FileState, PhotoWithPresignedUrl } from "@/lib/types";
+import { Topic } from "@vimmer/api/db/types";
 import {
   Card,
   CardContent,
@@ -9,38 +9,38 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@vimmer/ui/components/card"
+} from "@vimmer/ui/components/card";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
-} from "@vimmer/ui/components/dialog"
-import { PrimaryButton } from "@vimmer/ui/components/primary-button"
-import { Button } from "@vimmer/ui/components/button"
-import { Progress } from "@vimmer/ui/components/progress"
-import { AnimatePresence, motion } from "motion/react"
-import { FileProgressItem } from "@/components/participate/file-progress-item"
-import { AlertTriangle, RefreshCcw, RefreshCw, X } from "lucide-react"
-import { useUploadStore } from "@/lib/stores/upload-store"
-import { useFileUpload } from "@/hooks/use-file-upload"
-import { useMemo, useState, useEffect } from "react"
-import { useI18n } from "@/locales/client"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/client"
-import { useSubmissionQueryState } from "@/hooks/use-submission-query-state"
+} from "@vimmer/ui/components/dialog";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { Button } from "@vimmer/ui/components/button";
+import { Progress } from "@vimmer/ui/components/progress";
+import { AnimatePresence, motion } from "motion/react";
+import { FileProgressItem } from "@/components/participate/file-progress-item";
+import { AlertTriangle, RefreshCcw, RefreshCw, X } from "lucide-react";
+import { useUploadStore } from "@/lib/stores/upload-store";
+import { useFileUpload } from "@/hooks/use-file-upload";
+import { useMemo, useState, useEffect } from "react";
+import { useI18n } from "@/locales/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
+import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 
 interface UploadProgressProps {
-  files?: PhotoWithPresignedUrl[]
-  topics: Topic[]
-  expectedCount: number
-  onComplete: () => void
-  open?: boolean
-  onClose?: () => void
+  files?: PhotoWithPresignedUrl[];
+  topics: Topic[];
+  expectedCount: number;
+  onComplete: () => void;
+  open?: boolean;
+  onClose?: () => void;
   realtimeConfig: {
-    endpoint: string
-    authorizer: string
-    topic: string
-  }
+    endpoint: string;
+    authorizer: string;
+    topic: string;
+  };
 }
 
 export function UploadProgress({
@@ -51,29 +51,29 @@ export function UploadProgress({
   onClose,
   realtimeConfig,
 }: UploadProgressProps) {
-  const queryClient = useQueryClient()
-  const trpc = useTRPC()
-  const t = useI18n()
-  const files = useUploadStore((state) => state.files)
-  const { retryFailedFiles } = useFileUpload({ realtimeConfig })
-  const [elapsedTime, setElapsedTime] = useState(0)
-  const { submissionState } = useSubmissionQueryState()
+  const queryClient = useQueryClient();
+  const trpc = useTRPC();
+  const t = useI18n();
+  const files = useUploadStore((state) => state.files);
+  const { retryFailedFiles } = useFileUpload({ realtimeConfig });
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const { submissionState } = useSubmissionQueryState();
 
   const { mutate: verifyS3Upload } = useMutation(
     trpc.submissions.verifyS3Upload.mutationOptions({
       onSettled: () => {
         queryClient.invalidateQueries({
           queryKey: trpc.submissions.pathKey(),
-        })
+        });
         queryClient.invalidateQueries({
           queryKey: trpc.participants.pathKey(),
-        })
+        });
       },
-    })
-  )
+    }),
+  );
 
   const enhancedFileStates: FileState[] = useMemo(() => {
-    const fileStates = Array.from(files.values())
+    const fileStates = Array.from(files.values());
     return fileStates.map((f) => ({
       ...f,
       status:
@@ -84,8 +84,8 @@ export function UploadProgress({
             : f.phase === "s3_upload"
               ? ("uploading" as const)
               : ("pending" as const),
-    }))
-  }, [files])
+    }));
+  }, [files]);
 
   const handleRefresh = () => {
     if (elapsedTime > 60) {
@@ -93,19 +93,21 @@ export function UploadProgress({
         if (file.phase === "s3_upload" || file.phase === "processing") {
           verifyS3Upload({
             key: file.key,
-          })
+          });
         }
       }
     }
-  }
+  };
 
   const progress = useMemo(() => {
-    const fileStates = Array.from(files.values())
-    const total = fileStates.length || expectedFilesCount
-    const completed = fileStates.filter((f) => f.phase === "completed").length
-    const failed = fileStates.filter((f) => f.phase === "error").length
-    const uploading = fileStates.filter((f) => f.phase === "s3_upload").length
-    const processing = fileStates.filter((f) => f.phase === "processing").length
+    const fileStates = Array.from(files.values());
+    const total = fileStates.length || expectedFilesCount;
+    const completed = fileStates.filter((f) => f.phase === "completed").length;
+    const failed = fileStates.filter((f) => f.phase === "error").length;
+    const uploading = fileStates.filter((f) => f.phase === "s3_upload").length;
+    const processing = fileStates.filter(
+      (f) => f.phase === "processing",
+    ).length;
 
     return {
       total,
@@ -114,42 +116,42 @@ export function UploadProgress({
       uploading,
       processing,
       percentage: total > 0 ? (completed / total) * 100 : 0,
-    }
-  }, [files, expectedFilesCount])
+    };
+  }, [files, expectedFilesCount]);
 
   const failedFiles = enhancedFileStates.filter(
-    (file) => file.status === "error"
-  )
+    (file) => file.status === "error",
+  );
 
-  const allUploadsComplete = progress.completed === expectedFilesCount
-  const hasFailures = failedFiles.length > 0
-  const canRetry = hasFailures
+  const allUploadsComplete = progress.completed === expectedFilesCount;
+  const hasFailures = failedFiles.length > 0;
+  const canRetry = hasFailures;
   const failedSummaryText = hasFailures
     ? failedFiles.length === 1
       ? t("uploadProgress.failedUploads.one")
       : t("uploadProgress.failedUploads.other", { count: failedFiles.length })
-    : ""
+    : "";
 
   useEffect(() => {
-    if (!open) return
+    if (!open) return;
 
     const interval = setInterval(() => {
-      setElapsedTime((prev) => prev + 1)
-    }, 1000)
+      setElapsedTime((prev) => prev + 1);
+    }, 1000);
 
-    return () => clearInterval(interval)
-  }, [open])
+    return () => clearInterval(interval);
+  }, [open]);
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, "0")}`
-  }
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
 
   const handleRetryFailedFiles = () => {
-    setElapsedTime(0)
-    retryFailedFiles()
-  }
+    setElapsedTime(0);
+    retryFailedFiles();
+  };
 
   return (
     <Dialog open={open}>
@@ -253,7 +255,7 @@ export function UploadProgress({
                         file={file}
                         topic={
                           topics.find(
-                            (topic) => topic.orderIndex === file.orderIndex
+                            (topic) => topic.orderIndex === file.orderIndex,
                           )!
                         }
                       />
@@ -315,5 +317,5 @@ export function UploadProgress({
         </Card>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

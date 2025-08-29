@@ -1,39 +1,39 @@
-import type { Database } from "@vimmer/api/db"
-import { marathons, topics, submissions } from "@vimmer/api/db/schema"
-import { eq, sql, count } from "drizzle-orm"
-import type { NewTopic } from "@vimmer/api/db/types"
-import type { SupabaseClient } from "@vimmer/supabase/types"
+import type { Database } from "@vimmer/api/db";
+import { marathons, topics, submissions } from "@vimmer/api/db/schema";
+import { eq, sql, count } from "drizzle-orm";
+import type { NewTopic } from "@vimmer/api/db/types";
+import type { SupabaseClient } from "@vimmer/supabase/types";
 
 export async function getTopicsByMarathonIdQuery(
   db: Database,
-  { id }: { id: number }
+  { id }: { id: number },
 ) {
   const result = await db.query.topics.findMany({
     where: eq(topics.marathonId, id),
     orderBy: (topics, { asc }) => [asc(topics.orderIndex)],
-  })
-  return result
+  });
+  return result;
 }
 
 export async function getTopicsByDomainQuery(
   db: Database,
-  { domain }: { domain: string }
+  { domain }: { domain: string },
 ) {
   const result = await db.query.marathons.findMany({
     where: eq(marathons.domain, domain),
     with: {
       topics: true,
     },
-  })
-  console.log("result", result)
-  return result.flatMap(({ topics }) => topics)
+  });
+  console.log("result", result);
+  return result.flatMap(({ topics }) => topics);
 }
 
 export async function getTopicByIdQuery(db: Database, { id }: { id: number }) {
   const result = await db.query.topics.findFirst({
     where: eq(topics.id, id),
-  })
-  return result ?? null
+  });
+  return result ?? null;
 }
 
 export async function updateTopicQuery(
@@ -42,9 +42,9 @@ export async function updateTopicQuery(
     id,
     data,
   }: {
-    id: number
-    data: Partial<NewTopic>
-  }
+    id: number;
+    data: Partial<NewTopic>;
+  },
 ) {
   const result = await db
     .update(topics)
@@ -52,8 +52,8 @@ export async function updateTopicQuery(
     .where(eq(topics.id, id))
     .returning({
       id: topics.id,
-    })
-  return { id: result[0]?.id ?? null }
+    });
+  return { id: result[0]?.id ?? null };
 }
 
 export async function updateTopicsOrder(
@@ -62,38 +62,38 @@ export async function updateTopicsOrder(
     topicIds,
     marathonId,
   }: {
-    topicIds: number[]
-    marathonId: number
-  }
+    topicIds: number[];
+    marathonId: number;
+  },
 ) {
   await supabase
     .rpc("update_topic_order", {
       p_topic_ids: topicIds,
       p_marathon_id: marathonId,
     })
-    .throwOnError()
+    .throwOnError();
 }
 
 export async function createTopicQuery(
   db: Database,
-  { data }: { data: NewTopic }
+  { data }: { data: NewTopic },
 ) {
   const result = await db.insert(topics).values(data).returning({
     id: topics.id,
-  })
-  return { id: result[0]?.id ?? null }
+  });
+  return { id: result[0]?.id ?? null };
 }
 
 export async function deleteTopicQuery(db: Database, { id }: { id: number }) {
   const result = await db.delete(topics).where(eq(topics.id, id)).returning({
     id: topics.id,
-  })
-  return { id: result[0]?.id ?? null }
+  });
+  return { id: result[0]?.id ?? null };
 }
 
 export async function getTopicsWithSubmissionCountQuery(
   db: Database,
-  { domain }: { domain: string }
+  { domain }: { domain: string },
 ): Promise<{ id: number; count: number }[]> {
   const data = await db
     .select({
@@ -104,20 +104,20 @@ export async function getTopicsWithSubmissionCountQuery(
     .innerJoin(marathons, eq(topics.marathonId, marathons.id))
     .leftJoin(submissions, eq(topics.id, submissions.topicId))
     .where(eq(marathons.domain, domain))
-    .groupBy(topics.id)
-  return data
+    .groupBy(topics.id);
+  return data;
 }
 
 export async function getTotalSubmissionCountQuery(
   db: Database,
-  { marathonId }: { marathonId: number }
+  { marathonId }: { marathonId: number },
 ) {
   const result = await db
     .select({ count: count(submissions.id) })
     .from(submissions)
-    .where(eq(submissions.marathonId, marathonId))
+    .where(eq(submissions.marathonId, marathonId));
 
-  return result[0]?.count ?? 0
+  return result[0]?.count ?? 0;
 }
 
 export async function getScheduledTopicsQuery(db: Database) {
@@ -126,7 +126,7 @@ export async function getScheduledTopicsQuery(db: Database) {
     with: {
       marathon: true,
     },
-  })
+  });
 
-  return result
+  return result;
 }

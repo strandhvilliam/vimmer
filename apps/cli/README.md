@@ -98,8 +98,8 @@ export const myTool: Tool = {
   name: "mytool",
   description: "Description of my tool",
   register: (program: Command) => {
-    const command = program.command("mytool")
+    const command = program.command("mytool");
     // Add subcommands here
   },
-}
+};
 ```

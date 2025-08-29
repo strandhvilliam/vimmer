@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { Star, ImageIcon } from "lucide-react"
-import { Card, CardContent } from "@vimmer/ui/components/card"
-import { Badge } from "@vimmer/ui/components/badge"
+import { Star, ImageIcon } from "lucide-react";
+import { Card, CardContent } from "@vimmer/ui/components/card";
+import { Badge } from "@vimmer/ui/components/badge";
 
 interface Participant {
-  id: number
-  reference: string
-  competitionClass?: { name: string; numberOfPhotos: number } | null
-  deviceGroup?: { name: string } | null
+  id: number;
+  reference: string;
+  competitionClass?: { name: string; numberOfPhotos: number } | null;
+  deviceGroup?: { name: string } | null;
 }
 
 interface ParticipantCardProps {
-  participant: Participant
-  rating: number
-  onClick: () => void
-  thumbnailUrl: string
+  participant: Participant;
+  rating: number;
+  onClick: () => void;
+  thumbnailUrl: string;
 }
 
 export function ParticipantCard({
@@ -79,12 +79,12 @@ export function ParticipantCard({
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   // Fallback to ImageIcon if image fails to load
-                  const target = e.target as HTMLImageElement
-                  target.style.display = "none"
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = "none";
                   const fallback =
-                    target.parentElement?.querySelector(".image-fallback")
+                    target.parentElement?.querySelector(".image-fallback");
                   if (fallback) {
-                    ;(fallback as HTMLElement).style.display = "flex"
+                    (fallback as HTMLElement).style.display = "flex";
                   }
                 }}
               />
@@ -97,5 +97,5 @@ export function ParticipantCard({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

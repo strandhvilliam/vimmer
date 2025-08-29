@@ -31,5 +31,5 @@ export function ParticipantListLoading() {
         ))}
       </div>
     </div>
-  )
+  );
 }

@@ -43,14 +43,16 @@ export function ExportClientPage() {
     })
   )
 
-  const participantCount = participants.length
+  const participantCount = participants.filter(
+    (p) => p.status === "verified"
+  ).length
   const zippedSubmissionsCount = zippedSubmissions?.length
   const canDownloadZippedSubmissions =
     participantCount > 0 && participantCount === zippedSubmissionsCount
 
   // Contact sheet status calculation
   const participantsWithContactSheets = participants.filter(
-    (p) => p.contactSheetKey
+    (p) => p.contactSheetKey && p.status === "verified"
   ).length
 
   // Verified participants count for bulk generation
