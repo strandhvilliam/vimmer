@@ -28,6 +28,7 @@
     "@trpc/tanstack-react-query": "^11.4.2",
     "@types/archiver": "^6.0.3",
     "archiver": "^7.0.1",
+    "effect": "^3.17.9",
     "react": "19.1",
     "sharp": "^0.34.3",
     "sst": "^3.17.10"
