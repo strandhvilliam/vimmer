@@ -1,12 +1,5 @@
 import { Redis } from "@upstash/redis"
-import {
-  Config,
-  ConfigProvider,
-  Data,
-  Duration,
-  Effect,
-  Schedule,
-} from "effect"
+import { Config, Data, Duration, Effect, Schedule } from "effect"
 
 export class RedisError extends Data.TaggedError("RedisError")<{
   message?: string

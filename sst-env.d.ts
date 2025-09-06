@@ -5,95 +5,28 @@
 
 declare module "sst" {
   export interface Resource {
-    "Api": {
-      "name": string
-      "type": "sst.aws.Function"
-      "url": string
-    }
-    "ContactSheetGeneratorQueue": {
+    "SheetGeneratorQueue": {
       "type": "sst.aws.Queue"
       "url": string
     }
-    "ContactSheetsBucket": {
-      "name": string
-      "type": "sst.aws.Bucket"
-    }
-    "ExportsBucket": {
-      "name": string
-      "type": "sst.aws.Bucket"
-    }
-    "GenerateParticipantZipTask": {
-      "assignPublicIp": boolean
-      "cluster": string
-      "containers": any
-      "securityGroups": any
-      "subnets": any
-      "taskDefinition": string
-      "type": "sst.aws.Task"
-    }
-    "MarathonSettingsBucket": {
-      "name": string
-      "type": "sst.aws.Bucket"
-    }
-    "MarathonSettingsRouter": {
-      "type": "sst.aws.Router"
-      "url": string
-    }
-    "PreviewBucket": {
-      "name": string
-      "type": "sst.aws.Bucket"
-    }
-    "PreviewsRouter": {
-      "type": "sst.aws.Router"
-      "url": string
-    }
-    "ProcessPhotoQueue": {
+    "UploadStatusQueue": {
       "type": "sst.aws.Queue"
       "url": string
     }
-    "ProcessSubmissionDlq": {
-      "type": "sst.aws.Queue"
-      "url": string
-    }
-    "Realtime": {
-      "authorizer": string
-      "endpoint": string
-      "type": "sst.aws.Realtime"
-    }
-    "SubmissionBucket": {
+    "V2SubmissionsBucket": {
       "name": string
       "type": "sst.aws.Bucket"
     }
-    "SubmissionsRouter": {
-      "type": "sst.aws.Router"
-      "url": string
-    }
-    "ThumbnailBucket": {
+    "V2ThumbnailsBucket": {
       "name": string
       "type": "sst.aws.Bucket"
     }
-    "ThumbnailsRouter": {
-      "type": "sst.aws.Router"
-      "url": string
-    }
-    "ValidateSubmissionDlq": {
+    "ValidationQueue": {
       "type": "sst.aws.Queue"
       "url": string
     }
-    "ValidateSubmissionQueue": {
+    "ZipGeneratorQueue": {
       "type": "sst.aws.Queue"
-      "url": string
-    }
-    "VariantsGenerator": {
-      "name": string
-      "type": "sst.aws.Function"
-      "url": string
-    }
-    "VimmerVPC": {
-      "type": "sst.aws.Vpc"
-    }
-    "WebApp": {
-      "type": "sst.aws.Nextjs"
       "url": string
     }
   }

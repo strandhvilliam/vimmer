@@ -17,57 +17,26 @@ export default $config({
       access: "public",
     })
 
-    const objectCreatedBus = new sst.aws.Bus("ObjectCreatedBus")
-
-    const uploadStatusQueue = new sst.aws.Queue("UploadStatusQueue")
-    const processMetadataQueue = new sst.aws.Queue("ProcessMetadataQueue")
-    const thumbnailGeneratorQueue = new sst.aws.Queue("ThumbnailGeneratorQueue")
-    const aggregationQueue = new sst.aws.Queue("AggregationQueue")
+    const uploadProcessorQueue = new sst.aws.Queue("UploadStatusQueue")
 
     const validationQueue = new sst.aws.Queue("ValidationQueue")
     const sheetGeneratorQueue = new sst.aws.Queue("SheetGeneratorQueue")
     const zipGeneratorQueue = new sst.aws.Queue("ZipGeneratorQueue")
 
-    uploadStatusQueue.subscribe({
-      handler: "./workers/upload-status-worker/index.handler",
-      link: [uploadStatusQueue],
+    submissionsBucket.notify({
+      notifications: [
+        {
+          name: "SubmissionsBucketNotification",
+          queue: uploadProcessorQueue,
+          events: ["s3:ObjectCreated:*"],
+        },
+      ],
     })
 
-    processMetadataQueue.subscribe({
-      handler: "./workers/process-metadata-worker/index.handler",
-      link: [processMetadataQueue, submissionsBucket],
+    uploadProcessorQueue.subscribe({
+      handler: "./tasks/upload-processor/index.handler",
+      link: [uploadProcessorQueue, submissionsBucket],
     })
-
-    thumbnailGeneratorQueue.subscribe({
-      handler: "./workers/thumbnail-generator-worker/index.handler",
-      link: [thumbnailGeneratorQueue, thumbnailsBucket, submissionsBucket],
-    })
-
-    aggregationQueue.subscribe({
-      handler: "./workers/aggregation-worker/index.handler",
-      link: [aggregationQueue],
-    })
-
-    validationQueue.subscribe({
-      handler: "./workers/validation-worker/index.handler",
-      link: [validationQueue],
-    })
-
-    sheetGeneratorQueue.subscribe({
-      handler: "./workers/sheet-generator-worker/index.handler",
-      link: [sheetGeneratorQueue],
-    })
-
-    zipGeneratorQueue.subscribe({
-      handler: "./workers/zip-generator-worker/index.handler",
-      link: [zipGeneratorQueue],
-    })
-
-    objectCreatedBus.subscribeQueue("UploadStatusQueue", uploadStatusQueue)
-    objectCreatedBus.subscribeQueue(
-      "ThumbnailGeneratorQueue",
-      thumbnailGeneratorQueue
-    )
   },
 })
 
