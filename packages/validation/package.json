@@ -13,6 +13,7 @@
     "typescript": "^5.7.2"
   },
   "dependencies": {
+    "effect": "^3.17.13",
     "exifr": "^7.1.3"
   }
 }

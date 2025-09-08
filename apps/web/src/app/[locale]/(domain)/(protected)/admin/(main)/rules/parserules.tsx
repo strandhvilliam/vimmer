@@ -1,12 +1,12 @@
-import type { NewRuleConfig, RuleConfig } from "@vimmer/api/db/types";
+import type { NewRuleConfig, RuleConfig } from "@vimmer/api/db/types"
 import {
   allowedFileTypesParamsSchema,
   maxFileSizeParamsSchema,
   RulesFormValues,
   withinTimerangeParamsSchema,
-} from "./_lib/schemas";
-import { RULE_KEYS } from "@vimmer/validation/constants";
-import { RuleKey } from "@vimmer/validation/types";
+} from "./_lib/schemas"
+import { RULE_KEYS } from "../../../../../../../../../../packages/validation/old/constants"
+import { RuleKey } from "../../../../../../../../../../packages/validation/old/types"
 
 const DEFAULT_RULE_CONFIGS: RulesFormValues = {
   max_file_size: {
@@ -46,31 +46,31 @@ const DEFAULT_RULE_CONFIGS: RulesFormValues = {
     severity: "error",
     params: null,
   },
-};
+}
 
 function parseRuleWithParams<TParams>(
   rule: RuleConfig,
   schema: {
-    safeParse: (params: unknown) => { success: boolean; data?: TParams };
+    safeParse: (params: unknown) => { success: boolean; data?: TParams }
   },
   key: keyof RulesFormValues,
-  paramOverride?: Partial<TParams>,
+  paramOverride?: Partial<TParams>
 ): Partial<RulesFormValues> {
-  if (!rule.params) return {};
-  const ok = schema.safeParse(rule.params);
-  if (!ok.success) return {};
+  if (!rule.params) return {}
+  const ok = schema.safeParse(rule.params)
+  if (!ok.success) return {}
   return {
     [key]: {
       enabled: rule.enabled,
       severity: rule.severity,
       params: paramOverride ? { ...ok.data, ...paramOverride } : ok.data,
     },
-  } as Partial<RulesFormValues>;
+  } as Partial<RulesFormValues>
 }
 
 function parseSimpleRule(
   key: keyof RulesFormValues,
-  rule: RuleConfig,
+  rule: RuleConfig
 ): Partial<RulesFormValues> {
   return {
     [key]: {
@@ -78,14 +78,14 @@ function parseSimpleRule(
       severity: rule.severity,
       params: null,
     },
-  };
+  }
 }
 
 export function parseRules(
   rules: RuleConfig[],
-  marathon: { startDate?: string; endDate?: string },
+  marathon: { startDate?: string; endDate?: string }
 ): RulesFormValues {
-  let parsedRules: Partial<RulesFormValues> = {};
+  let parsedRules: Partial<RulesFormValues> = {}
 
   const ruleHandlers: Record<
     RuleKey,
@@ -95,13 +95,13 @@ export function parseRules(
       parseRuleWithParams(
         rule,
         maxFileSizeParamsSchema,
-        RULE_KEYS.MAX_FILE_SIZE,
+        RULE_KEYS.MAX_FILE_SIZE
       ),
     [RULE_KEYS.ALLOWED_FILE_TYPES]: (rule) =>
       parseRuleWithParams(
         rule,
         allowedFileTypesParamsSchema,
-        RULE_KEYS.ALLOWED_FILE_TYPES,
+        RULE_KEYS.ALLOWED_FILE_TYPES
       ),
     [RULE_KEYS.WITHIN_TIMERANGE]: (rule) =>
       parseRuleWithParams(
@@ -111,23 +111,23 @@ export function parseRules(
         {
           start: marathon.startDate,
           end: marathon.endDate,
-        },
+        }
       ),
     [RULE_KEYS.SAME_DEVICE]: (rule) =>
       parseSimpleRule(RULE_KEYS.SAME_DEVICE, rule),
     [RULE_KEYS.MODIFIED]: (rule) => parseSimpleRule(RULE_KEYS.MODIFIED, rule),
     [RULE_KEYS.STRICT_TIMESTAMP_ORDERING]: (rule) =>
       parseSimpleRule(RULE_KEYS.STRICT_TIMESTAMP_ORDERING, rule),
-  };
+  }
 
   for (const rule of rules) {
     const isValidRuleKey = Object.values(RULE_KEYS).includes(
-      rule.ruleKey as RuleKey,
-    );
-    if (!isValidRuleKey) continue;
-    const handler = ruleHandlers[rule.ruleKey as RuleKey];
+      rule.ruleKey as RuleKey
+    )
+    if (!isValidRuleKey) continue
+    const handler = ruleHandlers[rule.ruleKey as RuleKey]
     if (handler) {
-      parsedRules = { ...parsedRules, ...handler(rule) };
+      parsedRules = { ...parsedRules, ...handler(rule) }
     }
   }
 
@@ -140,17 +140,17 @@ export function parseRules(
         end: marathon.endDate ?? "",
       },
     },
-  };
+  }
 
   return {
     ...defaultRulesWithMarathonDates,
     ...parsedRules,
-  };
+  }
 }
 
 export function mapRulesToDbRules(
   rules: RulesFormValues,
-  marathonId: number,
+  marathonId: number
 ): NewRuleConfig[] {
   return Object.entries(rules).map(([key, value]) => {
     return {
@@ -159,6 +159,6 @@ export function mapRulesToDbRules(
       params: value.params,
       enabled: value.enabled,
       severity: value.severity,
-    };
-  });
+    }
+  })
 }

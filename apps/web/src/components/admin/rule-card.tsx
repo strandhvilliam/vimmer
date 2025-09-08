@@ -1,20 +1,20 @@
-"use client";
-"use no memo";
+"use client"
+"use no memo"
 
-import React from "react";
-import { Card } from "@vimmer/ui/components/card";
-import { motion } from "motion/react";
-import { AnyFieldApi } from "@tanstack/react-form";
-import { RulesSeverityToggle } from "./rules-severity-toggle";
-import { Switch } from "@vimmer/ui/components/switch";
-import { SeverityLevel } from "@vimmer/validation/types";
+import React from "react"
+import { Card } from "@vimmer/ui/components/card"
+import { motion } from "motion/react"
+import { AnyFieldApi } from "@tanstack/react-form"
+import { RulesSeverityToggle } from "./rules-severity-toggle"
+import { Switch } from "@vimmer/ui/components/switch"
+import { SeverityLevel } from "../../../../../packages/validation/old/types"
 
 interface RuleCardProps {
-  title: string;
-  description: string;
-  recommendedSeverity: SeverityLevel;
-  field: AnyFieldApi;
-  children?: React.ReactNode;
+  title: string
+  description: string
+  recommendedSeverity: SeverityLevel
+  field: AnyFieldApi
+  children?: React.ReactNode
 }
 
 export function RuleCard({
@@ -36,7 +36,7 @@ export function RuleCard({
             id={title}
             checked={field.state.value.enabled}
             onCheckedChange={(checked) => {
-              field.handleChange({ ...field.state.value, enabled: checked });
+              field.handleChange({ ...field.state.value, enabled: checked })
             }}
             className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
             aria-labelledby={`${title}-heading`}
@@ -56,7 +56,7 @@ export function RuleCard({
           <RulesSeverityToggle
             severity={field.state.value.severity}
             onSeverityChange={(severity) => {
-              field.handleChange({ ...field.state.value, severity });
+              field.handleChange({ ...field.state.value, severity })
             }}
             recommendedSeverity={recommendedSeverity}
           />
@@ -64,5 +64,5 @@ export function RuleCard({
         </motion.div>
       )}
     </Card>
-  );
+  )
 }

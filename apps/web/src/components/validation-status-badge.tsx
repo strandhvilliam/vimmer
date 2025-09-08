@@ -1,10 +1,10 @@
-import { AlertCircle, AlertTriangle, CheckCircle } from "lucide-react";
-import { VALIDATION_OUTCOME } from "@vimmer/validation/constants";
+import { AlertCircle, AlertTriangle, CheckCircle } from "lucide-react"
+import { VALIDATION_OUTCOME } from "../../../../packages/validation/old/constants"
 
 interface ValidationStatusBadgeProps {
-  outcome?: (typeof VALIDATION_OUTCOME)[keyof typeof VALIDATION_OUTCOME];
-  severity?: "error" | "warning";
-  message?: string;
+  outcome?: (typeof VALIDATION_OUTCOME)[keyof typeof VALIDATION_OUTCOME]
+  severity?: "error" | "warning"
+  message?: string
 }
 
 export function ValidationStatusBadge({
@@ -12,33 +12,33 @@ export function ValidationStatusBadge({
   severity,
   message,
 }: ValidationStatusBadgeProps) {
-  if (!outcome) return null;
+  if (!outcome) return null
 
-  let badgeClass = "";
-  let Icon = CheckCircle;
-  let label = "";
+  let badgeClass = ""
+  let Icon = CheckCircle
+  let label = ""
 
   if (outcome === VALIDATION_OUTCOME.PASSED) {
     badgeClass =
-      "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100";
-    Icon = CheckCircle;
-    label = "Passed";
+      "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+    Icon = CheckCircle
+    label = "Passed"
   } else if (outcome === VALIDATION_OUTCOME.FAILED) {
     if (severity === "error") {
-      badgeClass = "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100";
-      Icon = AlertCircle;
-      label = "Failed";
+      badgeClass = "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
+      Icon = AlertCircle
+      label = "Failed"
     } else {
       badgeClass =
-        "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100";
-      Icon = AlertTriangle;
-      label = "Warning";
+        "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100"
+      Icon = AlertTriangle
+      label = "Warning"
     }
   } else if (outcome === VALIDATION_OUTCOME.SKIPPED) {
     badgeClass =
-      "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100";
-    Icon = AlertTriangle;
-    label = "Warning";
+      "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100"
+    Icon = AlertTriangle
+    label = "Warning"
   }
 
   return (
@@ -48,5 +48,5 @@ export function ValidationStatusBadge({
       <Icon className="h-3 w-3 shrink-0" />
       <span>{label}</span>
     </div>
-  );
+  )
 }

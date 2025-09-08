@@ -5,7 +5,7 @@
     "paths": {
       "@/*": ["src/*"],
       "@vimmer/api/*": ["../api/src/*"],
-      "@vimmer/validation/*": ["../../packages/validation/src/*"],
+      "@vimmer/validation/*": ["../../packages/validation/old/*"],
       "@vimmer/ui/*": ["../../packages/ui/src/*"],
       "@vimmer/image-processing": ["../../packages/image-processing/src"],
       "next-international/*": ["../../node_modules/next-international/*"]

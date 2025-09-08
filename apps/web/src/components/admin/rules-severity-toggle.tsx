@@ -1,17 +1,17 @@
-import { cn } from "@vimmer/ui/lib/utils";
+import { cn } from "@vimmer/ui/lib/utils"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@vimmer/ui/components/tooltip";
-import { TooltipProvider } from "@vimmer/ui/components/tooltip";
-import { InfoIcon } from "lucide-react";
-import { motion } from "motion/react";
-import { SeverityLevel } from "@vimmer/validation/types";
+} from "@vimmer/ui/components/tooltip"
+import { TooltipProvider } from "@vimmer/ui/components/tooltip"
+import { InfoIcon } from "lucide-react"
+import { motion } from "motion/react"
+import { SeverityLevel } from "../../../../../packages/validation/old/types"
 interface SeverityToggleProps {
-  severity: SeverityLevel;
-  onSeverityChange: (severity: SeverityLevel) => void;
-  recommendedSeverity: SeverityLevel;
+  severity: SeverityLevel
+  onSeverityChange: (severity: SeverityLevel) => void
+  recommendedSeverity: SeverityLevel
 }
 
 export function RulesSeverityToggle({
@@ -68,7 +68,7 @@ export function RulesSeverityToggle({
             "rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1",
             severity === "warning"
               ? "bg-amber-100 text-amber-800 shadow-sm border border-amber-200"
-              : "text-muted-foreground hover:bg-background/50",
+              : "text-muted-foreground hover:bg-background/50"
           )}
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
@@ -83,7 +83,7 @@ export function RulesSeverityToggle({
             "rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1",
             severity === "error"
               ? "bg-red-100 text-red-800 shadow-sm border border-red-200"
-              : "text-muted-foreground hover:bg-background/50",
+              : "text-muted-foreground hover:bg-background/50"
           )}
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
@@ -93,5 +93,5 @@ export function RulesSeverityToggle({
         </motion.button>
       </motion.div>
     </div>
-  );
+  )
 }

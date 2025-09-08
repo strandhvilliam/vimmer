@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { Button } from "@vimmer/ui/components/button";
+import { Button } from "@vimmer/ui/components/button"
 import {
   Dialog,
   DialogContent,
@@ -8,77 +8,80 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@vimmer/ui/components/dialog";
+} from "@vimmer/ui/components/dialog"
 import {
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@vimmer/ui/components/card";
-import { UploadProgress } from "@/components/participate/upload-progress";
-import { StepNavigationHandlers } from "@/lib/types";
-import { usePhotoStore } from "@/lib/stores/photo-store";
-import { RuleKey, RuleConfig } from "@vimmer/validation/types";
-import { SubmissionsList } from "@/components/participate/submission-list";
-import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
-import { combinePhotos } from "@/lib/combine-photos";
-import { UploadErrorFallback } from "@/components/participate/upload-error-fallback";
-import { UploadSection } from "@/components/participate/upload-section";
-import { useFileUpload } from "@/hooks/use-file-upload";
-import { useUploadStore } from "@/lib/stores/upload-store";
-import { CompetitionClass, Marathon, Topic } from "@vimmer/api/db/types";
-import { useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
-import { COMMON_IMAGE_EXTENSIONS } from "@/lib/constants";
+} from "@vimmer/ui/components/card"
+import { UploadProgress } from "@/components/participate/upload-progress"
+import { StepNavigationHandlers } from "@/lib/types"
+import { usePhotoStore } from "@/lib/stores/photo-store"
+import {
+  RuleKey,
+  RuleConfig,
+} from "../../../../../packages/validation/old/types"
+import { SubmissionsList } from "@/components/participate/submission-list"
+import { useSubmissionQueryState } from "@/hooks/use-submission-query-state"
+import { combinePhotos } from "@/lib/combine-photos"
+import { UploadErrorFallback } from "@/components/participate/upload-error-fallback"
+import { UploadSection } from "@/components/participate/upload-section"
+import { useFileUpload } from "@/hooks/use-file-upload"
+import { useUploadStore } from "@/lib/stores/upload-store"
+import { CompetitionClass, Marathon, Topic } from "@vimmer/api/db/types"
+import { useRef, useState } from "react"
+import { Loader2 } from "lucide-react"
+import { COMMON_IMAGE_EXTENSIONS } from "@/lib/constants"
 import {
   RULE_KEYS,
   SEVERITY_LEVELS,
   VALIDATION_OUTCOME,
-} from "@vimmer/validation/constants";
-import { toast } from "sonner";
-import { useI18n } from "@/locales/client";
-import { useTRPC } from "@/trpc/client";
-import { useDomain } from "@/contexts/domain-context";
-import { useMutation } from "@tanstack/react-query";
-import { UploadInstructionsDialog } from "@/components/participate/upload-instructions-dialog";
-import { ParticipantConfirmationDialog } from "@/components/participate/participant-confirmation-dialog";
-import { PrimaryButton } from "@vimmer/ui/components/primary-button";
-import { motion } from "motion/react";
-import { parseExifData } from "@/lib/parse-exif-data";
+} from "../../../../../packages/validation/old/constants"
+import { toast } from "sonner"
+import { useI18n } from "@/locales/client"
+import { useTRPC } from "@/trpc/client"
+import { useDomain } from "@/contexts/domain-context"
+import { useMutation } from "@tanstack/react-query"
+import { UploadInstructionsDialog } from "@/components/participate/upload-instructions-dialog"
+import { ParticipantConfirmationDialog } from "@/components/participate/participant-confirmation-dialog"
+import { PrimaryButton } from "@vimmer/ui/components/primary-button"
+import { motion } from "motion/react"
+import { parseExifData } from "@/lib/parse-exif-data"
 
 const convertHeic = async (file: File) => {
   try {
-    const heic2any = await import("heic2any");
+    const heic2any = await import("heic2any")
     const heic = await heic2any.default({
       blob: file,
       toType: "image/jpeg",
       quality: 1,
-    });
-    const blob = Array.isArray(heic) ? heic : [heic];
+    })
+    const blob = Array.isArray(heic) ? heic : [heic]
     return new File(
       blob,
       file.name.replace(".heic", ".jpg").replace(".heif", ".jpg"),
       {
         type: "image/jpeg",
-      },
-    );
+      }
+    )
   } catch (error) {
-    console.error(`Failed to convert HEIC file ${file.name}`, error);
-    return undefined;
+    console.error(`Failed to convert HEIC file ${file.name}`, error)
+    return undefined
   }
-};
+}
 
 interface Props extends StepNavigationHandlers {
-  competitionClasses: CompetitionClass[];
-  topics: Topic[];
-  ruleConfigs: RuleConfig<RuleKey>[];
-  marathon: Marathon;
+  competitionClasses: CompetitionClass[]
+  topics: Topic[]
+  ruleConfigs: RuleConfig<RuleKey>[]
+  marathon: Marathon
   realtimeConfig: {
-    endpoint: string;
-    authorizer: string;
-    topic: string;
-  };
+    endpoint: string
+    authorizer: string
+    topic: string
+  }
 }
 
 export function UploadSubmissionsStep({
@@ -90,9 +93,9 @@ export function UploadSubmissionsStep({
   ruleConfigs,
   realtimeConfig,
 }: Props) {
-  const t = useI18n();
-  const trpc = useTRPC();
-  const { domain } = useDomain();
+  const t = useI18n()
+  const trpc = useTRPC()
+  const { domain } = useDomain()
   const {
     submissionState: {
       competitionClassId,
@@ -101,115 +104,115 @@ export function UploadSubmissionsStep({
       uploadInstructionsShown,
     },
     setSubmissionState,
-  } = useSubmissionQueryState();
+  } = useSubmissionQueryState()
 
   const { photos, validateAndAddPhotos, removePhoto, validationResults } =
-    usePhotoStore();
+    usePhotoStore()
 
-  const { executeUpload } = useFileUpload({ realtimeConfig });
-  const { isUploading, setIsUploading } = useUploadStore();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
-  const [isConvertingHeic, setIsConvertingHeic] = useState(false);
-  const [isCancellingConversion, setIsCancellingConversion] = useState(false);
-  const [conversionTotal, setConversionTotal] = useState(0);
-  const [conversionDone, setConversionDone] = useState(0);
+  const { executeUpload } = useFileUpload({ realtimeConfig })
+  const { isUploading, setIsUploading } = useUploadStore()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false)
+  const [isConvertingHeic, setIsConvertingHeic] = useState(false)
+  const [isCancellingConversion, setIsCancellingConversion] = useState(false)
+  const [conversionTotal, setConversionTotal] = useState(0)
+  const [conversionDone, setConversionDone] = useState(0)
   const [currentConvertingName, setCurrentConvertingName] = useState<
     string | null
-  >(null);
-  const cancelConvertRef = useRef<{ canceled: boolean }>({ canceled: false });
+  >(null)
+  const cancelConvertRef = useRef<{ canceled: boolean }>({ canceled: false })
 
   // Temporarily use any to bypass type checking until API is rebuilt
   const { mutateAsync: generatePresignedSubmissions } = useMutation(
     trpc.presignedUrls.generatePresignedSubmissionsOnDemand.mutationOptions({
       onError: () => {
-        toast.error(t("uploadSubmissions.failedPresigned"));
+        toast.error(t("uploadSubmissions.failedPresigned"))
       },
-    }),
-  );
+    })
+  )
 
   const competitionClass = competitionClasses.find(
-    (cc) => cc.id === competitionClassId,
-  );
+    (cc) => cc.id === competitionClassId
+  )
 
   const handleCloseInstructionsDialog = () => {
-    setSubmissionState({ uploadInstructionsShown: true });
-  };
+    setSubmissionState({ uploadInstructionsShown: true })
+  }
 
   const handleCloseUploadProgress = () => {
-    setIsUploading(false);
-  };
+    setIsUploading(false)
+  }
 
   const handleFileSelect = async (files: FileList | null) => {
     if (!files || files.length === 0) {
-      toast.error(t("uploadSubmissions.noFilesSelected"));
-      return;
+      toast.error(t("uploadSubmissions.noFilesSelected"))
+      return
     }
-    if (!competitionClass) return;
+    if (!competitionClass) return
 
-    let fileArray = Array.from(files);
+    let fileArray = Array.from(files)
 
     const isHeicFile = (file: File) =>
       file.type === "image/heic" ||
       file.type === "image/heif" ||
       /\.heic$/i.test(file.name) ||
-      /\.heif$/i.test(file.name);
+      /\.heif$/i.test(file.name)
 
-    const preconvertedExifData: { name: string; exif: any }[] = [];
+    const preconvertedExifData: { name: string; exif: any }[] = []
     if (fileArray.some((file) => isHeicFile(file))) {
-      const nonHeicFiles = fileArray.filter((f) => !isHeicFile(f));
-      const heicFiles = fileArray.filter((f) => isHeicFile(f));
+      const nonHeicFiles = fileArray.filter((f) => !isHeicFile(f))
+      const heicFiles = fileArray.filter((f) => isHeicFile(f))
 
-      setIsConvertingHeic(true);
-      setIsCancellingConversion(false);
-      setConversionTotal(heicFiles.length);
-      setConversionDone(0);
-      cancelConvertRef.current.canceled = false;
+      setIsConvertingHeic(true)
+      setIsCancellingConversion(false)
+      setConversionTotal(heicFiles.length)
+      setConversionDone(0)
+      cancelConvertRef.current.canceled = false
       try {
-        const converted: File[] = [];
+        const converted: File[] = []
         for (let i = 0; i < heicFiles.length; i++) {
-          const file = heicFiles[i]!;
-          setCurrentConvertingName(file.name);
-          if (cancelConvertRef.current.canceled) break;
-          const exif = await parseExifData(file);
+          const file = heicFiles[i]!
+          setCurrentConvertingName(file.name)
+          if (cancelConvertRef.current.canceled) break
+          const exif = await parseExifData(file)
           preconvertedExifData.push({
             name: file.name.replace(".heic", ".jpg").replace(".heif", ".jpg"),
             exif,
-          });
-          const result = await convertHeic(file);
-          if (cancelConvertRef.current.canceled) break;
-          if (result) converted.push(result);
-          setConversionDone(i + 1);
+          })
+          const result = await convertHeic(file)
+          if (cancelConvertRef.current.canceled) break
+          if (result) converted.push(result)
+          setConversionDone(i + 1)
         }
 
         if (cancelConvertRef.current.canceled) {
           // User canceled: keep state clean and exit without adding photos
-          setIsCancellingConversion(false);
-          setIsConvertingHeic(false);
-          setConversionDone(0);
-          setConversionTotal(0);
-          setCurrentConvertingName(null);
-          toast.message("HEIC conversion canceled");
-          return;
+          setIsCancellingConversion(false)
+          setIsConvertingHeic(false)
+          setConversionDone(0)
+          setConversionTotal(0)
+          setCurrentConvertingName(null)
+          toast.message("HEIC conversion canceled")
+          return
         }
 
-        fileArray = [...nonHeicFiles, ...converted];
+        fileArray = [...nonHeicFiles, ...converted]
       } catch (error) {
-        console.error("Failed to convert HEIC files", error);
-        toast.error("Failed to convert HEIC files");
-        setIsCancellingConversion(false);
-        setIsConvertingHeic(false);
-        return;
+        console.error("Failed to convert HEIC files", error)
+        toast.error("Failed to convert HEIC files")
+        setIsCancellingConversion(false)
+        setIsConvertingHeic(false)
+        return
       } finally {
-        setIsCancellingConversion(false);
-        setIsConvertingHeic(false);
-        setCurrentConvertingName(null);
+        setIsCancellingConversion(false)
+        setIsConvertingHeic(false)
+        setCurrentConvertingName(null)
       }
     }
 
     if (fileArray.length === 0) {
-      toast.error(t("uploadSubmissions.noFilesSelected"));
-      return;
+      toast.error(t("uploadSubmissions.noFilesSelected"))
+      return
     }
 
     await validateAndAddPhotos({
@@ -223,30 +226,30 @@ export function UploadSubmissionsStep({
               start: marathon.startDate,
               end: marathon.endDate,
             },
-          };
+          }
         }
-        return rule;
+        return rule
       }),
       orderIndexes: topics.map((topic) => topic.orderIndex),
       maxPhotos: competitionClass.numberOfPhotos,
       preconvertedExifData,
-    });
-  };
+    })
+  }
 
   const handleUploadClick = () => {
     if (!competitionClass) {
-      toast.error(t("uploadSubmissions.unableToDetermineClass"));
-      return;
+      toast.error(t("uploadSubmissions.unableToDetermineClass"))
+      return
     }
     if (photos.length >= competitionClass.numberOfPhotos) {
-      toast.error(t("uploadSubmissions.maxPhotosReached"));
-      return;
+      toast.error(t("uploadSubmissions.maxPhotosReached"))
+      return
     }
-    fileInputRef.current?.click();
-  };
+    fileInputRef.current?.click()
+  }
 
   const handleRemovePhoto = async (orderIndex: number) => {
-    if (!competitionClass) return;
+    if (!competitionClass) return
     await removePhoto({
       photoToRemoveIndex: orderIndex,
       ruleConfigs: ruleConfigs.map((rule) => {
@@ -258,34 +261,34 @@ export function UploadSubmissionsStep({
               start: marathon.startDate,
               end: marathon.endDate,
             },
-          };
+          }
         }
-        return rule;
+        return rule
       }),
       orderIndexes: topics.map((topic) => topic.orderIndex),
       maxPhotos: competitionClass.numberOfPhotos,
-    });
-  };
+    })
+  }
 
   const handleUpload = async () => {
     if (!domain || !participantRef || !participantId || !competitionClassId) {
-      toast.error(t("uploadSubmissions.missingRequiredInfo"));
-      return;
+      toast.error(t("uploadSubmissions.missingRequiredInfo"))
+      return
     }
 
-    setShowConfirmationDialog(true);
-  };
+    setShowConfirmationDialog(true)
+  }
 
   const handleConfirmedUpload = async () => {
-    setShowConfirmationDialog(false);
+    setShowConfirmationDialog(false)
 
     if (!domain || !participantRef || !participantId || !competitionClassId) {
-      toast.error(t("uploadSubmissions.missingRequiredInfo"));
-      return;
+      toast.error(t("uploadSubmissions.missingRequiredInfo"))
+      return
     }
 
     try {
-      setIsUploading(true);
+      setIsUploading(true)
 
       const presignedSubmissions = await generatePresignedSubmissions({
         domain,
@@ -299,29 +302,29 @@ export function UploadSubmissionsStep({
           }))
           .filter((p) => p.exif)
           .sort((a, b) => a.orderIndex - b.orderIndex),
-      });
+      })
 
       if (!presignedSubmissions || presignedSubmissions.length === 0) {
-        setIsUploading(false);
-        toast.error(t("uploadSubmissions.failedNoSubmissions"));
-        return;
+        setIsUploading(false)
+        toast.error(t("uploadSubmissions.failedNoSubmissions"))
+        return
       }
 
-      const combinedPhotos = combinePhotos(photos, presignedSubmissions);
+      const combinedPhotos = combinePhotos(photos, presignedSubmissions)
 
       if (!combinedPhotos || combinedPhotos.length === 0) {
-        setIsUploading(false);
-        toast.error(t("uploadSubmissions.failedPreparePhotos"));
-        return;
+        setIsUploading(false)
+        toast.error(t("uploadSubmissions.failedPreparePhotos"))
+        return
       }
 
-      await executeUpload(combinedPhotos);
+      await executeUpload(combinedPhotos)
     } catch (error) {
-      console.error("Upload failed:", error);
-      setIsUploading(false);
-      toast.error(t("uploadSubmissions.failedToStartUpload"));
+      console.error("Upload failed:", error)
+      setIsUploading(false)
+      toast.error(t("uploadSubmissions.failedToStartUpload"))
     }
-  };
+  }
 
   if (!competitionClass) {
     return (
@@ -329,7 +332,7 @@ export function UploadSubmissionsStep({
         error={t("uploadSubmissions.unexpectedError")}
         onPrevStepAction={onPrevStep}
       />
-    );
+    )
   }
 
   return (
@@ -361,8 +364,8 @@ export function UploadSubmissionsStep({
             <Button
               variant="outline"
               onClick={() => {
-                cancelConvertRef.current.canceled = true;
-                setIsCancellingConversion(true);
+                cancelConvertRef.current.canceled = true
+                setIsCancellingConversion(true)
               }}
               disabled={isCancellingConversion}
             >
@@ -438,13 +441,12 @@ export function UploadSubmissionsStep({
       {/* Floating finalize button */}
       {(() => {
         const allPhotosSelected =
-          photos.length === competitionClass.numberOfPhotos &&
-          photos.length > 0;
+          photos.length === competitionClass.numberOfPhotos && photos.length > 0
         const hasValidationErrors = validationResults.some(
           (result) =>
             result.outcome === VALIDATION_OUTCOME.FAILED &&
-            result.severity === SEVERITY_LEVELS.ERROR,
-        );
+            result.severity === SEVERITY_LEVELS.ERROR
+        )
 
         return allPhotosSelected && !hasValidationErrors ? (
           <motion.div
@@ -462,8 +464,8 @@ export function UploadSubmissionsStep({
               </PrimaryButton>
             </div>
           </motion.div>
-        ) : null;
+        ) : null
       })()}
     </>
-  );
+  )
 }

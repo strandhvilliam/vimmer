@@ -1,5 +1,5 @@
 {
   "extends": "@vimmer/typescript-config/base.json",
-  "include": ["src", "."],
+  "include": ["old", "."],
   "exclude": ["node_modules"]
 }
