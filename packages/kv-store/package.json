@@ -1,5 +1,5 @@
 {
-  "name": "redis-store",
+  "name": "@blikka/kv-store",
   "module": "index.ts",
   "type": "module",
   "private": true,

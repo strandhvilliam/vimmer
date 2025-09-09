@@ -15,8 +15,8 @@ import {
 } from "./schema"
 import { FileSystem } from "@effect/platform"
 
-export class UploadStateRepo extends Effect.Service<UploadStateRepo>()(
-  "@blikka/packages/redis-store/upload-state-repo",
+export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
+  "@blikka/packages/kv-store/upload-kv-repository",
   {
     dependencies: [
       RedisClient.Default,
@@ -29,29 +29,50 @@ export class UploadStateRepo extends Effect.Service<UploadStateRepo>()(
       const fs = yield* FileSystem.FileSystem
 
       const initState = (domain: string, ref: string, expectedCount: number) =>
-        Effect.gen(function* () {
+        Effect.fn("UploadKVRepository.initState")(function* () {
           const participantState = makeInitialParticipantState(expectedCount)
+
+          const submissionStates = Array.from(
+            { length: expectedCount },
+            (_, orderIndex) => orderIndex
+          ).reduce<Record<string, SubmissionState>>((acc, orderIndex) => {
+            const key = keyFactory.submission(
+              domain,
+              ref,
+              orderIndex.toString()
+            )
+            acc[key] = makeInitialSubmissionState(orderIndex)
+            return acc
+          }, {})
+
+          yield* redis.use((client) => client.mset(submissionStates))
           yield* redis.use((client) =>
             client.hset(keyFactory.participant(domain, ref), participantState)
           )
+        })
 
-          const submissionStates: Record<string, SubmissionState> = Array.from(
-            { length: expectedCount },
-            (_, orderIndex) => orderIndex
-          ).reduce(
-            (acc, orderIndex) => {
-              acc[keyFactory.submission(domain, ref, orderIndex.toString())] =
-                makeInitialSubmissionState(orderIndex)
-              return acc
-            },
-            {} as Record<string, SubmissionState>
+      const incrementParticipantState = (
+        domain: string,
+        ref: string,
+        orderIndex: string
+      ) =>
+        Effect.fn("UploadKVRepository.incrementParticipantState")(function* () {
+          const key = keyFactory.participant(domain, ref)
+          const incrementScript = yield* fs.readFileString(
+            "lua-scripts/increment.lua"
           )
-
-          yield* redis.use((client) => client.mset(submissionStates))
+          const [result] = yield* redis.use((client) =>
+            client.eval<string[], [string]>(
+              incrementScript,
+              [key],
+              [orderIndex]
+            )
+          )
+          return yield* Schema.decodeUnknown(IncrementResultSchema)(result)
         })
 
       const getExifState = (domain: string, ref: string, orderIndex: string) =>
-        Effect.gen(function* () {
+        Effect.fn("UploadKVRepository.getExifState")(function* () {
           const key = keyFactory.exif(domain, ref, orderIndex)
           const result = yield* redis.use((client) =>
             client.get<string | null>(key)
@@ -64,7 +85,7 @@ export class UploadStateRepo extends Effect.Service<UploadStateRepo>()(
         })
 
       const getParticipantState = (domain: string, ref: string) =>
-        Effect.gen(function* () {
+        Effect.fn("UploadKVRepository.getParticipantState")(function* () {
           const key = keyFactory.participant(domain, ref)
           const result = yield* redis.use((client) =>
             client.get<string | null>(key)
@@ -83,7 +104,7 @@ export class UploadStateRepo extends Effect.Service<UploadStateRepo>()(
         ref: string,
         orderIndex: string
       ) =>
-        Effect.gen(function* () {
+        Effect.fn("UploadKVRepository.getSubmissionState")(function* () {
           const key = keyFactory.submission(domain, ref, orderIndex)
           const result = yield* redis.use((client) =>
             client.get<string | null>(key)
@@ -97,32 +118,12 @@ export class UploadStateRepo extends Effect.Service<UploadStateRepo>()(
           return Option.some<SubmissionState>(parsed)
         })
 
-      const incrementParticipantState = (
-        domain: string,
-        ref: string,
-        orderIndex: string
-      ) =>
-        Effect.gen(function* () {
-          const key = keyFactory.participant(domain, ref)
-          const incrementScript = yield* fs.readFileString(
-            "lua-scripts/increment.lua"
-          )
-          const [result] = yield* redis.use((client) =>
-            client.eval<string[], [string]>(
-              incrementScript,
-              [key],
-              [orderIndex]
-            )
-          )
-          return yield* Schema.decodeUnknown(IncrementResultSchema)(result)
-        })
-
       const updateParticipantState = (
         domain: string,
         ref: string,
         state: Partial<ParticipantState>
       ) =>
-        Effect.gen(function* () {
+        Effect.fn("UploadKVRepository.updateParticipantState")(function* () {
           const key = keyFactory.participant(domain, ref)
           const encodedState = yield* Schema.encode(
             Schema.partial(ParticipantStateSchema)
@@ -136,7 +137,7 @@ export class UploadStateRepo extends Effect.Service<UploadStateRepo>()(
         orderIndex: string,
         state: Partial<SubmissionState>
       ) =>
-        Effect.gen(function* () {
+        Effect.fn("UploadKVRepository.updateSubmissionState")(function* () {
           const key = keyFactory.submission(domain, ref, orderIndex)
           const encodedState = yield* Schema.encode(
             Schema.partial(SubmissionStateSchema)
@@ -150,7 +151,7 @@ export class UploadStateRepo extends Effect.Service<UploadStateRepo>()(
         orderIndex: string,
         state: ExifState
       ) =>
-        Effect.gen(function* () {
+        Effect.fn("UploadKVRepository.setExifState")(function* () {
           const key = keyFactory.exif(domain, ref, orderIndex)
           const encodedState = yield* Schema.encode(
             Schema.partial(ExifStateSchema)

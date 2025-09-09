@@ -1,0 +1,16 @@
+{
+  "name": "image-manipulation",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "effect": "^3.17.13",
+    "sharp": "^0.34.3"
+  }
+}

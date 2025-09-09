@@ -21,7 +21,7 @@ export class S3Service extends Effect.Service<S3Service>()(
       const s3Client = yield* S3EffectClient
 
       const getFile = (bucket: string, key: string) =>
-        Effect.gen(function* () {
+        Effect.fn("S3Service.getFile")(function* () {
           const file = yield* s3Client.use((client) =>
             client.send(new GetObjectCommand({ Bucket: bucket, Key: key }))
           )
@@ -41,7 +41,7 @@ export class S3Service extends Effect.Service<S3Service>()(
           })
         })
       const getHead = (bucket: string, key: string) =>
-        Effect.gen(function* () {
+        Effect.fn("S3Service.getHead")(function* () {
           const head = yield* s3Client.use((client) =>
             client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }))
           )
@@ -49,7 +49,7 @@ export class S3Service extends Effect.Service<S3Service>()(
         })
 
       const getPresignedUrl = (bucket: string, key: string) => {
-        Effect.gen(function* () {
+        Effect.fn("S3Service.getPresignedUrl")(function* () {
           const getObjectCommand = new GetObjectCommand({
             Bucket: bucket,
             Key: key,
@@ -70,7 +70,7 @@ export class S3Service extends Effect.Service<S3Service>()(
         })
       }
       const putFile = (bucket: string, key: string, file: Buffer) => {
-        Effect.gen(function* () {
+        Effect.fn("S3Service.putFile")(function* () {
           const putObjectCommand = new PutObjectCommand({
             Bucket: bucket,
             Key: key,

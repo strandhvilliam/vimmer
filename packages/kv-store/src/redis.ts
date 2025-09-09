@@ -1,5 +1,5 @@
 import { Redis } from "@upstash/redis"
-import { Config, Data, Duration, Effect, Schedule } from "effect"
+import { Config, Console, Data, Duration, Effect, Schedule } from "effect"
 
 export class RedisError extends Data.TaggedError("RedisError")<{
   message?: string
@@ -29,8 +29,7 @@ const makeClient = (url: string, token: string) =>
 export class RedisClient extends Effect.Service<RedisClient>()(
   "@blikka/packages/redis-store/redis-client",
   {
-    // No need for scoped since upstash redis is self closing
-    effect: Effect.gen(function* () {
+    scoped: Effect.gen(function* () {
       const url = yield* Config.string("REDIS_URL")
       const token = yield* Config.string("REDIS_TOKEN")
 
@@ -61,6 +60,9 @@ export class RedisClient extends Effect.Service<RedisClient>()(
             return result
           }
         })
+      yield* Effect.addFinalizer(() =>
+        Console.log("Shutting down Redis client")
+      )
 
       return {
         use,

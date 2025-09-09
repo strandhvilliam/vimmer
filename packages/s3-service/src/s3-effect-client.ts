@@ -1,5 +1,5 @@
 import { S3Client } from "@aws-sdk/client-s3"
-import { Config, Data, Effect } from "effect"
+import { Config, Console, Data, Effect } from "effect"
 
 export class S3EffectError extends Data.TaggedError("S3EffectError")<{
   message?: string
@@ -9,7 +9,7 @@ export class S3EffectError extends Data.TaggedError("S3EffectError")<{
 export class S3EffectClient extends Effect.Service<S3EffectClient>()(
   "@blikka/packages/s3-service/s3-effect-client",
   {
-    effect: Effect.gen(function* () {
+    scoped: Effect.gen(function* () {
       const region = yield* Config.string("AWS_REGION")
 
       const client = new S3Client({ region })
@@ -38,6 +38,8 @@ export class S3EffectClient extends Effect.Service<S3EffectClient>()(
           }
           return result
         })
+
+      yield* Effect.addFinalizer(() => Console.log("Shutting down S3 client"))
 
       return {
         use,
