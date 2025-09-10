@@ -1,5 +1,5 @@
 {
-  "name": "s3-service",
+  "name": "exif-parser",
   "module": "index.ts",
   "type": "module",
   "private": true,
@@ -9,12 +9,8 @@
   "peerDependencies": {
     "typescript": "^5"
   },
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.883.0",
-    "@aws-sdk/s3-request-presigner": "^3.883.0",
-    "effect": "^3.17.13"
+    "effect": "^3.17.13",
+    "exifr": "^7.1.3"
   }
 }

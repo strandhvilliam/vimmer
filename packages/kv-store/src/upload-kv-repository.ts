@@ -19,9 +19,9 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
   "@blikka/packages/kv-store/upload-kv-repository",
   {
     dependencies: [
+      NodeFileSystem.layer,
       RedisClient.Default,
       KeyFactory.Default,
-      NodeFileSystem.layer,
     ],
     effect: Effect.gen(function* () {
       const redis = yield* RedisClient

@@ -10,6 +10,9 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@blikka/s3": "workspace:*",
+    "@blikka/kv-store": "workspace:*",
+    "@blikka/image-manipulation": "workspace:*",
     "@effect-aws/lambda": "^1.5.1",
     "effect": "^3.17.13"
   }

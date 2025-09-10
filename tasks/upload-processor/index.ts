@@ -1,11 +1,9 @@
-import { Console, Effect, Either, Logger, Schema } from "effect"
-import {
-  type EffectHandler,
-  type S3Event,
-  type SQSEvent,
-  LambdaHandler,
-} from "@effect-aws/lambda"
-import { parseJson } from "./src/utils"
+import { Console, Effect, Either, Layer, Logger, Option, Schema } from "effect"
+import { S3Service } from "@blikka/s3"
+import { type SQSEvent, LambdaHandler } from "@effect-aws/lambda"
+import { parseJson, parseKey } from "./src/utils"
+import { UploadKVRepository } from "@blikka/kv-store"
+import { SharpImageService } from "@blikka/image-manipulation"
 
 const S3EventSchema = Schema.Struct({
   Records: Schema.Array(
@@ -14,34 +12,84 @@ const S3EventSchema = Schema.Struct({
         object: Schema.Struct({
           key: Schema.String,
         }),
+        bucket: Schema.Struct({
+          name: Schema.String,
+        }),
       }),
     })
   ),
 })
 
-const effectHandler: EffectHandler<SQSEvent, never> = (event) =>
-  Effect.forEach(event.Records, (record) =>
-    Effect.gen(function* () {
-      const body = yield* parseJson(record.body).pipe(
-        Effect.map(Schema.decodeUnknownEither(S3EventSchema))
-      )
-      if (Either.isLeft(body)) {
-        Console.error("Invalid S3 event", body.left)
-        return
-      }
-      const s3Event = body.right
-      const keys = s3Event.Records.map((r) => r.s3.object.key)
+const effectHandler = (event: SQSEvent) =>
+  Effect.gen(function* () {
+    const s3 = yield* S3Service
+    const kv = yield* UploadKVRepository
+    const sharp = yield* SharpImageService
 
-      // process each key
-      // parse key to [domain, participantRef, orderIndex, fileName]
-      // get submission from s3
-      // generate thumbnail
-      // parse exif data
-      // update submissionstate
-      // increment participant upload count
+    yield* Effect.forEach(
+      event.Records,
+      (record) =>
+        Effect.gen(function* () {
+          const body = yield* parseJson(record.body).pipe(
+            Effect.map(Schema.decodeUnknownEither(S3EventSchema))
+          )
+          if (Either.isLeft(body)) {
+            Console.error("Invalid S3 event", body.left)
+            return
+          }
+          const { Records } = body.right
 
-      return Effect.void
-    })
-  ).pipe(Effect.catchAll((error) => Effect.logError(error)))
+          for (const record of Records) {
+            const { domain, reference, orderIndex, fileName } = yield* parseKey(
+              record.s3.object.key
+            )
+            const photo = yield* s3.getFile(
+              record.s3.bucket.name,
+              record.s3.object.key
+            )
 
-export const handler = LambdaHandler.make(effectHandler)
+            if (Option.isNone(photo)) {
+              Console.error("Photo not found", record.s3.object.key)
+              return
+            }
+
+            const resized = yield* sharp.resize(Buffer.from(photo.value), {
+              width: 400,
+            })
+
+            yield* s3.putFile(
+              record.s3.bucket.name,
+              record.s3.object.key,
+              resized
+            )
+          }
+
+          // for (const key of keys) {
+          //   const { domain, reference, orderIndex, fileName } =
+          //     yield* parseKey(key)
+          // }
+
+          // process each key
+          // parse key to [domain, participantRef, orderIndex, fileName]
+          // get submission from s3
+          // generate thumbnail
+          // parse exif data
+          // update submissionstate
+          // increment participant upload count
+
+          return Effect.void
+        }),
+      { concurrency: "unbounded" }
+    ).pipe(Effect.catchAll((error) => Effect.logError(error)))
+  })
+
+const MainLayer = Layer.mergeAll(
+  S3Service.Default,
+  UploadKVRepository.Default,
+  SharpImageService.Default
+)
+
+export const handler = LambdaHandler.make({
+  handler: effectHandler,
+  layer: MainLayer,
+})

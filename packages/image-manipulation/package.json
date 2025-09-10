@@ -1,8 +1,11 @@
 {
-  "name": "image-manipulation",
+  "name": "@blikka/image-manipulation",
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
@@ -10,6 +13,8 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@effect/platform": "^0.90.7",
+    "@effect/platform-node": "^0.96.1",
     "effect": "^3.17.13",
     "sharp": "^0.34.3"
   }
