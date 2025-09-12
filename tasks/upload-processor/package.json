@@ -14,6 +14,7 @@
     "@blikka/kv-store": "workspace:*",
     "@blikka/image-manipulation": "workspace:*",
     "@blikka/exif-parser": "workspace:*",
+    "@blikka/bus": "workspace:*",
     "@effect-aws/lambda": "^1.5.1",
     "effect": "^3.17.13"
   }

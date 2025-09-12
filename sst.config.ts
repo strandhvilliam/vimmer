@@ -18,6 +18,7 @@ export default $config({
     })
 
     const uploadProcessorQueue = new sst.aws.Queue("UploadStatusQueue")
+    const submissionFinalizedBus = new sst.aws.Bus("SubmissionFinalizedBus")
 
     const validationQueue = new sst.aws.Queue("ValidationQueue")
     const sheetGeneratorQueue = new sst.aws.Queue("SheetGeneratorQueue")
@@ -37,6 +38,19 @@ export default $config({
       handler: "./tasks/upload-processor/index.handler",
       link: [uploadProcessorQueue, submissionsBucket],
     })
+
+    submissionFinalizedBus.subscribeQueue(
+      "ValidationBusSubscription",
+      validationQueue
+    )
+    submissionFinalizedBus.subscribeQueue(
+      "SheetGeneratorBusSubscription",
+      sheetGeneratorQueue
+    )
+    submissionFinalizedBus.subscribeQueue(
+      "ZipGeneratorBusSubscription",
+      zipGeneratorQueue
+    )
   },
 })
 

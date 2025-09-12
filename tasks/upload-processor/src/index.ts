@@ -7,6 +7,7 @@ import { ExifParser } from "@blikka/exif-parser"
 import { SharpImageService } from "@blikka/image-manipulation"
 import { Resource as SSTResource } from "sst"
 import { SQSRecord } from "aws-lambda"
+import { BusService } from "@blikka/bus"
 
 class PhotoNotFoundError extends Data.TaggedError("PhotoNotFoundError")<{
   message?: string
@@ -30,6 +31,7 @@ interface ProcessingContext {
   kv: UploadKVRepository
   sharp: SharpImageService
   exifParser: ExifParser
+  bus: BusService
 }
 
 const S3EventSchema = Schema.Struct({
@@ -51,7 +53,7 @@ const THUMBNAIL_WIDTH = 400
 
 const processPhoto = (ctx: ProcessingContext, key: string) =>
   Effect.gen(function* () {
-    const { s3, kv, sharp, exifParser } = ctx
+    const { s3, kv, sharp, exifParser, bus } = ctx
 
     const generateThumbnail = Effect.fn("upload-processor.generateThumbnail")(
       function* (photo: Buffer, key: string) {
@@ -165,9 +167,13 @@ const processPhoto = (ctx: ProcessingContext, key: string) =>
       )
 
     if (finalize) {
-      // Eventbridge BUS trigger
+      const result = yield* Effect.either(
+        bus.sendFinalizedEvent(domain, reference)
+      )
+      if (Either.isLeft(result)) {
+        yield* setParticipantErrorState("FAILED_TO_SEND_FINALIZED_EVENT")
+      }
     }
-    return {}
   })
 
 const processSQSRecord = (ctx: ProcessingContext, record: SQSRecord) =>
@@ -217,6 +223,7 @@ const effectHandler = (event: SQSEvent) =>
       kv: yield* UploadKVRepository,
       sharp: yield* SharpImageService,
       exifParser: yield* ExifParser,
+      bus: yield* BusService,
     }
 
     yield* Effect.forEach(
@@ -235,7 +242,8 @@ const MainLayer = Layer.mergeAll(
   S3Service.Default,
   UploadKVRepository.Default,
   SharpImageService.Default,
-  ExifParser.Default
+  ExifParser.Default,
+  BusService.Default
 )
 
 export const handler = LambdaHandler.make({

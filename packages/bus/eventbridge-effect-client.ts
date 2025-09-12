@@ -1,44 +1,49 @@
-import { S3Client } from "@aws-sdk/client-s3"
+import { EventBridgeClient } from "@aws-sdk/client-eventbridge"
 import { Config, Console, Data, Effect } from "effect"
 
-export class S3EffectError extends Data.TaggedError("S3EffectError")<{
+export class EventBridgeEffectError extends Data.TaggedError(
+  "EventBridgeEffectError"
+)<{
   message?: string
   cause?: unknown
 }> {}
 
-export class S3EffectClient extends Effect.Service<S3EffectClient>()(
+export class EventBridgeEffectClient extends Effect.Service<EventBridgeEffectClient>()(
   "@blikka/packages/s3-service/s3-effect-client",
   {
     scoped: Effect.gen(function* () {
       const region = yield* Config.string("AWS_REGION")
 
-      const client = new S3Client({ region })
+      const client = new EventBridgeClient({ region })
+
       const use = <T>(
-        fn: (client: S3Client) => T
-      ): Effect.Effect<Awaited<T>, S3EffectError, never> =>
+        fn: (client: EventBridgeClient) => T
+      ): Effect.Effect<Awaited<T>, EventBridgeEffectError, never> =>
         Effect.gen(function* () {
           const result = yield* Effect.try({
             try: () => fn(client),
             catch: (error) =>
-              new S3EffectError({
+              new EventBridgeEffectError({
                 cause: error,
-                message: "S3.use error (Sync)",
+                message: "EventBridge.use error (Sync)",
               }),
           })
           if (result instanceof Promise) {
             return yield* Effect.tryPromise({
               try: () => result,
               catch: (e) =>
-                new S3EffectError({
+                new EventBridgeEffectError({
                   cause: e,
-                  message: "S3.use error (Async)",
+                  message: "EventBridge.use error (Async)",
                 }),
             })
           }
           return result
         })
 
-      yield* Effect.addFinalizer(() => Console.log("Shutting down S3 client"))
+      yield* Effect.addFinalizer(() =>
+        Console.log("Shutting down EventBridge client")
+      )
 
       return {
         use,

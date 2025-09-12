@@ -9,6 +9,11 @@ declare module "sst" {
       "type": "sst.aws.Queue"
       "url": string
     }
+    "SubmissionFinalizedBus": {
+      "arn": string
+      "name": string
+      "type": "sst.aws.Bus"
+    }
     "UploadStatusQueue": {
       "type": "sst.aws.Queue"
       "url": string
