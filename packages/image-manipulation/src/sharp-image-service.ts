@@ -1,6 +1,6 @@
-import { Data, Effect } from "effect"
-import { SharpEffectfulTemp, SharpError } from "./sharp-effectful-temp"
-import sharp, { type ResizeOptions } from "sharp"
+import { Effect } from "effect"
+import { SharpError } from "./sharp-effectful-temp"
+import sharp from "sharp"
 
 const makeSharpInstance = (image: Buffer) =>
   Effect.try({
@@ -27,7 +27,12 @@ export class SharpImageService extends Effect.Service<SharpImageService>()(
           try: () =>
             instance
               .rotate()
-              .resize({ width: options.width, height: options.height })
+              .resize({
+                width: options.width,
+                height: options.height,
+                withoutEnlargement: true,
+                fit: "inside",
+              })
               .keepMetadata()
               .toBuffer(),
           catch: (error) =>

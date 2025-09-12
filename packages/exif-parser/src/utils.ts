@@ -1,5 +1,5 @@
-import { Effect, HashSet } from "effect"
-import type { ExifData } from "../schemas"
+import { Effect } from "effect"
+import type { ExifData } from "./schemas"
 
 /**
  * Sanitizes EXIF data for safe serialization and storage.
@@ -26,7 +26,7 @@ export const sanitizeExifData = (
       return input
     }
 
-    // circular reference check
+    // Circular reference check
     if (typeof input === "object" && input !== null) {
       if (visited.has(input)) {
         return "[Circular Reference]"
@@ -34,7 +34,7 @@ export const sanitizeExifData = (
       visited.add(input)
     }
 
-    // binary data sanitization
+    // Binary data sanitization
 
     if (
       !keepBinaryData &&
@@ -51,24 +51,26 @@ export const sanitizeExifData = (
       return `[Binary Data: ${bytes} bytes]`
     }
 
-    // string sanitization
+    // String sanitization
     if (typeof input === "string") {
       return input.replace(/[\u0000-\u001F\u007F-\u009F]/g, "")
     }
 
-    // date → ISO
+    // Date → ISO
     if (input instanceof Date) {
       return input.toISOString()
     }
 
-    // arrays
+    // Arrays
     if (Array.isArray(input)) {
-      const result = input.map((item) => sanitizeExifData(item, visited))
+      const result = input.map((item) =>
+        sanitizeExifData(item, keepBinaryData, visited)
+      )
       visited.delete(input)
       return result
     }
 
-    // plain objects
+    // Plain objects
     if (typeof input === "object" && input !== null) {
       const result: Record<string, unknown> = {}
       for (const [key, value] of Object.entries(input)) {
@@ -77,7 +79,11 @@ export const sanitizeExifData = (
             ? key.replace(/[\u0000-\u001F\u007F-\u009F]/g, "")
             : key
         if (sanitizedKey) {
-          result[sanitizedKey] = sanitizeExifData(value, visited)
+          result[sanitizedKey] = sanitizeExifData(
+            value,
+            keepBinaryData,
+            visited
+          )
         }
       }
       visited.delete(input)
@@ -92,7 +98,7 @@ export const sanitizeExifData = (
  */
 export const removeGpsData = (exif: ExifData) =>
   Effect.sync(() => {
-    const gpsKeys = HashSet.make(
+    const gpsKeys = new Set([
       "GPSLatitude",
       "GPSLongitude",
       "GPSAltitude",
@@ -114,13 +120,13 @@ export const removeGpsData = (exif: ExifData) =>
       "Location",
       "Latitude",
       "Longitude",
-      "Altitude"
-    )
+      "Altitude",
+    ])
 
     const result = { ...exif }
 
     for (const key of Object.keys(exif)) {
-      if (HashSet.has(gpsKeys, key)) {
+      if (gpsKeys.has(key)) {
         delete result[key as keyof ExifData]
       }
     }

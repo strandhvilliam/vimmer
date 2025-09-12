@@ -1,6 +1,6 @@
 import exifr from "exifr"
 import { Data, Effect, Either, Schema } from "effect"
-import { ExifSchema } from "../schemas"
+import { ExifSchema } from "./schemas"
 import { removeGpsData, sanitizeExifData } from "./utils"
 
 export class ExifParseError extends Data.TaggedError("ExifParserError")<{

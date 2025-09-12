@@ -1,5 +1,5 @@
-import { Effect, Option, Schema } from "effect"
-import { RedisClient } from "./redis"
+import { Duration, Effect, Option, Schedule, Schema } from "effect"
+import { RedisClient, RedisError } from "./redis"
 import { NodeFileSystem } from "@effect/platform-node"
 import { KeyFactory } from "./key-factory"
 import {
@@ -28,8 +28,8 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
       const keyFactory = yield* KeyFactory
       const fs = yield* FileSystem.FileSystem
 
-      const initState = (domain: string, ref: string, expectedCount: number) =>
-        Effect.fn("UploadKVRepository.initState")(function* () {
+      const initState = Effect.fn("UploadKVRepository.initState")(
+        function* (domain: string, ref: string, expectedCount: number) {
           const participantState = makeInitialParticipantState(expectedCount)
 
           const submissionStates = Array.from(
@@ -49,14 +49,38 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
           yield* redis.use((client) =>
             client.hset(keyFactory.participant(domain, ref), participantState)
           )
-        })
+        },
+        Effect.retry(
+          Schedule.compose(
+            Schedule.exponential(Duration.millis(100)),
+            Schedule.recurs(3)
+          )
+        )
+      )
 
-      const incrementParticipantState = (
-        domain: string,
-        ref: string,
-        orderIndex: string
-      ) =>
-        Effect.fn("UploadKVRepository.incrementParticipantState")(function* () {
+      const setParticipantErrorState = Effect.fn(
+        "UploadKVRepository.setErrorState"
+      )(
+        function* (domain: string, ref: string, code: string) {
+          const participantState = yield* getParticipantState(domain, ref)
+          if (Option.isSome(participantState)) {
+            yield* updateParticipantState(domain, ref, {
+              errors: [...participantState.value.errors, code],
+            })
+          }
+        },
+        Effect.retry(
+          Schedule.compose(
+            Schedule.exponential(Duration.millis(100)),
+            Schedule.recurs(3)
+          )
+        )
+      )
+
+      const incrementParticipantState = Effect.fn(
+        "UploadKVRepository.incrementParticipantState"
+      )(
+        function* (domain: string, ref: string, orderIndex: string) {
           const key = keyFactory.participant(domain, ref)
           const incrementScript = yield* fs.readFileString(
             "lua-scripts/increment.lua"
@@ -68,11 +92,51 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
               [orderIndex]
             )
           )
-          return yield* Schema.decodeUnknown(IncrementResultSchema)(result)
-        })
+          const code = yield* Schema.decodeUnknown(IncrementResultSchema)(
+            result
+          )
 
-      const getExifState = (domain: string, ref: string, orderIndex: string) =>
-        Effect.fn("UploadKVRepository.getExifState")(function* () {
+          switch (code) {
+            case "INVALID_ORDER_INDEX":
+              yield* setParticipantErrorState(domain, ref, code)
+              return yield* Effect.fail(
+                new RedisError({
+                  message: "Invalid order index provided",
+                  cause: result,
+                })
+              )
+              break
+            case "MISSING_DATA":
+              yield* setParticipantErrorState(domain, ref, code)
+              return yield* Effect.fail(
+                new RedisError({
+                  message: "Missing data provided",
+                  cause: result,
+                })
+              )
+              break
+            case "DUPLICATE_ORDER_INDEX":
+              yield* Effect.logWarning(
+                "Duplicate order index provided, skipping"
+              )
+              break
+            case "ALREADY_FINALIZED":
+              yield* Effect.logWarning("Already finalized, skipping")
+              break
+          }
+
+          return { finalize: code === "FINALIZED" }
+        },
+        Effect.retry(
+          Schedule.compose(
+            Schedule.exponential(Duration.millis(100)),
+            Schedule.recurs(3)
+          )
+        )
+      )
+
+      const getExifState = Effect.fn("UploadKVRepository.getExifState")(
+        function* (domain: string, ref: string, orderIndex: string) {
           const key = keyFactory.exif(domain, ref, orderIndex)
           const result = yield* redis.use((client) =>
             client.get<string | null>(key)
@@ -82,10 +146,20 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
           }
           const parsed = yield* Schema.decodeUnknown(ExifStateSchema)(result)
           return Option.some<ExifState>(parsed)
-        })
+        },
+        Effect.retryOrElse(
+          Schedule.compose(
+            Schedule.exponential(Duration.millis(100)),
+            Schedule.recurs(3)
+          ),
+          () => Effect.succeed(Option.none<ExifState>())
+        )
+      )
 
-      const getParticipantState = (domain: string, ref: string) =>
-        Effect.fn("UploadKVRepository.getParticipantState")(function* () {
+      const getParticipantState = Effect.fn(
+        "UploadKVRepository.getParticipantState"
+      )(
+        function* (domain: string, ref: string) {
           const key = keyFactory.participant(domain, ref)
           const result = yield* redis.use((client) =>
             client.get<string | null>(key)
@@ -97,14 +171,20 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
             result
           )
           return Option.some<ParticipantState>(parsed)
-        })
+        },
+        Effect.retryOrElse(
+          Schedule.compose(
+            Schedule.exponential(Duration.millis(100)),
+            Schedule.recurs(3)
+          ),
+          () => Effect.succeed(Option.none<ParticipantState>())
+        )
+      )
 
-      const getSubmissionState = (
-        domain: string,
-        ref: string,
-        orderIndex: string
-      ) =>
-        Effect.fn("UploadKVRepository.getSubmissionState")(function* () {
+      const getSubmissionState = Effect.fn(
+        "UploadKVRepository.getSubmissionState"
+      )(
+        function* (domain: string, ref: string, orderIndex: string) {
           const key = keyFactory.submission(domain, ref, orderIndex)
           const result = yield* redis.use((client) =>
             client.get<string | null>(key)
@@ -116,48 +196,81 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
             result
           )
           return Option.some<SubmissionState>(parsed)
-        })
+        },
+        Effect.retryOrElse(
+          Schedule.compose(
+            Schedule.exponential(Duration.millis(100)),
+            Schedule.recurs(3)
+          ),
+          () => Effect.succeed(Option.none<SubmissionState>())
+        )
+      )
 
-      const updateParticipantState = (
-        domain: string,
-        ref: string,
-        state: Partial<ParticipantState>
-      ) =>
-        Effect.fn("UploadKVRepository.updateParticipantState")(function* () {
+      const updateParticipantState = Effect.fn(
+        "UploadKVRepository.updateParticipantState"
+      )(
+        function* (
+          domain: string,
+          ref: string,
+          state: Partial<ParticipantState>
+        ) {
           const key = keyFactory.participant(domain, ref)
           const encodedState = yield* Schema.encode(
             Schema.partial(ParticipantStateSchema)
           )(state)
           return yield* redis.use((client) => client.hset(key, encodedState))
-        })
+        },
+        Effect.retry(
+          Schedule.compose(
+            Schedule.exponential(Duration.millis(100)),
+            Schedule.recurs(3)
+          )
+        )
+      )
 
-      const updateSubmissionState = (
-        domain: string,
-        ref: string,
-        orderIndex: string,
-        state: Partial<SubmissionState>
-      ) =>
-        Effect.fn("UploadKVRepository.updateSubmissionState")(function* () {
+      const updateSubmissionState = Effect.fn(
+        "UploadKVRepository.updateSubmissionState"
+      )(
+        function* (
+          domain: string,
+          ref: string,
+          orderIndex: string,
+          state: Partial<SubmissionState>
+        ) {
           const key = keyFactory.submission(domain, ref, orderIndex)
           const encodedState = yield* Schema.encode(
             Schema.partial(SubmissionStateSchema)
           )(state)
           return yield* redis.use((client) => client.hset(key, encodedState))
-        })
+        },
+        Effect.retry(
+          Schedule.compose(
+            Schedule.exponential(Duration.millis(100)),
+            Schedule.recurs(3)
+          )
+        )
+      )
 
-      const setExifState = (
-        domain: string,
-        ref: string,
-        orderIndex: string,
-        state: ExifState
-      ) =>
-        Effect.fn("UploadKVRepository.setExifState")(function* () {
+      const setExifState = Effect.fn("UploadKVRepository.setExifState")(
+        function* (
+          domain: string,
+          ref: string,
+          orderIndex: string,
+          state: ExifState
+        ) {
           const key = keyFactory.exif(domain, ref, orderIndex)
           const encodedState = yield* Schema.encode(
             Schema.partial(ExifStateSchema)
           )(state)
           return yield* redis.use((client) => client.set(key, encodedState))
-        })
+        },
+        Effect.retry(
+          Schedule.compose(
+            Schedule.exponential(Duration.millis(100)),
+            Schedule.recurs(3)
+          )
+        )
+      )
 
       return {
         getExifState,
@@ -165,6 +278,7 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
         getSubmissionState,
         initState,
         incrementParticipantState,
+        setParticipantErrorState,
         updateParticipantState,
         updateSubmissionState,
         setExifState,

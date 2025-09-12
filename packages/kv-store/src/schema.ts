@@ -38,7 +38,7 @@ export const makeInitialParticipantState = (expectedCount: number) =>
 
 export const ExifStateSchema = Schema.Record({
   key: Schema.String,
-  value: Schema.Any,
+  value: Schema.Unknown,
 })
 
 export const IncrementResultSchema = Schema.Literal(
