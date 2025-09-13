@@ -1,0 +1,19 @@
+{
+  "name": "db",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@effect/sql": "^0.44.2",
+    "@effect/sql-drizzle": "^0.43.0",
+    "@effect/sql-pg": "^0.45.1",
+    "drizzle-kit": "^0.31.4",
+    "effect": "^3.17.13"
+  }
+}

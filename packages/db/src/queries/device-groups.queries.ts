@@ -1,0 +1,105 @@
+import { Effect, Option } from "effect"
+import { DrizzleClient } from "../drizzle-client"
+import { Database } from "../database"
+import { deviceGroups, marathons } from "../schema"
+import { eq } from "drizzle-orm"
+import type { NewDeviceGroup } from "../types"
+import { SqlError } from "@effect/sql/SqlError"
+
+export class DeviceGroupsQueries extends Effect.Service<DeviceGroupsQueries>()(
+  "@blikka.app/db/device-group-queries",
+  {
+    dependencies: [DrizzleClient.Default],
+    effect: Effect.gen(function* () {
+      const db = yield* DrizzleClient
+
+      const getDeviceGroupByIdQuery = Effect.fn(
+        "DeviceGroupsQueries.getDeviceGroupByIdQuery"
+      )(function* ({ id }: { id: number }) {
+        const result = yield* db.query.deviceGroups.findFirst({
+          where: eq(deviceGroups.id, id),
+        })
+        return Option.fromNullable(result)
+      })
+
+      const getDeviceGroupsByDomainQuery = Effect.fn(
+        "DeviceGroupsQueries.getDeviceGroupsByDomainQuery"
+      )(function* ({ domain }: { domain: string }) {
+        const result = yield* db
+          .select()
+          .from(deviceGroups)
+          .innerJoin(marathons, eq(deviceGroups.marathonId, marathons.id))
+          .where(eq(marathons.domain, domain))
+
+        return result.map((row) => row.device_groups)
+      })
+
+      const createDeviceGroup = Effect.fn(
+        "DeviceGroupsQueries.createDeviceGroup"
+      )(function* ({ data }: { data: NewDeviceGroup }) {
+        const [result] = yield* db.insert(deviceGroups).values(data).returning()
+
+        if (!result) {
+          return yield* Effect.fail(
+            new SqlError({
+              cause: "Failed to create device group",
+            })
+          )
+        }
+
+        return result
+      })
+
+      const updateDeviceGroup = Effect.fn(
+        "DeviceGroupsQueries.updateDeviceGroup"
+      )(function* ({
+        id,
+        data,
+      }: {
+        id: number
+        data: Partial<NewDeviceGroup>
+      }) {
+        const [result] = yield* db
+          .update(deviceGroups)
+          .set(data)
+          .where(eq(deviceGroups.id, id))
+          .returning()
+
+        if (!result) {
+          return yield* Effect.fail(
+            new SqlError({
+              cause: "Failed to update device group",
+            })
+          )
+        }
+        return result
+      })
+
+      const deleteDeviceGroup = Effect.fn(
+        "DeviceGroupsQueries.deleteDeviceGroup"
+      )(function* ({ id }: { id: number }) {
+        const [result] = yield* db
+          .delete(deviceGroups)
+          .where(eq(deviceGroups.id, id))
+          .returning()
+
+        if (!result) {
+          return yield* Effect.fail(
+            new SqlError({
+              cause: "Failed to delete device group",
+            })
+          )
+        }
+        return result
+      })
+
+      return {
+        getDeviceGroupByIdQuery,
+        getDeviceGroupsByDomainQuery,
+        createDeviceGroup,
+        updateDeviceGroup,
+        deleteDeviceGroup,
+      }
+    }),
+  }
+) {}
