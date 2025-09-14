@@ -1,40 +1,8 @@
-import { Data, Effect, Either, Layer, Option, Schema } from "effect"
-import { S3Service } from "@blikka/s3"
+import { Effect, Schema } from "effect"
 import { type SQSEvent, LambdaHandler } from "@effect-aws/lambda"
-import { parseJson, parseKey } from "./utils"
-import { ExifState, UploadKVRepository } from "@blikka/kv-store"
-import { ExifParser } from "@blikka/exif-parser"
-import { SharpImageService } from "@blikka/image-manipulation"
-import { Resource as SSTResource } from "sst"
-import { SQSRecord } from "aws-lambda"
-import { BusService } from "@blikka/bus"
-import { Database } from "@blikka/db"
-
-class PhotoNotFoundError extends Data.TaggedError("PhotoNotFoundError")<{
-  message?: string
-  cause?: unknown
-}> {}
-
-class InvalidS3EventError extends Data.TaggedError("InvalidS3EventError")<{
-  message?: string
-  cause?: unknown
-}> {}
-
-class FailedToIncrementParticipantStateError extends Data.TaggedError(
-  "FailedToIncrementParticipantStateError"
-)<{
-  message?: string
-  cause?: unknown
-}> {}
-
-interface ProcessingContext {
-  s3: S3Service
-  kv: UploadKVRepository
-  sharp: SharpImageService
-  exifParser: ExifParser
-  bus: BusService
-  db: Database
-}
+import { parseJson, InvalidS3EventError } from "./utils"
+import { type SQSRecord } from "aws-lambda"
+import { UploadProcessorService } from "./upload-processor-service"
 
 const S3EventSchema = Schema.Struct({
   Records: Schema.Array(
@@ -51,209 +19,51 @@ const S3EventSchema = Schema.Struct({
   ),
 })
 
-const THUMBNAIL_WIDTH = 400
-
-const processPhoto = (ctx: ProcessingContext, key: string) =>
-  Effect.gen(function* () {
-    const { s3, kv, sharp, exifParser, bus, db } = ctx
-
-    const generateThumbnail = Effect.fn("upload-processor.generateThumbnail")(
-      function* (photo: Buffer, key: string) {
-        const { domain, reference, orderIndex, fileName } = yield* parseKey(key)
-        const thumbnailKey = `${domain}/${reference}/${orderIndex}/thumbnail_${fileName}`
-
-        const resized = yield* sharp.resize(Buffer.from(photo), {
-          width: THUMBNAIL_WIDTH,
-        })
-        yield* s3.putFile(
-          SSTResource.V2ThumbnailsBucket.name,
-          thumbnailKey,
-          resized
-        )
-        return thumbnailKey
-      }
-    )
-
-    const setParticipantErrorState = Effect.fnUntraced(
-      function* (error: string) {
-        yield* kv.setParticipantErrorState(domain, reference, error)
-        yield* Effect.logError(error)
-      },
-      Effect.catchAll((error) =>
-        Effect.logError("Failed to set participant error state", error)
-      )
-    )
-
-    const { domain, reference, orderIndex, fileName } = yield* parseKey(key)
-
-    const submissionState = yield* kv.getSubmissionState(
-      domain,
-      reference,
-      orderIndex
-    )
-    if (Option.isSome(submissionState) && submissionState.value.uploaded) {
-      yield* Effect.logWarning("Submission already uploaded, skipping")
-      return
-    }
-
-    const photo = yield* Effect.either(
-      s3.getFile(SSTResource.V2SubmissionsBucket.name, key)
-    )
-
-    if (Either.isLeft(photo)) {
-      return yield* Effect.fail(
-        new PhotoNotFoundError({
-          cause: photo.left,
-          message: "Photo not found",
-        })
-      )
-    }
-
-    const [exifResult, thumbnailKeyResult] = yield* Effect.all(
-      [
-        Effect.either(exifParser.parse(Buffer.from(photo.right))),
-        Effect.either(generateThumbnail(Buffer.from(photo.right), key)),
-      ],
-      { concurrency: 2 }
-    )
-
-    const exifOpt = yield* Either.match(exifResult, {
-      onLeft: () =>
-        setParticipantErrorState("EXIF_ERROR").pipe(
-          Effect.as(Option.none<ExifState>())
-        ),
-      onRight: (result) =>
-        kv.setExifState(domain, reference, orderIndex, result).pipe(
-          Effect.map(() => Option.some(result)),
-          Effect.catchAll((error) =>
-            Effect.zipRight(
-              Effect.logError("Failed to set exif state", error),
-              Effect.succeed(Option.none<ExifState>())
-            )
-          )
-        ),
-    })
-
-    const thumbnailOpt = yield* Either.match(thumbnailKeyResult, {
-      onLeft: () =>
-        setParticipantErrorState("THUMBNAIL_ERROR").pipe(
-          Effect.as(Option.none<string>())
-        ),
-      onRight: (key) => Effect.succeed(Option.some(key)),
-    })
-
-    yield* kv
-      .updateSubmissionState(domain, reference, orderIndex, {
-        uploaded: true,
-        orderIndex: Number(orderIndex),
-        thumbnailKey: Option.isSome(thumbnailOpt) ? thumbnailOpt.value : null,
-        exifProcessed: Option.isSome(exifOpt),
-      })
-      .pipe(
-        Effect.orElse(() =>
-          Effect.logError("Failed to update submission state")
-        )
-      )
-
-    const { finalize } = yield* kv
-      .incrementParticipantState(domain, reference, orderIndex)
-      .pipe(
-        Effect.orElse(() =>
-          Effect.fail(
-            new FailedToIncrementParticipantStateError({
-              cause: "Failed to increment participant state",
-              message: "Failed to increment participant state",
-            })
-          )
-        )
-      )
-
-    if (finalize) {
-      const state = yield* kv.getParticipantState(domain, reference)
-
-      if (Option.isSome(state)) {
-        yield* db.submissionsQueries.updateAllSubmissions({
-          data: {
-            status: "uploaded",
-          },
-        })
-
-        yield* db.participantsQueries.updateParticipantByReference({
-          reference,
-          domain,
-          data: {
-            status: "completed",
-            uploadCount: state.value.processedIndexes.filter((i) => i === 1)
-              .length,
-          },
-        })
-      }
-
-      const result = yield* Effect.either(
-        bus.sendFinalizedEvent(domain, reference)
-      )
-      if (Either.isLeft(result)) {
-        yield* setParticipantErrorState("FAILED_TO_SEND_FINALIZED_EVENT")
-      }
-    }
-  })
-
-const processSQSRecord = (ctx: ProcessingContext, record: SQSRecord) =>
-  Effect.gen(function* () {
-    const s3Event = yield* parseJson(record.body).pipe(
-      Effect.flatMap(Schema.decodeUnknown(S3EventSchema)),
-      Effect.mapError(
-        (cause) =>
-          new InvalidS3EventError({
-            cause,
-            message: "Failed to parse S3 event",
-          })
-      )
-    )
-
-    yield* Effect.forEach(
-      s3Event.Records,
-      (record) =>
-        Effect.gen(function* () {
-          const key = record.s3.object.key
-          return yield* processPhoto(ctx, key)
-        }),
-      { concurrency: 2 }
-    ).pipe(
-      Effect.catchTag("PhotoNotFoundError", (error) =>
-        Effect.logError("Photo not found", error)
-      ),
-      Effect.catchTag("FailedToIncrementParticipantStateError", (error) =>
-        Effect.logError("Failed to increment participant state", error)
-      ),
-      Effect.catchTag("InvalidKeyFormatError", (error) =>
-        Effect.logError("Invalid S3 event", error)
-      )
-    )
-  }).pipe(
-    Effect.catchAll((error) =>
-      Effect.gen(function* () {
-        yield* Effect.logError("Failed to process SQS record", error)
-      })
-    )
-  )
-
 const effectHandler = (event: SQSEvent) =>
   Effect.gen(function* () {
-    const ctx: ProcessingContext = {
-      s3: yield* S3Service,
-      kv: yield* UploadKVRepository,
-      sharp: yield* SharpImageService,
-      exifParser: yield* ExifParser,
-      bus: yield* BusService,
-      db: yield* Database,
-    }
+    const uploadProcessor = yield* UploadProcessorService
 
-    yield* Effect.forEach(
-      event.Records,
-      (record) => processSQSRecord(ctx, record),
-      { concurrency: 3 }
+    const processSQSRecord = Effect.fn("upload-processor.processSQSRecord")(
+      function* (record: SQSRecord) {
+        const s3Event = yield* parseJson(record.body).pipe(
+          Effect.flatMap(Schema.decodeUnknown(S3EventSchema)),
+          Effect.mapError(
+            (cause) =>
+              new InvalidS3EventError({
+                cause,
+                message: "Failed to parse S3 event",
+              })
+          )
+        )
+
+        yield* Effect.forEach(
+          s3Event.Records,
+          (record) =>
+            Effect.gen(function* () {
+              const key = record.s3.object.key
+              return yield* uploadProcessor.processPhoto(key)
+            }),
+          { concurrency: 2 }
+        ).pipe(
+          Effect.catchTag("PhotoNotFoundError", (error) =>
+            Effect.logError("Photo not found", error)
+          ),
+          Effect.catchTag("FailedToIncrementParticipantStateError", (error) =>
+            Effect.logError("Failed to increment participant state", error)
+          ),
+          Effect.catchTag("InvalidKeyFormatError", (error) =>
+            Effect.logError("Invalid S3 event", error)
+          )
+        )
+      },
+      Effect.catchAll((error) =>
+        Effect.logError("Failed to process SQS record", error)
+      )
     )
+
+    yield* Effect.forEach(event.Records, (record) => processSQSRecord(record), {
+      concurrency: 3,
+    })
   }).pipe(
     Effect.withSpan("uploadProcessor.handler"),
     Effect.tapError((error) =>
@@ -261,16 +71,7 @@ const effectHandler = (event: SQSEvent) =>
     )
   )
 
-const MainLayer = Layer.mergeAll(
-  S3Service.Default,
-  UploadKVRepository.Default,
-  SharpImageService.Default,
-  ExifParser.Default,
-  BusService.Default,
-  Database.Default
-)
-
 export const handler = LambdaHandler.make({
   handler: effectHandler,
-  layer: MainLayer,
+  layer: UploadProcessorService.Default,
 })

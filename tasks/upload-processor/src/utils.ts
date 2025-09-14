@@ -9,6 +9,35 @@ export class InvalidKeyFormatError extends Data.TaggedError(
   message?: string
 }> {}
 
+export class PhotoNotFoundError extends Data.TaggedError("PhotoNotFoundError")<{
+  message?: string
+  cause?: unknown
+  details?: string
+}> {}
+
+export class InvalidS3EventError extends Data.TaggedError(
+  "InvalidS3EventError"
+)<{
+  message?: string
+  cause?: unknown
+}> {}
+
+export class FailedToIncrementParticipantStateError extends Data.TaggedError(
+  "FailedToIncrementParticipantStateError"
+)<{
+  message?: string
+  cause?: unknown
+}> {}
+
+export class FailedToFinalizeParticipantError extends Data.TaggedError(
+  "FailedToFinalizeParticipantError"
+)<{
+  message?: string
+  cause?: unknown
+  domain: string
+  reference: string
+}> {}
+
 export const parseJson = (input: string) =>
   Effect.try({
     try: () => JSON.parse(input),
@@ -27,3 +56,11 @@ export const parseKey = (key: string) =>
     }
     return Effect.succeed({ domain, reference, orderIndex, fileName })
   }).pipe(Effect.flatten)
+
+export const makeThumbnailKey = (params: {
+  domain: string
+  reference: string
+  orderIndex: string
+  fileName: string
+}) =>
+  `${params.domain}/${params.reference}/${params.orderIndex}/thumbnail_${params.fileName}`

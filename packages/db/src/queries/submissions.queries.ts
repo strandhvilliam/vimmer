@@ -13,6 +13,7 @@ import type {
   ZippedSubmission,
 } from "../types"
 import { SqlError } from "@effect/sql/SqlError"
+import { conflictUpdateSetAllColumns } from "../utils"
 
 export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
   "@blikka/db/submissions-queries",
@@ -229,7 +230,15 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
       }: {
         reference: string
         domain: string
-        updates: { orderIndex: number; data: Partial<NewSubmission> }[]
+        updates: {
+          orderIndex: number
+          data: Partial<
+            Omit<
+              NewSubmission,
+              "id" | "createdAt" | "updatedAt" | "participantId" | "marathonId"
+            >
+          >
+        }[]
       }) {
         const participant = yield* db.query.participants.findFirst({
           where: and(
@@ -253,11 +262,26 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
           )
         }
 
-        for (const update of updates) {
+        const data = updates.reduce<NewSubmission[]>((acc, update) => {
           const submission = participant.submissions.find(
             (s) => s.topic.orderIndex === update.orderIndex
           )
-        }
+          if (submission) {
+            acc.push({ ...submission, ...update.data })
+          }
+          return acc
+        }, [])
+
+        const result = yield* db
+          .insert(submissions)
+          .values(data)
+          .onConflictDoUpdate({
+            target: submissions.id,
+            set: conflictUpdateSetAllColumns(submissions, ["id"]),
+          })
+          .returning()
+
+        return result
       })
 
       const updateSubmissionByKey = Effect.fn(

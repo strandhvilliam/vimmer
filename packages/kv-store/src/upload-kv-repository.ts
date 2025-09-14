@@ -206,6 +206,65 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
         )
       )
 
+      const getAllSubmissionStates = Effect.fn(
+        "UploadKVRepository.getAllSubmissionStates"
+      )(
+        function* (domain: string, ref: string, orderIndexes: string[]) {
+          const keys = orderIndexes.map((orderIndex) =>
+            keyFactory.submission(domain, ref, orderIndex)
+          )
+
+          const result = yield* redis.use((client) => client.mget(keys))
+
+          const parsed = yield* Schema.decodeUnknown(
+            Schema.Array(SubmissionStateSchema)
+          )(result)
+
+          return Option.some(parsed)
+        },
+        Effect.retryOrElse(
+          Schedule.compose(
+            Schedule.exponential(Duration.millis(100)),
+            Schedule.recurs(3)
+          ),
+          () => Effect.succeed(Option.none<SubmissionState[]>())
+        )
+      )
+
+      const getAllExifStates = Effect.fn("UploadKVRepository.getAllExifStates")(
+        function* (domain: string, ref: string, orderIndexes: string[]) {
+          const sortedOrderIndexes = orderIndexes.sort(
+            (a, b) => Number(a) - Number(b)
+          )
+          const keys = sortedOrderIndexes.map((orderIndex) =>
+            keyFactory.exif(domain, ref, orderIndex)
+          )
+          const data = yield* redis.use((client) => client.mget(keys))
+          const parsed = yield* Schema.decodeUnknown(
+            Schema.Array(ExifStateSchema)
+          )(data)
+
+          const result = sortedOrderIndexes.map((orderIndex, index) => {
+            return {
+              orderIndex,
+              exif: parsed.at(index),
+            }
+          })
+
+          return Option.some(result)
+        },
+        Effect.retryOrElse(
+          Schedule.compose(
+            Schedule.exponential(Duration.millis(100)),
+            Schedule.recurs(3)
+          ),
+          () =>
+            Effect.succeed(
+              Option.none<{ orderIndex: string; exif: ExifState }[]>()
+            )
+        )
+      )
+
       const updateParticipantState = Effect.fn(
         "UploadKVRepository.updateParticipantState"
       )(
@@ -276,12 +335,14 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
         getExifState,
         getParticipantState,
         getSubmissionState,
+        getAllSubmissionStates,
         initState,
         incrementParticipantState,
         setParticipantErrorState,
         updateParticipantState,
         updateSubmissionState,
         setExifState,
+        getAllExifStates,
       } as const
     }),
   }
