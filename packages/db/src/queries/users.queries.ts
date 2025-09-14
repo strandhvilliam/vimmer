@@ -13,17 +13,19 @@ export class UsersQueries extends Effect.Service<UsersQueries>()(
     effect: Effect.gen(function* () {
       const db = yield* DrizzleClient
 
-      const getUserByIdQuery = Effect.fn("UsersQueries.getUserByIdQuery")(
-        function* ({ id }: { id: string }) {
-          const result = yield* db.query.user.findFirst({
-            where: eq(user.id, id),
-          })
-          return Option.fromNullable(result)
-        }
-      )
+      const getUserById = Effect.fn("UsersQueries.getUserById")(function* ({
+        id,
+      }: {
+        id: string
+      }) {
+        const result = yield* db.query.user.findFirst({
+          where: eq(user.id, id),
+        })
+        return Option.fromNullable(result)
+      })
 
-      const getUserWithMarathonsQuery = Effect.fn(
-        "UsersQueries.getUserWithMarathonsQuery"
+      const getUserWithMarathons = Effect.fn(
+        "UsersQueries.getUserWithMarathons"
       )(function* ({ userId }: { userId: string }) {
         const result = yield* db.query.user.findFirst({
           where: eq(user.id, userId),
@@ -38,8 +40,8 @@ export class UsersQueries extends Effect.Service<UsersQueries>()(
         return Option.fromNullable(result)
       })
 
-      const getMarathonsByUserIdQuery = Effect.fn(
-        "UsersQueries.getMarathonsByUserIdQuery"
+      const getMarathonsByUserId = Effect.fn(
+        "UsersQueries.getMarathonsByUserId"
       )(function* ({ userId }: { userId: string }) {
         const result = yield* db.query.userMarathons.findMany({
           where: eq(userMarathons.userId, userId),
@@ -51,8 +53,8 @@ export class UsersQueries extends Effect.Service<UsersQueries>()(
         return result.map((userMarathon) => userMarathon.marathon)
       })
 
-      const getUserByEmailWithMarathonsQuery = Effect.fn(
-        "UsersQueries.getUserByEmailWithMarathonsQuery"
+      const getUserByEmailWithMarathons = Effect.fn(
+        "UsersQueries.getUserByEmailWithMarathons"
       )(function* ({ email }: { email: string }) {
         const result = yield* db.query.user.findFirst({
           where: eq(user.email, email),
@@ -63,8 +65,8 @@ export class UsersQueries extends Effect.Service<UsersQueries>()(
         return Option.fromNullable(result)
       })
 
-      const getStaffMembersByDomainQuery = Effect.fn(
-        "UsersQueries.getStaffMembersByDomainQuery"
+      const getStaffMembersByDomain = Effect.fn(
+        "UsersQueries.getStaffMembersByDomain"
       )(function* ({ domain }: { domain: string }) {
         const result = yield* db.query.marathons.findFirst({
           where: eq(marathons.domain, domain),
@@ -79,105 +81,113 @@ export class UsersQueries extends Effect.Service<UsersQueries>()(
         return result?.userMarathons ?? []
       })
 
-      const getStaffMemberByIdQuery = Effect.fn(
-        "UsersQueries.getStaffMemberByIdQuery"
-      )(function* ({ staffId, domain }: { staffId: string; domain: string }) {
-        const marathon = yield* db.query.marathons.findFirst({
-          where: eq(marathons.domain, domain),
-          columns: { id: true },
-        })
+      const getStaffMemberById = Effect.fn("UsersQueries.getStaffMemberById")(
+        function* ({ staffId, domain }: { staffId: string; domain: string }) {
+          const marathon = yield* db.query.marathons.findFirst({
+            where: eq(marathons.domain, domain),
+            columns: { id: true },
+          })
 
-        if (!marathon) {
-          return yield* Option.none()
-        }
+          if (!marathon) {
+            return yield* Option.none()
+          }
 
-        const result = yield* db.query.user.findFirst({
-          where: eq(user.id, staffId),
-          with: {
-            userMarathons: {
-              where: eq(userMarathons.marathonId, marathon.id),
-            },
-            participantVerifications: {
-              with: {
-                participant: true,
+          const result = yield* db.query.user.findFirst({
+            where: eq(user.id, staffId),
+            with: {
+              userMarathons: {
+                where: eq(userMarathons.marathonId, marathon.id),
+              },
+              participantVerifications: {
+                with: {
+                  participant: true,
+                },
               },
             },
-          },
-        })
+          })
 
-        if (!result?.userMarathons[0]) {
-          return yield* Option.none()
+          if (!result?.userMarathons[0]) {
+            return yield* Option.none()
+          }
+
+          const filteredParticipantVerifications =
+            result.participantVerifications.filter(
+              (pv) => pv.participant.marathonId === marathon.id
+            )
+
+          const resp = {
+            ...result.userMarathons[0],
+            user: {
+              ...result,
+              participantVerifications: filteredParticipantVerifications,
+            },
+          }
+          return Option.some(resp)
         }
+      )
 
-        const filteredParticipantVerifications =
-          result.participantVerifications.filter(
-            (pv) => pv.participant.marathonId === marathon.id
+      const createUser = Effect.fn("UsersQueries.createUser")(function* ({
+        data,
+      }: {
+        data: NewUser
+      }) {
+        const [result] = yield* db.insert(user).values(data).returning()
+
+        if (!result) {
+          return yield* Effect.fail(
+            new SqlError({
+              cause: "Failed to create user",
+            })
           )
-
-        const resp = {
-          ...result.userMarathons[0],
-          user: {
-            ...result,
-            participantVerifications: filteredParticipantVerifications,
-          },
         }
-        return Option.some(resp)
+        return result
       })
 
-      const createUserMutation = Effect.fn("UsersQueries.createUserMutation")(
-        function* ({ data }: { data: NewUser }) {
-          const [result] = yield* db.insert(user).values(data).returning()
+      const updateUser = Effect.fn("UsersQueries.updateUser")(function* ({
+        id,
+        data,
+      }: {
+        id: string
+        data: Partial<NewUser>
+      }) {
+        const [result] = yield* db
+          .update(user)
+          .set(data)
+          .where(eq(user.id, id))
+          .returning()
 
-          if (!result) {
-            return yield* Effect.fail(
-              new SqlError({
-                cause: "Failed to create user",
-              })
-            )
-          }
-          return result
+        if (!result) {
+          return yield* Effect.fail(
+            new SqlError({
+              cause: "Failed to update user",
+            })
+          )
         }
-      )
+        return result
+      })
 
-      const updateUserMutation = Effect.fn("UsersQueries.updateUserMutation")(
-        function* ({ id, data }: { id: string; data: Partial<NewUser> }) {
-          const [result] = yield* db
-            .update(user)
-            .set(data)
-            .where(eq(user.id, id))
-            .returning()
+      const deleteUser = Effect.fn("UsersQueries.deleteUser")(function* ({
+        id,
+      }: {
+        id: string
+      }) {
+        const [result] = yield* db
+          .delete(user)
+          .where(eq(user.id, id))
+          .returning()
 
-          if (!result) {
-            return yield* Effect.fail(
-              new SqlError({
-                cause: "Failed to update user",
-              })
-            )
-          }
-          return result
+        if (!result) {
+          return yield* Effect.fail(
+            new SqlError({
+              cause: "Failed to delete user",
+            })
+          )
         }
-      )
+        return result
+      })
 
-      const deleteUserMutation = Effect.fn("UsersQueries.deleteUserMutation")(
-        function* ({ id }: { id: string }) {
-          const [result] = yield* db
-            .delete(user)
-            .where(eq(user.id, id))
-            .returning()
-
-          if (!result) {
-            return yield* Effect.fail(
-              new SqlError({
-                cause: "Failed to delete user",
-              })
-            )
-          }
-          return result
-        }
-      )
-
-      const createUserMarathonRelationMutation = Effect.fn(
-        "UsersQueries.createUserMarathonRelationMutation"
+      const createUserMarathonRelation = Effect.fn(
+        "UsersQueries.createUserMarathonRelation"
       )(function* ({ data }: { data: NewUserMarathonRelation }) {
         const [result] = yield* db
           .insert(userMarathons)
@@ -194,8 +204,8 @@ export class UsersQueries extends Effect.Service<UsersQueries>()(
         return result
       })
 
-      const updateUserMarathonRelationMutation = Effect.fn(
-        "UsersQueries.updateUserMarathonRelationMutation"
+      const updateUserMarathonRelation = Effect.fn(
+        "UsersQueries.updateUserMarathonRelation"
       )(function* ({
         userId,
         marathonId,
@@ -226,8 +236,8 @@ export class UsersQueries extends Effect.Service<UsersQueries>()(
         return result
       })
 
-      const deleteUserMarathonRelationMutation = Effect.fn(
-        "UsersQueries.deleteUserMarathonRelationMutation"
+      const deleteUserMarathonRelation = Effect.fn(
+        "UsersQueries.deleteUserMarathonRelation"
       )(function* ({
         userId,
         marathonId,
@@ -256,18 +266,18 @@ export class UsersQueries extends Effect.Service<UsersQueries>()(
       })
 
       return {
-        getUserByIdQuery,
-        getUserWithMarathonsQuery,
-        getMarathonsByUserIdQuery,
-        getUserByEmailWithMarathonsQuery,
-        getStaffMembersByDomainQuery,
-        getStaffMemberByIdQuery,
-        createUserMutation,
-        updateUserMutation,
-        deleteUserMutation,
-        createUserMarathonRelationMutation,
-        updateUserMarathonRelationMutation,
-        deleteUserMarathonRelationMutation,
+        getUserById,
+        getUserWithMarathons,
+        getMarathonsByUserId,
+        getUserByEmailWithMarathons,
+        getStaffMembersByDomain,
+        getStaffMemberById,
+        createUser,
+        updateUser,
+        deleteUser,
+        createUserMarathonRelation,
+        updateUserMarathonRelation,
+        deleteUserMarathonRelation,
       }
     }),
   }

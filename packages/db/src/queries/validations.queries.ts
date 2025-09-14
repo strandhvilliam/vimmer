@@ -20,8 +20,8 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
     effect: Effect.gen(function* () {
       const db = yield* DrizzleClient
 
-      const getValidationResultsByParticipantIdQuery = Effect.fn(
-        "ValidationsQueries.getValidationResultsByParticipantIdQuery"
+      const getValidationResultsByParticipantId = Effect.fn(
+        "ValidationsQueries.getValidationResultsByParticipantId"
       )(function* ({ participantId }: { participantId: number }) {
         const result = yield* db.query.validationResults.findMany({
           where: eq(validationResults.participantId, participantId),
@@ -30,8 +30,8 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
         return result
       })
 
-      const getValidationResultsByDomainQuery = Effect.fn(
-        "ValidationsQueries.getValidationResultsByDomainQuery"
+      const getValidationResultsByDomain = Effect.fn(
+        "ValidationsQueries.getValidationResultsByDomain"
       )(function* ({ domain }: { domain: string }) {
         const result = yield* db.query.marathons.findFirst({
           where: eq(marathons.domain, domain),
@@ -61,8 +61,8 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
         )
       })
 
-      const getParticipantVerificationsByStaffIdQuery = Effect.fn(
-        "ValidationsQueries.getParticipantVerificationsByStaffIdQuery"
+      const getParticipantVerificationsByStaffId = Effect.fn(
+        "ValidationsQueries.getParticipantVerificationsByStaffId"
       )(function* ({ staffId, domain }: { staffId: string; domain: string }) {
         const result = yield* db.query.participantVerifications.findMany({
           where: eq(participantVerifications.staffId, staffId),
@@ -90,8 +90,8 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
           }))
       })
 
-      const createValidationResultMutation = Effect.fn(
-        "ValidationsQueries.createValidationResultMutation"
+      const createValidationResult = Effect.fn(
+        "ValidationsQueries.createValidationResult"
       )(function* ({ data }: { data: NewValidationResult }) {
         const [result] = yield* db
           .insert(validationResults)
@@ -109,8 +109,8 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
         return result
       })
 
-      const createMultipleValidationResultsMutation = Effect.fn(
-        "ValidationsQueries.createMultipleValidationResultsMutation"
+      const createMultipleValidationResults = Effect.fn(
+        "ValidationsQueries.createMultipleValidationResults"
       )(function* ({ data }: { data: NewValidationResult[] }) {
         const existingValidationResults =
           yield* db.query.validationResults.findMany({
@@ -163,7 +163,7 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
           if (!r.id) {
             continue
           }
-          const updated = yield* updateValidationResultMutation({
+          const updated = yield* updateValidationResult({
             id: r.id,
             data: r,
           })
@@ -173,8 +173,8 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
         return result
       })
 
-      const updateValidationResultMutation = Effect.fn(
-        "ValidationsQueries.updateValidationResultMutation"
+      const updateValidationResult = Effect.fn(
+        "ValidationsQueries.updateValidationResult"
       )(function* ({
         id,
         data,
@@ -198,8 +198,8 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
         return result
       })
 
-      const createParticipantVerificationMutation = Effect.fn(
-        "ValidationsQueries.createParticipantVerificationMutation"
+      const createParticipantVerification = Effect.fn(
+        "ValidationsQueries.createParticipantVerification"
       )(function* ({ data }: { data: NewParticipantVerification }) {
         const [result] = yield* db
           .insert(participantVerifications)
@@ -217,8 +217,8 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
         return result
       })
 
-      const clearNonEnabledRuleResultsMutation = Effect.fn(
-        "ValidationsQueries.clearNonEnabledRuleResultsMutation"
+      const clearNonEnabledRuleResults = Effect.fn(
+        "ValidationsQueries.clearNonEnabledRuleResults"
       )(function* ({
         participantId,
         ruleKeys,
@@ -236,8 +236,8 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
           )
       })
 
-      const getAllParticipantVerificationsQuery = Effect.fn(
-        "ValidationsQueries.getAllParticipantVerificationsQuery"
+      const getAllParticipantVerifications = Effect.fn(
+        "ValidationsQueries.getAllParticipantVerifications"
       )(function* ({
         domain,
         page,
@@ -298,8 +298,8 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
         }
       })
 
-      const clearAllValidationResultsMutation = Effect.fn(
-        "ValidationsQueries.clearAllValidationResultsMutation"
+      const clearAllValidationResults = Effect.fn(
+        "ValidationsQueries.clearAllValidationResults"
       )(function* ({ participantId }: { participantId: number }) {
         yield* db
           .delete(validationResults)
@@ -307,16 +307,16 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
       })
 
       return {
-        getValidationResultsByParticipantIdQuery,
-        getValidationResultsByDomainQuery,
-        getParticipantVerificationsByStaffIdQuery,
-        createValidationResultMutation,
-        createMultipleValidationResultsMutation,
-        updateValidationResultMutation,
-        createParticipantVerificationMutation,
-        clearNonEnabledRuleResultsMutation,
-        getAllParticipantVerificationsQuery,
-        clearAllValidationResultsMutation,
+        getValidationResultsByParticipantId,
+        getValidationResultsByDomain,
+        getParticipantVerificationsByStaffId,
+        createValidationResult,
+        createMultipleValidationResults,
+        updateValidationResult,
+        createParticipantVerification,
+        clearNonEnabledRuleResults,
+        getAllParticipantVerifications,
+        clearAllValidationResults,
       }
     }),
   }

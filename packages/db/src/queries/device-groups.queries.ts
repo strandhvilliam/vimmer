@@ -13,8 +13,8 @@ export class DeviceGroupsQueries extends Effect.Service<DeviceGroupsQueries>()(
     effect: Effect.gen(function* () {
       const db = yield* DrizzleClient
 
-      const getDeviceGroupByIdQuery = Effect.fn(
-        "DeviceGroupsQueries.getDeviceGroupByIdQuery"
+      const getDeviceGroupById = Effect.fn(
+        "DeviceGroupsQueries.getDeviceGroupById"
       )(function* ({ id }: { id: number }) {
         const result = yield* db.query.deviceGroups.findFirst({
           where: eq(deviceGroups.id, id),
@@ -22,8 +22,8 @@ export class DeviceGroupsQueries extends Effect.Service<DeviceGroupsQueries>()(
         return Option.fromNullable(result)
       })
 
-      const getDeviceGroupsByDomainQuery = Effect.fn(
-        "DeviceGroupsQueries.getDeviceGroupsByDomainQuery"
+      const getDeviceGroupsByDomain = Effect.fn(
+        "DeviceGroupsQueries.getDeviceGroupsByDomain"
       )(function* ({ domain }: { domain: string }) {
         const result = yield* db
           .select()
@@ -94,8 +94,8 @@ export class DeviceGroupsQueries extends Effect.Service<DeviceGroupsQueries>()(
       })
 
       return {
-        getDeviceGroupByIdQuery,
-        getDeviceGroupsByDomainQuery,
+        getDeviceGroupById,
+        getDeviceGroupsByDomain,
         createDeviceGroup,
         updateDeviceGroup,
         deleteDeviceGroup,

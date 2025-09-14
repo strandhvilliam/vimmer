@@ -12,8 +12,8 @@ export class CompetitionClassesQueries extends Effect.Service<CompetitionClasses
     effect: Effect.gen(function* () {
       const db = yield* DrizzleClient
 
-      const getCompetitionClassByIdQuery = Effect.fn(
-        "CompetitionClassesQueries.getCompetitionClassByIdQuery"
+      const getCompetitionClassById = Effect.fn(
+        "CompetitionClassesQueries.getCompetitionClassById"
       )(function* ({ id }: { id: number }) {
         const result = yield* db.query.competitionClasses.findFirst({
           where: eq(competitionClasses.id, id),
@@ -21,8 +21,8 @@ export class CompetitionClassesQueries extends Effect.Service<CompetitionClasses
         return Option.fromNullable(result)
       })
 
-      const getCompetitionClassesByDomainQuery = Effect.fn(
-        "CompetitionClassesQueries.getCompetitionClassesByDomainQuery"
+      const getCompetitionClassesByDomain = Effect.fn(
+        "CompetitionClassesQueries.getCompetitionClassesByDomain"
       )(function* ({ domain }: { domain: string }) {
         const result = yield* db
           .select()
@@ -93,8 +93,8 @@ export class CompetitionClassesQueries extends Effect.Service<CompetitionClasses
       })
 
       return {
-        getCompetitionClassByIdQuery,
-        getCompetitionClassesByDomainQuery,
+        getCompetitionClassById,
+        getCompetitionClassesByDomain,
         createCompetitionClass,
         updateCompetitionClass,
         deleteCompetitionClass,

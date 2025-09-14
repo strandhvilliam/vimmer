@@ -8,6 +8,7 @@ import { SharpImageService } from "@blikka/image-manipulation"
 import { Resource as SSTResource } from "sst"
 import { SQSRecord } from "aws-lambda"
 import { BusService } from "@blikka/bus"
+import { Database } from "@blikka/db"
 
 class PhotoNotFoundError extends Data.TaggedError("PhotoNotFoundError")<{
   message?: string
@@ -32,6 +33,7 @@ interface ProcessingContext {
   sharp: SharpImageService
   exifParser: ExifParser
   bus: BusService
+  db: Database
 }
 
 const S3EventSchema = Schema.Struct({
@@ -53,7 +55,7 @@ const THUMBNAIL_WIDTH = 400
 
 const processPhoto = (ctx: ProcessingContext, key: string) =>
   Effect.gen(function* () {
-    const { s3, kv, sharp, exifParser, bus } = ctx
+    const { s3, kv, sharp, exifParser, bus, db } = ctx
 
     const generateThumbnail = Effect.fn("upload-processor.generateThumbnail")(
       function* (photo: Buffer, key: string) {
@@ -167,6 +169,26 @@ const processPhoto = (ctx: ProcessingContext, key: string) =>
       )
 
     if (finalize) {
+      const state = yield* kv.getParticipantState(domain, reference)
+
+      if (Option.isSome(state)) {
+        yield* db.submissionsQueries.updateAllSubmissions({
+          data: {
+            status: "uploaded",
+          },
+        })
+
+        yield* db.participantsQueries.updateParticipantByReference({
+          reference,
+          domain,
+          data: {
+            status: "completed",
+            uploadCount: state.value.processedIndexes.filter((i) => i === 1)
+              .length,
+          },
+        })
+      }
+
       const result = yield* Effect.either(
         bus.sendFinalizedEvent(domain, reference)
       )
@@ -224,6 +246,7 @@ const effectHandler = (event: SQSEvent) =>
       sharp: yield* SharpImageService,
       exifParser: yield* ExifParser,
       bus: yield* BusService,
+      db: yield* Database,
     }
 
     yield* Effect.forEach(
@@ -243,7 +266,8 @@ const MainLayer = Layer.mergeAll(
   UploadKVRepository.Default,
   SharpImageService.Default,
   ExifParser.Default,
-  BusService.Default
+  BusService.Default,
+  Database.Default
 )
 
 export const handler = LambdaHandler.make({

@@ -14,7 +14,7 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
       const db = yield* DrizzleClient
       const supabase = yield* SupabaseClient
 
-      const getParticipantByIdQuery = Effect.fn(
+      const getParticipantById = Effect.fn(
         "ParticipantsQueries.getParticipantByIdQuery"
       )(function* ({ id }: { id: number }) {
         const result = yield* db.query.participants.findFirst({
@@ -31,7 +31,7 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         return Option.fromNullable(result)
       })
 
-      const getParticipantsWithoutSubmissionsQuery = Effect.fn(
+      const getParticipantsWithoutSubmissions = Effect.fn(
         "ParticipantsQueries.getParticipantsWithoutSubmissionsQuery"
       )(function* ({ domain }: { domain: string }) {
         const result = yield* db.query.participants.findMany({
@@ -46,7 +46,7 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         return result
       })
 
-      const getParticipantByReferenceQuery = Effect.fn(
+      const getParticipantByReference = Effect.fn(
         "ParticipantsQueries.getParticipantByReferenceQuery"
       )(function* ({
         reference,
@@ -76,7 +76,7 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         return result
       })
 
-      const getParticipantsByDomainQuery = Effect.fn(
+      const getParticipantsByDomain = Effect.fn(
         "ParticipantsQueries.getParticipantsByDomainQuery"
       )(function* ({ domain }: { domain: string }) {
         const result = yield* db.query.participants.findMany({
@@ -93,7 +93,7 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         return result
       })
 
-      const getParticipantsByDomainPaginatedQuery = Effect.fn(
+      const getParticipantsByDomainPaginated = Effect.fn(
         "ParticipantsQueries.getParticipantsByDomainPaginatedQuery"
       )(function* ({
         domain,
@@ -234,7 +234,7 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         }
       })
 
-      const createParticipantMutation = Effect.fn(
+      const createParticipant = Effect.fn(
         "ParticipantsQueries.createParticipantMutation"
       )(function* ({ data }: { data: NewParticipant }) {
         if (!data.domain) {
@@ -247,7 +247,7 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
 
         let existingParticipant
         try {
-          existingParticipant = yield* getParticipantByReferenceQuery({
+          existingParticipant = yield* getParticipantByReference({
             reference: data.reference,
             domain: data.domain,
           })
@@ -278,7 +278,7 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         return result
       })
 
-      const updateParticipantMutation = Effect.fn(
+      const updateParticipantById = Effect.fn(
         "ParticipantsQueries.updateParticipantMutation"
       )(function* ({
         id,
@@ -304,7 +304,38 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         return result
       })
 
-      const deleteParticipantMutation = Effect.fn(
+      const updateParticipantByReference = Effect.fn(
+        "ParticipantsQueries.updateParticipantByReference"
+      )(function* ({
+        reference,
+        domain,
+        data,
+      }: {
+        reference: string
+        domain: string
+        data: Partial<NewParticipant>
+      }) {
+        const [result] = yield* db
+          .update(participants)
+          .set(data)
+          .where(
+            and(
+              eq(participants.reference, reference),
+              eq(participants.domain, domain)
+            )
+          )
+          .returning({ id: participants.id })
+        if (!result) {
+          return yield* Effect.fail(
+            new SqlError({
+              cause: "Failed to update participant",
+            })
+          )
+        }
+        return result
+      })
+
+      const deleteParticipant = Effect.fn(
         "ParticipantsQueries.deleteParticipantMutation"
       )(function* ({ id }: { id: number }) {
         const [result] = yield* db
@@ -321,7 +352,7 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         return result
       })
 
-      const getVerifiedParticipantsWithCompletePreviewKeysQuery = Effect.fn(
+      const getVerifiedParticipantsWithCompletePreviewKeys = Effect.fn(
         "ParticipantsQueries.getVerifiedParticipantsWithCompletePreviewKeysQuery"
       )(function* ({ domain }: { domain: string }) {
         // Get all verified participants with their submissions
@@ -372,7 +403,7 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         return readyParticipants
       })
 
-      const incrementUploadCounterMutation = Effect.fn(
+      const incrementUploadCounter = Effect.fn(
         "ParticipantsQueries.incrementUploadCounterMutation"
       )(function* ({
         participantId,
@@ -404,16 +435,17 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
       })
 
       return {
-        getParticipantByIdQuery,
-        getParticipantsWithoutSubmissionsQuery,
-        getParticipantByReferenceQuery,
-        getParticipantsByDomainQuery,
-        getParticipantsByDomainPaginatedQuery,
-        createParticipantMutation,
-        updateParticipantMutation,
-        deleteParticipantMutation,
-        getVerifiedParticipantsWithCompletePreviewKeysQuery,
-        incrementUploadCounterMutation,
+        getParticipantById,
+        getParticipantsWithoutSubmissions,
+        getParticipantByReference,
+        getParticipantsByDomain,
+        getParticipantsByDomainPaginated,
+        createParticipant,
+        updateParticipantById,
+        updateParticipantByReference,
+        deleteParticipant,
+        getVerifiedParticipantsWithCompletePreviewKeys,
+        incrementUploadCounter,
       }
     }),
   }

@@ -15,8 +15,8 @@ export class TopicsQueries extends Effect.Service<TopicsQueries>()(
       const db = yield* DrizzleClient
       const supabase = yield* SupabaseClient
 
-      const getTopicsByMarathonIdQuery = Effect.fn(
-        "TopicsQueries.getTopicsByMarathonIdQuery"
+      const getTopicsByMarathonId = Effect.fn(
+        "TopicsQueries.getTopicsByMarathonId"
       )(function* ({ id }: { id: number }) {
         const result = yield* db.query.topics.findMany({
           where: eq(topics.marathonId, id),
@@ -25,47 +25,52 @@ export class TopicsQueries extends Effect.Service<TopicsQueries>()(
         return result
       })
 
-      const getTopicsByDomainQuery = Effect.fn(
-        "TopicsQueries.getTopicsByDomainQuery"
-      )(function* ({ domain }: { domain: string }) {
-        const result = yield* db.query.marathons.findMany({
-          where: eq(marathons.domain, domain),
-          with: {
-            topics: true,
-          },
+      const getTopicsByDomain = Effect.fn("TopicsQueries.getTopicsByDomain")(
+        function* ({ domain }: { domain: string }) {
+          const result = yield* db.query.marathons.findMany({
+            where: eq(marathons.domain, domain),
+            with: {
+              topics: true,
+            },
+          })
+          return result.flatMap(({ topics }) => topics)
+        }
+      )
+
+      const getTopicById = Effect.fn("TopicsQueries.getTopicById")(function* ({
+        id,
+      }: {
+        id: number
+      }) {
+        const result = yield* db.query.topics.findFirst({
+          where: eq(topics.id, id),
         })
-        console.log("result", result)
-        return result.flatMap(({ topics }) => topics)
+        return result ?? null
       })
 
-      const getTopicByIdQuery = Effect.fn("TopicsQueries.getTopicByIdQuery")(
-        function* ({ id }: { id: number }) {
-          const result = yield* db.query.topics.findFirst({
-            where: eq(topics.id, id),
-          })
-          return result ?? null
+      const updateTopic = Effect.fn("TopicsQueries.updateTopic")(function* ({
+        id,
+        data,
+      }: {
+        id: number
+        data: Partial<NewTopic>
+      }) {
+        const [result] = yield* db
+          .update(topics)
+          .set(data)
+          .where(eq(topics.id, id))
+          .returning()
+
+        if (!result) {
+          return yield* Effect.fail(
+            new SqlError({
+              cause: "Failed to update topic",
+            })
+          )
         }
-      )
 
-      const updateTopicQuery = Effect.fn("TopicsQueries.updateTopicQuery")(
-        function* ({ id, data }: { id: number; data: Partial<NewTopic> }) {
-          const [result] = yield* db
-            .update(topics)
-            .set(data)
-            .where(eq(topics.id, id))
-            .returning()
-
-          if (!result) {
-            return yield* Effect.fail(
-              new SqlError({
-                cause: "Failed to update topic",
-              })
-            )
-          }
-
-          return result
-        }
-      )
+        return result
+      })
 
       const updateTopicsOrder = Effect.fn("TopicsQueries.updateTopicsOrder")(
         function* ({
@@ -86,43 +91,47 @@ export class TopicsQueries extends Effect.Service<TopicsQueries>()(
         }
       )
 
-      const createTopicQuery = Effect.fn("TopicQueries.createTopicQuery")(
-        function* ({ data }: { data: NewTopic }) {
-          const [result] = yield* db.insert(topics).values(data).returning({
-            id: topics.id,
-          })
+      const createTopic = Effect.fn("TopicQueries.createTopic")(function* ({
+        data,
+      }: {
+        data: NewTopic
+      }) {
+        const [result] = yield* db.insert(topics).values(data).returning({
+          id: topics.id,
+        })
 
-          if (!result) {
-            return yield* Effect.fail(
-              new SqlError({
-                cause: "Failed to create topic",
-              })
-            )
-          }
-
-          return result
+        if (!result) {
+          return yield* Effect.fail(
+            new SqlError({
+              cause: "Failed to create topic",
+            })
+          )
         }
-      )
 
-      const deleteTopicQuery = Effect.fn("TopicQueries.deleteTopicQuery")(
-        function* ({ id }: { id: number }) {
-          const [result] = yield* db
-            .delete(topics)
-            .where(eq(topics.id, id))
-            .returning()
-          if (!result) {
-            return yield* Effect.fail(
-              new SqlError({
-                cause: "Failed to delete topic",
-              })
-            )
-          }
-          return result
+        return result
+      })
+
+      const deleteTopic = Effect.fn("TopicQueries.deleteTopic")(function* ({
+        id,
+      }: {
+        id: number
+      }) {
+        const [result] = yield* db
+          .delete(topics)
+          .where(eq(topics.id, id))
+          .returning()
+        if (!result) {
+          return yield* Effect.fail(
+            new SqlError({
+              cause: "Failed to delete topic",
+            })
+          )
         }
-      )
+        return result
+      })
 
-      const getTopicsWithSubmissionCountQuery = Effect.fn(
-        "TopicQueries.getTopicsWithSubmissionCountQuery"
+      const getTopicsWithSubmissionCount = Effect.fn(
+        "TopicQueries.getTopicsWithSubmissionCount"
       )(function* ({ domain }: { domain: string }) {
         const data = yield* db
           .select({
@@ -137,8 +146,8 @@ export class TopicsQueries extends Effect.Service<TopicsQueries>()(
         return data
       })
 
-      const getTotalSubmissionCountQuery = Effect.fn(
-        "TopicQueries.getTotalSubmissionCountQuery"
+      const getTotalSubmissionCount = Effect.fn(
+        "TopicQueries.getTotalSubmissionCount"
       )(function* ({ marathonId }: { marathonId: number }) {
         const [result] = yield* db
           .select({ count: count(submissions.id) })
@@ -148,29 +157,29 @@ export class TopicsQueries extends Effect.Service<TopicsQueries>()(
         return result?.count ?? 0
       })
 
-      const getScheduledTopicsQuery = Effect.fn(
-        "TopicQueries.getScheduledTopicsQuery"
-      )(function* () {
-        const [result] = yield* db.query.topics.findMany({
-          where: eq(topics.visibility, "scheduled"),
-          with: {
-            marathon: true,
-          },
-        })
-        return result
-      })
+      const getScheduledTopics = Effect.fn("TopicQueries.getScheduledTopics")(
+        function* () {
+          const [result] = yield* db.query.topics.findMany({
+            where: eq(topics.visibility, "scheduled"),
+            with: {
+              marathon: true,
+            },
+          })
+          return result
+        }
+      )
 
       return {
-        getTopicsByMarathonIdQuery,
-        getTopicsByDomainQuery,
-        getTopicByIdQuery,
-        updateTopicQuery,
+        getTopicsByMarathonId,
+        getTopicsByDomain,
+        getTopicById,
+        updateTopic,
         updateTopicsOrder,
-        createTopicQuery,
-        deleteTopicQuery,
-        getTopicsWithSubmissionCountQuery,
-        getTotalSubmissionCountQuery,
-        getScheduledTopicsQuery,
+        createTopic,
+        deleteTopic,
+        getTopicsWithSubmissionCount,
+        getTotalSubmissionCount,
+        getScheduledTopics,
       }
     }),
   }

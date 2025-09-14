@@ -23,8 +23,8 @@ export class JuryQueries extends Effect.Service<JuryQueries>()(
     effect: Effect.gen(function* () {
       const db = yield* DrizzleClient
 
-      const getJuryInvitationsByMarathonIdQuery = Effect.fn(
-        "JuryQueries.getJuryInvitatinosByMarathonIdQuery"
+      const getJuryInvitationsByMarathonId = Effect.fn(
+        "JuryQueries.getJuryInvitatinosByMarathonId"
       )(function* ({ id }: { id: number }) {
         const result = yield* db.query.juryInvitations.findMany({
           where: eq(juryInvitations.marathonId, id),
@@ -33,8 +33,8 @@ export class JuryQueries extends Effect.Service<JuryQueries>()(
         return result
       })
 
-      const getJuryInvitationByIdQuery = Effect.fn(
-        "JuryQueries.getJuryInvitationByIdQuery"
+      const getJuryInvitationById = Effect.fn(
+        "JuryQueries.getJuryInvitationById"
       )(function* ({ id }: { id: number }) {
         const result = yield* db.query.juryInvitations.findFirst({
           where: eq(juryInvitations.id, id),
@@ -42,8 +42,8 @@ export class JuryQueries extends Effect.Service<JuryQueries>()(
         return Option.fromNullable(result)
       })
 
-      const getJuryInvitationsByDomainQuery = Effect.fn(
-        "JuryQueries.getJuryInvitationsByDomainQuery"
+      const getJuryInvitationsByDomain = Effect.fn(
+        "JuryQueries.getJuryInvitationsByDomain"
       )(function* ({ domain }: { domain: string }) {
         const marathon = yield* db
           .select({ id: marathons.id })
@@ -70,8 +70,8 @@ export class JuryQueries extends Effect.Service<JuryQueries>()(
         return result
       })
 
-      const createJuryInvitationMutation = Effect.fn(
-        "JuryQueries.createJuryInvitationMutation"
+      const createJuryInvitation = Effect.fn(
+        "JuryQueries.createJuryInvitation"
       )(function* ({ data }: { data: NewJuryInvitation }) {
         const [result] = yield* db
           .insert(juryInvitations)
@@ -89,8 +89,8 @@ export class JuryQueries extends Effect.Service<JuryQueries>()(
         return result
       })
 
-      const updateJuryInvitationMutation = Effect.fn(
-        "JuryQueries.updateJuryInvitationMutation"
+      const updateJuryInvitation = Effect.fn(
+        "JuryQueries.updateJuryInvitation"
       )(function* ({
         id,
         data,
@@ -114,8 +114,8 @@ export class JuryQueries extends Effect.Service<JuryQueries>()(
         return result
       })
 
-      const deleteJuryInvitationMutation = Effect.fn(
-        "JuryQueries.deleteJuryInvitationMutation"
+      const deleteJuryInvitation = Effect.fn(
+        "JuryQueries.deleteJuryInvitation"
       )(function* ({ id }: { id: number }) {
         const [result] = yield* db
           .delete(juryInvitations)
@@ -132,36 +132,8 @@ export class JuryQueries extends Effect.Service<JuryQueries>()(
         return result
       })
 
-      //   const TokenPayloadSchema = z.object({
-      //     domain: z.string(),
-      //     invitationId: z.number(),
-      //     iat: z.number(),
-      //     exp: z.number(),
-      //   })
-
-      //   async function verifyJuryToken(token: string) {
-      //     try {
-      //       const secret = process.env.JURY_JWT_SECRET
-      //       if (!secret) {
-      //         throw new Error("JWT SECRET is not set")
-      //       }
-      //       const { payload } = await jwtVerify(
-      //         token,
-      //         new TextEncoder().encode(secret)
-      //       )
-
-      //       const parsed = TokenPayloadSchema.safeParse(payload)
-      //       if (parsed.success) {
-      //         return parsed.data
-      //       }
-      //       return null
-      //     } catch {
-      //       return null
-      //     }
-      //   }
-
-      const getJuryDataByTokenPayloadQuery = Effect.fn(
-        "JuryQueries.getJuryDataByTokenQuery"
+      const getJuryDataByTokenPayload = Effect.fn(
+        "JuryQueries.getJuryDataByToken"
       )(function* ({
         domain,
         invitationId,
@@ -201,8 +173,8 @@ export class JuryQueries extends Effect.Service<JuryQueries>()(
         return invitation
       })
 
-      const getJuryParticipantSubmissionsQuery = Effect.fn(
-        "JuryQueries.getJuryParticipantSubmissionsQuery"
+      const getJuryParticipantSubmissions = Effect.fn(
+        "JuryQueries.getJuryParticipantSubmissions"
       )(function* ({
         domain,
         invitationId,
@@ -296,18 +268,92 @@ export class JuryQueries extends Effect.Service<JuryQueries>()(
         }
       })
 
-      const createJuryRatingMutation = Effect.fn(
-        "JuryQueries.createJuryRatingMutation"
-      )(function* ({
+      const createJuryRating = Effect.fn("JuryQueries.createJuryRating")(
+        function* ({
+          invitationId,
+          participantId,
+          rating,
+          notes,
+        }: {
+          invitationId: number
+          participantId: number
+          rating: number
+          notes?: string
+        }) {
+          const invitation = yield* db.query.juryInvitations.findFirst({
+            where: eq(juryInvitations.id, invitationId),
+          })
+
+          if (!invitation) {
+            return yield* Effect.fail(
+              new SqlError({
+                cause: "Invitation not found",
+              })
+            )
+          }
+
+          const [result] = yield* db
+            .insert(juryRatings)
+            .values({
+              invitationId,
+              participantId,
+              rating,
+              notes: notes || "",
+              marathonId: invitation.marathonId,
+            })
+            .returning()
+
+          if (!result) {
+            return yield* Effect.fail(
+              new SqlError({
+                cause: "Failed to create jury rating",
+              })
+            )
+          }
+
+          return result
+        }
+      )
+
+      const updateJuryRating = Effect.fn("JuryQueries.updateJuryRating")(
+        function* ({
+          invitationId,
+          participantId,
+          rating,
+          notes,
+          finalRanking,
+        }: {
+          invitationId: number
+          participantId: number
+          rating: number
+          notes?: string
+          finalRanking?: number
+        }) {
+          const result = yield* db
+            .update(juryRatings)
+            .set({
+              rating,
+              notes: notes || "",
+              finalRanking,
+            })
+            .where(
+              and(
+                eq(juryRatings.invitationId, invitationId),
+                eq(juryRatings.participantId, participantId)
+              )
+            )
+            .returning()
+
+          return result
+        }
+      )
+
+      const getJuryRating = Effect.fn("JuryQueries.getJuryRating")(function* ({
         invitationId,
         participantId,
-        rating,
-        notes,
       }: {
         invitationId: number
         participantId: number
-        rating: number
-        notes?: string
       }) {
         const invitation = yield* db.query.juryInvitations.findFirst({
           where: eq(juryInvitations.id, invitationId),
@@ -321,62 +367,17 @@ export class JuryQueries extends Effect.Service<JuryQueries>()(
           )
         }
 
-        const [result] = yield* db
-          .insert(juryRatings)
-          .values({
-            invitationId,
-            participantId,
-            rating,
-            notes: notes || "",
-            marathonId: invitation.marathonId,
-          })
-          .returning()
+        const result = yield* db.query.juryRatings.findFirst({
+          where: and(
+            eq(juryRatings.invitationId, invitationId),
+            eq(juryRatings.participantId, participantId)
+          ),
+        })
 
-        if (!result) {
-          return yield* Effect.fail(
-            new SqlError({
-              cause: "Failed to create jury rating",
-            })
-          )
-        }
-
-        return result
+        return Option.fromNullable(result)
       })
 
-      const updateJuryRatingMutation = Effect.fn(
-        "JuryQueries.updateJuryRatingMutation"
-      )(function* ({
-        invitationId,
-        participantId,
-        rating,
-        notes,
-        finalRanking,
-      }: {
-        invitationId: number
-        participantId: number
-        rating: number
-        notes?: string
-        finalRanking?: number
-      }) {
-        const result = yield* db
-          .update(juryRatings)
-          .set({
-            rating,
-            notes: notes || "",
-            finalRanking,
-          })
-          .where(
-            and(
-              eq(juryRatings.invitationId, invitationId),
-              eq(juryRatings.participantId, participantId)
-            )
-          )
-          .returning()
-
-        return result
-      })
-
-      const getJuryRatingQuery = Effect.fn("JuryQueries.getJuryRatingQuery")(
+      const deleteJuryRating = Effect.fn("JuryQueries.deleteJuryRating")(
         function* ({
           invitationId,
           participantId,
@@ -396,53 +397,22 @@ export class JuryQueries extends Effect.Service<JuryQueries>()(
             )
           }
 
-          const result = yield* db.query.juryRatings.findFirst({
-            where: and(
-              eq(juryRatings.invitationId, invitationId),
-              eq(juryRatings.participantId, participantId)
-            ),
-          })
+          const result = yield* db
+            .delete(juryRatings)
+            .where(
+              and(
+                eq(juryRatings.invitationId, invitationId),
+                eq(juryRatings.participantId, participantId)
+              )
+            )
+            .returning()
 
           return Option.fromNullable(result)
         }
       )
 
-      const deleteJuryRatingMutation = Effect.fn(
-        "JuryQueries.deleteJuryRatingMutation"
-      )(function* ({
-        invitationId,
-        participantId,
-      }: {
-        invitationId: number
-        participantId: number
-      }) {
-        const invitation = yield* db.query.juryInvitations.findFirst({
-          where: eq(juryInvitations.id, invitationId),
-        })
-
-        if (!invitation) {
-          return yield* Effect.fail(
-            new SqlError({
-              cause: "Invitation not found",
-            })
-          )
-        }
-
-        const result = yield* db
-          .delete(juryRatings)
-          .where(
-            and(
-              eq(juryRatings.invitationId, invitationId),
-              eq(juryRatings.participantId, participantId)
-            )
-          )
-          .returning()
-
-        return Option.fromNullable(result)
-      })
-
-      const getJurySubmissionsWithoutFiltersQuery = Effect.fn(
-        "JuryQueries.getJurySubmissionWithouFiltersQuery"
+      const getJurySubmissionsWithoutFilters = Effect.fn(
+        "JuryQueries.getJurySubmissionWithouFilters"
       )(function* ({
         invitation,
         cursor,
@@ -610,8 +580,8 @@ export class JuryQueries extends Effect.Service<JuryQueries>()(
         }
       })
 
-      const getJurySubmissionsWithRatingFiltersQuery = Effect.fn(
-        "JuryQueries.getJurySubmissionsWithRatingFiltersQuery"
+      const getJurySubmissionsWithRatingFilters = Effect.fn(
+        "JuryQueries.getJurySubmissionsWithRatingFilters"
       )(function* ({
         invitation,
         ratingFilter,
@@ -801,8 +771,8 @@ export class JuryQueries extends Effect.Service<JuryQueries>()(
         }
       })
 
-      const getJurySubmissionsFromTokenQuery = Effect.fn(
-        "JuryQueries.getJurySubmissionsFromTokenQuery"
+      const getJurySubmissionsFromToken = Effect.fn(
+        "JuryQueries.getJurySubmissionsFromToken"
       )(function* ({
         invitationId,
         cursor,
@@ -825,21 +795,21 @@ export class JuryQueries extends Effect.Service<JuryQueries>()(
         }
 
         if (ratingFilter && ratingFilter.length > 0) {
-          return yield* getJurySubmissionsWithRatingFiltersQuery({
+          return yield* getJurySubmissionsWithRatingFilters({
             invitation,
             ratingFilter,
             cursor,
           })
         } else {
-          return yield* getJurySubmissionsWithoutFiltersQuery({
+          return yield* getJurySubmissionsWithoutFilters({
             invitation,
             cursor,
           })
         }
       })
 
-      const getJuryRatingsByInvitationQuery = Effect.fn(
-        "JuryQueries.getJuryRatingsByInvitationQuery"
+      const getJuryRatingsByInvitation = Effect.fn(
+        "JuryQueries.getJuryRatingsByInvitation"
       )(function* ({ invitationId }: { invitationId: number }) {
         const invitation = yield* db.query.juryInvitations.findFirst({
           where: eq(juryInvitations.id, invitationId),
@@ -868,8 +838,8 @@ export class JuryQueries extends Effect.Service<JuryQueries>()(
         return ratings
       })
 
-      const getJuryParticipantCountQuery = Effect.fn(
-        "JuryQueries.getJuryParticipantCountQuery"
+      const getJuryParticipantCount = Effect.fn(
+        "JuryQueries.getJuryParticipantCount"
       )(function* ({
         invitationId,
         ratingFilter,
@@ -925,8 +895,8 @@ export class JuryQueries extends Effect.Service<JuryQueries>()(
         return { value: participantIds.length }
       })
 
-      const getJuryInvitationStatisticsQuery = Effect.fn(
-        "JuryQueries.getJuryInvitationStatisticsQuery"
+      const getJuryInvitationStatistics = Effect.fn(
+        "JuryQueries.getJuryInvitationStatistics"
       )(function* ({ invitationId }: { invitationId: number }) {
         const invitation = yield* db.query.juryInvitations.findFirst({
           where: eq(juryInvitations.id, invitationId),
@@ -1032,14 +1002,22 @@ export class JuryQueries extends Effect.Service<JuryQueries>()(
       })
 
       return {
-        getJuryInvitationStatisticsQuery,
-        getJuryParticipantCountQuery,
-        getJuryRatingQuery,
-        getJuryRatingsByInvitationQuery,
-        getJurySubmissionsWithRatingFiltersQuery,
-        createJuryRatingMutation,
-        updateJuryRatingMutation,
-        deleteJuryRatingMutation,
+        getJuryInvitationsByMarathonId,
+        getJuryInvitationById,
+        getJuryInvitationsByDomain,
+        createJuryInvitation,
+        updateJuryInvitation,
+        deleteJuryInvitation,
+        getJuryDataByTokenPayload,
+        getJurySubmissionsWithoutFilters,
+        getJurySubmissionsWithRatingFilters,
+        getJuryInvitationStatistics,
+        getJuryParticipantCount,
+        getJuryRating,
+        getJuryRatingsByInvitation,
+        createJuryRating,
+        updateJuryRating,
+        deleteJuryRating,
       }
     }),
   }

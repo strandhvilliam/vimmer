@@ -13,85 +13,88 @@ export class RulesQueries extends Effect.Service<RulesQueries>()(
     effect: Effect.gen(function* () {
       const db = yield* DrizzleClient
 
-      const getRulesByDomainQuery = Effect.fn(
-        "RulesQueries.getRulesByDomainQuery"
-      )(function* ({ domain }: { domain: string }) {
-        const result = yield* db.query.marathons.findFirst({
-          where: eq(marathons.domain, domain),
-          with: {
-            ruleConfigs: true,
-          },
-        })
-
-        const rules = result?.ruleConfigs ?? []
-
-        if (rules.length === 0 && result?.id) {
-          yield* db.insert(ruleConfigs).values(
-            getDefaultRuleConfigs(result.id, {
-              startDate: result.startDate,
-              endDate: result.endDate,
-            })
-          )
-          const newResult = yield* db.query.marathons.findFirst({
-            where: eq(marathons.id, result.id),
+      const getRulesByDomain = Effect.fn("RulesQueries.getRulesByDomain")(
+        function* ({ domain }: { domain: string }) {
+          const result = yield* db.query.marathons.findFirst({
+            where: eq(marathons.domain, domain),
             with: {
               ruleConfigs: true,
             },
           })
-          if (!newResult) {
+
+          const rules = result?.ruleConfigs ?? []
+
+          if (rules.length === 0 && result?.id) {
+            yield* db.insert(ruleConfigs).values(
+              getDefaultRuleConfigs(result.id, {
+                startDate: result.startDate,
+                endDate: result.endDate,
+              })
+            )
+            const newResult = yield* db.query.marathons.findFirst({
+              where: eq(marathons.id, result.id),
+              with: {
+                ruleConfigs: true,
+              },
+            })
+            if (!newResult) {
+              return yield* Effect.fail(
+                new SqlError({
+                  cause: "Failed to get rules",
+                })
+              )
+            }
+            return newResult.ruleConfigs
+          }
+          if (rules.length === 0) {
             return yield* Effect.fail(
               new SqlError({
                 cause: "Failed to get rules",
               })
             )
           }
-          return newResult.ruleConfigs
-        }
-        if (rules.length === 0) {
-          return yield* Effect.fail(
-            new SqlError({
-              cause: "Failed to get rules",
-            })
-          )
-        }
 
-        return rules
-      })
-
-      const createRuleConfigMutation = Effect.fn(
-        "RulesQueries.createRuleConfigMutation"
-      )(function* ({ data }: { data: NewRuleConfig }) {
-        const [result] = yield* db.insert(ruleConfigs).values(data).returning()
-        if (!result) {
-          return yield* Effect.fail(
-            new SqlError({
-              cause: "Failed to create rule config",
-            })
-          )
+          return rules
         }
-        return result
-      })
+      )
 
-      const updateRuleConfigMutation = Effect.fn(
-        "RulesQueries.updateRuleConfigMutation"
-      )(function* ({ id, data }: { id: number; data: Partial<NewRuleConfig> }) {
-        const [result] = yield* db
-          .update(ruleConfigs)
-          .set(data)
-          .where(eq(ruleConfigs.id, id))
-          .returning()
-        if (!result) {
-          return yield* Effect.fail(
-            new SqlError({
-              cause: "Failed to update rule config",
-            })
-          )
+      const createRuleConfig = Effect.fn("RulesQueries.createRuleConfig")(
+        function* ({ data }: { data: NewRuleConfig }) {
+          const [result] = yield* db
+            .insert(ruleConfigs)
+            .values(data)
+            .returning()
+          if (!result) {
+            return yield* Effect.fail(
+              new SqlError({
+                cause: "Failed to create rule config",
+              })
+            )
+          }
+          return result
         }
-        return result
-      })
+      )
 
-      const updateMultipleRuleConfigMutation = Effect.fn(
-        "RulesQueries.updateMultipleRuleConfigMutation"
+      const updateRuleConfig = Effect.fn("RulesQueries.updateRuleConfig")(
+        function* ({ id, data }: { id: number; data: Partial<NewRuleConfig> }) {
+          const [result] = yield* db
+            .update(ruleConfigs)
+            .set(data)
+            .where(eq(ruleConfigs.id, id))
+            .returning()
+          if (!result) {
+            return yield* Effect.fail(
+              new SqlError({
+                cause: "Failed to update rule config",
+              })
+            )
+          }
+          return result
+        }
+      )
+
+      const updateMultipleRuleConfig = Effect.fn(
+        "RulesQueries.updateMultipleRuleConfig"
       )(function* ({ data }: { data: NewRuleConfig[] }) {
         const result = yield* db
           .insert(ruleConfigs)
@@ -104,29 +107,29 @@ export class RulesQueries extends Effect.Service<RulesQueries>()(
         return result
       })
 
-      const deleteRuleConfigMutation = Effect.fn(
-        "RulesQueries.deleteRuleConfigMutation"
-      )(function* ({ id }: { id: number }) {
-        const [result] = yield* db
-          .delete(ruleConfigs)
-          .where(eq(ruleConfigs.id, id))
-          .returning()
-        if (!result) {
-          return yield* Effect.fail(
-            new SqlError({
-              cause: "Failed to delete rule config",
-            })
-          )
+      const deleteRuleConfig = Effect.fn("RulesQueries.deleteRuleConfig")(
+        function* ({ id }: { id: number }) {
+          const [result] = yield* db
+            .delete(ruleConfigs)
+            .where(eq(ruleConfigs.id, id))
+            .returning()
+          if (!result) {
+            return yield* Effect.fail(
+              new SqlError({
+                cause: "Failed to delete rule config",
+              })
+            )
+          }
+          return result
         }
-        return result
-      })
+      )
 
       return {
-        getRulesByDomainQuery,
-        createRuleConfigMutation,
-        updateRuleConfigMutation,
-        updateMultipleRuleConfigMutation,
-        deleteRuleConfigMutation,
+        getRulesByDomain,
+        createRuleConfig,
+        updateMultipleRuleConfig,
+        updateRuleConfig,
+        deleteRuleConfig,
       }
     }),
   }

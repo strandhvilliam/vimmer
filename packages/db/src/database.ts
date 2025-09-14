@@ -8,6 +8,8 @@ import { JuryQueries } from "./queries/jury.queries"
 import { MarathonsQueries } from "./queries/marathons.queries"
 import { TopicsQueries } from "./queries/topics.queries"
 import { DeviceGroupsQueries } from "./queries/device-groups.queries"
+import { CompetitionClassesQueries } from "./queries/competition-classes.queries"
+import { ParticipantsQueries } from "./queries/participants.queries"
 
 export class Database extends Effect.Service<Database>()(
   "@blikka/db/database",
@@ -16,6 +18,14 @@ export class Database extends Effect.Service<Database>()(
       UsersQueries.Default,
       ValidationsQueries.Default,
       SubmissionsQueries.Default,
+      SponsorsQueries.Default,
+      RulesQueries.Default,
+      JuryQueries.Default,
+      MarathonsQueries.Default,
+      TopicsQueries.Default,
+      DeviceGroupsQueries.Default,
+      CompetitionClassesQueries.Default,
+      ParticipantsQueries.Default,
     ],
     effect: Effect.gen(function* () {
       const usersQueries = yield* UsersQueries
@@ -27,6 +37,8 @@ export class Database extends Effect.Service<Database>()(
       const marathonsQueries = yield* MarathonsQueries
       const topicsQueries = yield* TopicsQueries
       const deviceGroupsQueries = yield* DeviceGroupsQueries
+      const competitionClassesQueries = yield* CompetitionClassesQueries
+      const participantsQueries = yield* ParticipantsQueries
 
       return {
         usersQueries,
@@ -38,6 +50,8 @@ export class Database extends Effect.Service<Database>()(
         marathonsQueries,
         topicsQueries,
         deviceGroupsQueries,
+        competitionClassesQueries,
+        participantsQueries,
       }
     }),
   }
