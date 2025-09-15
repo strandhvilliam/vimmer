@@ -5,6 +5,11 @@
 
 declare module "sst" {
   export interface Resource {
+    "DevCaller": {
+      "name": string
+      "type": "sst.aws.Function"
+      "url": string
+    }
     "SheetGeneratorQueue": {
       "type": "sst.aws.Queue"
       "url": string
@@ -17,6 +22,10 @@ declare module "sst" {
     "UploadStatusQueue": {
       "type": "sst.aws.Queue"
       "url": string
+    }
+    "V2ContactSheetsBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
     }
     "V2SubmissionsBucket": {
       "name": string
