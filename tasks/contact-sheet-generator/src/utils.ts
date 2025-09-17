@@ -1,4 +1,4 @@
-import { Data, Effect, Option } from "effect"
+import { Data, Effect, Option, Schema } from "effect"
 import {
   BOTTOM_ROW_LARGE,
   BOTTOM_ROW_SMALL,
@@ -33,6 +33,23 @@ import {
 } from "./constants"
 import { SponsorPosition } from "./schemas"
 import { SheetVariables } from "./types"
+import { ParticipantState } from "@blikka/kv-store"
+import { CompetitionClass } from "@blikka/db"
+import { SQSRecord } from "aws-lambda"
+import { FinalizedEventSchema } from "@blikka/bus"
+
+const VALID_PHOTO_COUNTS = [8, 24]
+
+export class InvalidBodyError extends Data.TaggedError("InvalidBodyError")<{
+  message?: string
+  cause?: unknown
+}> {}
+
+export class InvalidSheetGenerationData extends Data.TaggedError(
+  "InvalidDataError"
+)<{
+  message?: string
+}> {}
 
 export class JsonParseError extends Data.TaggedError("JsonParseError")<{
   message?: string
@@ -317,3 +334,87 @@ export const parseJson = (input: string) =>
     try: () => JSON.parse(input),
     catch: (unknown) => new JsonParseError({ message: "Failed to parse JSON" }),
   })
+
+export const ensureReadyForSheetGeneration = Effect.fn(
+  "contactSheetGenerator.ensureReadyForSheetGeneration"
+)(function* (
+  kvData: Option.Option<ParticipantState>,
+  reference: string,
+  domain: string
+) {
+  if (Option.isNone(kvData)) {
+    return yield* Effect.fail(
+      new InvalidSheetGenerationData({
+        message: `Participant state not found for reference ${reference} and domain ${domain}`,
+      })
+    )
+  }
+
+  if (!kvData.value.finalized) {
+    yield* Effect.log(
+      `Participant state not finalized for reference ${reference} and domain ${domain}`
+    )
+    return yield* Effect.succeed({ shouldSkip: true })
+  }
+
+  if (kvData.value.contactSheetKey) {
+    yield* Effect.log(
+      `Contact sheet already generated for reference ${reference} and domain ${domain}`
+    )
+    return yield* Effect.succeed({ shouldSkip: true })
+  }
+})
+
+export const validatePhotoCount = Effect.fn(
+  "contactSheetGenerator.validatePhotoCount"
+)(function* (
+  reference: string,
+  keys: string[],
+  competitionClass: CompetitionClass | null
+) {
+  if (!competitionClass?.numberOfPhotos) {
+    return yield* Effect.fail(
+      new InvalidSheetGenerationData({
+        message: `Missing competition class photo count`,
+      })
+    )
+  }
+
+  const expectedCount = competitionClass.numberOfPhotos
+  if (!VALID_PHOTO_COUNTS.includes(expectedCount)) {
+    return yield* Effect.fail(
+      new InvalidSheetGenerationData({
+        message: `Unsupported photo count ${expectedCount} for participant ${reference}`,
+      })
+    )
+  }
+
+  if (keys.length !== expectedCount) {
+    return yield* Effect.fail(
+      new InvalidSheetGenerationData({
+        message: `Photo count mismatch. Expected ${expectedCount}, got ${keys.length}`,
+      })
+    )
+  }
+})
+
+export const parseFinalizedEvent = Effect.fn(
+  "contactSheetGenerator.parseFinalizedEvent"
+)(
+  function* (input: string) {
+    const json = yield* Effect.try({
+      try: () => JSON.parse(input),
+      catch: (unknown) =>
+        new JsonParseError({ message: "Failed to parse JSON" }),
+    })
+    const params = yield* Schema.decodeUnknown(FinalizedEventSchema)(json)
+    return params
+  },
+  Effect.mapError(
+    (error) =>
+      new InvalidBodyError({
+        message: "Failed to parse finalized event",
+        cause: error,
+      })
+  )
+)

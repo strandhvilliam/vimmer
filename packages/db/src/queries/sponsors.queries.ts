@@ -1,7 +1,7 @@
 import { Effect, Option } from "effect"
 import { sponsors } from "../schema"
 import { DrizzleClient } from "../drizzle-client"
-import { and, eq } from "drizzle-orm"
+import { and, desc, eq } from "drizzle-orm"
 import type { NewSponsor } from "../types"
 import { SqlError } from "@effect/sql/SqlError"
 
@@ -19,6 +19,19 @@ export class SponsorsQueries extends Effect.Service<SponsorsQueries>()(
           where: eq(sponsors.marathonId, marathonId),
         })
         return result
+      })
+
+      const getLatestSponsorByType = Effect.fn(
+        "SponsorsQueries.getLatestSponsorByType"
+      )(function* ({ marathonId, type }: { marathonId: number; type: string }) {
+        const result = yield* db.query.sponsors.findFirst({
+          where: and(
+            eq(sponsors.marathonId, marathonId),
+            eq(sponsors.type, type)
+          ),
+          orderBy: desc(sponsors.createdAt),
+        })
+        return Option.fromNullable(result)
       })
 
       const getSponsorsByType = Effect.fn("SponsorsQueries.getSponsorsByType")(
@@ -107,6 +120,7 @@ export class SponsorsQueries extends Effect.Service<SponsorsQueries>()(
 
       return {
         getSponsorsByMarathonId,
+        getLatestSponsorByType,
         getSponsorsByType,
         getSponsorById,
         createSponsor,

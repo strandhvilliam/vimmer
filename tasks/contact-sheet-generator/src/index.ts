@@ -1,18 +1,17 @@
-import { Data, Effect, Layer, Option, Schema } from "effect"
+import { Effect, Layer, Option, Schema } from "effect"
 import { type SQSEvent, LambdaHandler } from "@effect-aws/lambda"
 import { SheetCreator } from "./sheet-creator"
-import { FinalizedEventSchema } from "@blikka/bus"
 import { Database } from "@blikka/db"
 import { UploadKVRepository } from "@blikka/kv-store"
 import { S3Service } from "@blikka/s3"
 import { Resource as SSTResource } from "sst"
-import { generateContactSheetKey, parseJson } from "./utils"
-
-class InvalidSheetGenerationData extends Data.TaggedError("InvalidDataError")<{
-  message?: string
-}> {}
-
-const VALID_PHOTO_COUNTS = [8, 24]
+import {
+  ensureReadyForSheetGeneration,
+  generateContactSheetKey,
+  InvalidSheetGenerationData,
+  parseFinalizedEvent,
+  validatePhotoCount,
+} from "./utils"
 
 const effectHandler = (event: SQSEvent) =>
   Effect.gen(function* () {
@@ -25,34 +24,17 @@ const effectHandler = (event: SQSEvent) =>
       event.Records,
       (record) =>
         Effect.gen(function* () {
-          const json = yield* parseJson(record.body)
-          const params = yield* Schema.decodeUnknown(FinalizedEventSchema)(json)
+          const params = yield* parseFinalizedEvent(record.body)
           const kvData = yield* kvStore.getParticipantState(
             params.domain,
             params.reference
           )
 
-          if (Option.isNone(kvData)) {
-            return yield* Effect.fail(
-              new InvalidSheetGenerationData({
-                message: `Participant state not found for reference ${params.reference} and domain ${params.domain}`,
-              })
-            )
-          }
-
-          if (!kvData.value.finalized) {
-            yield* Effect.log(
-              `Participant state not finalized for reference ${params.reference} and domain ${params.domain}`
-            )
-            return yield* Effect.succeed(null)
-          }
-
-          if (kvData.value.contactSheetKey) {
-            yield* Effect.log(
-              `Contact sheet already generated for reference ${params.reference} and domain ${params.domain}`
-            )
-            return yield* Effect.succeed(null)
-          }
+          yield* ensureReadyForSheetGeneration(
+            kvData,
+            params.reference,
+            params.domain
+          )
 
           const participant =
             yield* db.participantsQueries.getParticipantByReference({
@@ -68,20 +50,10 @@ const effectHandler = (event: SQSEvent) =>
             )
           }
 
-          const sponsors = yield* db.sponsorsQueries.getSponsorsByMarathonId({
+          const sponsor = yield* db.sponsorsQueries.getLatestSponsorByType({
             marathonId: participant.value.marathonId,
+            type: "contact-sheets",
           })
-
-          const sponsorKey = Option.fromNullable(
-            sponsors
-              .filter((s) => s.type === "contact-sheets")
-              .sort(
-                (a, b) =>
-                  new Date(a.createdAt).getTime() -
-                  new Date(b.createdAt).getTime()
-              )
-              .at(-1)?.key
-          )
 
           const topics = yield* db.topicsQueries
             .getTopicsByDomain({
@@ -98,28 +70,17 @@ const effectHandler = (event: SQSEvent) =>
 
           const keys = participant.value.submissions.map((s) => s.key)
 
-          const isValidPhotoCount =
-            participant.value.competitionClass?.numberOfPhotos &&
-            VALID_PHOTO_COUNTS.includes(
-              participant.value.competitionClass.numberOfPhotos
-            ) &&
-            keys.length === participant.value.competitionClass.numberOfPhotos
-
-          if (!isValidPhotoCount) {
-            return yield* Effect.fail(
-              new InvalidSheetGenerationData({
-                message: `Invalid photo count for participant ${params.reference} and domain ${params.domain}`,
-              })
-            )
-          }
+          yield* validatePhotoCount(
+            params.reference,
+            keys,
+            participant.value.competitionClass
+          )
 
           const contactSheetBuffer = yield* sheetCreator.createSheet({
             domain: params.domain,
             reference: params.reference,
             keys,
-            sponsorKey: Option.isSome(sponsorKey)
-              ? sponsorKey.value
-              : undefined,
+            sponsorKey: Option.isSome(sponsor) ? sponsor.value.key : undefined,
             sponsorPosition: "bottom-right",
             topics,
           })
@@ -130,7 +91,7 @@ const effectHandler = (event: SQSEvent) =>
           )
           yield* s3.putFile(
             SSTResource.V2ContactSheetsBucket.name,
-            contactSheetKey,
+            generateContactSheetKey(params.domain, params.reference),
             contactSheetBuffer
           )
 
@@ -154,9 +115,9 @@ const effectHandler = (event: SQSEvent) =>
       }
     )
   }).pipe(
-    Effect.withSpan("uploadProcessor.handler"),
-    Effect.tapError((error) =>
-      Effect.logError("Handler failed with error", error)
+    Effect.withSpan("contactSheetGenerator.handler"),
+    Effect.catchAll((error) =>
+      Effect.logError("Contact Sheet Generator Error:", error)
     )
   )
 
