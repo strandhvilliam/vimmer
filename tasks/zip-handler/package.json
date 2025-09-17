@@ -8,5 +8,10 @@
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "@effect-aws/lambda": "^1.5.1",
+    "effect": "^3.17.13",
+    "jszip": "^3.10.1"
   }
 }

@@ -10,6 +10,8 @@ export class KeyFactory extends Effect.Service<KeyFactory>()(
         `exif:${domain}:${ref}:${orderIndex}`,
       participant: (domain: string, ref: string) =>
         `participant:${domain}:${ref}`,
+      zipProgress: (domain: string, ref: string) =>
+        `zip-progress:${domain}:${ref}`,
     }),
   }
 ) {}

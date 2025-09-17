@@ -5,6 +5,9 @@
 
 declare module "sst" {
   export interface Resource {
+    "BlikkaMainVPC": {
+      "type": "sst.aws.Vpc"
+    }
     "DevCaller": {
       "name": string
       "type": "sst.aws.Function"
@@ -46,6 +49,15 @@ declare module "sst" {
     "ZipGeneratorQueue": {
       "type": "sst.aws.Queue"
       "url": string
+    }
+    "ZipHandlerTask": {
+      "assignPublicIp": boolean
+      "cluster": string
+      "containers": any
+      "securityGroups": any
+      "subnets": any
+      "taskDefinition": string
+      "type": "sst.aws.Task"
     }
   }
 }

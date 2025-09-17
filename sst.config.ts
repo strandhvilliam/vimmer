@@ -44,6 +44,17 @@ export default $config({
       ],
     })
 
+    /* TASKS */
+    const vpc = new sst.aws.Vpc("BlikkaMainVPC")
+    const cluster = new sst.aws.Cluster("BlikkaMainCluster", { vpc })
+    const zipHandlerTask = new sst.aws.Task("ZipHandlerTask", {
+      cluster,
+      image: {
+        dockerfile: "/tasks/zip-handler/Dockerfile",
+      },
+      link: [submissionsBucket],
+    })
+
     /* QUEUE HANDLERS */
 
     uploadProcessorQueue.subscribe({
@@ -54,6 +65,18 @@ export default $config({
     sheetGeneratorQueue.subscribe({
       handler: "./tasks/contact-sheet-generator/index.handler",
       link: [sheetGeneratorQueue, contactSheetsBucket, submissionsBucket],
+    })
+
+    zipGeneratorQueue.subscribe({
+      handler: "./tasks/zip-generator/handler.handler",
+      link: [
+        zipGeneratorQueue,
+        submissionsBucket,
+        thumbnailsBucket,
+        contactSheetsBucket,
+        sponsorBucket,
+        zipHandlerTask,
+      ],
     })
 
     /* BUS SUBSCRIPTIONS */
