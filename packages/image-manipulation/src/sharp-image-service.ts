@@ -1,6 +1,7 @@
 import { Effect } from "effect"
 import { SharpError } from "./sharp-effectful-temp"
 import sharp from "sharp"
+import type { SheetImagePart } from "./types"
 
 const makeSharpInstance = (image: Buffer) =>
   Effect.try({
@@ -44,8 +45,79 @@ export class SharpImageService extends Effect.Service<SharpImageService>()(
         return resized
       })
 
+      const prepareForCanvas = Effect.fn("SharpImageService.prepareForCanvas")(
+        function* (
+          buffer: Buffer,
+          width: number,
+          height: number,
+          fit: "cover" | "inside",
+          background: string
+        ) {
+          const instance = yield* makeSharpInstance(buffer)
+          return yield* Effect.tryPromise({
+            try: () =>
+              instance
+                .resize(width, height, {
+                  fit,
+                  withoutEnlargement: false,
+                  background,
+                })
+                .jpeg()
+                .rotate()
+                .toBuffer(),
+            catch: (error) =>
+              new SharpError({
+                cause: error,
+                message: "Failed to prepare image for canvas",
+              }),
+          })
+        }
+      )
+
+      const createCanvasSheet = Effect.fn(
+        "SharpImageService.createCanvasSheet"
+      )(function* ({
+        width,
+        height,
+        background,
+        items,
+      }: {
+        width: number
+        height: number
+        background: string
+        items: SheetImagePart[]
+      }) {
+        const canvas = yield* Effect.try({
+          try: () =>
+            sharp({
+              create: {
+                width,
+                height,
+                channels: 3,
+                background,
+              },
+            }),
+          catch: (error) =>
+            new SharpError({
+              cause: error,
+              message: "Failed to create canvas",
+            }),
+        })
+
+        return yield* Effect.tryPromise({
+          try: () => canvas.composite(items).jpeg().toBuffer(),
+          catch: (error) =>
+            new SharpError({
+              cause: error,
+              message: "Failed to composite images",
+            }),
+        })
+      })
+
       return {
         resize,
+        prepareForCanvas,
+        createCanvasSheet,
       } as const
     }),
   }
