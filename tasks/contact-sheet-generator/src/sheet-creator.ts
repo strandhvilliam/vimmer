@@ -105,18 +105,26 @@ export class SheetCreator extends Effect.Service<SheetCreator>()(
         }
       })
 
-      const createSheet = Effect.fn("SheetCreator.createSheet")(function* (
-        domain: string,
-        reference: string,
-        keys: string[],
-        sponsorKey: string,
-        sponsorPosition: SponsorPosition,
+      const createSheet = Effect.fn("SheetCreator.createSheet")(function* ({
+        domain,
+        reference,
+        keys,
+        sponsorKey,
+        sponsorPosition,
+        topics,
+      }: {
+        domain: string
+        reference: string
+        keys: string[]
+        sponsorKey?: string
+        sponsorPosition: SponsorPosition
         topics: { name: string; orderIndex: number }[]
-      ) {
+      }) {
         const imageFiles = yield* getImageFiles(keys)
-        const sponsorFile = yield* s3.getFile(
-          SSTResource.V2SponsorBucket.name,
+        const sponsorFile = Option.fromNullable(
           sponsorKey
+            ? yield* s3.getFile(SSTResource.V2SponsorBucket.name, sponsorKey)
+            : null
         )
         const { cols, rows, sponsorRow, sponsorCol } = getGridConfig(
           sponsorPosition,
@@ -141,9 +149,9 @@ export class SheetCreator extends Effect.Service<SheetCreator>()(
               const isSponsor =
                 row === sponsorRow && col === sponsorCol && sponsorFile
 
-              if (isSponsor) {
+              if (isSponsor && Option.isSome(sponsorFile)) {
                 return yield* processSponsorImage(
-                  Buffer.from(sponsorFile),
+                  Buffer.from(sponsorFile.value),
                   sheetVariables
                 ).pipe(
                   Effect.map((sponsorImage) => [

@@ -34,6 +34,10 @@ import {
 import { SponsorPosition } from "./schemas"
 import { SheetVariables } from "./types"
 
+export class JsonParseError extends Data.TaggedError("JsonParseError")<{
+  message?: string
+}> {}
+
 export class SvgGenerationError extends Data.TaggedError("SvgGenerationError")<{
   message?: string
   cause?: unknown
@@ -303,4 +307,13 @@ export const generateTextLabelSvg = ({
         cause: error,
         message: "Failed to generate text label SVG",
       }),
+  })
+
+export const generateContactSheetKey = (domain: string, reference: string) =>
+  `${domain}/${reference}/contact_sheet_${reference}_${new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5)}.jpg`
+
+export const parseJson = (input: string) =>
+  Effect.try({
+    try: () => JSON.parse(input),
+    catch: (unknown) => new JsonParseError({ message: "Failed to parse JSON" }),
   })
