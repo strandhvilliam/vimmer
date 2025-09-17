@@ -69,11 +69,7 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
           },
         })
 
-        if (!result) {
-          return null
-        }
-
-        return result
+        return Option.fromNullable(result)
       })
 
       const getParticipantsByDomain = Effect.fn(
