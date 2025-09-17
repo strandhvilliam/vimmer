@@ -1,0 +1,214 @@
+import { Effect, Option } from "effect"
+import { SharpImageService } from "@blikka/image-manipulation"
+import { S3Service } from "@blikka/s3"
+import { Resource as SSTResource } from "sst"
+import {
+  calculateCoordinateValues,
+  calculateSheetVariables,
+  generateParticipantReferenceSvg,
+  generateTextLabelSvg,
+  getGridConfig,
+  getImageLabel,
+  getImagePosition,
+  ImageNotFoundError,
+  InvalidImageCountError,
+  parseKey,
+  TopicLabelNotFoundError,
+} from "./utils"
+import { SponsorPosition } from "./schemas"
+import {
+  CANVAS_HEIGHT,
+  CANVAS_WIDTH,
+  SEQUENCE_WIDTH_RATIO,
+  WHITE_BACKGROUND,
+} from "./constants"
+import { SheetVariables } from "./types"
+
+export class SheetCreator extends Effect.Service<SheetCreator>()(
+  "@blikka/contact-sheet-generator/sheet-creator",
+  {
+    dependencies: [SharpImageService.Default, S3Service.Default],
+    effect: Effect.gen(function* () {
+      const sharp = yield* SharpImageService
+      const s3 = yield* S3Service
+
+      const getImageFiles = Effect.fn("SheetCreator.getImageFiles")(function* (
+        keys: string[]
+      ) {
+        const results = yield* Effect.all(
+          keys.map((key) =>
+            Effect.gen(function* () {
+              const buffer = yield* s3.getFile(
+                SSTResource.V2SubmissionsBucket.name,
+                key
+              )
+              const parsedKey = yield* parseKey(key)
+              return {
+                ...parsedKey,
+                key,
+                buffer,
+              }
+            })
+          ),
+          { concurrency: 10 }
+        )
+        if (results.length !== keys.length) {
+          return yield* new InvalidImageCountError({
+            message: "Invalid image count",
+          })
+        }
+        return results.sort(
+          (a, b) => Number(a.orderIndex) - Number(b.orderIndex)
+        )
+      })
+
+      const processSponsorImage = Effect.fn("SheetCreator.processSponsorImage")(
+        function* (sponsorFile: Buffer, sheetVariables: SheetVariables) {
+          return yield* sharp.prepareForCanvas(
+            Buffer.from(sponsorFile),
+            sheetVariables.cellWidth,
+            sheetVariables.cellHeight,
+            "inside",
+            WHITE_BACKGROUND
+          )
+        }
+      )
+
+      const processImage = Effect.fn("SheetCreator.processImage")(function* (
+        imageFile: Buffer,
+        orderIndex: number,
+        topics: { name: string; orderIndex: number }[],
+        sheetVariables: SheetVariables
+      ) {
+        const image = yield* sharp.prepareForCanvas(
+          Buffer.from(imageFile),
+          sheetVariables.cellWidth,
+          sheetVariables.cellHeight,
+          "inside",
+          WHITE_BACKGROUND
+        )
+
+        const label = getImageLabel(orderIndex, topics)
+        if (Option.isNone(label)) {
+          return yield* new TopicLabelNotFoundError({
+            message: "Label not found when processing",
+          })
+        }
+        const textBuffer = yield* generateTextLabelSvg({
+          sheetVariables,
+          label: label.value,
+        })
+
+        return {
+          image,
+          textBuffer,
+        }
+      })
+
+      const createSheet = Effect.fn("SheetCreator.createSheet")(function* (
+        domain: string,
+        reference: string,
+        keys: string[],
+        sponsorKey: string,
+        sponsorPosition: SponsorPosition,
+        topics: { name: string; orderIndex: number }[]
+      ) {
+        const imageFiles = yield* getImageFiles(keys)
+        const sponsorFile = yield* s3.getFile(
+          SSTResource.V2SponsorBucket.name,
+          sponsorKey
+        )
+        const { cols, rows, sponsorRow, sponsorCol } = getGridConfig(
+          sponsorPosition,
+          imageFiles.length
+        )
+        const sheetVariables = calculateSheetVariables(reference, cols, rows)
+
+        const cellPositions = Array.from({ length: rows }, (_, row) =>
+          Array.from({ length: cols }, (_, col) => ({ row, col }))
+        ).flat()
+
+        const compositeImages = yield* Effect.forEach(
+          cellPositions,
+          ({ row, col }, index) =>
+            Effect.gen(function* () {
+              const { x, y } = calculateCoordinateValues({
+                col,
+                row,
+                sheetVariables,
+              })
+              const imagePosition = getImagePosition({ x, y, sheetVariables })
+              const isSponsor =
+                row === sponsorRow && col === sponsorCol && sponsorFile
+
+              if (isSponsor) {
+                return yield* processSponsorImage(
+                  Buffer.from(sponsorFile),
+                  sheetVariables
+                ).pipe(
+                  Effect.map((sponsorImage) => [
+                    { input: sponsorImage, ...imagePosition },
+                  ])
+                )
+              }
+
+              if (index < imageFiles.length) {
+                const file = imageFiles[index]
+                if (!file) {
+                  return yield* Effect.fail(
+                    new ImageNotFoundError({
+                      message: "Image not found when processing",
+                    })
+                  )
+                }
+                return yield* processImage(
+                  Buffer.from(file.buffer),
+                  index,
+                  topics,
+                  sheetVariables
+                ).pipe(
+                  Effect.map(({ image, textBuffer }) => [
+                    { input: image, ...imagePosition },
+                    {
+                      input: textBuffer,
+                      top: y + sheetVariables.availableImageHeight,
+                      left: x,
+                    },
+                  ])
+                )
+              }
+
+              return yield* Effect.succeed<
+                { input: Buffer; top: number; left: number }[]
+              >([])
+            }),
+          { concurrency: 5 }
+        ).pipe(Effect.map((data) => data.flat()))
+
+        const participantReferenceSvg = yield* generateParticipantReferenceSvg({
+          reference,
+        })
+        const seqWidth = Math.floor(CANVAS_WIDTH * SEQUENCE_WIDTH_RATIO)
+        const seqHeight = Math.floor(CANVAS_HEIGHT)
+        const participantReferenceCompositePart = {
+          input: participantReferenceSvg,
+          top: CANVAS_HEIGHT - seqHeight,
+          left: CANVAS_WIDTH - seqWidth,
+        }
+
+        const finalSheet = yield* sharp.createCanvasSheet({
+          width: CANVAS_WIDTH,
+          height: CANVAS_HEIGHT,
+          background: WHITE_BACKGROUND,
+          items: [...compositeImages, participantReferenceCompositePart],
+        })
+
+        return finalSheet
+      })
+
+      return {
+        createSheet,
+      }
+    }),
+  }
+) {}

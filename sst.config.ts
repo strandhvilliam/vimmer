@@ -20,6 +20,9 @@ export default $config({
     const contactSheetsBucket = new sst.aws.Bucket("V2ContactSheetsBucket", {
       access: "public",
     })
+    const sponsorBucket = new sst.aws.Bucket("V2SponsorBucket", {
+      access: "public",
+    })
 
     /* QUEUES & BUSES */
 
