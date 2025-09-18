@@ -1,0 +1,20 @@
+{
+  "extends": "@vimmer/typescript-config/base.json",
+  "include": ["src", "."],
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "noEmit": true,
+    "allowJs": true,
+    "paths": {
+      "@/*": ["src/*"],
+      "@blikka/kv-store": ["../../packages/kv-store/src"],
+      "@blikka/bus": ["../../packages/bus/src"],
+      "@blikka/db": ["../../packages/db/src"],
+      "@blikka/validation": ["../../packages/validation/src"]
+    },
+    "strict": true
+  },
+  "exclude": ["node_modules"]
+}

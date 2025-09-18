@@ -601,8 +601,21 @@
         "typescript": "^5",
       },
     },
-    "tasks/zip-handler": {
-      "name": "zip-handler",
+    "tasks/validation-runner": {
+      "name": "validation-runner",
+      "dependencies": {
+        "@effect-aws/lambda": "^1.5.1",
+        "effect": "^3.17.13",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
+    "tasks/zip-worker": {
+      "name": "@blikka/zip-worker",
       "dependencies": {
         "@effect-aws/lambda": "^1.5.1",
         "effect": "^3.17.13",
@@ -784,6 +797,8 @@
     "@blikka/kv-store": ["@blikka/kv-store@workspace:packages/kv-store"],
 
     "@blikka/s3": ["@blikka/s3@workspace:packages/s3"],
+
+    "@blikka/zip-worker": ["@blikka/zip-worker@workspace:tasks/zip-worker"],
 
     "@borewit/text-codec": ["@borewit/text-codec@0.1.1", "", {}, "sha512-5L/uBxmjaCIX5h8Z+uu+kA9BQLkc/Wl06UGR5ajNRxu+/XjonB5i8JpgFMrPj3LXTCPA0pv8yxUvbUi+QthGGA=="],
 
@@ -3031,6 +3046,8 @@
 
     "uuid": ["uuid@11.1.0", "", { "bin": { "uuid": "dist/esm/bin/uuid" } }, "sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A=="],
 
+    "validation-runner": ["validation-runner@workspace:tasks/validation-runner"],
+
     "variants-generator": ["variants-generator@workspace:services/variants-generator"],
 
     "vary": ["vary@1.1.2", "", {}, "sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg=="],
@@ -3098,8 +3115,6 @@
     "yaml": ["yaml@2.8.1", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-lcYcMxX2PO9XMGvAJkJ3OsNMw+/7FKes7/hgerGUYWIoWu5j/+YQqcZr5JnPZWzOsEBgMbSbiSTn/dv/69Mkpw=="],
 
     "yocto-queue": ["yocto-queue@0.1.0", "", {}, "sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q=="],
-
-    "zip-handler": ["zip-handler@workspace:tasks/zip-handler"],
 
     "zip-stream": ["zip-stream@6.0.1", "", { "dependencies": { "archiver-utils": "^5.0.0", "compress-commons": "^6.0.2", "readable-stream": "^4.0.0" } }, "sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA=="],
 
