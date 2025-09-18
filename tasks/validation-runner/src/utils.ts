@@ -10,6 +10,12 @@ export class JsonParseError extends Data.TaggedError("JsonParseError")<{
   message?: string
 }> {}
 
+export class InvalidDataFoundError extends Data.TaggedError(
+  "InvalidDataFoundError"
+)<{
+  message?: string
+}> {}
+
 export const parseFinalizedEvent = Effect.fn(
   "contactSheetGenerator.parseFinalizedEvent"
 )(

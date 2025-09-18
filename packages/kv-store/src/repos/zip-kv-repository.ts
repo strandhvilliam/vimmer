@@ -1,7 +1,7 @@
 import { Effect, Option, Schedule, Duration, Schema } from "effect"
-import { KeyFactory } from "./key-factory"
-import { RedisClient } from "./redis"
-import { makeInitialZipProgress } from "./schema"
+import { KeyFactory } from "../key-factory"
+import { RedisClient } from "../redis"
+import { makeInitialZipProgress } from "../schema"
 
 export class ZipKVRepository extends Effect.Service<ZipKVRepository>()(
   "@blikka/packages/kv-store/zip-kv-repository",

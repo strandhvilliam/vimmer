@@ -1,13 +1,7 @@
 import { Effect } from "effect"
 import { FileValidationsService } from "./file-validations-service"
-import { RULE_KEYS, VALIDATION_OUTCOME } from "./constants"
-import {
-  ValidationRule,
-  ValidationInput,
-  ValidationFailure,
-  ValidationSkipped,
-  ValidationResult,
-} from "./types"
+import { RULE_KEYS } from "./constants"
+import { ValidationRule, ValidationInput } from "./types"
 import { GeneralValidationsService } from "./general-validations-service"
 import {
   createFailureResult,
@@ -15,7 +9,6 @@ import {
   createSkippedResult,
   parseRuleParams,
 } from "./utils"
-import { ValidationResultSchema } from "./schemas"
 
 export class ValidationEngine extends Effect.Service<ValidationEngine>()(
   "@vimmer/packages/validation/orchestrator",

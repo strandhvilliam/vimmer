@@ -1,14 +1,16 @@
 import { Schema } from "effect"
 
 export const SubmissionStateSchema = Schema.Struct({
+  key: Schema.String,
   orderIndex: Schema.Number,
   uploaded: Schema.Boolean,
   thumbnailKey: Schema.NullOr(Schema.String),
   exifProcessed: Schema.Boolean,
 })
 
-export const makeInitialSubmissionState = (orderIndex: number) =>
+export const makeInitialSubmissionState = (key: string, orderIndex: number) =>
   SubmissionStateSchema.make({
+    key,
     uploaded: false,
     orderIndex,
     thumbnailKey: null,

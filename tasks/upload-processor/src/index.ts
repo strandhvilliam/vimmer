@@ -64,12 +64,7 @@ const effectHandler = (event: SQSEvent) =>
     yield* Effect.forEach(event.Records, (record) => processSQSRecord(record), {
       concurrency: 3,
     })
-  }).pipe(
-    Effect.withSpan("uploadProcessor.handler"),
-    Effect.tapError((error) =>
-      Effect.logError("Handler failed with error", error)
-    )
-  )
+  }).pipe(Effect.withSpan("uploadProcessor.handler"))
 
 export const handler = LambdaHandler.make({
   handler: effectHandler,

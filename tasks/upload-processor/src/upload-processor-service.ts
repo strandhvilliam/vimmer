@@ -1,6 +1,10 @@
 import { Effect, Option, Either, Schedule, Duration } from "effect"
 import { S3Service } from "@blikka/s3"
-import { ExifState, UploadKVRepository } from "@blikka/kv-store"
+import {
+  ExifKVRepository,
+  ExifState,
+  UploadKVRepository,
+} from "@blikka/kv-store"
 import { SharpImageService } from "@blikka/image-manipulation"
 import { ExifParser } from "@blikka/exif-parser"
 import { BusService } from "@blikka/bus"
@@ -22,6 +26,7 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
     dependencies: [
       S3Service.Default,
       UploadKVRepository.Default,
+      ExifKVRepository.Default,
       SharpImageService.Default,
       ExifParser.Default,
       BusService.Default,
@@ -29,7 +34,8 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
     ],
     effect: Effect.gen(function* () {
       const s3 = yield* S3Service
-      const kv = yield* UploadKVRepository
+      const uploadKv = yield* UploadKVRepository
+      const exifKv = yield* ExifKVRepository
       const sharp = yield* SharpImageService
       const exifParser = yield* ExifParser
       const bus = yield* BusService
@@ -60,7 +66,7 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
 
       const setParticipantErrorState = Effect.fnUntraced(
         function* (domain: string, reference: string, error: string) {
-          yield* kv.setParticipantErrorState(domain, reference, error)
+          yield* uploadKv.setParticipantErrorState(domain, reference, error)
           yield* Effect.logError(error)
         },
         Effect.catchAll((error) =>
@@ -72,7 +78,7 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
         "upload-processor.finalizeParticipant"
       )(
         function* (domain: string, reference: string) {
-          const participantStateOpt = yield* kv.getParticipantState(
+          const participantStateOpt = yield* uploadKv.getParticipantState(
             domain,
             reference
           )
@@ -91,21 +97,18 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
           const processedIndexStrings = processedIndexes.map((i) => `${i}`)
           const uploadCount = processedIndexes.filter((v) => v !== 0).length
 
-          const submissionStatesOpt = yield* kv.getAllSubmissionStates(
+          const submissionStatesOpt = yield* uploadKv.getAllSubmissionStates(
             domain,
             reference,
             processedIndexStrings
           )
-          const exifStatesOpt = yield* kv.getAllExifStates(
+          const exifStates = yield* exifKv.getAllExifStates(
             domain,
             reference,
             processedIndexStrings
           )
 
-          if (
-            Option.isNone(submissionStatesOpt) ||
-            Option.isNone(exifStatesOpt)
-          ) {
+          if (Option.isNone(submissionStatesOpt)) {
             return yield* Effect.fail(
               new FailedToFinalizeParticipantError({
                 cause: "Submission states or exif states not found",
@@ -117,7 +120,6 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
           }
 
           const submissionStates = submissionStatesOpt.value
-          const exifStates = exifStatesOpt.value
 
           const updates = submissionStates.map((state) => {
             const exif =
@@ -208,7 +210,7 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
         function* (key: string) {
           const { domain, reference, orderIndex } = yield* parseKey(key)
 
-          const submissionStateOpt = yield* kv.getSubmissionState(
+          const submissionStateOpt = yield* uploadKv.getSubmissionState(
             domain,
             reference,
             orderIndex
@@ -233,10 +235,19 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
               )
             )
 
+          if (Option.isNone(photo)) {
+            return yield* Effect.fail(
+              new PhotoNotFoundError({
+                cause: "Photo not found",
+                message: "Photo not found",
+              })
+            )
+          }
+
           const [exifResult, thumbnailKeyResult] = yield* Effect.all(
             [
-              Effect.either(exifParser.parse(Buffer.from(photo))),
-              Effect.either(generateThumbnail(Buffer.from(photo), key)),
+              Effect.either(exifParser.parse(Buffer.from(photo.value))),
+              Effect.either(generateThumbnail(Buffer.from(photo.value), key)),
             ],
             { concurrency: 2 }
           )
@@ -247,7 +258,7 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
                 Effect.as(Option.none<ExifState>())
               ),
             onRight: (result) =>
-              kv.setExifState(domain, reference, orderIndex, result).pipe(
+              exifKv.setExifState(domain, reference, orderIndex, result).pipe(
                 Effect.map(() => Option.some(result)),
                 Effect.catchAll((error) =>
                   Effect.zipRight(
@@ -268,7 +279,7 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
             onRight: (key) => Effect.succeed(Option.some(key)),
           })
 
-          yield* kv
+          yield* uploadKv
             .updateSubmissionState(domain, reference, orderIndex, {
               uploaded: true,
               orderIndex: Number(orderIndex),
@@ -283,7 +294,7 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
               )
             )
 
-          const { finalize } = yield* kv
+          const { finalize } = yield* uploadKv
             .incrementParticipantState(domain, reference, orderIndex)
             .pipe(
               Effect.orElse(() =>

@@ -1,7 +1,15 @@
-import { Duration, Effect, Option, Schedule, Schema } from "effect"
-import { RedisClient, RedisError } from "./redis"
+import {
+  Duration,
+  Effect,
+  HashMap,
+  Option,
+  pipe,
+  Schedule,
+  Schema,
+} from "effect"
+import { RedisClient, RedisError } from "../redis"
 import { NodeFileSystem } from "@effect/platform-node"
-import { KeyFactory } from "./key-factory"
+import { KeyFactory } from "../key-factory"
 import {
   ExifStateSchema,
   IncrementResultSchema,
@@ -12,8 +20,9 @@ import {
   type ExifState,
   type ParticipantState,
   type SubmissionState,
-} from "./schema"
+} from "../schema"
 import { FileSystem } from "@effect/platform"
+import { parseKey } from "../utils"
 
 export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
   "@blikka/packages/kv-store/upload-kv-repository",
@@ -28,26 +37,34 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
       const keyFactory = yield* KeyFactory
       const fs = yield* FileSystem.FileSystem
 
-      const initState = Effect.fn("UploadKVRepository.initState")(
-        function* (domain: string, ref: string, expectedCount: number) {
-          const participantState = makeInitialParticipantState(expectedCount)
+      const initializeState = Effect.fn("UploadKVRepository.initState")(
+        function* (
+          domain: string,
+          reference: string,
+          submissionKeys: string[]
+        ) {
+          const participantState = makeInitialParticipantState(
+            submissionKeys.length
+          )
 
-          const submissionStates = Array.from(
-            { length: expectedCount },
-            (_, orderIndex) => orderIndex
-          ).reduce<Record<string, SubmissionState>>((acc, orderIndex) => {
-            const key = keyFactory.submission(
+          const map: Record<string, SubmissionState> = {}
+
+          for (const key of submissionKeys) {
+            const { orderIndex } = yield* parseKey(key)
+            const redisKey = keyFactory.submission(
               domain,
-              ref,
+              reference,
               orderIndex.toString()
             )
-            acc[key] = makeInitialSubmissionState(orderIndex)
-            return acc
-          }, {})
+            map[redisKey] = makeInitialSubmissionState(key, Number(orderIndex))
+          }
 
-          yield* redis.use((client) => client.mset(submissionStates))
+          yield* redis.use((client) => client.mset(map))
           yield* redis.use((client) =>
-            client.hset(keyFactory.participant(domain, ref), participantState)
+            client.hset(
+              keyFactory.participant(domain, reference),
+              participantState
+            )
           )
         },
         Effect.retry(
@@ -135,27 +152,6 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
         )
       )
 
-      const getExifState = Effect.fn("UploadKVRepository.getExifState")(
-        function* (domain: string, ref: string, orderIndex: string) {
-          const key = keyFactory.exif(domain, ref, orderIndex)
-          const result = yield* redis.use((client) =>
-            client.get<string | null>(key)
-          )
-          if (result === null) {
-            return Option.none<ExifState>()
-          }
-          const parsed = yield* Schema.decodeUnknown(ExifStateSchema)(result)
-          return Option.some<ExifState>(parsed)
-        },
-        Effect.retryOrElse(
-          Schedule.compose(
-            Schedule.exponential(Duration.millis(100)),
-            Schedule.recurs(3)
-          ),
-          () => Effect.succeed(Option.none<ExifState>())
-        )
-      )
-
       const getParticipantState = Effect.fn(
         "UploadKVRepository.getParticipantState"
       )(
@@ -231,40 +227,6 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
         )
       )
 
-      const getAllExifStates = Effect.fn("UploadKVRepository.getAllExifStates")(
-        function* (domain: string, ref: string, orderIndexes: string[]) {
-          const sortedOrderIndexes = orderIndexes.sort(
-            (a, b) => Number(a) - Number(b)
-          )
-          const keys = sortedOrderIndexes.map((orderIndex) =>
-            keyFactory.exif(domain, ref, orderIndex)
-          )
-          const data = yield* redis.use((client) => client.mget(keys))
-          const parsed = yield* Schema.decodeUnknown(
-            Schema.Array(ExifStateSchema)
-          )(data)
-
-          const result = sortedOrderIndexes.map((orderIndex, index) => {
-            return {
-              orderIndex,
-              exif: parsed.at(index),
-            }
-          })
-
-          return Option.some(result)
-        },
-        Effect.retryOrElse(
-          Schedule.compose(
-            Schedule.exponential(Duration.millis(100)),
-            Schedule.recurs(3)
-          ),
-          () =>
-            Effect.succeed(
-              Option.none<{ orderIndex: string; exif: ExifState }[]>()
-            )
-        )
-      )
-
       const updateParticipantState = Effect.fn(
         "UploadKVRepository.updateParticipantState"
       )(
@@ -310,39 +272,15 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
         )
       )
 
-      const setExifState = Effect.fn("UploadKVRepository.setExifState")(
-        function* (
-          domain: string,
-          ref: string,
-          orderIndex: string,
-          state: ExifState
-        ) {
-          const key = keyFactory.exif(domain, ref, orderIndex)
-          const encodedState = yield* Schema.encode(
-            Schema.partial(ExifStateSchema)
-          )(state)
-          return yield* redis.use((client) => client.set(key, encodedState))
-        },
-        Effect.retry(
-          Schedule.compose(
-            Schedule.exponential(Duration.millis(100)),
-            Schedule.recurs(3)
-          )
-        )
-      )
-
       return {
-        getExifState,
         getParticipantState,
         getSubmissionState,
         getAllSubmissionStates,
-        initState,
+        initState: initializeState,
         incrementParticipantState,
         setParticipantErrorState,
         updateParticipantState,
         updateSubmissionState,
-        setExifState,
-        getAllExifStates,
       } as const
     }),
   }
