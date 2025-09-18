@@ -42,6 +42,10 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
+    "V2ZipsBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
     "ValidationQueue": {
       "type": "sst.aws.Queue"
       "url": string

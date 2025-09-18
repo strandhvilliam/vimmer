@@ -1,6 +1,7 @@
-import { Effect, Option, Schedule, Duration } from "effect"
+import { Effect, Option, Schedule, Duration, Schema } from "effect"
 import { KeyFactory } from "./key-factory"
 import { RedisClient } from "./redis"
+import { makeInitialZipProgress } from "./schema"
 
 export class ZipKVRepository extends Effect.Service<ZipKVRepository>()(
   "@blikka/packages/kv-store/zip-kv-repository",
@@ -32,7 +33,9 @@ export class ZipKVRepository extends Effect.Service<ZipKVRepository>()(
       )(
         function* (domain: string, ref: string) {
           const key = keyFactory.zipProgress(domain, ref)
-          return yield* redis.use((client) => client.incr(key))
+          return yield* redis.use((client) =>
+            client.hincrby(key, "progress", 1)
+          )
         },
         Effect.retry(
           Schedule.compose(
@@ -42,10 +45,46 @@ export class ZipKVRepository extends Effect.Service<ZipKVRepository>()(
         )
       )
 
-      const resetZipProgress = Effect.fn("ZipKVRepository.resetZipProgress")(
+      const completeZipProgress = Effect.fn(
+        "ZipKVRepository.completeZipProgress"
+      )(
         function* (domain: string, ref: string) {
           const key = keyFactory.zipProgress(domain, ref)
-          return yield* redis.use((client) => client.del(key))
+          return yield* redis.use((client) =>
+            client.hset(key, { status: "completed" })
+          )
+        },
+        Effect.retry(
+          Schedule.compose(
+            Schedule.exponential(Duration.millis(100)),
+            Schedule.recurs(3)
+          )
+        )
+      )
+
+      const setZipProgressError = Effect.fn(
+        "ZipKVRepository.setZipProgressError"
+      )(
+        function* (domain: string, ref: string, errors: string[]) {
+          const key = keyFactory.zipProgress(domain, ref)
+          return yield* redis.use((client) => client.hset(key, { errors }))
+        },
+        Effect.retry(
+          Schedule.compose(
+            Schedule.exponential(Duration.millis(100)),
+            Schedule.recurs(3)
+          )
+        )
+      )
+
+      const initializeZipProgress = Effect.fn(
+        "ZipKVRepository.resetZipProgress"
+      )(
+        function* (domain: string, ref: string, zipKey: string) {
+          const key = keyFactory.zipProgress(domain, ref)
+          return yield* redis.use((client) =>
+            client.hset(key, makeInitialZipProgress(zipKey))
+          )
         },
         Effect.retry(
           Schedule.compose(
@@ -57,6 +96,10 @@ export class ZipKVRepository extends Effect.Service<ZipKVRepository>()(
 
       return {
         getZipProgress,
+        incrementZipProgress,
+        setZipProgressError,
+        initializeZipProgress,
+        completeZipProgress,
       } as const
     }),
   }

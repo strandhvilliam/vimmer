@@ -50,6 +50,21 @@ export const IncrementResultSchema = Schema.Literal(
   "MISSING_DATA"
 )
 
+export const ZipProgressSchema = Schema.Struct({
+  progress: Schema.Number,
+  status: Schema.String,
+  errors: Schema.Array(Schema.String),
+  zipKey: Schema.String,
+})
+
+export const makeInitialZipProgress = (zipKey: string) =>
+  ZipProgressSchema.make({
+    progress: 0,
+    status: "pending",
+    errors: [],
+    zipKey,
+  })
+
 export type SubmissionState = typeof SubmissionStateSchema.Type
 export type ParticipantState = typeof ParticipantStateSchema.Type
 export type ExifState = typeof ExifStateSchema.Type

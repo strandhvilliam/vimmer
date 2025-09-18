@@ -3,7 +3,7 @@ import {
   HeadObjectCommand,
   PutObjectCommand,
 } from "@aws-sdk/client-s3"
-import { Data, Duration, Effect, Schedule } from "effect"
+import { Data, Duration, Effect, Option, Schedule } from "effect"
 import { S3EffectClient } from "./s3-effect-client"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 
@@ -26,14 +26,11 @@ export class S3Service extends Effect.Service<S3Service>()(
           )
 
           if (!file.Body) {
-            return yield* new S3ClientError({
-              cause: new Error("Body is null"),
-              message: "Body is null",
-            })
+            return Option.none<Uint8Array>()
           }
           const body = file.Body
 
-          return yield* Effect.tryPromise({
+          const buffer = yield* Effect.tryPromise({
             try: () => body.transformToByteArray(),
             catch: (error) =>
               new S3ClientError({
@@ -41,6 +38,7 @@ export class S3Service extends Effect.Service<S3Service>()(
                 message: "Failed to transform to byte array",
               }),
           })
+          return Option.some(buffer)
         },
         Effect.catchTag("S3EffectError", (error) => {
           return new S3ClientError({

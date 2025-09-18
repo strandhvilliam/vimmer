@@ -23,6 +23,9 @@ export default $config({
     const sponsorBucket = new sst.aws.Bucket("V2SponsorBucket", {
       access: "public",
     })
+    const zipsBucket = new sst.aws.Bucket("V2ZipsBucket", {
+      access: "public",
+    })
 
     /* QUEUES & BUSES */
 

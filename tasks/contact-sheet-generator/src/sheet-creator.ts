@@ -42,11 +42,16 @@ export class SheetCreator extends Effect.Service<SheetCreator>()(
                 SSTResource.V2SubmissionsBucket.name,
                 key
               )
+              if (Option.isNone(buffer)) {
+                return yield* new ImageNotFoundError({
+                  message: "Image not found when processing",
+                })
+              }
               const parsedKey = yield* parseKey(key)
               return {
                 ...parsedKey,
                 key,
-                buffer,
+                buffer: buffer.value,
               }
             })
           ),
@@ -121,11 +126,10 @@ export class SheetCreator extends Effect.Service<SheetCreator>()(
         topics: { name: string; orderIndex: number }[]
       }) {
         const imageFiles = yield* getImageFiles(keys)
-        const sponsorFile = Option.fromNullable(
-          sponsorKey
-            ? yield* s3.getFile(SSTResource.V2SponsorBucket.name, sponsorKey)
-            : null
-        )
+        const sponsorFile = sponsorKey
+          ? yield* s3.getFile(SSTResource.V2SponsorBucket.name, sponsorKey)
+          : Option.none<Uint8Array>()
+
         const { cols, rows, sponsorRow, sponsorCol } = getGridConfig(
           sponsorPosition,
           imageFiles.length
