@@ -63,6 +63,7 @@ export const RuleParamsSchema = Schema.Struct({
 
 export const ValidationRuleSchema = <K extends RuleKey>(key: K) =>
   Schema.Struct({
+    ruleKey: RuleKeySchema,
     enabled: Schema.Boolean,
     severity: SeverityLevelSchema,
     params: RuleParamsSchema.pick(key),

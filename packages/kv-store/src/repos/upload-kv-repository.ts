@@ -216,7 +216,7 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
             Schema.Array(SubmissionStateSchema)
           )(result)
 
-          return Option.some(parsed)
+          return Option.fromIterable(parsed)
         },
         Effect.retryOrElse(
           Schedule.compose(
