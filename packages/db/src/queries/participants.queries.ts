@@ -61,7 +61,11 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
             eq(participants.domain, domain)
           ),
           with: {
-            submissions: true,
+            submissions: {
+              with: {
+                topic: true,
+              },
+            },
             competitionClass: true,
             deviceGroup: true,
             validationResults: true,
@@ -78,11 +82,8 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         const result = yield* db.query.participants.findMany({
           where: eq(participants.domain, domain),
           with: {
-            submissions: true,
             competitionClass: true,
             deviceGroup: true,
-            validationResults: true,
-            zippedSubmissions: true,
           },
         })
 

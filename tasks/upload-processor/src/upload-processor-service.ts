@@ -97,7 +97,7 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
           const processedIndexStrings = processedIndexes.map((i) => `${i}`)
           const uploadCount = processedIndexes.filter((v) => v !== 0).length
 
-          const submissionStatesOpt = yield* uploadKv.getAllSubmissionStates(
+          const submissionStates = yield* uploadKv.getAllSubmissionStates(
             domain,
             reference,
             processedIndexStrings
@@ -108,18 +108,14 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
             processedIndexStrings
           )
 
-          if (Option.isNone(submissionStatesOpt)) {
-            return yield* Effect.fail(
-              new FailedToFinalizeParticipantError({
-                cause: "Submission states or exif states not found",
-                message: "Submission states or exif states not found",
-                domain,
-                reference,
-              })
-            )
+          if (submissionStates.length === 0 || exifStates.length === 0) {
+            return yield* new FailedToFinalizeParticipantError({
+              cause: "Submission states or exif states not found",
+              message: "Submission states or exif states not found",
+              domain,
+              reference,
+            })
           }
-
-          const submissionStates = submissionStatesOpt.value
 
           const updates = submissionStates.map((state) => {
             const exif =

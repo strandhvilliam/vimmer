@@ -53,14 +53,20 @@ export class ExifKVRepository extends Effect.Service<ExifKVRepository>()(
             }
           })
 
-          return Option.fromIterable(result)
+          return result
         },
         Effect.retryOrElse(
           Schedule.compose(
             Schedule.exponential(Duration.millis(100)),
             Schedule.recurs(3)
           ),
-          () => Effect.succeed(Option.none<ExifState[]>())
+          () =>
+            Effect.succeed(
+              [] as {
+                orderIndex: string
+                exif: { readonly [x: string]: unknown }
+              }[]
+            )
         )
       )
 

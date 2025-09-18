@@ -216,14 +216,14 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
             Schema.Array(SubmissionStateSchema)
           )(result)
 
-          return Option.fromIterable(parsed)
+          return parsed
         },
         Effect.retryOrElse(
           Schedule.compose(
             Schedule.exponential(Duration.millis(100)),
             Schedule.recurs(3)
           ),
-          () => Effect.succeed(Option.none<SubmissionState[]>())
+          () => Effect.succeed([] as readonly SubmissionState[])
         )
       )
 

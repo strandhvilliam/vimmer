@@ -1,7 +1,7 @@
 import { Effect } from "effect"
 import { FileValidationsService } from "./file-validations-service"
 import { RULE_KEYS } from "./constants"
-import { ValidationRule, ValidationInput } from "./types"
+import { ValidationRule, ValidationInput, ValidationFailure } from "./types"
 import { GeneralValidationsService } from "./general-validations-service"
 import {
   createFailureResult,
@@ -119,6 +119,14 @@ export class ValidationEngine extends Effect.Service<ValidationEngine>()(
                   )
               )
               return results
+            }
+            default: {
+              return yield* Effect.fail(
+                new ValidationFailure({
+                  ruleKey: rule.ruleKey,
+                  message: "Rule not found",
+                })
+              )
             }
           }
         })

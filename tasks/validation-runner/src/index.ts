@@ -24,6 +24,7 @@ import {
   ValidationRule,
   ValidationRuleSchema,
 } from "@blikka/validation"
+import { KVStore } from "@blikka/kv-store"
 
 class ValidationRunner extends Effect.Service<ValidationRunner>()(
   "@blikka/validation-runner",
@@ -31,15 +32,13 @@ class ValidationRunner extends Effect.Service<ValidationRunner>()(
     dependencies: [
       Database.Default,
       S3Service.Default,
-      UploadKVRepository.Default,
-      ExifKVRepository.Default,
+      KVStore.Default,
       ValidationEngine.Default,
     ],
     effect: Effect.gen(function* () {
       const db = yield* Database
       const s3 = yield* S3Service
-      const uploadKv = yield* UploadKVRepository
-      const exifKv = yield* ExifKVRepository
+      const kv = yield* KVStore
       const validator = yield* ValidationEngine
 
       const makeValidationRules = Effect.fn(
@@ -70,14 +69,42 @@ class ValidationRunner extends Effect.Service<ValidationRunner>()(
 
       const makeValidationInputs = Effect.fn(
         "ValidationRunner.makeValidationInputs"
-      )(function* (exifStates: ExifState[]) {})
+      )(function* (
+        exifStates: { orderIndex: string; exif: ExifState }[],
+        submissionStates: readonly SubmissionState[]
+      ) {
+        const validationInputs: ValidationInput[] = []
+
+        for (const submissionState of submissionStates) {
+          const exifState = exifStates.find(
+            (e) => e.orderIndex === `${submissionState.orderIndex}`
+          )
+
+          const head = yield* s3.getHead(
+            SSTResource.V2SubmissionsBucket.name,
+            submissionState.key
+          )
+
+          const mimeType = head.ContentType
+          const fileSize = head.ContentLength
+          const fileName = submissionState.key
+
+          const validationInput = ValidationInputSchema.make({
+            exif: exifState?.exif ?? {},
+            fileName,
+            mimeType: mimeType ?? "image/jpeg",
+            fileSize: fileSize ?? 0,
+            orderIndex: submissionState.orderIndex,
+          })
+          validationInputs.push(validationInput)
+        }
+        return validationInputs
+      })
 
       const runValidations = Effect.fn("ValidationRunner.runValidations")(
         function* (domain: string, reference: string) {
-          const participantStateOpt = yield* uploadKv.getParticipantState(
-            domain,
-            reference
-          )
+          const participantStateOpt =
+            yield* kv.uploadRepository.getParticipantState(domain, reference)
 
           if (
             Option.isSome(participantStateOpt) &&
@@ -98,65 +125,64 @@ class ValidationRunner extends Effect.Service<ValidationRunner>()(
           const rules = yield* db.rulesQueries.getRulesByDomain({
             domain,
           })
-
-          const exifStates = yield* exifKv.getAllExifStates(
-            domain,
-            reference,
-            participantStateOpt.value.processedIndexes.map((_, i) => `${i}`)
+          const orderIndexes = participantStateOpt.value.processedIndexes.map(
+            (_, i) => `${i}`
           )
 
-          const submissionStates = yield* uploadKv.getAllSubmissionStates(
-            domain,
-            reference,
-            participantStateOpt.value.processedIndexes.map((_, i) => `${i}`)
+          const [exifStates, submissionStates] = yield* Effect.all(
+            [
+              kv.exifRepository.getAllExifStates(
+                domain,
+                reference,
+                orderIndexes
+              ),
+              kv.uploadRepository.getAllSubmissionStates(
+                domain,
+                reference,
+                orderIndexes
+              ),
+            ],
+            { concurrency: 2 }
           )
 
-          const numberOfSubmissions =
-            participantStateOpt.value.processedIndexes.length
-
-          const validationInputs = []
-
-          for (let i = 0; i < numberOfSubmissions; i++) {
-            const exifState = exifStates.find((e) => e.orderIndex === `${i}`)
-            const submissionState = submissionStates.find(
-              (s) => s.orderIndex === `${i}`
-            )
-
-            if (Option.isNone(submissionState)) {
-              return yield* Effect.fail(
-                new InvalidDataFoundError({
-                  message: `Submission not found for reference ${reference} and domain ${domain}`,
-                })
-              )
-            }
-
-            const head = yield* s3.getHead(
-              SSTResource.V2SubmissionsBucket.name,
-              submissionState.value.key
-            )
-
-            const mimeType = head.ContentType
-            const fileSize = head.ContentLength
-            const fileName = submissionState.value.key
-
-            const validationInput = ValidationInputSchema.make({
-              exif: exifState?.exif ?? {},
-              fileName,
-              mimeType: mimeType ?? "image/jpeg",
-              fileSize: fileSize ?? 0,
-              orderIndex: i,
+          if (exifStates.length === 0 || submissionStates.length === 0) {
+            return yield* new InvalidDataFoundError({
+              message: `Exif states or submission states not found for reference ${reference} and domain ${domain}`,
             })
-            validationInputs.push(validationInput)
           }
 
-          const validationRules = yield* makeValidationRules(rules)
+          const [validationInputs, validationRules] = yield* Effect.all(
+            [
+              makeValidationInputs(exifStates, submissionStates),
+              makeValidationRules(rules),
+            ],
+            { concurrency: 2 }
+          )
 
           const validationResults = yield* validator.runValidations(
             validationRules,
             validationInputs
           )
+          const participant =
+            yield* db.participantsQueries.getParticipantByReference({
+              reference,
+              domain,
+            })
 
-          return validationResults
+          if (Option.isNone(participant)) {
+            return yield* Effect.fail(
+              new InvalidDataFoundError({
+                message: `Participant not found for reference ${reference} and domain ${domain}`,
+              })
+            )
+          }
+
+          yield* db.validationsQueries.createMultipleValidationResults({
+            data: validationResults.map((r) => ({
+              ...r,
+              participantId: participant.value.id,
+            })),
+          })
         }
       )
       return {
@@ -178,9 +204,9 @@ const effectHandler = (event: SQSEvent) =>
       )
     )
   }).pipe(
-    Effect.withSpan("contactSheetGenerator.handler"),
+    Effect.withSpan("validationRunner.handler"),
     Effect.catchAll((error) =>
-      Effect.logError("Contact Sheet Generator Error:", error)
+      Effect.logError("Validation Runner Error:", error)
     )
   )
 
