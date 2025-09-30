@@ -1,29 +1,29 @@
-import { Effect, Option } from "effect"
-import { DrizzleClient } from "../drizzle-client"
+import { Effect, Option } from "effect";
+import { DrizzleClient } from "../drizzle-client";
 import {
   marathons,
   participants,
   submissions,
   zippedSubmissions,
-} from "../schema"
-import { and, eq, inArray } from "drizzle-orm"
+} from "../schema";
+import { and, eq, inArray } from "drizzle-orm";
 import type {
   NewSubmission,
   NewZippedSubmission,
   ZippedSubmission,
-} from "../types"
-import { SqlError } from "@effect/sql/SqlError"
-import { conflictUpdateSetAllColumns } from "../utils"
+} from "../types";
+import { SqlError } from "@effect/sql/SqlError";
+import { conflictUpdateSetAllColumns } from "../utils";
 
 export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
   "@blikka/db/submissions-queries",
   {
     dependencies: [DrizzleClient.Default],
     effect: Effect.gen(function* () {
-      const db = yield* DrizzleClient
+      const db = yield* DrizzleClient;
 
       const getAllSubmissionKeysForMarathon = Effect.fn(
-        "SubmissionsQueries.getAllSubmissionKeysForMarathon"
+        "SubmissionsQueries.getAllSubmissionKeysForMarathon",
       )(function* ({ marathonId }: { marathonId: number }) {
         const result = yield* db.query.submissions.findMany({
           where: eq(submissions.marathonId, marathonId),
@@ -32,48 +32,48 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
             thumbnailKey: true,
             previewKey: true,
           },
-        })
+        });
 
-        return result
-      })
+        return result;
+      });
 
       const getSubmissionById = Effect.fn(
-        "SubmissionsQueries.getSubmissionById"
+        "SubmissionsQueries.getSubmissionById",
       )(function* ({ id }: { id: number }) {
         const result = yield* db.query.submissions.findFirst({
           where: eq(submissions.id, id),
-        })
+        });
 
-        return Option.fromNullable(result)
-      })
+        return Option.fromNullable(result);
+      });
 
       const getSubmissionByKey = Effect.fn(
-        "SubmissionsQueries.getSubmissionByKey"
+        "SubmissionsQueries.getSubmissionByKey",
       )(function* ({ key }: { key: string }) {
         const result = yield* db.query.submissions.findFirst({
           where: eq(submissions.key, key),
-        })
+        });
 
-        return Option.fromNullable(result)
-      })
+        return Option.fromNullable(result);
+      });
 
       const getZippedSubmissionsByDomain = Effect.fn(
-        "SubmissionsQueries.getZippedSubmissionsByDomain"
+        "SubmissionsQueries.getZippedSubmissionsByDomain",
       )(function* ({ domain }: { domain: string }) {
         const result = yield* db.query.marathons.findFirst({
           where: eq(marathons.domain, domain),
           with: {
             zippedSubmissions: true,
           },
-        })
+        });
 
-        if (!result?.zippedSubmissions) return []
+        if (!result?.zippedSubmissions) return [];
 
-        const latestByParticipant = new Map<number, ZippedSubmission>()
+        const latestByParticipant = new Map<number, ZippedSubmission>();
 
         for (const zs of result.zippedSubmissions) {
-          if (!zs.participantId) continue
-          const existing = latestByParticipant.get(zs.participantId)
+          if (!zs.participantId) continue;
+          const existing = latestByParticipant.get(zs.participantId);
           if (
             !existing ||
             (zs.createdAt &&
@@ -81,67 +81,67 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
               new Date(zs.createdAt) > new Date(existing.createdAt)) ||
             (!zs.createdAt && zs.id > existing.id)
           ) {
-            latestByParticipant.set(zs.participantId, zs)
+            latestByParticipant.set(zs.participantId, zs);
           }
         }
 
-        return Array.from(latestByParticipant.values())
-      })
+        return Array.from(latestByParticipant.values());
+      });
 
       const getZippedSubmissionsByMarathonId = Effect.fn(
-        "SubmissionsQueries.getZippedSubmissionsByMarathonId"
+        "SubmissionsQueries.getZippedSubmissionsByMarathonId",
       )(function* ({ marathonId }: { marathonId: number }) {
         const result = yield* db.query.zippedSubmissions.findMany({
           where: eq(zippedSubmissions.marathonId, marathonId),
-        })
+        });
 
-        return result
-      })
+        return result;
+      });
 
       const getManySubmissionsByKeys = Effect.fn(
-        "SubmissionsQueries.getManySubmissionsByKeys"
+        "SubmissionsQueries.getManySubmissionsByKeys",
       )(function* ({ keys }: { keys: string[] }) {
         const result = yield* db.query.submissions.findMany({
           where: inArray(submissions.key, keys),
-        })
+        });
 
-        return result
-      })
+        return result;
+      });
 
       const getSubmissionsByParticipantId = Effect.fn(
-        "SubmissionsQueries.getSubmissionsByParticipantId"
+        "SubmissionsQueries.getSubmissionsByParticipantId",
       )(function* ({ participantId }: { participantId: number }) {
         const result = yield* db.query.submissions.findMany({
           where: eq(submissions.participantId, participantId),
-        })
+        });
 
-        return result
-      })
+        return result;
+      });
 
       const getSubmissionsForJuryQuery = Effect.fn(
-        "SubmissionsQueries.getSubmissionsForJury"
+        "SubmissionsQueries.getSubmissionsForJury",
       )(function* ({
         filters,
       }: {
         filters: {
-          domain: string
-          competitionClassId?: number | null
-          deviceGroupId?: number | null
-          topicId?: number | null
-        }
+          domain: string;
+          competitionClassId?: number | null;
+          deviceGroupId?: number | null;
+          topicId?: number | null;
+        };
       }) {
         const marathon = yield* db.query.marathons.findFirst({
           where: eq(marathons.domain, filters.domain),
-        })
+        });
 
         if (!marathon) {
-          return []
+          return [];
         }
 
         const conditions = [
           eq(submissions.marathonId, marathon.id),
           eq(submissions.status, "uploaded"),
-        ]
+        ];
 
         const result = yield* db.query.submissions.findMany({
           where: and(...conditions),
@@ -154,9 +154,9 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
             },
             topic: true,
           },
-        })
+        });
 
-        let filteredResult = result
+        let filteredResult = result;
 
         if (
           filters.competitionClassId !== null &&
@@ -165,8 +165,8 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
           filteredResult = filteredResult.filter(
             (s) =>
               (s.participant as any).competitionClassId ===
-              filters.competitionClassId
-          )
+              filters.competitionClassId,
+          );
         }
 
         if (
@@ -175,75 +175,75 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
         ) {
           filteredResult = filteredResult.filter(
             (s) =>
-              (s.participant as any).deviceGroupId === filters.deviceGroupId
-          )
+              (s.participant as any).deviceGroupId === filters.deviceGroupId,
+          );
         }
 
         if (filters.topicId !== null && filters.topicId !== undefined) {
           filteredResult = filteredResult.filter(
-            (s) => s.topicId === filters.topicId
-          )
+            (s) => s.topicId === filters.topicId,
+          );
         }
 
-        return filteredResult
-      })
+        return filteredResult;
+      });
 
       const createSubmission = Effect.fn("SubmissionsQueries.createSubmission")(
         function* ({ data }: { data: NewSubmission }) {
           const [result] = yield* db
             .insert(submissions)
             .values(data)
-            .returning()
+            .returning();
 
           if (!result) {
             return yield* Effect.fail(
               new SqlError({
                 cause: "Failed to create submission",
-              })
-            )
+              }),
+            );
           }
 
-          return result
-        }
-      )
+          return result;
+        },
+      );
 
       const createMultipleSubmissions = Effect.fn(
-        "SubmissionsQueries.createMultipleSubmissions"
+        "SubmissionsQueries.createMultipleSubmissions",
       )(function* ({ data }: { data: NewSubmission[] }) {
-        const [result] = yield* db.insert(submissions).values(data).returning()
+        const [result] = yield* db.insert(submissions).values(data).returning();
         if (!result) {
           return yield* Effect.fail(
             new SqlError({
               cause: "Failed to create multiple submissions",
-            })
-          )
+            }),
+          );
         }
-        return result
-      })
+        return result;
+      });
 
       const updateAllSubmissions = Effect.fn(
-        "SubmissionsQueries.updateAllSubmissions"
+        "SubmissionsQueries.updateAllSubmissions",
       )(function* ({
         updates,
         reference,
         domain,
       }: {
-        reference: string
-        domain: string
+        reference: string;
+        domain: string;
         updates: {
-          orderIndex: number
+          orderIndex: number;
           data: Partial<
             Omit<
               NewSubmission,
               "id" | "createdAt" | "updatedAt" | "participantId" | "marathonId"
             >
-          >
-        }[]
+          >;
+        }[];
       }) {
         const participant = yield* db.query.participants.findFirst({
           where: and(
             eq(participants.reference, reference),
-            eq(participants.domain, domain)
+            eq(participants.domain, domain),
           ),
           with: {
             submissions: {
@@ -252,25 +252,25 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
               },
             },
           },
-        })
+        });
 
         if (!participant) {
           return yield* Effect.fail(
             new SqlError({
               cause: "Participant not found",
-            })
-          )
+            }),
+          );
         }
 
         const data = updates.reduce<NewSubmission[]>((acc, update) => {
           const submission = participant.submissions.find(
-            (s) => s.topic.orderIndex === update.orderIndex
-          )
+            (s) => s.topic.orderIndex === update.orderIndex,
+          );
           if (submission) {
-            acc.push({ ...submission, ...update.data })
+            acc.push({ ...submission, ...update.data });
           }
-          return acc
-        }, [])
+          return acc;
+        }, []);
 
         const result = yield* db
           .insert(submissions)
@@ -279,119 +279,119 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
             target: submissions.id,
             set: conflictUpdateSetAllColumns(submissions, ["id"]),
           })
-          .returning()
+          .returning();
 
-        return result
-      })
+        return result;
+      });
 
       const updateSubmissionByKey = Effect.fn(
-        "SubmissionsQueries.updateSubmissionByKeyMutation"
+        "SubmissionsQueries.updateSubmissionByKeyMutation",
       )(function* ({
         key,
         data,
       }: {
-        key: string
-        data: Partial<NewSubmission>
+        key: string;
+        data: Partial<NewSubmission>;
       }) {
         const [result] = yield* db
           .update(submissions)
           .set(data)
           .where(eq(submissions.key, key))
-          .returning()
+          .returning();
         if (!result) {
           return yield* Effect.fail(
             new SqlError({
               cause: "Failed to update submission by key",
-            })
-          )
+            }),
+          );
         }
-        return result
-      })
+        return result;
+      });
 
       const updateSubmissionById = Effect.fn(
-        "SubmissionsQueries.updateSubmissionById"
+        "SubmissionsQueries.updateSubmissionById",
       )(function* ({ id, data }: { id: number; data: Partial<NewSubmission> }) {
         const [result] = yield* db
           .update(submissions)
           .set(data)
           .where(eq(submissions.id, id))
-          .returning()
+          .returning();
         if (!result) {
           return yield* Effect.fail(
             new SqlError({
               cause: "Failed to update submission by id",
-            })
-          )
+            }),
+          );
         }
-        return result
-      })
+        return result;
+      });
 
       const createZippedSubmission = Effect.fn(
-        "SubmissionsQueries.createZippedSubmission"
+        "SubmissionsQueries.createZippedSubmission",
       )(function* ({ data }: { data: NewZippedSubmission }) {
         const [result] = yield* db
           .insert(zippedSubmissions)
           .values(data)
-          .returning()
+          .returning();
         if (!result) {
           return yield* Effect.fail(
             new SqlError({
               cause: "Failed to create zipped submission",
-            })
-          )
+            }),
+          );
         }
-        return result
-      })
+        return result;
+      });
 
       const updateZippedSubmission = Effect.fn(
-        "SubmissionsQueries.updateZippedSubmission"
+        "SubmissionsQueries.updateZippedSubmission",
       )(function* ({
         id,
         data,
       }: {
-        id: number
-        data: Partial<NewZippedSubmission>
+        id: number;
+        data: Partial<NewZippedSubmission>;
       }) {
         const [result] = yield* db
           .update(zippedSubmissions)
           .set(data)
           .where(eq(zippedSubmissions.id, id))
-          .returning()
+          .returning();
         if (!result) {
           return yield* Effect.fail(
             new SqlError({
               cause: "Failed to update zipped submission",
-            })
-          )
+            }),
+          );
         }
-        return result
-      })
+        return result;
+      });
 
       const getZippedSubmissionByParticipantRefQuery = Effect.fn(
-        "SubmissionsQueries.getZippedSubmissionByParticipantRefQuery"
+        "SubmissionsQueries.getZippedSubmissionByParticipantRefQuery",
       )(function* ({
         domain,
         participantRef,
       }: {
-        domain: string
-        participantRef: string
+        domain: string;
+        participantRef: string;
       }) {
         const participant = yield* db.query.participants.findFirst({
           where: and(
             eq(participants.domain, domain),
-            eq(participants.reference, participantRef)
+            eq(participants.reference, participantRef),
           ),
           with: {
             zippedSubmissions: true,
           },
-        })
+        });
 
         if (!participant || !participant.zippedSubmissions) {
-          return null
+          return null;
         }
 
-        return participant.zippedSubmissions
-      })
+        return participant.zippedSubmissions;
+      });
 
       return {
         getAllSubmissionKeysForMarathon,
@@ -410,7 +410,7 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
         updateZippedSubmission,
         getZippedSubmissionByParticipantRefQuery,
         updateAllSubmissions,
-      }
+      };
     }),
-  }
+  },
 ) {}

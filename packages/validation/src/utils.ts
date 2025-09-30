@@ -1,5 +1,5 @@
-import { RuleParamsSchema, ValidationResultSchema } from "./schemas"
-import { Data, Effect, Schema, Option } from "effect"
+import { RuleParamsSchema, ValidationResultSchema } from "./schemas";
+import { Data, Effect, Schema, Option } from "effect";
 import {
   RuleKey,
   RuleParams,
@@ -8,39 +8,39 @@ import {
   ValidationResult,
   ValidationRule,
   ValidationSkipped,
-} from "./types"
-import { VALIDATION_OUTCOME } from "./constants"
+} from "./types";
+import { VALIDATION_OUTCOME } from "./constants";
 
 export class ValidationParamError extends Data.TaggedError(
-  "ValidationParamError"
+  "ValidationParamError",
 )<{
-  message?: string
+  message?: string;
 }> {}
 
 export const parseRuleParams = <K extends RuleKey>(key: K, params: unknown) =>
   Effect.gen(function* () {
     return yield* Schema.decodeUnknown(RuleParamsSchema.pick(key))(params).pipe(
       Effect.mapError(
-        (error) => new ValidationParamError({ message: error.message })
-      )
-    )
-  })
+        (error) => new ValidationParamError({ message: error.message }),
+      ),
+    );
+  });
 
 export const getTimestamp = (
-  exif: Record<string, unknown>
+  exif: Record<string, unknown>,
 ): Option.Option<Date> =>
   Option.fromNullable(
-    exif.DateTimeOriginal ?? exif.DateTimeDigitized ?? exif.CreateDate
+    exif.DateTimeOriginal ?? exif.DateTimeDigitized ?? exif.CreateDate,
   ).pipe(
     Option.filter((timestamp) => typeof timestamp === "string"),
     Option.flatMap((timestamp) => {
-      const date = new Date(timestamp)
-      return isNaN(date.getTime()) ? Option.none() : Option.some(date)
-    })
-  )
+      const date = new Date(timestamp);
+      return isNaN(date.getTime()) ? Option.none() : Option.some(date);
+    }),
+  );
 
 export const getDeviceIdentifier = (
-  exif: Record<string, unknown>
+  exif: Record<string, unknown>,
 ): Option.Option<string> =>
   Option.fromNullable(exif.Model).pipe(
     Option.filter((m): m is string => typeof m === "string"),
@@ -49,26 +49,26 @@ export const getDeviceIdentifier = (
         const serial =
           exif.SerialNumber && typeof exif.SerialNumber === "string"
             ? `-${exif.SerialNumber}`
-            : ""
-        return `${exif.Make}-${model}${serial}`
+            : "";
+        return `${exif.Make}-${model}${serial}`;
       }
-      return model
-    })
-  )
+      return model;
+    }),
+  );
 
 export const getExtensionFromFilename = (
-  filename: string
+  filename: string,
 ): Option.Option<string> => {
-  const match = filename.match(/\.([^.]+)$/)
+  const match = filename.match(/\.([^.]+)$/);
   return Option.fromNullable(match?.[1]).pipe(
-    Option.map((extension) => extension.toLowerCase().replace(/^\./, ""))
-  )
-}
+    Option.map((extension) => extension.toLowerCase().replace(/^\./, "")),
+  );
+};
 
 export const createFailureResult = (
   rule: ValidationRule,
   error: ValidationFailure,
-  input?: ValidationInput
+  input?: ValidationInput,
 ): Effect.Effect<ValidationResult> =>
   Effect.succeed(
     ValidationResultSchema.make({
@@ -79,13 +79,13 @@ export const createFailureResult = (
       fileName: input?.fileName,
       orderIndex: input?.orderIndex,
       isGeneral: !input,
-    })
-  )
+    }),
+  );
 
 export const createSkippedResult = (
   rule: ValidationRule,
   error: ValidationSkipped,
-  input?: ValidationInput
+  input?: ValidationInput,
 ): Effect.Effect<ValidationResult> =>
   Effect.succeed(
     ValidationResultSchema.make({
@@ -96,12 +96,12 @@ export const createSkippedResult = (
       fileName: input?.fileName,
       orderIndex: input?.orderIndex,
       isGeneral: !input,
-    })
-  )
+    }),
+  );
 
 export const createPassedResult = (
   rule: ValidationRule,
-  input?: ValidationInput
+  input?: ValidationInput,
 ): Effect.Effect<ValidationResult> =>
   Effect.succeed(
     ValidationResultSchema.make({
@@ -112,5 +112,5 @@ export const createPassedResult = (
       fileName: input?.fileName,
       orderIndex: input?.orderIndex,
       isGeneral: !input,
-    })
-  )
+    }),
+  );

@@ -1,4 +1,4 @@
-import { Effect } from "effect"
+import { Effect } from "effect";
 
 export class KeyFactory extends Effect.Service<KeyFactory>()(
   "@blikka/packages/redis-store/key-factory",
@@ -13,5 +13,5 @@ export class KeyFactory extends Effect.Service<KeyFactory>()(
       zipProgress: (domain: string, ref: string) =>
         `zip-progress:${domain}:${ref}`,
     }),
-  }
+  },
 ) {}

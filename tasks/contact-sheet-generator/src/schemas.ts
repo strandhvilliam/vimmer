@@ -1,11 +1,11 @@
-import { Schema } from "effect"
+import { Schema } from "effect";
 
 export const SponsorPositionSchema = Schema.Literal(
   "bottom-right",
   "bottom-left",
   "top-right",
   "top-left",
-  "center"
-)
+  "center",
+);
 
-export type SponsorPosition = typeof SponsorPositionSchema.Type
+export type SponsorPosition = typeof SponsorPositionSchema.Type;

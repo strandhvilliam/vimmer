@@ -1,32 +1,32 @@
-"use client"
+"use client";
 
-import { useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
-import { useForm } from "@tanstack/react-form"
-import * as z from "zod"
-import { PrimaryButton } from "@vimmer/ui/components/primary-button"
-import { Label } from "@vimmer/ui/components/label"
-import { toast } from "@vimmer/ui/hooks/use-toast"
-import { authClient } from "@/lib/auth-client"
-import { REGEXP_ONLY_DIGITS } from "input-otp"
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { useForm } from "@tanstack/react-form";
+import * as z from "zod";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { Label } from "@vimmer/ui/components/label";
+import { toast } from "@vimmer/ui/hooks/use-toast";
+import { authClient } from "@/lib/auth-client";
+import { REGEXP_ONLY_DIGITS } from "input-otp";
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from "@vimmer/ui/components/input-otp"
-import { useState } from "react"
+} from "@vimmer/ui/components/input-otp";
+import { useState } from "react";
 
 interface VerifyFormProps {
-  email: string
+  email: string;
 }
 
 const verifyFormSchema = z.object({
   otp: z.string().length(6, "Please enter a valid 6-digit code"),
-})
+});
 
 export function AdminVerifyForm({ email }: VerifyFormProps) {
-  const router = useRouter()
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm({
     defaultValues: { otp: "" },
@@ -35,43 +35,43 @@ export function AdminVerifyForm({ email }: VerifyFormProps) {
         const { error } = await authClient.signIn.emailOtp({
           email,
           otp: value.otp,
-        })
+        });
         if (error) {
           toast({
             title: "Error",
             description: error.message,
             variant: "destructive",
-          })
-          setError("Invalid verification code. Please try again.")
-          return
+          });
+          setError("Invalid verification code. Please try again.");
+          return;
         }
         toast({
           title: "Success",
           description: "You have been signed in successfully.",
-        })
-        router.push("/select-domain")
+        });
+        router.push("/select-domain");
       } catch (error) {
-        console.error(error)
+        console.error(error);
         toast({
           title: "Error",
           description: "Invalid verification code. Please try again.",
           variant: "destructive",
-        })
-        setError("Invalid verification code. Please try again.")
+        });
+        setError("Invalid verification code. Please try again.");
       }
     },
     validators: {
       onChange: verifyFormSchema,
       onMount: verifyFormSchema,
     },
-  })
+  });
 
   return (
     <form
       onSubmit={(e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        form.handleSubmit()
+        e.preventDefault();
+        e.stopPropagation();
+        form.handleSubmit();
       }}
       className="grid gap-6"
     >
@@ -123,5 +123,5 @@ export function AdminVerifyForm({ email }: VerifyFormProps) {
         )}
       />
     </form>
-  )
+  );
 }

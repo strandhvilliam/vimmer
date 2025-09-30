@@ -1,58 +1,58 @@
-import { PrimaryButton } from "@vimmer/ui/components/primary-button"
-import { Card, CardContent } from "@vimmer/ui/components/card"
-import { Skeleton } from "@vimmer/ui/components/skeleton"
-import { Alert } from "@vimmer/ui/components/alert"
-import { CloudUpload, AlertTriangle } from "lucide-react"
-import { motion, AnimatePresence } from "motion/react"
-import React from "react"
-import { useI18n } from "@/locales/client"
-import { usePhotoStore } from "@/lib/stores/photo-store"
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { Card, CardContent } from "@vimmer/ui/components/card";
+import { Skeleton } from "@vimmer/ui/components/skeleton";
+import { Alert } from "@vimmer/ui/components/alert";
+import { CloudUpload, AlertTriangle } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import React from "react";
+import { useI18n } from "@/locales/client";
+import { usePhotoStore } from "@/lib/stores/photo-store";
 
-import { Marathon, Topic } from "@vimmer/api/db/types"
+import { Marathon, Topic } from "@vimmer/api/db/types";
 import {
   RuleConfig,
   RuleKey,
-} from "../../../../../packages/validation/old/types"
+} from "../../../../../packages/validation/old/types";
 import {
   SEVERITY_LEVELS,
   VALIDATION_OUTCOME,
-} from "../../../../../packages/validation/old/constants"
+} from "../../../../../packages/validation/old/constants";
 
 interface UploadSectionProps {
-  maxPhotos: number
-  ruleConfigs: RuleConfig<RuleKey>[]
-  topics: Topic[]
-  marathon: Marathon
-  onUploadClick: () => void
+  maxPhotos: number;
+  ruleConfigs: RuleConfig<RuleKey>[];
+  topics: Topic[];
+  marathon: Marathon;
+  onUploadClick: () => void;
 }
 
 export function UploadSection(props: UploadSectionProps) {
-  const { maxPhotos, onUploadClick } = props
-  const { photos, validationResults } = usePhotoStore()
-  const t = useI18n()
+  const { maxPhotos, onUploadClick } = props;
+  const { photos, validationResults } = usePhotoStore();
+  const t = useI18n();
 
   // const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const allPhotosSelected = photos.length === maxPhotos && photos.length > 0
+  const allPhotosSelected = photos.length === maxPhotos && photos.length > 0;
 
   const hasValidationErrors = validationResults.some(
     (result) =>
       result.outcome === VALIDATION_OUTCOME.FAILED &&
-      result.severity === SEVERITY_LEVELS.ERROR
-  )
+      result.severity === SEVERITY_LEVELS.ERROR,
+  );
 
   const hasValidationWarnings = validationResults.some(
     (result) =>
       result.outcome === VALIDATION_OUTCOME.FAILED &&
-      result.severity === SEVERITY_LEVELS.WARNING
-  )
+      result.severity === SEVERITY_LEVELS.WARNING,
+  );
 
   // group by fileName
   const errorMessages = validationResults
     .filter(
       (result) =>
         result.outcome === VALIDATION_OUTCOME.FAILED &&
-        result.severity === SEVERITY_LEVELS.ERROR
+        result.severity === SEVERITY_LEVELS.ERROR,
     )
     .map((result) => ({
       message: result.message,
@@ -60,16 +60,16 @@ export function UploadSection(props: UploadSectionProps) {
     }))
     .reduce(
       (acc, result) => {
-        const existingMessage = acc.find((m) => m.fileName === result.fileName)
+        const existingMessage = acc.find((m) => m.fileName === result.fileName);
         if (existingMessage) {
-          existingMessage.message += `, ${result.message}`
+          existingMessage.message += `, ${result.message}`;
         } else {
-          acc.push(result)
+          acc.push(result);
         }
-        return acc
+        return acc;
       },
-      [] as { message: string; fileName: string | undefined }[]
-    )
+      [] as { message: string; fileName: string | undefined }[],
+    );
 
   const warningMessages = validationResults
     .reduce(
@@ -78,29 +78,29 @@ export function UploadSection(props: UploadSectionProps) {
           result.outcome === VALIDATION_OUTCOME.FAILED &&
           result.severity === SEVERITY_LEVELS.WARNING
         ) {
-          const existingMessage = acc.find((m) => m.message === result.message)
+          const existingMessage = acc.find((m) => m.message === result.message);
           if (!existingMessage) {
             acc.push({
               message: result.message,
               fileName: result.fileName,
-            })
+            });
           }
         }
-        return acc
+        return acc;
       },
-      [] as { message: string; fileName: string | undefined }[]
+      [] as { message: string; fileName: string | undefined }[],
     )
     .map((result) => ({
       message: result.message,
       fileName: result.fileName,
-    }))
+    }));
 
   const noExif = photos.some(
-    (photo) => !photo.exif || Object.keys(photo.exif).length === 0
-  )
+    (photo) => !photo.exif || Object.keys(photo.exif).length === 0,
+  );
 
   const renderValidationWarnings = () => {
-    if (!hasValidationWarnings && !noExif) return null
+    if (!hasValidationWarnings && !noExif) return null;
     return (
       <Alert className="bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/50 dark:border-amber-800 dark:text-amber-200 w-full">
         <AlertTriangle className="h-4 w-4" />
@@ -130,8 +130,8 @@ export function UploadSection(props: UploadSectionProps) {
           </div>
         </div>
       </Alert>
-    )
-  }
+    );
+  };
 
   return (
     <AnimatePresence mode="popLayout">
@@ -245,8 +245,8 @@ export function UploadSection(props: UploadSectionProps) {
               ${photos.length >= maxPhotos ? "opacity-50 pointer-events-none" : ""}
             `}
             onClick={(e) => {
-              e.preventDefault()
-              onUploadClick()
+              e.preventDefault();
+              onUploadClick();
             }}
           >
             {/* <input
@@ -330,5 +330,5 @@ export function UploadSection(props: UploadSectionProps) {
       )}
       {renderValidationWarnings()}
     </AnimatePresence>
-  )
+  );
 }

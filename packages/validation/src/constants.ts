@@ -5,7 +5,7 @@ export const RULE_KEYS = {
   SAME_DEVICE: "same_device",
   WITHIN_TIMERANGE: "within_timerange",
   MODIFIED: "modified",
-} as const
+} as const;
 
 export const IMAGE_EXTENSION_TO_MIME_TYPE = {
   jpg: "image/jpeg",
@@ -20,13 +20,13 @@ export const IMAGE_EXTENSION_TO_MIME_TYPE = {
   avif: "image/avif",
   heic: "image/heic",
   heif: "image/heif",
-} as const
+} as const;
 
 export const VALIDATION_OUTCOME = {
   PASSED: "passed",
   FAILED: "failed",
   SKIPPED: "skipped",
-} as const
+} as const;
 
 export const EDITING_SOFTWARE_KEYWORDS = [
   "photoshop",
@@ -39,4 +39,4 @@ export const EDITING_SOFTWARE_KEYWORDS = [
   "snapseed",
   "acdsee",
   "paintshop",
-] as const
+] as const;

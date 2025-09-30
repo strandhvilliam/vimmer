@@ -1,2 +1,2 @@
-export * from "./exif-parser"
-export * from "./utils"
+export * from "./exif-parser";
+export * from "./utils";

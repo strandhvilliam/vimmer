@@ -1,23 +1,23 @@
-import { EventBridgeClient } from "@aws-sdk/client-eventbridge"
-import { Config, Console, Data, Effect } from "effect"
+import { EventBridgeClient } from "@aws-sdk/client-eventbridge";
+import { Config, Console, Data, Effect } from "effect";
 
 export class EventBridgeEffectError extends Data.TaggedError(
-  "EventBridgeEffectError"
+  "EventBridgeEffectError",
 )<{
-  message?: string
-  cause?: unknown
+  message?: string;
+  cause?: unknown;
 }> {}
 
 export class EventBridgeEffectClient extends Effect.Service<EventBridgeEffectClient>()(
   "@blikka/packages/s3-service/s3-effect-client",
   {
     scoped: Effect.gen(function* () {
-      const region = yield* Config.string("AWS_REGION")
+      const region = yield* Config.string("AWS_REGION");
 
-      const client = new EventBridgeClient({ region })
+      const client = new EventBridgeClient({ region });
 
       const use = <T>(
-        fn: (client: EventBridgeClient) => T
+        fn: (client: EventBridgeClient) => T,
       ): Effect.Effect<Awaited<T>, EventBridgeEffectError, never> =>
         Effect.gen(function* () {
           const result = yield* Effect.try({
@@ -27,7 +27,7 @@ export class EventBridgeEffectClient extends Effect.Service<EventBridgeEffectCli
                 cause: error,
                 message: "EventBridge.use error (Sync)",
               }),
-          })
+          });
           if (result instanceof Promise) {
             return yield* Effect.tryPromise({
               try: () => result,
@@ -36,18 +36,18 @@ export class EventBridgeEffectClient extends Effect.Service<EventBridgeEffectCli
                   cause: e,
                   message: "EventBridge.use error (Async)",
                 }),
-            })
+            });
           }
-          return result
-        })
+          return result;
+        });
 
       yield* Effect.addFinalizer(() =>
-        Console.log("Shutting down EventBridge client")
-      )
+        Console.log("Shutting down EventBridge client"),
+      );
 
       return {
         use,
-      }
+      };
     }),
-  }
+  },
 ) {}

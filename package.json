@@ -24,6 +24,7 @@
   ],
   "dependencies": {
     "@aws-sdk/lib-storage": "^3.828.0",
+    "@effect/vitest": "^0.26.0",
     "@trpc/client": "^11.4.2",
     "@trpc/server": "^11.4.2",
     "@trpc/tanstack-react-query": "^11.4.2",

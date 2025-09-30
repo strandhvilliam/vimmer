@@ -1,43 +1,43 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Loader2 } from "lucide-react"
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
-import { Input } from "@vimmer/ui/components/input"
-import { useRouter } from "next/navigation"
-import { motion } from "motion/react"
-import { Card, CardContent } from "@vimmer/ui/components/card"
-import Link from "next/link"
-import { toast } from "sonner"
-import { PrimaryButton } from "@vimmer/ui/components/primary-button"
-import { authClient } from "@/lib/auth-client"
-import { Button } from "@vimmer/ui/components/button"
+import { Input } from "@vimmer/ui/components/input";
+import { useRouter } from "next/navigation";
+import { motion } from "motion/react";
+import { Card, CardContent } from "@vimmer/ui/components/card";
+import Link from "next/link";
+import { toast } from "sonner";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { authClient } from "@/lib/auth-client";
+import { Button } from "@vimmer/ui/components/button";
 
 export function AdminLoginForm() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
       const { error } = await authClient.emailOtp.sendVerificationOtp({
         email,
         type: "sign-in",
-      })
+      });
 
-      if (error) throw error
-      router.push(`/auth/admin/verify?email=${encodeURIComponent(email)}`)
+      if (error) throw error;
+      router.push(`/auth/admin/verify?email=${encodeURIComponent(email)}`);
     } catch (error) {
-      console.error(error)
+      console.error(error);
       toast.error("Something went wrong. Please try again.", {
         description: "Please try again.",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -87,5 +87,5 @@ export function AdminLoginForm() {
         </CardContent>
       </Card>
     </motion.div>
-  )
+  );
 }

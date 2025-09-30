@@ -1,21 +1,21 @@
-import { Effect, Option } from "effect"
-import { DrizzleClient } from "../drizzle-client"
-import { participants } from "../schema"
-import { eq, and, inArray, or, ilike, asc, desc, count } from "drizzle-orm"
-import type { NewParticipant } from "../types"
-import { SqlError } from "@effect/sql/SqlError"
-import { SupabaseClient } from "../supabase-client"
+import { Effect, Option } from "effect";
+import { DrizzleClient } from "../drizzle-client";
+import { participants } from "../schema";
+import { eq, and, inArray, or, ilike, asc, desc, count } from "drizzle-orm";
+import type { NewParticipant } from "../types";
+import { SqlError } from "@effect/sql/SqlError";
+import { SupabaseClient } from "../supabase-client";
 
 export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
   "@blikka/db/participants-queries",
   {
     dependencies: [DrizzleClient.Default, SupabaseClient.Default],
     effect: Effect.gen(function* () {
-      const db = yield* DrizzleClient
-      const supabase = yield* SupabaseClient
+      const db = yield* DrizzleClient;
+      const supabase = yield* SupabaseClient;
 
       const getParticipantById = Effect.fn(
-        "ParticipantsQueries.getParticipantByIdQuery"
+        "ParticipantsQueries.getParticipantByIdQuery",
       )(function* ({ id }: { id: number }) {
         const result = yield* db.query.participants.findFirst({
           where: eq(participants.id, id),
@@ -26,13 +26,13 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
             validationResults: true,
             zippedSubmissions: true,
           },
-        })
+        });
 
-        return Option.fromNullable(result)
-      })
+        return Option.fromNullable(result);
+      });
 
       const getParticipantsWithoutSubmissions = Effect.fn(
-        "ParticipantsQueries.getParticipantsWithoutSubmissionsQuery"
+        "ParticipantsQueries.getParticipantsWithoutSubmissionsQuery",
       )(function* ({ domain }: { domain: string }) {
         const result = yield* db.query.participants.findMany({
           where: eq(participants.domain, domain),
@@ -41,24 +41,24 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
             deviceGroup: true,
             zippedSubmissions: true,
           },
-        })
+        });
 
-        return result
-      })
+        return result;
+      });
 
       const getParticipantByReference = Effect.fn(
-        "ParticipantsQueries.getParticipantByReferenceQuery"
+        "ParticipantsQueries.getParticipantByReferenceQuery",
       )(function* ({
         reference,
         domain,
       }: {
-        reference: string
-        domain: string
+        reference: string;
+        domain: string;
       }) {
         const result = yield* db.query.participants.findFirst({
           where: and(
             eq(participants.reference, reference),
-            eq(participants.domain, domain)
+            eq(participants.domain, domain),
           ),
           with: {
             submissions: {
@@ -71,13 +71,13 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
             validationResults: true,
             zippedSubmissions: true,
           },
-        })
+        });
 
-        return Option.fromNullable(result)
-      })
+        return Option.fromNullable(result);
+      });
 
       const getParticipantsByDomain = Effect.fn(
-        "ParticipantsQueries.getParticipantsByDomainQuery"
+        "ParticipantsQueries.getParticipantsByDomainQuery",
       )(function* ({ domain }: { domain: string }) {
         const result = yield* db.query.participants.findMany({
           where: eq(participants.domain, domain),
@@ -85,13 +85,13 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
             competitionClass: true,
             deviceGroup: true,
           },
-        })
+        });
 
-        return result
-      })
+        return result;
+      });
 
       const getParticipantsByDomainPaginated = Effect.fn(
-        "ParticipantsQueries.getParticipantsByDomainPaginatedQuery"
+        "ParticipantsQueries.getParticipantsByDomainPaginatedQuery",
       )(function* ({
         domain,
         page,
@@ -103,109 +103,109 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         sortBy,
         sortOrder,
       }: {
-        domain: string
-        page: number
-        pageSize: number
-        search?: string
-        status?: string | string[]
-        competitionClassId?: number | number[]
-        deviceGroupId?: number | number[]
+        domain: string;
+        page: number;
+        pageSize: number;
+        search?: string;
+        status?: string | string[];
+        competitionClassId?: number | number[];
+        deviceGroupId?: number | number[];
         sortBy:
           | "createdAt"
           | "reference"
           | "firstname"
           | "lastname"
-          | "uploadCount"
-        sortOrder: "asc" | "desc"
+          | "uploadCount";
+        sortOrder: "asc" | "desc";
       }) {
-        const offset = (page - 1) * pageSize
+        const offset = (page - 1) * pageSize;
 
-        const whereConditions = [eq(participants.domain, domain)]
+        const whereConditions = [eq(participants.domain, domain)];
 
         if (status) {
           if (Array.isArray(status)) {
-            whereConditions.push(inArray(participants.status, status))
+            whereConditions.push(inArray(participants.status, status));
           } else {
-            whereConditions.push(eq(participants.status, status))
+            whereConditions.push(eq(participants.status, status));
           }
         }
 
         if (competitionClassId) {
           if (Array.isArray(competitionClassId)) {
             whereConditions.push(
-              inArray(participants.competitionClassId, competitionClassId)
-            )
+              inArray(participants.competitionClassId, competitionClassId),
+            );
           } else {
             whereConditions.push(
-              eq(participants.competitionClassId, competitionClassId)
-            )
+              eq(participants.competitionClassId, competitionClassId),
+            );
           }
         }
 
         if (deviceGroupId) {
           if (Array.isArray(deviceGroupId)) {
             whereConditions.push(
-              inArray(participants.deviceGroupId, deviceGroupId)
-            )
+              inArray(participants.deviceGroupId, deviceGroupId),
+            );
           } else {
-            whereConditions.push(eq(participants.deviceGroupId, deviceGroupId))
+            whereConditions.push(eq(participants.deviceGroupId, deviceGroupId));
           }
         }
 
         if (search) {
-          const searchPattern = `%${search}%`
+          const searchPattern = `%${search}%`;
           const searchCondition = or(
             ilike(participants.reference, searchPattern),
             ilike(participants.firstname, searchPattern),
             ilike(participants.lastname, searchPattern),
-            ilike(participants.email, searchPattern)
-          )
+            ilike(participants.email, searchPattern),
+          );
           if (searchCondition) {
-            whereConditions.push(searchCondition)
+            whereConditions.push(searchCondition);
           }
         }
 
-        const orderBy = []
+        const orderBy = [];
         if (sortBy === "createdAt") {
           orderBy.push(
             sortOrder === "asc"
               ? asc(participants.createdAt)
-              : desc(participants.createdAt)
-          )
+              : desc(participants.createdAt),
+          );
         } else if (sortBy === "reference") {
           orderBy.push(
             sortOrder === "asc"
               ? asc(participants.reference)
-              : desc(participants.reference)
-          )
+              : desc(participants.reference),
+          );
         } else if (sortBy === "firstname") {
           orderBy.push(
             sortOrder === "asc"
               ? asc(participants.firstname)
-              : desc(participants.firstname)
-          )
+              : desc(participants.firstname),
+          );
         } else if (sortBy === "lastname") {
           orderBy.push(
             sortOrder === "asc"
               ? asc(participants.lastname)
-              : desc(participants.lastname)
-          )
+              : desc(participants.lastname),
+          );
         } else if (sortBy === "uploadCount") {
           orderBy.push(
             sortOrder === "asc"
               ? asc(participants.uploadCount)
-              : desc(participants.uploadCount)
-          )
+              : desc(participants.uploadCount),
+          );
         }
 
         const totalCountResult = yield* db
           .select({ count: count() })
           .from(participants)
           .where(
-            whereConditions.length > 0 ? and(...whereConditions) : undefined
-          )
+            whereConditions.length > 0 ? and(...whereConditions) : undefined,
+          );
 
-        const totalCount = totalCountResult[0]?.count || 0
+        const totalCount = totalCountResult[0]?.count || 0;
 
         const result = yield* db.query.participants.findMany({
           where:
@@ -220,7 +220,7 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
           orderBy,
           limit: pageSize,
           offset,
-        })
+        });
 
         return {
           data: result,
@@ -228,28 +228,28 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
           page,
           pageSize,
           totalPages: Math.ceil(totalCount / pageSize),
-        }
-      })
+        };
+      });
 
       const createParticipant = Effect.fn(
-        "ParticipantsQueries.createParticipantMutation"
+        "ParticipantsQueries.createParticipantMutation",
       )(function* ({ data }: { data: NewParticipant }) {
         if (!data.domain) {
           return yield* Effect.fail(
             new SqlError({
               cause: "Domain is required",
-            })
-          )
+            }),
+          );
         }
 
-        let existingParticipant
+        let existingParticipant;
         try {
           existingParticipant = yield* getParticipantByReference({
             reference: data.reference,
             domain: data.domain,
-          })
+          });
         } catch (error) {
-          console.log("error", error)
+          console.log("error", error);
         }
 
         // if (existingParticipant) {
@@ -262,55 +262,55 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         const [result] = yield* db
           .insert(participants)
           .values(data)
-          .returning({ id: participants.id })
+          .returning({ id: participants.id });
 
         if (!result) {
           return yield* Effect.fail(
             new SqlError({
               cause: "Failed to create participant",
-            })
-          )
+            }),
+          );
         }
 
-        return result
-      })
+        return result;
+      });
 
       const updateParticipantById = Effect.fn(
-        "ParticipantsQueries.updateParticipantMutation"
+        "ParticipantsQueries.updateParticipantMutation",
       )(function* ({
         id,
         data,
       }: {
-        id: number
-        data: Partial<NewParticipant>
+        id: number;
+        data: Partial<NewParticipant>;
       }) {
         const [result] = yield* db
           .update(participants)
           .set(data)
           .where(eq(participants.id, id))
-          .returning({ id: participants.id })
+          .returning({ id: participants.id });
 
         if (!result) {
           return yield* Effect.fail(
             new SqlError({
               cause: "Failed to update participant",
-            })
-          )
+            }),
+          );
         }
 
-        return result
-      })
+        return result;
+      });
 
       const updateParticipantByReference = Effect.fn(
-        "ParticipantsQueries.updateParticipantByReference"
+        "ParticipantsQueries.updateParticipantByReference",
       )(function* ({
         reference,
         domain,
         data,
       }: {
-        reference: string
-        domain: string
-        data: Partial<NewParticipant>
+        reference: string;
+        domain: string;
+        data: Partial<NewParticipant>;
       }) {
         const [result] = yield* db
           .update(participants)
@@ -318,45 +318,45 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
           .where(
             and(
               eq(participants.reference, reference),
-              eq(participants.domain, domain)
-            )
+              eq(participants.domain, domain),
+            ),
           )
-          .returning({ id: participants.id })
+          .returning({ id: participants.id });
         if (!result) {
           return yield* Effect.fail(
             new SqlError({
               cause: "Failed to update participant",
-            })
-          )
+            }),
+          );
         }
-        return result
-      })
+        return result;
+      });
 
       const deleteParticipant = Effect.fn(
-        "ParticipantsQueries.deleteParticipantMutation"
+        "ParticipantsQueries.deleteParticipantMutation",
       )(function* ({ id }: { id: number }) {
         const [result] = yield* db
           .delete(participants)
           .where(eq(participants.id, id))
-          .returning()
+          .returning();
         if (!result) {
           return yield* Effect.fail(
             new SqlError({
               cause: "Failed to delete participant",
-            })
-          )
+            }),
+          );
         }
-        return result
-      })
+        return result;
+      });
 
       const getVerifiedParticipantsWithCompletePreviewKeys = Effect.fn(
-        "ParticipantsQueries.getVerifiedParticipantsWithCompletePreviewKeysQuery"
+        "ParticipantsQueries.getVerifiedParticipantsWithCompletePreviewKeysQuery",
       )(function* ({ domain }: { domain: string }) {
         // Get all verified participants with their submissions
         const verifiedParticipants = yield* db.query.participants.findMany({
           where: and(
             eq(participants.domain, domain),
-            eq(participants.status, "verified")
+            eq(participants.status, "verified"),
           ),
           with: {
             submissions: {
@@ -373,41 +373,41 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
             lastname: true,
             contactSheetKey: true,
           },
-        })
+        });
 
         const readyParticipants = verifiedParticipants.filter((participant) => {
           if (
             !participant.submissions ||
             participant.submissions.length === 0
           ) {
-            return false
+            return false;
           }
 
           if (participant.contactSheetKey !== null) {
-            return false
+            return false;
           }
 
           // All submissions must have preview keys
           return participant.submissions.every(
-            (submission) => submission.previewKey
-          )
-        })
+            (submission) => submission.previewKey,
+          );
+        });
 
         console.log(
-          `Found ${verifiedParticipants.length} verified participants, ${readyParticipants.length} ready for bulk sheet generation`
-        )
+          `Found ${verifiedParticipants.length} verified participants, ${readyParticipants.length} ready for bulk sheet generation`,
+        );
 
-        return readyParticipants
-      })
+        return readyParticipants;
+      });
 
       const incrementUploadCounter = Effect.fn(
-        "ParticipantsQueries.incrementUploadCounterMutation"
+        "ParticipantsQueries.incrementUploadCounterMutation",
       )(function* ({
         participantId,
         totalExpected,
       }: {
-        participantId: number
-        totalExpected: number
+        participantId: number;
+        totalExpected: number;
       }) {
         const resp = yield* supabase.use((client) =>
           client
@@ -415,21 +415,21 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
               participant_id: participantId,
               total_expected: totalExpected,
             })
-            .throwOnError()
-        )
+            .throwOnError(),
+        );
 
         const data = resp.data as {
-          upload_count: number
-          status: string
-          is_complete: boolean
-        }
+          upload_count: number;
+          status: string;
+          is_complete: boolean;
+        };
 
         return {
           uploadCount: data.upload_count,
           status: data.status,
           isComplete: data.is_complete,
-        }
-      })
+        };
+      });
 
       return {
         getParticipantById,
@@ -443,7 +443,7 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         deleteParticipant,
         getVerifiedParticipantsWithCompletePreviewKeys,
         incrementUploadCounter,
-      }
+      };
     }),
-  }
+  },
 ) {}

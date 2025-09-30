@@ -12,8 +12,8 @@ import {
   unique,
   pgSequence,
   pgEnum,
-} from "drizzle-orm/pg-core"
-import { relations, sql } from "drizzle-orm"
+} from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
 
 export const inviteType = pgEnum("invite_type", [
   "topic",
@@ -21,13 +21,13 @@ export const inviteType = pgEnum("invite_type", [
   "custom",
   "all",
   "device",
-])
+]);
 export const uploadStatus = pgEnum("upload_status", [
   "initialized",
   "processing",
   "error",
   "completed",
-])
+]);
 
 export const participantsIdSeq1 = pgSequence("participants_id_seq1", {
   startWith: "1",
@@ -36,7 +36,7 @@ export const participantsIdSeq1 = pgSequence("participants_id_seq1", {
   maxValue: "9223372036854775807",
   cache: "1",
   cycle: false,
-})
+});
 export const submissionsIdSeq1 = pgSequence("submissions_id_seq1", {
   startWith: "1",
   increment: "1",
@@ -44,7 +44,7 @@ export const submissionsIdSeq1 = pgSequence("submissions_id_seq1", {
   maxValue: "9223372036854775807",
   cache: "1",
   cycle: false,
-})
+});
 
 export const juryRatings = pgTable(
   "jury_ratings",
@@ -87,8 +87,8 @@ export const juryRatings = pgTable(
       foreignColumns: [participants.id],
       name: "jury_ratings_participant_id_fkey",
     }).onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const ruleConfigs = pgTable(
   "rule_configs",
@@ -119,8 +119,8 @@ export const ruleConfigs = pgTable(
       foreignColumns: [marathons.id],
       name: "rule_configs_marathon_id_fkey",
     }),
-  ]
-)
+  ],
+);
 
 export const juryInvitations = pgTable(
   "jury_invitations",
@@ -178,8 +178,8 @@ export const juryInvitations = pgTable(
       foreignColumns: [topics.id],
       name: "jury_invitations_topic_id_fkey",
     }).onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const participants = pgTable(
   "participants",
@@ -216,16 +216,16 @@ export const participants = pgTable(
   (table) => [
     index("participants_domain_idx").using(
       "btree",
-      table.domain.asc().nullsLast().op("text_ops")
+      table.domain.asc().nullsLast().op("text_ops"),
     ),
     index("participants_reference_domain_idx").using(
       "btree",
       table.reference.asc().nullsLast().op("text_ops"),
-      table.domain.asc().nullsLast().op("text_ops")
+      table.domain.asc().nullsLast().op("text_ops"),
     ),
     index("participants_reference_idx").using(
       "btree",
-      table.reference.asc().nullsLast().op("text_ops")
+      table.reference.asc().nullsLast().op("text_ops"),
     ),
     foreignKey({
       columns: [table.competitionClassId],
@@ -244,8 +244,8 @@ export const participants = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const account = pgTable(
   "account",
@@ -270,8 +270,8 @@ export const account = pgTable(
       foreignColumns: [user.id],
       name: "account_userId_fkey",
     }),
-  ]
-)
+  ],
+);
 
 export const session = pgTable(
   "session",
@@ -293,8 +293,8 @@ export const session = pgTable(
       name: "session_userId_fkey",
     }),
     unique("session_token_key").on(table.token),
-  ]
-)
+  ],
+);
 
 export const userMarathons = pgTable(
   "user_marathons",
@@ -327,8 +327,8 @@ export const userMarathons = pgTable(
       foreignColumns: [user.id],
       name: "user_marathons_user_id_fkey",
     }),
-  ]
-)
+  ],
+);
 
 export const validationResults = pgTable(
   "validation_results",
@@ -358,15 +358,15 @@ export const validationResults = pgTable(
   (table) => [
     index("validation_results_participant_id_idx").using(
       "btree",
-      table.participantId.asc().nullsLast().op("int8_ops")
+      table.participantId.asc().nullsLast().op("int8_ops"),
     ),
     foreignKey({
       columns: [table.participantId],
       foreignColumns: [participants.id],
       name: "validation_results_participant_id_fkey",
     }).onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const verification = pgTable("verification", {
   id: text().primaryKey().notNull(),
@@ -375,7 +375,7 @@ export const verification = pgTable("verification", {
   expiresAt: timestamp({ mode: "string" }).notNull(),
   createdAt: timestamp({ mode: "string" }),
   updatedAt: timestamp({ mode: "string" }),
-})
+});
 
 export const marathons = pgTable(
   "marathons",
@@ -406,10 +406,10 @@ export const marathons = pgTable(
   (table) => [
     index("marathons_domain_idx").using(
       "btree",
-      table.domain.asc().nullsLast().op("text_ops")
+      table.domain.asc().nullsLast().op("text_ops"),
     ),
-  ]
-)
+  ],
+);
 
 export const competitionClasses = pgTable(
   "competition_classes",
@@ -437,7 +437,7 @@ export const competitionClasses = pgTable(
   (table) => [
     index("competition_classes_marathon_id_idx").using(
       "btree",
-      table.marathonId.asc().nullsLast().op("int8_ops")
+      table.marathonId.asc().nullsLast().op("int8_ops"),
     ),
     foreignKey({
       columns: [table.marathonId],
@@ -446,8 +446,8 @@ export const competitionClasses = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const deviceGroups = pgTable(
   "device_groups",
@@ -474,7 +474,7 @@ export const deviceGroups = pgTable(
   (table) => [
     index("device_groups_marathon_id_idx").using(
       "btree",
-      table.marathonId.asc().nullsLast().op("int8_ops")
+      table.marathonId.asc().nullsLast().op("int8_ops"),
     ),
     foreignKey({
       columns: [table.marathonId],
@@ -483,8 +483,8 @@ export const deviceGroups = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const participantVerifications = pgTable(
   "participant_verifications",
@@ -510,7 +510,7 @@ export const participantVerifications = pgTable(
   (table) => [
     index("participant_verifications_staff_id_idx").using(
       "btree",
-      table.staffId.asc().nullsLast().op("text_ops")
+      table.staffId.asc().nullsLast().op("text_ops"),
     ),
     foreignKey({
       columns: [table.staffId],
@@ -522,8 +522,8 @@ export const participantVerifications = pgTable(
       foreignColumns: [participants.id],
       name: "participant_verifications_participant_id_fkey",
     }).onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const submissions = pgTable(
   "submissions",
@@ -560,15 +560,15 @@ export const submissions = pgTable(
   (table) => [
     index("submissions_key_idx").using(
       "btree",
-      table.key.asc().nullsLast().op("text_ops")
+      table.key.asc().nullsLast().op("text_ops"),
     ),
     index("submissions_marathon_id_idx").using(
       "btree",
-      table.marathonId.asc().nullsLast().op("int8_ops")
+      table.marathonId.asc().nullsLast().op("int8_ops"),
     ),
     index("submissions_participant_id_idx").using(
       "btree",
-      table.participantId.asc().nullsLast().op("int8_ops")
+      table.participantId.asc().nullsLast().op("int8_ops"),
     ),
     foreignKey({
       columns: [table.marathonId],
@@ -589,8 +589,8 @@ export const submissions = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const topics = pgTable(
   "topics",
@@ -626,8 +626,8 @@ export const topics = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const zippedSubmissions = pgTable(
   "zipped_submissions",
@@ -666,8 +666,8 @@ export const zippedSubmissions = pgTable(
       foreignColumns: [participants.id],
       name: "zipped_submissions_participant_id_fkey",
     }).onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const user = pgTable(
   "user",
@@ -683,8 +683,8 @@ export const user = pgTable(
     banReason: text(),
     banExpires: timestamp({ mode: "string" }),
   },
-  (table) => [unique("user_email_key").on(table.email)]
-)
+  (table) => [unique("user_email_key").on(table.email)],
+);
 
 export const sponsors = pgTable(
   "sponsors",
@@ -717,8 +717,8 @@ export const sponsors = pgTable(
       foreignColumns: [marathons.id],
       name: "sponsors_marathon_id_fkey",
     }).onDelete("cascade"),
-  ]
-)
+  ],
+);
 
 export const juryRatingsRelations = relations(juryRatings, ({ one }) => ({
   juryInvitation: one(juryInvitations, {
@@ -733,7 +733,7 @@ export const juryRatingsRelations = relations(juryRatings, ({ one }) => ({
     fields: [juryRatings.participantId],
     references: [participants.id],
   }),
-}))
+}));
 
 export const juryInvitationsRelations = relations(
   juryInvitations,
@@ -755,8 +755,8 @@ export const juryInvitationsRelations = relations(
       fields: [juryInvitations.topicId],
       references: [topics.id],
     }),
-  })
-)
+  }),
+);
 
 export const marathonsRelations = relations(marathons, ({ many }) => ({
   juryRatings: many(juryRatings),
@@ -770,7 +770,7 @@ export const marathonsRelations = relations(marathons, ({ many }) => ({
   topics: many(topics),
   zippedSubmissions: many(zippedSubmissions),
   sponsors: many(sponsors),
-}))
+}));
 
 export const participantsRelations = relations(
   participants,
@@ -792,15 +792,15 @@ export const participantsRelations = relations(
     participantVerifications: many(participantVerifications),
     submissions: many(submissions),
     zippedSubmissions: many(zippedSubmissions),
-  })
-)
+  }),
+);
 
 export const ruleConfigsRelations = relations(ruleConfigs, ({ one }) => ({
   marathon: one(marathons, {
     fields: [ruleConfigs.marathonId],
     references: [marathons.id],
   }),
-}))
+}));
 
 export const competitionClassesRelations = relations(
   competitionClasses,
@@ -811,8 +811,8 @@ export const competitionClassesRelations = relations(
       fields: [competitionClasses.marathonId],
       references: [marathons.id],
     }),
-  })
-)
+  }),
+);
 
 export const deviceGroupsRelations = relations(
   deviceGroups,
@@ -823,8 +823,8 @@ export const deviceGroupsRelations = relations(
       fields: [deviceGroups.marathonId],
       references: [marathons.id],
     }),
-  })
-)
+  }),
+);
 
 export const topicsRelations = relations(topics, ({ one, many }) => ({
   juryInvitations: many(juryInvitations),
@@ -833,28 +833,28 @@ export const topicsRelations = relations(topics, ({ one, many }) => ({
     fields: [topics.marathonId],
     references: [marathons.id],
   }),
-}))
+}));
 
 export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
     fields: [account.userId],
     references: [user.id],
   }),
-}))
+}));
 
 export const userRelations = relations(user, ({ many }) => ({
   accounts: many(account),
   sessions: many(session),
   userMarathons: many(userMarathons),
   participantVerifications: many(participantVerifications),
-}))
+}));
 
 export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, {
     fields: [session.userId],
     references: [user.id],
   }),
-}))
+}));
 
 export const userMarathonsRelations = relations(userMarathons, ({ one }) => ({
   marathon: one(marathons, {
@@ -865,7 +865,7 @@ export const userMarathonsRelations = relations(userMarathons, ({ one }) => ({
     fields: [userMarathons.userId],
     references: [user.id],
   }),
-}))
+}));
 
 export const validationResultsRelations = relations(
   validationResults,
@@ -874,8 +874,8 @@ export const validationResultsRelations = relations(
       fields: [validationResults.participantId],
       references: [participants.id],
     }),
-  })
-)
+  }),
+);
 
 export const participantVerificationsRelations = relations(
   participantVerifications,
@@ -888,8 +888,8 @@ export const participantVerificationsRelations = relations(
       fields: [participantVerifications.participantId],
       references: [participants.id],
     }),
-  })
-)
+  }),
+);
 
 export const submissionsRelations = relations(submissions, ({ one }) => ({
   marathon: one(marathons, {
@@ -904,7 +904,7 @@ export const submissionsRelations = relations(submissions, ({ one }) => ({
     fields: [submissions.topicId],
     references: [topics.id],
   }),
-}))
+}));
 
 export const zippedSubmissionsRelations = relations(
   zippedSubmissions,
@@ -917,12 +917,12 @@ export const zippedSubmissionsRelations = relations(
       fields: [zippedSubmissions.participantId],
       references: [participants.id],
     }),
-  })
-)
+  }),
+);
 
 export const sponsorsRelations = relations(sponsors, ({ one }) => ({
   marathon: one(marathons, {
     fields: [sponsors.marathonId],
     references: [marathons.id],
   }),
-}))
+}));

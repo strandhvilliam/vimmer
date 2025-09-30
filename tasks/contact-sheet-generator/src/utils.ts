@@ -1,4 +1,4 @@
-import { Data, Effect, Option, Schema } from "effect"
+import { Data, Effect, Option, Schema } from "effect";
 import {
   BOTTOM_ROW_LARGE,
   BOTTOM_ROW_SMALL,
@@ -30,88 +30,88 @@ import {
   TEXT_SPACING_REDUCTION,
   TEXT_VERTICAL_POSITION,
   TOP_ROW,
-} from "./constants"
-import { SponsorPosition } from "./schemas"
-import { SheetVariables } from "./types"
-import { ParticipantState } from "@blikka/kv-store"
-import { CompetitionClass } from "@blikka/db"
-import { SQSRecord } from "aws-lambda"
-import { FinalizedEventSchema } from "@blikka/bus"
+} from "./constants";
+import { SponsorPosition } from "./schemas";
+import { SheetVariables } from "./types";
+import { ParticipantState } from "@blikka/kv-store";
+import { CompetitionClass } from "@blikka/db";
+import { SQSRecord } from "aws-lambda";
+import { FinalizedEventSchema } from "@blikka/bus";
 
-const VALID_PHOTO_COUNTS = [8, 24]
+const VALID_PHOTO_COUNTS = [8, 24];
 
 export class InvalidBodyError extends Data.TaggedError("InvalidBodyError")<{
-  message?: string
-  cause?: unknown
+  message?: string;
+  cause?: unknown;
 }> {}
 
 export class InvalidSheetGenerationData extends Data.TaggedError(
-  "InvalidDataError"
+  "InvalidDataError",
 )<{
-  message?: string
+  message?: string;
 }> {}
 
 export class JsonParseError extends Data.TaggedError("JsonParseError")<{
-  message?: string
+  message?: string;
 }> {}
 
 export class SvgGenerationError extends Data.TaggedError("SvgGenerationError")<{
-  message?: string
-  cause?: unknown
+  message?: string;
+  cause?: unknown;
 }> {}
 
 export class InvalidKeyFormatError extends Data.TaggedError(
-  "InvalidKeyFormatError"
+  "InvalidKeyFormatError",
 )<{
-  message?: string
+  message?: string;
 }> {}
 
 export class TopicLabelNotFoundError extends Data.TaggedError(
-  "TopicLabelNotFoundError"
+  "TopicLabelNotFoundError",
 )<{
-  message?: string
+  message?: string;
 }> {}
 
 export class InvalidImageCountError extends Data.TaggedError(
-  "InvalidImageCountError"
+  "InvalidImageCountError",
 )<{
-  message?: string
+  message?: string;
 }> {}
 
 export class ImageNotFoundError extends Data.TaggedError("ImageNotFoundError")<{
-  message?: string
+  message?: string;
 }> {}
 
 export const parseKey = (key: string) =>
   Effect.sync(() => {
-    const [domain, reference, orderIndex, fileName] = key.split("/")
+    const [domain, reference, orderIndex, fileName] = key.split("/");
     if (!domain || !reference || !orderIndex || !fileName) {
       return Effect.fail(
         new InvalidKeyFormatError({
           message: `Missing: domain=${domain}, reference=${reference}, orderIndex=${orderIndex}, fileName=${fileName}`,
-        })
-      )
+        }),
+      );
     }
-    return Effect.succeed({ domain, reference, orderIndex, fileName })
-  }).pipe(Effect.flatten)
+    return Effect.succeed({ domain, reference, orderIndex, fileName });
+  }).pipe(Effect.flatten);
 
 export function getGridConfig(
   sponsorPosition: SponsorPosition,
-  imageCount: number
+  imageCount: number,
 ) {
-  const isSmallGrid = imageCount === SMALL_IMAGE_COUNT
-  const gridSize = isSmallGrid ? SMALL_GRID_SIZE : LARGE_GRID_SIZE
+  const isSmallGrid = imageCount === SMALL_IMAGE_COUNT;
+  const gridSize = isSmallGrid ? SMALL_GRID_SIZE : LARGE_GRID_SIZE;
   const { row: sponsorRow, col: sponsorCol } = getSponsorPosition(
     sponsorPosition,
-    isSmallGrid
-  )
+    isSmallGrid,
+  );
 
   return {
     cols: gridSize,
     rows: gridSize,
     sponsorRow,
     sponsorCol,
-  }
+  };
 }
 
 export function escapeXml(unsafe: string) {
@@ -120,12 +120,12 @@ export function escapeXml(unsafe: string) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;")
+    .replace(/'/g, "&apos;");
 }
 
 export function getSponsorPosition(
   position: SponsorPosition,
-  isSmallGrid: boolean
+  isSmallGrid: boolean,
 ): { row: number; col: number } {
   const positions = {
     "bottom-left": {
@@ -148,41 +148,41 @@ export function getSponsorPosition(
       row: isSmallGrid ? BOTTOM_ROW_SMALL : BOTTOM_ROW_LARGE,
       col: isSmallGrid ? RIGHT_COL_SMALL : RIGHT_COL_LARGE,
     },
-  }
+  };
 
-  return positions[position]
+  return positions[position];
 }
 
 export function calculateSheetVariables(
   reference: string,
   cols: number,
-  rows: number
+  rows: number,
 ): SheetVariables {
-  const textHeight = Math.round(CANVAS_HEIGHT * TEXT_HEIGHT_RATIO)
+  const textHeight = Math.round(CANVAS_HEIGHT * TEXT_HEIGHT_RATIO);
   const sequenceSpace = reference
     ? Math.round(CANVAS_HEIGHT * SEQUENCE_SPACE_RATIO)
-    : 0
+    : 0;
 
-  const availableWidth = CANVAS_WIDTH - DEFAULT_PADDING * (cols + 1)
+  const availableWidth = CANVAS_WIDTH - DEFAULT_PADDING * (cols + 1);
   const availableHeight =
     CANVAS_HEIGHT -
     DEFAULT_PADDING * (rows + 1) -
     sequenceSpace +
-    EXTRA_SPACING_ADJUSTMENT
+    EXTRA_SPACING_ADJUSTMENT;
 
-  const cellWidth = Math.floor(availableWidth / cols)
-  const cellHeight = Math.floor(availableHeight / rows)
+  const cellWidth = Math.floor(availableWidth / cols);
+  const cellHeight = Math.floor(availableHeight / rows);
 
   const availableImageHeight =
-    cellHeight - (textHeight - TEXT_SPACING_REDUCTION)
+    cellHeight - (textHeight - TEXT_SPACING_REDUCTION);
 
-  let imageWidth: number, imageHeight: number
+  let imageWidth: number, imageHeight: number;
   if (cellWidth / availableImageHeight > LANDSCAPE_ASPECT_RATIO) {
-    imageHeight = Math.floor(availableImageHeight * IMAGE_SIZE_FACTOR)
-    imageWidth = Math.floor(imageHeight * LANDSCAPE_ASPECT_RATIO)
+    imageHeight = Math.floor(availableImageHeight * IMAGE_SIZE_FACTOR);
+    imageWidth = Math.floor(imageHeight * LANDSCAPE_ASPECT_RATIO);
   } else {
-    imageWidth = Math.floor(cellWidth * IMAGE_SIZE_FACTOR)
-    imageHeight = Math.floor(imageWidth / LANDSCAPE_ASPECT_RATIO)
+    imageWidth = Math.floor(cellWidth * IMAGE_SIZE_FACTOR);
+    imageHeight = Math.floor(imageWidth / LANDSCAPE_ASPECT_RATIO);
   }
 
   return {
@@ -195,16 +195,18 @@ export function calculateSheetVariables(
     sequenceSpace,
     availableWidth,
     availableHeight,
-  }
+  };
 }
 
 export function getImageLabel(
   orderIndex: number,
-  topics: { name: string; orderIndex: number }[]
+  topics: { name: string; orderIndex: number }[],
 ): Option.Option<string> {
-  const topic = topics.find((t) => t.orderIndex === orderIndex)
-  if (!topic) return Option.none()
-  return Option.some(`${topic.orderIndex + LABEL_INDEX_OFFSET} - ${topic.name}`)
+  const topic = topics.find((t) => t.orderIndex === orderIndex);
+  if (!topic) return Option.none();
+  return Option.some(
+    `${topic.orderIndex + LABEL_INDEX_OFFSET} - ${topic.name}`,
+  );
 }
 
 export function calculateImagePosition({
@@ -212,20 +214,20 @@ export function calculateImagePosition({
   y,
   sheetVariables,
 }: {
-  x: number
-  y: number
-  sheetVariables: SheetVariables
+  x: number;
+  y: number;
+  sheetVariables: SheetVariables;
 }) {
   return {
     top:
       y +
       Math.floor(
-        (sheetVariables.availableImageHeight - sheetVariables.imageHeight) / 2
+        (sheetVariables.availableImageHeight - sheetVariables.imageHeight) / 2,
       ),
     left:
       x +
       Math.floor((sheetVariables.cellWidth - sheetVariables.imageWidth) / 2),
-  }
+  };
 }
 
 export function getImagePosition({
@@ -233,20 +235,20 @@ export function getImagePosition({
   y,
   sheetVariables,
 }: {
-  x: number
-  y: number
-  sheetVariables: SheetVariables
+  x: number;
+  y: number;
+  sheetVariables: SheetVariables;
 }) {
   return {
     top:
       y +
       Math.floor(
-        (sheetVariables.availableImageHeight - sheetVariables.imageHeight) / 2
+        (sheetVariables.availableImageHeight - sheetVariables.imageHeight) / 2,
       ),
     left:
       x +
       Math.floor((sheetVariables.cellWidth - sheetVariables.imageWidth) / 2),
-  }
+  };
 }
 
 export function calculateCoordinateValues({
@@ -254,29 +256,29 @@ export function calculateCoordinateValues({
   row,
   sheetVariables,
 }: {
-  col: number
-  row: number
-  sheetVariables: SheetVariables
+  col: number;
+  row: number;
+  sheetVariables: SheetVariables;
 }) {
   return {
     x: DEFAULT_PADDING + col * (sheetVariables.cellWidth + DEFAULT_PADDING),
     y: DEFAULT_PADDING * 2 + row * (sheetVariables.cellHeight + ROW_SPACING),
-  }
+  };
 }
 
 export const generateParticipantReferenceSvg = ({
   reference,
 }: {
-  reference: string
+  reference: string;
 }) =>
   Effect.try({
     try: () => {
       const seqFontSize = Math.max(
         SEQUENCE_FONT_SIZE_MIN,
-        Math.floor(CANVAS_HEIGHT * SEQUENCE_FONT_SIZE_RATIO)
-      )
-      const seqWidth = Math.floor(CANVAS_WIDTH * SEQUENCE_WIDTH_RATIO)
-      const seqHeight = Math.floor(CANVAS_HEIGHT)
+        Math.floor(CANVAS_HEIGHT * SEQUENCE_FONT_SIZE_RATIO),
+      );
+      const seqWidth = Math.floor(CANVAS_WIDTH * SEQUENCE_WIDTH_RATIO);
+      const seqHeight = Math.floor(CANVAS_HEIGHT);
 
       const seqSvg = `
     <svg width="${seqWidth}" height="${seqHeight}">
@@ -287,22 +289,22 @@ export const generateParticipantReferenceSvg = ({
             fill="black" 
             text-anchor="middle">${escapeXml(reference)}</text>
     </svg>
-  `
-      return Buffer.from(seqSvg)
+  `;
+      return Buffer.from(seqSvg);
     },
     catch: (error) =>
       new SvgGenerationError({
         cause: error,
         message: "Failed to generate participant reference SVG",
       }),
-  })
+  });
 
 export const generateTextLabelSvg = ({
   label,
   sheetVariables,
 }: {
-  label: string
-  sheetVariables: SheetVariables
+  label: string;
+  sheetVariables: SheetVariables;
 }) =>
   Effect.try({
     try: () => {
@@ -316,105 +318,105 @@ export const generateTextLabelSvg = ({
               text-anchor="start"
               >${escapeXml(label)}</text>
       </svg>
-    `
-      return Buffer.from(textSvg)
+    `;
+      return Buffer.from(textSvg);
     },
     catch: (error) =>
       new SvgGenerationError({
         cause: error,
         message: "Failed to generate text label SVG",
       }),
-  })
+  });
 
 export const generateContactSheetKey = (domain: string, reference: string) =>
-  `${domain}/${reference}/contact_sheet_${reference}_${new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5)}.jpg`
+  `${domain}/${reference}/contact_sheet_${reference}_${new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5)}.jpg`;
 
 export const parseJson = (input: string) =>
   Effect.try({
     try: () => JSON.parse(input),
     catch: (unknown) => new JsonParseError({ message: "Failed to parse JSON" }),
-  })
+  });
 
 export const ensureReadyForSheetGeneration = Effect.fn(
-  "contactSheetGenerator.ensureReadyForSheetGeneration"
+  "contactSheetGenerator.ensureReadyForSheetGeneration",
 )(function* (
   kvData: Option.Option<ParticipantState>,
   reference: string,
-  domain: string
+  domain: string,
 ) {
   if (Option.isNone(kvData)) {
     return yield* Effect.fail(
       new InvalidSheetGenerationData({
         message: `Participant state not found for reference ${reference} and domain ${domain}`,
-      })
-    )
+      }),
+    );
   }
 
   if (!kvData.value.finalized) {
     yield* Effect.log(
-      `Participant state not finalized for reference ${reference} and domain ${domain}`
-    )
-    return yield* Effect.succeed({ shouldSkip: true })
+      `Participant state not finalized for reference ${reference} and domain ${domain}`,
+    );
+    return yield* Effect.succeed({ shouldSkip: true });
   }
 
   if (kvData.value.contactSheetKey) {
     yield* Effect.log(
-      `Contact sheet already generated for reference ${reference} and domain ${domain}`
-    )
-    return yield* Effect.succeed({ shouldSkip: true })
+      `Contact sheet already generated for reference ${reference} and domain ${domain}`,
+    );
+    return yield* Effect.succeed({ shouldSkip: true });
   }
-})
+});
 
 export const validatePhotoCount = Effect.fn(
-  "contactSheetGenerator.validatePhotoCount"
+  "contactSheetGenerator.validatePhotoCount",
 )(function* (
   reference: string,
   keys: string[],
-  competitionClass: CompetitionClass | null
+  competitionClass: CompetitionClass | null,
 ) {
   if (!competitionClass?.numberOfPhotos) {
     return yield* Effect.fail(
       new InvalidSheetGenerationData({
         message: `Missing competition class photo count`,
-      })
-    )
+      }),
+    );
   }
 
-  const expectedCount = competitionClass.numberOfPhotos
+  const expectedCount = competitionClass.numberOfPhotos;
   if (!VALID_PHOTO_COUNTS.includes(expectedCount)) {
     return yield* Effect.fail(
       new InvalidSheetGenerationData({
         message: `Unsupported photo count ${expectedCount} for participant ${reference}`,
-      })
-    )
+      }),
+    );
   }
 
   if (keys.length !== expectedCount) {
     return yield* Effect.fail(
       new InvalidSheetGenerationData({
         message: `Photo count mismatch. Expected ${expectedCount}, got ${keys.length}`,
-      })
-    )
+      }),
+    );
   }
-})
+});
 
 export const parseFinalizedEvent = Effect.fn(
-  "contactSheetGenerator.parseFinalizedEvent"
+  "contactSheetGenerator.parseFinalizedEvent",
 )(
   function* (input: string) {
     const json = yield* Effect.try({
       try: () => JSON.parse(input),
       catch: (unknown) =>
         new JsonParseError({ message: "Failed to parse JSON" }),
-    })
-    const params = yield* Schema.decodeUnknown(FinalizedEventSchema)(json)
-    return params
+    });
+    const params = yield* Schema.decodeUnknown(FinalizedEventSchema)(json);
+    return params;
   },
   Effect.mapError(
     (error) =>
       new InvalidBodyError({
         message: "Failed to parse finalized event",
         cause: error,
-      })
-  )
-)
+      }),
+  ),
+);

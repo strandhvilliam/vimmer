@@ -1,16 +1,16 @@
-import { Effect, Option, Schema } from "effect"
-import { ZipKVRepository } from "@blikka/kv-store"
-import { Database, Submission, Topic } from "@blikka/db"
-import { S3Service } from "@blikka/s3"
-import { Resource as SSTResource } from "sst"
-import path from "path"
-import JSZip from "jszip"
+import { Effect, Option, Schema } from "effect";
+import { ZipKVRepository } from "@blikka/kv-store";
+import { Database, Submission, Topic } from "@blikka/db";
+import { S3Service } from "@blikka/s3";
+import { Resource as SSTResource } from "sst";
+import path from "path";
+import JSZip from "jszip";
 import {
   makeNewZipDto,
   InvalidArgumentsError,
   DataNotFoundError,
   FailedToGenerateZipError,
-} from "./utils"
+} from "./utils";
 
 export class ZipWorker extends Effect.Service<ZipWorker>()(
   "@blikka/tasks/zip-worker/zip-worker",
@@ -21,46 +21,49 @@ export class ZipWorker extends Effect.Service<ZipWorker>()(
       S3Service.Default,
     ],
     effect: Effect.gen(function* () {
-      const kvStore = yield* ZipKVRepository
-      const db = yield* Database
-      const s3 = yield* S3Service
+      const kvStore = yield* ZipKVRepository;
+      const db = yield* Database;
+      const s3 = yield* S3Service;
 
       const parseArguments = Effect.fn("ZipWorker.parseArguments")(
         function* () {
-          const domain = yield* Schema.Config("ARG_DOMAIN", Schema.String)
-          const reference = yield* Schema.Config("ARG_REFERENCE", Schema.String)
-          return { domain, reference }
+          const domain = yield* Schema.Config("ARG_DOMAIN", Schema.String);
+          const reference = yield* Schema.Config(
+            "ARG_REFERENCE",
+            Schema.String,
+          );
+          return { domain, reference };
         },
-        Effect.mapError((error) => new InvalidArgumentsError({ cause: error }))
-      )
+        Effect.mapError((error) => new InvalidArgumentsError({ cause: error })),
+      );
 
       const handleZipError = Effect.fn("ZipWorker.handleZipError")(
         function* (domain: string, reference: string, error: string) {
-          yield* kvStore.setZipProgressError(domain, reference, [`${error}`])
+          yield* kvStore.setZipProgressError(domain, reference, [`${error}`]);
         },
         Effect.catchAll((error) =>
-          Effect.logError("Error adding file to zip", error)
-        )
-      )
+          Effect.logError("Error adding file to zip", error),
+        ),
+      );
 
       const buildZipBuffer = Effect.fn("ZipWorker.buildZipBuffer")(function* (
         domain: string,
         reference: string,
-        entries: { path: string; data: Uint8Array<ArrayBufferLike> }[]
+        entries: { path: string; data: Uint8Array<ArrayBufferLike> }[],
       ) {
         return yield* Effect.tryPromise({
           try: async () => {
-            const zip = new JSZip()
+            const zip = new JSZip();
             for (const { path, data } of entries) {
               zip.file(path, data, {
                 binary: true,
                 compression: "DEFLATE",
-              })
+              });
             }
             return zip.generateAsync({
               type: "nodebuffer",
               compression: "DEFLATE",
-            })
+            });
           },
           catch: (error) =>
             new FailedToGenerateZipError({
@@ -69,19 +72,19 @@ export class ZipWorker extends Effect.Service<ZipWorker>()(
               domain,
               reference,
             }),
-        })
-      })
+        });
+      });
 
       const processSubmission = Effect.fn("ZipWorker.processSubmission")(
         function* (
           domain: string,
           reference: string,
           submission: Submission,
-          topics: Topic[]
+          topics: Topic[],
         ) {
           const orderIndex = Option.fromNullable(
-            topics.find((topic) => topic.id === submission.topicId)?.orderIndex
-          )
+            topics.find((topic) => topic.id === submission.topicId)?.orderIndex,
+          );
 
           if (Option.isNone(orderIndex)) {
             return yield* new DataNotFoundError({
@@ -89,12 +92,15 @@ export class ZipWorker extends Effect.Service<ZipWorker>()(
               domain,
               reference,
               key: submission.key,
-            })
+            });
           }
 
-          const paddedOrderIndex = String(orderIndex.value + 1).padStart(2, "0")
-          const extension = path.extname(submission.key).slice(1) || "jpg"
-          const zipPath = `${reference}_${paddedOrderIndex}.${extension}`
+          const paddedOrderIndex = String(orderIndex.value + 1).padStart(
+            2,
+            "0",
+          );
+          const extension = path.extname(submission.key).slice(1) || "jpg";
+          const zipPath = `${reference}_${paddedOrderIndex}.${extension}`;
 
           const bufferOpt = yield* s3
             .getFile(SSTResource.V2SubmissionsBucket.name, submission.key)
@@ -106,9 +112,9 @@ export class ZipWorker extends Effect.Service<ZipWorker>()(
                     cause: error,
                     domain,
                     reference,
-                  })
-              )
-            )
+                  }),
+              ),
+            );
 
           if (Option.isNone(bufferOpt)) {
             return yield* new DataNotFoundError({
@@ -116,15 +122,15 @@ export class ZipWorker extends Effect.Service<ZipWorker>()(
               domain,
               reference,
               key: submission.key,
-            })
+            });
           }
 
           return {
             path: zipPath,
             data: bufferOpt.value,
-          }
-        }
-      )
+          };
+        },
+      );
 
       const fetchRequiredData = Effect.fn("ZipWorker.fetchRequiredData")(
         function* (domain: string, reference: string) {
@@ -132,56 +138,56 @@ export class ZipWorker extends Effect.Service<ZipWorker>()(
             yield* db.participantsQueries.getParticipantByReference({
               reference,
               domain,
-            })
+            });
           if (Option.isNone(participantOpt)) {
             return yield* new DataNotFoundError({
               message: "Participant not found",
               domain,
               reference,
-            })
+            });
           }
           const topics = yield* db.topicsQueries.getTopicsByMarathonId({
             id: participantOpt.value.marathonId,
-          })
+          });
 
           return {
             participant: participantOpt.value,
             topics,
-          }
-        }
-      )
+          };
+        },
+      );
 
       const runZipTask = Effect.fn("ZipWorker.runZipTask")(
         function* () {
-          const { domain, reference } = yield* parseArguments()
+          const { domain, reference } = yield* parseArguments();
           yield* kvStore.initializeZipProgress(
             domain,
             reference,
-            `${domain}/${reference}.zip`
-          )
+            `${domain}/${reference}.zip`,
+          );
 
           const { participant, topics } = yield* fetchRequiredData(
             domain,
-            reference
-          )
+            reference,
+          );
 
           const entries = yield* Effect.forEach(
             participant.submissions,
             (submission) =>
               processSubmission(domain, reference, submission, topics).pipe(
                 Effect.tap(() =>
-                  kvStore.incrementZipProgress(domain, reference)
-                )
-              )
-          )
+                  kvStore.incrementZipProgress(domain, reference),
+                ),
+              ),
+          );
 
-          const zipBuffer = yield* buildZipBuffer(domain, reference, entries)
+          const zipBuffer = yield* buildZipBuffer(domain, reference, entries);
 
           yield* s3.putFile(
             SSTResource.V2ZipsBucket.name,
             `${domain}/${reference}.zip`,
-            zipBuffer
-          )
+            zipBuffer,
+          );
 
           yield* Effect.all(
             [
@@ -193,8 +199,8 @@ export class ZipWorker extends Effect.Service<ZipWorker>()(
                       cause: error,
                       domain,
                       reference,
-                    })
-                )
+                    }),
+                ),
               ),
               db.submissionsQueries
                 .createZippedSubmission({
@@ -208,27 +214,27 @@ export class ZipWorker extends Effect.Service<ZipWorker>()(
                         reference,
                         message: "Failed to save zipped submission to db",
                         cause: error,
-                      })
-                  )
+                      }),
+                  ),
                 ),
             ],
             {
               concurrency: "unbounded",
-            }
-          )
+            },
+          );
 
-          return zipBuffer
+          return zipBuffer;
         },
         Effect.catchTags({
           FailedToGenerateZipError: (error) =>
             handleZipError(error.domain, error.reference, `${error.message}`),
           DataNotFoundError: (error) =>
             handleZipError(error.domain, error.reference, `${error.message}`),
-        })
-      )
+        }),
+      );
       return {
         runZipTask,
-      } as const
+      } as const;
     }),
-  }
+  },
 ) {}

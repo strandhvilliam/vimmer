@@ -1,11 +1,11 @@
-import { Resource } from "sst"
+import { Resource } from "sst";
 import {
   EventBridgeClient,
   PutEventsCommand,
-} from "@aws-sdk/client-eventbridge"
+} from "@aws-sdk/client-eventbridge";
 
 export const handler = async () => {
-  const eb = new EventBridgeClient({})
+  const eb = new EventBridgeClient({});
 
   const result = await eb.send(
     new PutEventsCommand({
@@ -17,8 +17,8 @@ export const handler = async () => {
           DetailType: "blikka.bus.finalized",
         },
       ],
-    })
-  )
+    }),
+  );
 
-  return { result }
-}
+  return { result };
+};

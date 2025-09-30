@@ -1,10 +1,10 @@
-import { Data, Effect } from "effect"
-import type { Sharp } from "sharp"
-import sharp from "sharp"
+import { Data, Effect } from "effect";
+import type { Sharp } from "sharp";
+import sharp from "sharp";
 
 export class SharpError extends Data.TaggedError("SharpError")<{
-  message?: string
-  cause?: unknown
+  message?: string;
+  cause?: unknown;
 }> {}
 
 export type EffectSharp = {
@@ -16,18 +16,18 @@ export type EffectSharp = {
         ? (...args: A) => Effect.Effect<R, SharpError>
         : Sharp[K] extends (...args: infer A) => Sharp
           ? (...args: A) => EffectSharp
-          : Sharp[K]
-}
+          : Sharp[K];
+};
 
 const wrapSharp = (sharp: Sharp): EffectSharp =>
   new Proxy(sharp, {
     get: (target, prop, receiver) => {
-      const original = Reflect.get(target, prop, receiver)
+      const original = Reflect.get(target, prop, receiver);
       if (typeof original !== "function") {
-        return original
+        return original;
       }
       return (...args: unknown[]) => {
-        const result = original.apply(target, args)
+        const result = original.apply(target, args);
 
         if (result instanceof Promise) {
           return Effect.tryPromise({
@@ -37,15 +37,15 @@ const wrapSharp = (sharp: Sharp): EffectSharp =>
                 cause: error,
                 message: `Failed to execute ${String(prop)} on Sharp`,
               }),
-          })
+          });
         }
         if (result && result.constructor?.name === "Sharp") {
-          return wrapSharp(result)
+          return wrapSharp(result);
         }
-        return result
-      }
+        return result;
+      };
     },
-  }) as unknown as EffectSharp
+  }) as unknown as EffectSharp;
 
 export class SharpEffectfulTemp extends Effect.Service<SharpEffectfulTemp>()(
   "@blikka/packages/image-manipulation/sharp-effectful-temp",
@@ -53,7 +53,7 @@ export class SharpEffectfulTemp extends Effect.Service<SharpEffectfulTemp>()(
     dependencies: [],
     effect: Effect.gen(function* () {
       const fromBuffer = (
-        buffer: Buffer
+        buffer: Buffer,
       ): Effect.Effect<EffectSharp, SharpError, never> =>
         Effect.try({
           try: () => wrapSharp(sharp(buffer)),
@@ -62,11 +62,11 @@ export class SharpEffectfulTemp extends Effect.Service<SharpEffectfulTemp>()(
               cause: err,
               message: "Failed to create Sharp instance",
             }),
-        })
+        });
 
       return {
         fromBuffer,
-      }
+      };
     }),
-  }
+  },
 ) {}

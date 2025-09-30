@@ -6,34 +6,34 @@ export default $config({
       name: "blikka",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
-    }
+    };
   },
   async run() {
     /* BUCKETS */
 
     const submissionsBucket = new sst.aws.Bucket("V2SubmissionsBucket", {
       access: "public",
-    })
+    });
     const thumbnailsBucket = new sst.aws.Bucket("V2ThumbnailsBucket", {
       access: "public",
-    })
+    });
     const contactSheetsBucket = new sst.aws.Bucket("V2ContactSheetsBucket", {
       access: "public",
-    })
+    });
     const sponsorBucket = new sst.aws.Bucket("V2SponsorBucket", {
       access: "public",
-    })
+    });
     const zipsBucket = new sst.aws.Bucket("V2ZipsBucket", {
       access: "public",
-    })
+    });
 
     /* QUEUES & BUSES */
 
-    const submissionFinalizedBus = new sst.aws.Bus("SubmissionFinalizedBus")
-    const uploadProcessorQueue = new sst.aws.Queue("UploadStatusQueue")
-    const validationQueue = new sst.aws.Queue("ValidationQueue")
-    const sheetGeneratorQueue = new sst.aws.Queue("SheetGeneratorQueue")
-    const zipGeneratorQueue = new sst.aws.Queue("ZipGeneratorQueue")
+    const submissionFinalizedBus = new sst.aws.Bus("SubmissionFinalizedBus");
+    const uploadProcessorQueue = new sst.aws.Queue("UploadStatusQueue");
+    const validationQueue = new sst.aws.Queue("ValidationQueue");
+    const sheetGeneratorQueue = new sst.aws.Queue("SheetGeneratorQueue");
+    const zipGeneratorQueue = new sst.aws.Queue("ZipGeneratorQueue");
 
     /* BUCKET NOTIFICATIONS */
 
@@ -45,30 +45,30 @@ export default $config({
           events: ["s3:ObjectCreated:*"],
         },
       ],
-    })
+    });
 
     /* TASKS */
-    const vpc = new sst.aws.Vpc("BlikkaMainVPC")
-    const cluster = new sst.aws.Cluster("BlikkaMainCluster", { vpc })
+    const vpc = new sst.aws.Vpc("BlikkaMainVPC");
+    const cluster = new sst.aws.Cluster("BlikkaMainCluster", { vpc });
     const zipHandlerTask = new sst.aws.Task("ZipHandlerTask", {
       cluster,
       image: {
         dockerfile: "/tasks/zip-handler/Dockerfile",
       },
       link: [submissionsBucket],
-    })
+    });
 
     /* QUEUE HANDLERS */
 
     uploadProcessorQueue.subscribe({
       handler: "./tasks/upload-processor/index.handler",
       link: [uploadProcessorQueue, submissionsBucket],
-    })
+    });
 
     sheetGeneratorQueue.subscribe({
       handler: "./tasks/contact-sheet-generator/index.handler",
       link: [sheetGeneratorQueue, contactSheetsBucket, submissionsBucket],
-    })
+    });
 
     zipGeneratorQueue.subscribe({
       handler: "./tasks/zip-generator/handler.handler",
@@ -80,22 +80,22 @@ export default $config({
         sponsorBucket,
         zipHandlerTask,
       ],
-    })
+    });
 
     /* BUS SUBSCRIPTIONS */
 
     submissionFinalizedBus.subscribeQueue(
       "ValidationBusSubscription",
-      validationQueue
-    )
+      validationQueue,
+    );
     submissionFinalizedBus.subscribeQueue(
       "SheetGeneratorBusSubscription",
-      sheetGeneratorQueue
-    )
+      sheetGeneratorQueue,
+    );
     submissionFinalizedBus.subscribeQueue(
       "ZipGeneratorBusSubscription",
-      zipGeneratorQueue
-    )
+      zipGeneratorQueue,
+    );
 
     /* DEV CALLER */
 
@@ -103,13 +103,13 @@ export default $config({
       url: true,
       handler: "./tasks/dev-caller/index.handler",
       link: [submissionFinalizedBus],
-    })
+    });
 
     return {
       devCaller: devCallerFn.url,
-    }
+    };
   },
-})
+});
 
 // function v1() {
 //   const env = {

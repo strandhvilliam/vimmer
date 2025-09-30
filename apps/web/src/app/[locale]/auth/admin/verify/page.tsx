@@ -1,16 +1,16 @@
-import { redirect } from "next/navigation"
-import { Suspense } from "react"
-import { AdminVerifyForm } from "./admin-verify-form"
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { AdminVerifyForm } from "./admin-verify-form";
 
 interface PageProps {
-  searchParams: Promise<{ email?: string }>
+  searchParams: Promise<{ email?: string }>;
 }
 
 export default async function AdminVerifyPage({ searchParams }: PageProps) {
-  const { email } = await searchParams
+  const { email } = await searchParams;
 
   if (!email) {
-    redirect("/auth/admin/login")
+    redirect("/auth/admin/login");
   }
 
   return (
@@ -29,5 +29,5 @@ export default async function AdminVerifyPage({ searchParams }: PageProps) {
         </Suspense>
       </div>
     </div>
-  )
+  );
 }

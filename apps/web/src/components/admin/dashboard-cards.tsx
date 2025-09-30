@@ -1,64 +1,64 @@
-"use client"
+"use client";
 
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@vimmer/ui/components/card"
-import { Users, UploadCloud, AlertCircle, Hourglass } from "lucide-react"
-import { Participant, PARTICIPANT_STATUS } from "@vimmer/supabase/types"
+} from "@vimmer/ui/components/card";
+import { Users, UploadCloud, AlertCircle, Hourglass } from "lucide-react";
+import { Participant, PARTICIPANT_STATUS } from "@vimmer/supabase/types";
 import {
   SEVERITY_LEVELS,
   VALIDATION_OUTCOME,
-} from "../../../../../packages/validation/old/constants"
-import { useSuspenseQuery } from "@tanstack/react-query"
-import { useDomain } from "@/contexts/domain-context"
-import { useTRPC } from "@/trpc/client"
+} from "../../../../../packages/validation/old/constants";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useDomain } from "@/contexts/domain-context";
+import { useTRPC } from "@/trpc/client";
 
 export function DashboardCards() {
-  const trpc = useTRPC()
-  const { domain } = useDomain()
+  const trpc = useTRPC();
+  const { domain } = useDomain();
 
   const { data: participants } = useSuspenseQuery(
-    trpc.participants.getByDomain.queryOptions({ domain })
-  )
+    trpc.participants.getByDomain.queryOptions({ domain }),
+  );
 
-  const totalParticipants = participants.length
+  const totalParticipants = participants.length;
   const totalUploads = participants.reduce(
     (acc: number, p: Participant) => acc + p.uploadCount,
-    0
-  )
+    0,
+  );
 
   const { inProgressCount, verifiedCount } = participants.reduce(
     (acc, p) => {
       if (p.status === PARTICIPANT_STATUS.VERIFIED) {
-        acc.verifiedCount++
+        acc.verifiedCount++;
       } else {
-        acc.inProgressCount++
+        acc.inProgressCount++;
       }
-      return acc
+      return acc;
     },
     { inProgressCount: 0, verifiedCount: 0 } as {
-      verifiedCount: number
-      inProgressCount: number
-    }
-  )
+      verifiedCount: number;
+      inProgressCount: number;
+    },
+  );
 
   const validationIssues = participants.flatMap(
-    (p) => p.validationResults || []
-  )
+    (p) => p.validationResults || [],
+  );
 
   const errorCount = validationIssues.filter(
     (v) =>
       v.severity === SEVERITY_LEVELS.ERROR &&
-      v.outcome === VALIDATION_OUTCOME.FAILED
-  ).length
+      v.outcome === VALIDATION_OUTCOME.FAILED,
+  ).length;
   const warningCount = validationIssues.filter(
     (v) =>
       v.severity === SEVERITY_LEVELS.WARNING &&
-      v.outcome === VALIDATION_OUTCOME.FAILED
-  ).length
+      v.outcome === VALIDATION_OUTCOME.FAILED,
+  ).length;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -146,5 +146,5 @@ export function DashboardCards() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

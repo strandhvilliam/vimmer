@@ -11,7 +11,7 @@ The new validation architecture is separated into distinct services with clear r
 ## Basic Usage
 
 ```typescript
-import { Effect } from "effect"
+import { Effect } from "effect";
 import {
   ValidationOrchestrator,
   ValidationEngine,
@@ -19,7 +19,7 @@ import {
   RULE_KEYS,
   type ValidationInput,
   type ValidationRule,
-} from "@vimmer/validation"
+} from "@vimmer/validation";
 
 // Create validation input
 const input: ValidationInput = {
@@ -33,7 +33,7 @@ const input: ValidationInput = {
   fileSize: 5000000, // 5MB
   orderIndex: 0,
   mimeType: "image/jpeg",
-}
+};
 
 // Define validation rules
 const rules: ValidationRule[] = [
@@ -49,29 +49,29 @@ const rules: ValidationRule[] = [
     severity: "warning",
     params: { allowedFileTypes: ["jpg", "jpeg", "png"] },
   },
-]
+];
 
 // Run validation
 const program = Effect.gen(function* () {
-  const orchestrator = yield* ValidationOrchestrator
+  const orchestrator = yield* ValidationOrchestrator;
 
   // Validate single input
-  const singleResult = yield* orchestrator.validateSingle(rules[0], input)
+  const singleResult = yield* orchestrator.validateSingle(rules[0], input);
 
   // Validate multiple inputs with all rules
-  const allResults = yield* orchestrator.validateAll(rules, [input])
+  const allResults = yield* orchestrator.validateAll(rules, [input]);
 
-  return { singleResult, allResults }
-})
+  return { singleResult, allResults };
+});
 
 // Execute with services
 const result = await Effect.runPromise(
   program.pipe(
     Effect.provide(ValidationOrchestrator.Default),
     Effect.provide(ValidationEngine.Default),
-    Effect.provide(ResultFormatter.Default)
-  )
-)
+    Effect.provide(ResultFormatter.Default),
+  ),
+);
 ```
 
 ## Direct Engine Usage
@@ -80,21 +80,21 @@ For advanced use cases, you can use the ValidationEngine directly:
 
 ```typescript
 const engineProgram = Effect.gen(function* () {
-  const engine = yield* ValidationEngine
+  const engine = yield* ValidationEngine;
 
   // Returns Effect<void, ValidationFailure>
   const result = yield* Effect.either(
-    engine[RULE_KEYS.MAX_FILE_SIZE]({ maxBytes: 10000000 }, input)
-  )
+    engine[RULE_KEYS.MAX_FILE_SIZE]({ maxBytes: 10000000 }, input),
+  );
 
   if (result._tag === "Left") {
     // Validation failed
-    console.log("Failed:", result.left.message)
+    console.log("Failed:", result.left.message);
   } else {
     // Validation passed
-    console.log("Passed!")
+    console.log("Passed!");
   }
-})
+});
 ```
 
 ## Custom Formatting
@@ -103,24 +103,24 @@ You can use the ResultFormatter independently:
 
 ```typescript
 const formatterProgram = Effect.gen(function* () {
-  const formatter = yield* ResultFormatter
+  const formatter = yield* ResultFormatter;
 
   // Format different outcomes
   const successResult = formatter.formatSuccess(
     RULE_KEYS.MAX_FILE_SIZE,
-    "error"
-  )
+    "error",
+  );
   const failureResult = formatter.formatFailure(
     new ValidationFailure({
       ruleKey: RULE_KEYS.MAX_FILE_SIZE,
       message: "File too large",
       context: { fileSize: 15000000 },
     }),
-    "error"
-  )
+    "error",
+  );
 
-  return { successResult, failureResult }
-})
+  return { successResult, failureResult };
+});
 ```
 
 ## Key Benefits

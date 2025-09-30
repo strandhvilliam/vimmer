@@ -1,2 +1,2 @@
-export * from "./sharp-image-service"
-export * from "./types"
+export * from "./sharp-image-service";
+export * from "./types";

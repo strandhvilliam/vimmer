@@ -1,11 +1,11 @@
-import { sql } from "drizzle-orm"
-import { type PgUpdateSetSource, type PgTable } from "drizzle-orm/pg-core"
-import { getTableColumns } from "drizzle-orm"
-import { getTableConfig } from "drizzle-orm/pg-core"
+import { sql } from "drizzle-orm";
+import { type PgUpdateSetSource, type PgTable } from "drizzle-orm/pg-core";
+import { getTableColumns } from "drizzle-orm";
+import { getTableConfig } from "drizzle-orm/pg-core";
 
 export function getDefaultRuleConfigs(
   marathonId: number,
-  { startDate, endDate }: { startDate: string | null; endDate: string | null }
+  { startDate, endDate }: { startDate: string | null; endDate: string | null },
 ) {
   return [
     {
@@ -57,30 +57,30 @@ export function getDefaultRuleConfigs(
       severity: "error",
       params: null,
     },
-  ]
+  ];
 }
 
 export function conflictUpdateSetAllColumns<
   T extends PgTable,
   E extends (keyof T["$inferInsert"])[],
 >(table: T, except?: E): PgUpdateSetSource<T> {
-  const columns = getTableColumns(table)
-  const config = getTableConfig(table)
-  const { name: tableName } = config
+  const columns = getTableColumns(table);
+  const config = getTableConfig(table);
+  const { name: tableName } = config;
   const conflictUpdateSet = Object.entries(columns).reduce(
     (acc, [columnName, columnInfo]) => {
       if (except && except.includes(columnName as E[number])) {
-        return acc
+        return acc;
       }
       if (!columnInfo.default) {
         // @ts-expect-error
         acc[columnName] = sql.raw(
-          `COALESCE("excluded"."${columnInfo.name}", "${tableName}"."${columnInfo.name}")`
-        )
+          `COALESCE("excluded"."${columnInfo.name}", "${tableName}"."${columnInfo.name}")`,
+        );
       }
-      return acc
+      return acc;
     },
-    {}
-  ) as PgUpdateSetSource<T>
-  return conflictUpdateSet
+    {},
+  ) as PgUpdateSetSource<T>;
+  return conflictUpdateSet;
 }

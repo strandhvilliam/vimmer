@@ -1,25 +1,25 @@
-import { trpc, batchPrefetch, HydrateClient } from "@/trpc/server"
-import { notFound } from "next/navigation"
-import { Suspense } from "react"
-import { ReviewClientPage } from "./client-page"
-import { Resource } from "sst"
+import { trpc, batchPrefetch, HydrateClient } from "@/trpc/server";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { ReviewClientPage } from "./client-page";
+import { Resource } from "sst";
 
 export default async function ReviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token: string }>
+  searchParams: Promise<{ token: string }>;
 }) {
-  const { token } = await searchParams
+  const { token } = await searchParams;
 
   if (!token) {
-    notFound()
+    notFound();
   }
 
   batchPrefetch([
     trpc.jury.verifyTokenAndGetInitialData.queryOptions({
       token,
     }),
-  ])
+  ]);
 
   return (
     <HydrateClient>
@@ -32,5 +32,5 @@ export default async function ReviewPage({
         />
       </Suspense>
     </HydrateClient>
-  )
+  );
 }

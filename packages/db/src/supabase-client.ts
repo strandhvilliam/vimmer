@@ -1,12 +1,12 @@
-import { Config, Data, Effect } from "effect"
+import { Config, Data, Effect } from "effect";
 import {
   createClient as createSupabaseClient,
   SupabaseClient as SupabaseDbClient,
-} from "@supabase/supabase-js"
+} from "@supabase/supabase-js";
 
 export class SupabaseError extends Data.TaggedError("SupabaseError")<{
-  message?: string
-  cause?: unknown
+  message?: string;
+  cause?: unknown;
 }> {}
 
 export class SupabaseClient extends Effect.Service<SupabaseClient>()(
@@ -14,13 +14,13 @@ export class SupabaseClient extends Effect.Service<SupabaseClient>()(
   {
     dependencies: [],
     effect: Effect.gen(function* () {
-      const url = yield* Config.string("SUPABASE_URL")
-      const anonKey = yield* Config.string("SUPABASE_ANON_KEY")
+      const url = yield* Config.string("SUPABASE_URL");
+      const anonKey = yield* Config.string("SUPABASE_ANON_KEY");
 
-      const client = createSupabaseClient(url, anonKey)
+      const client = createSupabaseClient(url, anonKey);
 
       const use = <T>(
-        fn: (client: SupabaseDbClient) => T
+        fn: (client: SupabaseDbClient) => T,
       ): Effect.Effect<Awaited<T>, SupabaseError, never> =>
         Effect.gen(function* () {
           const result = yield* Effect.try({
@@ -30,7 +30,7 @@ export class SupabaseClient extends Effect.Service<SupabaseClient>()(
                 cause: error,
                 message: "Supabase.use error (Sync)",
               }),
-          })
+          });
           if (result instanceof Promise) {
             return yield* Effect.tryPromise({
               try: () => result,
@@ -39,15 +39,15 @@ export class SupabaseClient extends Effect.Service<SupabaseClient>()(
                   cause: e,
                   message: "Supabase.use error (Async)",
                 }),
-            })
+            });
           } else {
-            return result
+            return result;
           }
-        })
+        });
 
       return {
         use,
-      }
+      };
     }),
-  }
+  },
 ) {}
