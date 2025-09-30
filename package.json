@@ -8,9 +8,11 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
+    "@effect/vitest": "^0.26.0",
     "@types/aws-lambda": "8.10.146",
     "prettier": "^3.5.3",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^3.2.4"
   },
   "engines": {
     "node": ">=18"
@@ -24,7 +26,6 @@
   ],
   "dependencies": {
     "@aws-sdk/lib-storage": "^3.828.0",
-    "@effect/vitest": "^0.26.0",
     "@trpc/client": "^11.4.2",
     "@trpc/server": "^11.4.2",
     "@trpc/tanstack-react-query": "^11.4.2",

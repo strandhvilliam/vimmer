@@ -6,8 +6,12 @@
     "./validator": "./src/validator.ts",
     "./types": "./src/types.ts"
   },
+  "scripts": {
+    "test": "vitest"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "vitest": "^2.1.8"
   },
   "peerDependencies": {
     "typescript": "^5.7.2"
