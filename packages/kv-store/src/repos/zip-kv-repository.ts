@@ -1,14 +1,14 @@
 import { Effect, Option, Schedule, Duration, Schema } from "effect"
 import { KeyFactory } from "../key-factory"
-import { RedisClient } from "../redis"
+import { UpstashClient } from "../upstash"
 import { makeInitialZipProgress } from "../schema"
 
 export class ZipKVRepository extends Effect.Service<ZipKVRepository>()(
   "@blikka/packages/kv-store/zip-kv-repository",
   {
-    dependencies: [RedisClient.Default, KeyFactory.Default],
+    dependencies: [UpstashClient.Default, KeyFactory.Default],
     effect: Effect.gen(function* () {
-      const redis = yield* RedisClient
+      const redis = yield* UpstashClient
       const keyFactory = yield* KeyFactory
 
       const getZipProgress = Effect.fn("ZipKVRepository.getZipProgress")(
