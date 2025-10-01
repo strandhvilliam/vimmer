@@ -3,15 +3,21 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "start": "bun run index.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@effect/platform": "^0.92.0",
+    "@effect/cli": "^0.71.0",
+    "@blikka/db": "workspace:*",
+    "@effect/platform": "^0.92.1",
     "@effect/platform-bun": "^0.81.0",
-    "effect": "^3.18.0"
+    "@effect/platform-node": "^0.98.2",
+    "effect": "^3.18.1"
   }
 }
