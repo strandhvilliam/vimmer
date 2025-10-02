@@ -1,42 +1,54 @@
 import { MarathonCreationCliService } from "@/services/marathon-create-service"
-import { parseArg } from "@/utils"
-import { Args, Command } from "@effect/cli"
-import { Effect, Console } from "effect"
+import { Command, Options } from "@effect/cli"
+import { Effect, Option, Array } from "effect"
 
-const domainArg = Args.text({ name: "domain" }).pipe(
-  Args.optional,
-  Args.withDescription("The domain of the marathon (e.g. sthlm2025)")
-)
-const nameArg = Args.text({ name: "name" }).pipe(
-  Args.optional,
-  Args.withDescription("The name of the marathon (e.g. Stockholm Marathon)")
+const domainArg = Options.text("domain").pipe(
+  Options.withDescription("The domain of the marathon (e.g. sthlm2025)"),
+  Options.optional
 )
 
-export const marathonCreateCommand = Command.make(
-  "marathon:create",
-  { domainArg, nameArg },
-  ({ domainArg, nameArg }) => {
-    return Effect.gen(function* () {
-      const marathonCreationCliService = yield* MarathonCreationCliService
-      const parsedDomain = yield* parseArg(domainArg)
-      const parsedName = yield* parseArg(nameArg)
-      yield* marathonCreationCliService.create({
-        domainArg: parsedDomain,
-        nameArg: parsedName,
-      })
-    }).pipe(
-      Effect.catchTag("InvalidArgError", (error) => Console.log(error.message)),
-      Effect.catchTag("MarathonInputError", (error) =>
-        Console.log(`Error: ${error.message}`)
-      ),
-      Effect.catchTag("SqlError", (error) =>
-        Console.log("Unhandled SQL error:", error)
-      ),
-      Effect.catchTag("QuitException", (error) => Effect.void)
-    )
-  }
-).pipe(
+const nameArg = Options.text("name").pipe(
+  Options.withDescription(
+    "The name of the marathon (e.g. Stockholm Fotomaraton)"
+  ),
+  Options.optional
+)
+
+const classesArg = Options.text("classes").pipe(
+  Options.withDescription(
+    "The classes of the marathon with number of photos in format: '4 hours:12'"
+  ),
+  Options.repeated,
+  Options.map((classes) =>
+    classes
+      .map((c) => c.split(":").map((c) => c.trim()))
+      .map(([name, numberOfPhotos]) => ({
+        name: name ?? "",
+        numberOfPhotos: Number(numberOfPhotos),
+      }))
+  ),
+  Options.map((classes) =>
+    Array.isEmptyArray(classes) ? Option.none() : Option.some(classes)
+  )
+)
+
+export const marathonCreateCommand = Command.make("marathon:create", {
+  domainArg,
+  nameArg,
+  classesArg,
+}).pipe(
   Command.withDescription(
     "Create a new marathon. Optionally provide the domain and name as arguments or fill in the prompts."
+  ),
+  Command.withHandler(({ domainArg, nameArg, classesArg }) =>
+    MarathonCreationCliService.pipe(
+      Effect.andThen((service) =>
+        service.create({
+          domainArg,
+          nameArg,
+          classesArg,
+        })
+      )
+    )
   )
 )

@@ -1,7 +1,6 @@
 import { BunContext, BunRuntime } from "@effect/platform-bun"
-import { Args, Command } from "@effect/cli"
+import { Command } from "@effect/cli"
 import { Effect, Console, Layer } from "effect"
-import { parseArg } from "./utils"
 import { MarathonCreationCliService } from "./services/marathon-create-service"
 import { marathonCreateCommand } from "./commands/marathon-create-command"
 
