@@ -1,12 +1,12 @@
-import { Effect, Option } from "effect";
-import { RuleParams, ValidationInput } from "./types";
+import { Effect, Option } from "effect"
+import type { RuleParams, ValidationInput } from "./types"
 import {
   RULE_KEYS,
   IMAGE_EXTENSION_TO_MIME_TYPE,
   EDITING_SOFTWARE_KEYWORDS,
-} from "./constants";
-import { getTimestamp, getExtensionFromFilename } from "./utils";
-import { ValidationFailure, ValidationSkipped } from "./types";
+} from "./constants"
+import { getTimestamp, getExtensionFromFilename } from "./utils"
+import { ValidationFailure, ValidationSkipped } from "./types"
 
 export class SingleValidationsService extends Effect.Service<SingleValidationsService>()(
   "@vimmer/packages/validation/single-validations-service",
@@ -14,7 +14,7 @@ export class SingleValidationsService extends Effect.Service<SingleValidationsSe
     effect: Effect.gen(function* () {
       const validateMaxFileSize = (
         params: RuleParams["max_file_size"],
-        input: ValidationInput,
+        input: ValidationInput
       ) =>
         Effect.gen(function* () {
           if (input.fileSize > params.maxBytes) {
@@ -25,34 +25,34 @@ export class SingleValidationsService extends Effect.Service<SingleValidationsSe
                 fileSize: input.fileSize,
                 maxBytes: params.maxBytes,
               },
-            });
+            })
           }
 
-          return yield* Effect.succeed(void 0);
-        });
+          return yield* Effect.succeed(void 0)
+        })
       const validateAllowedFileTypes = (
         params: RuleParams["allowed_file_types"],
-        input: ValidationInput,
+        input: ValidationInput
       ) =>
         Effect.gen(function* () {
-          const extension = getExtensionFromFilename(input.fileName);
+          const extension = getExtensionFromFilename(input.fileName)
 
           const parsedAllowedFileTypes = params.allowedFileTypes.reduce(
             (acc, curr) => {
               if (curr === "jpeg") {
-                acc.push("jpg");
+                acc.push("jpg")
               }
-              acc.push(curr);
-              return acc;
+              acc.push(curr)
+              return acc
             },
-            [] as string[],
-          );
+            [] as string[]
+          )
 
           if (Option.isNone(extension)) {
             return yield* new ValidationSkipped({
               ruleKey: RULE_KEYS.ALLOWED_FILE_TYPES,
               reason: "Unable to determine file extension",
-            });
+            })
           }
 
           if (!parsedAllowedFileTypes.includes(extension.value)) {
@@ -63,23 +63,23 @@ export class SingleValidationsService extends Effect.Service<SingleValidationsSe
                 extension,
                 allowedExtensions: parsedAllowedFileTypes,
               },
-            });
+            })
           }
 
           const filteredMimeTypes = Object.entries(
-            IMAGE_EXTENSION_TO_MIME_TYPE,
-          ).filter(([key, _]) => params.allowedFileTypes.includes(key));
+            IMAGE_EXTENSION_TO_MIME_TYPE
+          ).filter(([key, _]) => params.allowedFileTypes.includes(key))
 
           if (filteredMimeTypes.length === 0) {
             return yield* new ValidationFailure({
               ruleKey: RULE_KEYS.ALLOWED_FILE_TYPES,
               message: `No valid mime types found for allowed extensions`,
-            });
+            })
           }
 
           const isValidMimeType = filteredMimeTypes.some(
-            ([_, value]) => value === input.mimeType,
-          );
+            ([_, value]) => value === input.mimeType
+          )
 
           if (!isValidMimeType) {
             return yield* new ValidationFailure({
@@ -89,37 +89,37 @@ export class SingleValidationsService extends Effect.Service<SingleValidationsSe
                 actualMimeType: input.mimeType,
                 allowedMimeTypes: filteredMimeTypes.map(([_, value]) => value),
               },
-            });
+            })
           }
 
           return yield* Effect.succeed(
-            "File is valid and within the allowed file types",
-          );
-        });
+            "File is valid and within the allowed file types"
+          )
+        })
       const validateTimeframe = (
         params: RuleParams["within_timerange"],
-        input: ValidationInput,
+        input: ValidationInput
       ) =>
         Effect.gen(function* () {
           const start =
             typeof params.start === "string"
               ? new Date(params.start)
-              : params.start;
+              : params.start
           const end =
-            typeof params.end === "string" ? new Date(params.end) : params.end;
+            typeof params.end === "string" ? new Date(params.end) : params.end
 
-          const timestamp = getTimestamp(input.exif);
+          const timestamp = getTimestamp(input.exif)
 
           if (Option.isNone(timestamp)) {
             return yield* new ValidationSkipped({
               ruleKey: RULE_KEYS.WITHIN_TIMERANGE,
               reason: "Unable to determine timestamp",
-            });
+            })
           }
 
           if (timestamp.value < start || timestamp.value > end) {
             const formatDate = (date: Date) =>
-              date.toISOString().replace("T", " ").substring(0, 16);
+              date.toISOString().replace("T", " ").substring(0, 16)
 
             return yield* new ValidationFailure({
               ruleKey: RULE_KEYS.WITHIN_TIMERANGE,
@@ -129,37 +129,37 @@ export class SingleValidationsService extends Effect.Service<SingleValidationsSe
                 startTime: start.toISOString(),
                 endTime: end.toISOString(),
               },
-            });
+            })
           }
 
           return yield* Effect.succeed(
-            "Photo was taken within the specified timeframe",
-          );
-        });
+            "Photo was taken within the specified timeframe"
+          )
+        })
       const validateModified = (
         params: RuleParams["modified"],
-        input: ValidationInput,
+        input: ValidationInput
       ) =>
         Effect.gen(function* () {
-          const software = Option.fromNullable<string>(input.exif["Software"]);
+          const software = Option.fromNullable<string>(input.exif["Software"])
 
           if (Option.isSome(software) && software.value !== "") {
             const hasEditingSoftwareKeyword = EDITING_SOFTWARE_KEYWORDS.some(
-              (keyword) => software.value.toLowerCase().includes(keyword),
-            );
+              (keyword) => software.value.toLowerCase().includes(keyword)
+            )
 
             if (hasEditingSoftwareKeyword) {
               return yield* new ValidationFailure({
                 ruleKey: RULE_KEYS.MODIFIED,
                 message: `Detected usage of photo editing software: ${software}`,
                 context: { software },
-              });
+              })
             }
           }
 
           const createDate =
-            input.exif.DateTimeOriginal || input.exif.CreateDate;
-          const modifyDate = input.exif.ModifyDate || input.exif.DateTime;
+            input.exif.DateTimeOriginal || input.exif.CreateDate
+          const modifyDate = input.exif.ModifyDate || input.exif.DateTime
 
           if (
             createDate &&
@@ -167,11 +167,11 @@ export class SingleValidationsService extends Effect.Service<SingleValidationsSe
             typeof createDate === "string" &&
             typeof modifyDate === "string"
           ) {
-            const createTime = new Date(createDate).getTime();
-            const modifyTime = new Date(modifyDate).getTime();
+            const createTime = new Date(createDate).getTime()
+            const modifyTime = new Date(modifyDate).getTime()
 
-            const ONE_HOUR_MS = 60 * 60 * 1000;
-            const isEdited = modifyTime - createTime > ONE_HOUR_MS;
+            const ONE_HOUR_MS = 60 * 60 * 1000
+            const isEdited = modifyTime - createTime > ONE_HOUR_MS
 
             if (isEdited) {
               return yield* new ValidationFailure({
@@ -184,23 +184,22 @@ export class SingleValidationsService extends Effect.Service<SingleValidationsSe
                   timeDifferenceHours:
                     (modifyTime - createTime) / (60 * 60 * 1000),
                 },
-              });
+              })
             }
           }
 
-          const exifData = input.exif;
+          const exifData = input.exif
           const meaningfulProperties = Object.entries(exifData).filter(
             ([_, value]) => {
               if (value === null || value === undefined || value === "")
-                return false;
-              if (typeof value === "string" && value.trim() === "")
-                return false;
-              return true;
-            },
-          );
+                return false
+              if (typeof value === "string" && value.trim() === "") return false
+              return true
+            }
+          )
 
-          const propertyCount = meaningfulProperties.length;
-          const MIN_EXPECTED_PROPERTIES = 15;
+          const propertyCount = meaningfulProperties.length
+          const MIN_EXPECTED_PROPERTIES = 15
 
           if (propertyCount < MIN_EXPECTED_PROPERTIES) {
             return yield* new ValidationFailure({
@@ -210,17 +209,17 @@ export class SingleValidationsService extends Effect.Service<SingleValidationsSe
                 propertyCount,
                 minExpected: MIN_EXPECTED_PROPERTIES,
               },
-            });
+            })
           }
 
-          return yield* Effect.succeed(void 0);
-        });
+          return yield* Effect.succeed(void 0)
+        })
       return {
         validateMaxFileSize,
         validateAllowedFileTypes,
         validateTimeframe,
         validateModified,
-      };
+      }
     }),
-  },
+  }
 ) {}

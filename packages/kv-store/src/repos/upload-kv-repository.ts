@@ -23,6 +23,7 @@ import {
 } from "../schema"
 import { FileSystem } from "@effect/platform"
 import { parseKey } from "../utils"
+import { luaIncrement } from "../lua-scripts/lua-increment"
 
 export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
   "@blikka/packages/kv-store/upload-kv-repository",
@@ -54,18 +55,21 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
             const redisKey = keyFactory.submission(
               domain,
               reference,
-              orderIndex.toString()
+              orderIndex
             )
             map[redisKey] = makeInitialSubmissionState(key, Number(orderIndex))
           }
 
-          yield* redis.use((client) => client.mset(map))
-          yield* redis.use((client) =>
-            client.hset(
-              keyFactory.participant(domain, reference),
-              participantState
+          yield* redis.use((client) => {
+            const participantKey = keyFactory.participant(domain, reference)
+            const entries = Object.entries(map)
+
+            const multi = entries.reduce(
+              (chain, [redisKey, value]) => chain.hset(redisKey, value),
+              client.multi().hset(participantKey, participantState)
             )
-          )
+            return multi.exec()
+          })
         },
         Effect.retry(
           Schedule.compose(
@@ -99,9 +103,7 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
       )(
         function* (domain: string, ref: string, orderIndex: string) {
           const key = keyFactory.participant(domain, ref)
-          const incrementScript = yield* fs.readFileString(
-            "lua-scripts/increment.lua"
-          )
+          const incrementScript = luaIncrement
           const [result] = yield* redis.use((client) =>
             client.eval<string[], [string]>(
               incrementScript,
@@ -276,7 +278,7 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
         getParticipantState,
         getSubmissionState,
         getAllSubmissionStates,
-        initState: initializeState,
+        initializeState,
         incrementParticipantState,
         setParticipantErrorState,
         updateParticipantState,

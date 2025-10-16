@@ -1,10 +1,10 @@
-import { Data, Effect, Option } from "effect"
+import { Data, Effect, Option, pipe, String } from "effect"
 
 export class InvalidArgError extends Data.TaggedError("InvalidArgError")<{
   message?: string
 }> {}
 
-export const parseArg = Effect.fn("CLI.parseArg")(function* (
+export const parseArg = Effect.fnUntraced(function* (
   arg: Option.Option<string>
 ) {
   if (Option.isNone(arg)) {
@@ -24,3 +24,18 @@ export const parseArg = Effect.fn("CLI.parseArg")(function* (
   }
   return Option.some(value)
 })
+
+export const generateSubmissionKey = (
+  domain: string,
+  reference: string,
+  orderIndex: number
+) => {
+  const dateTime = new Date().toISOString().replace(/[:.]/g, "-")
+  const formattedOrderIndex = (orderIndex + 1).toString().padStart(2, "0")
+  return `${domain}/${reference}/${formattedOrderIndex}/${reference}_${formattedOrderIndex}_${dateTime}.jpg`
+}
+
+export const formatOrderIndex = (index: number, topicStartIndex: number = 0) =>
+  Effect.sync(() => {
+    return pipe((topicStartIndex + index).toString(), String.padStart(2, "0"))
+  })

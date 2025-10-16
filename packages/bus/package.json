@@ -11,6 +11,6 @@
   },
   "dependencies": {
     "@aws-sdk/client-eventbridge": "^3.887.0",
-    "effect": "^3.17.13"
+    "effect": "catalog:"
   }
 }

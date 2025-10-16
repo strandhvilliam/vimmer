@@ -5,6 +5,11 @@ import * as schema from "./schema"
 
 const PgLive = PgClient.layerConfig({
   url: Config.redacted("DEV_DATABASE_URL"),
+  // password: Config.redacted("DEV_DATABASE_PASSWORD"),
+  // username: Config.string("DEV_DATABASE_USERNAME"),
+  // host: Config.string("DEV_DATABASE_HOST"),
+  // port: Config.number("DEV_DATABASE_PORT"),
+  // database: Config.string("DEV_DATABASE_NAME"),
 })
 
 export class DrizzleClient extends Effect.Service<DrizzleClient>()(

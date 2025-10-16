@@ -13,10 +13,11 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@effect/sql": "^0.44.2",
-    "@effect/sql-drizzle": "^0.43.0",
-    "@effect/sql-pg": "^0.45.1",
+    "@effect/sql": "^0.46.0",
+    "@effect/sql-drizzle": "^0.45.0",
+    "@effect/sql-pg": "^0.47.0",
     "drizzle-kit": "^0.31.5",
-    "effect": "^3.17.13"
+    "drizzle-orm": "^0.44.6",
+    "effect": "catalog:"
   }
 }

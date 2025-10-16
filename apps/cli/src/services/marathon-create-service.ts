@@ -1,6 +1,6 @@
 import { Terminal } from "@effect/platform"
 import { Prompt } from "@effect/cli"
-import { Effect, Option, Data, Console } from "effect"
+import { Effect, Option, Data, Console, Schema } from "effect"
 import { Database } from "@blikka/db"
 import { DOMAIN_MIN_LENGTH } from "../constants"
 import { QuitException } from "@effect/platform/Terminal"
@@ -181,8 +181,32 @@ export class MarathonCreationCliService extends Effect.Service<MarathonCreationC
             })),
           })
 
+        const numberOfTopics = Math.max(...classes.map((c) => c.numberOfPhotos))
+
+        const topics = yield* Effect.forEach(
+          Array.from({ length: numberOfTopics }),
+          (_, i) =>
+            Prompt.text({
+              message: `Enter topic name for topic ${i + 1}:`,
+              validate: (value) =>
+                Schema.decode(Schema.String.pipe(Schema.minLength(2)))(
+                  value
+                ).pipe(Effect.mapError((error) => error.message)),
+            }).pipe(
+              Effect.andThen((value) =>
+                db.topicsQueries.createTopic({
+                  data: {
+                    name: value,
+                    marathonId: newMarathon.id,
+                    orderIndex: i,
+                  },
+                })
+              )
+            )
+        )
+
         return yield* terminal.display(
-          `Marathon '${name}' created with ${createdClasses.length} classes!\n\n`
+          `Marathon '${name}' created with ${createdClasses.length} classes and ${topics.length} topics!\n\n`
         )
       })
 

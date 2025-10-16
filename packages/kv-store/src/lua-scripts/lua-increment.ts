@@ -1,6 +1,4 @@
----@diagnostic disable: undefined-global
-
-
+export const luaIncrement = `
 local result = { "PROCESSED_SUBMISSION"}
 
 local orderIndex = tonumber(ARGV[1]) + 1 -- 1-based index
@@ -52,3 +50,4 @@ end
 
 
 return result
+`

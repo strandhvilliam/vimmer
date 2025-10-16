@@ -30,8 +30,8 @@ export class UpstashClient extends Effect.Service<UpstashClient>()(
   "@blikka/packages/redis-store/upstash-client",
   {
     scoped: Effect.gen(function* () {
-      const url = yield* Config.string("REDIS_URL")
-      const token = yield* Config.string("REDIS_TOKEN")
+      const url = yield* Config.string("UPSTASH_REDIS_REST_URL")
+      const token = yield* Config.string("UPSTASH_REDIS_REST_TOKEN")
 
       const client = yield* makeClient(url, token)
 

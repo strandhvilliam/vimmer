@@ -26,6 +26,17 @@ export class MarathonsQueries extends Effect.Service<MarathonsQueries>()(
     effect: Effect.gen(function* () {
       const db = yield* DrizzleClient
 
+      const getMarathons = Effect.fn("MarathonsQueries.getMarathons")(
+        function* () {
+          return yield* db.query.marathons.findMany({
+            with: {
+              competitionClasses: true,
+              topics: true,
+            },
+          })
+        }
+      )
+
       const getMarathonById = Effect.fn("MarathonsQueries.getMarathonById")(
         function* ({ id }: { id: number }) {
           const result = yield* db.query.marathons.findFirst({
@@ -182,6 +193,7 @@ export class MarathonsQueries extends Effect.Service<MarathonsQueries>()(
         }
       )
       return {
+        getMarathons,
         getMarathonById,
         getMarathonByDomain,
         createMarathon,

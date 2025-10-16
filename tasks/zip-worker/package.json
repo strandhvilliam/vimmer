@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@effect-aws/lambda": "^1.5.1",
-    "effect": "^3.17.13",
+    "effect": "catalog:",
     "jszip": "^3.10.1"
   }
 }

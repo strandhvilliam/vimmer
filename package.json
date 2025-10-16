@@ -3,37 +3,34 @@
   "private": true,
   "scripts": {
     "check-aws-account": "if [ \"$(aws sts get-caller-identity --query 'Account' --output text)\" = \"975050331958\" ]; then echo '✅ Correct AWS account'; else echo '❌ Wrong AWS account, aborting.' && exit 1; fi",
-    "dev": "bun check-aws-account && sst dev --stage development",
+    "dev": "bun check-aws-account && bunx sst dev --stage development ",
     "deploy:prod": "bun check-aws-account && sst deploy --stage production",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
     "@effect/vitest": "^0.26.0",
     "@types/aws-lambda": "8.10.146",
-    "prettier": "^3.5.3",
-    "typescript": "^5.7.2",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "packageManager": "bun@1.1.35",
-  "workspaces": [
-    "apps/*",
-    "packages/*",
-    "services/*",
-    "tasks/*"
-  ],
+  "workspaces": {
+    "catalog": {
+      "effect": "^3.18.4",
+      "@effect/platform": "^0.90.7"
+    },
+    "packages": [
+      "apps/*",
+      "packages/*",
+      "services/*",
+      "tasks/*"
+    ]
+  },
   "dependencies": {
-    "@aws-sdk/lib-storage": "^3.828.0",
-    "@trpc/client": "^11.4.2",
-    "@trpc/server": "^11.4.2",
-    "@trpc/tanstack-react-query": "^11.4.2",
-    "@types/archiver": "^6.0.3",
-    "archiver": "^7.0.1",
-    "effect": "^3.18.1",
-    "react": "19.1",
-    "sharp": "^0.34.3",
-    "sst": "^3.17.10"
+    "sst": "^3.17.19"
   }
 }
