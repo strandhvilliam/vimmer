@@ -5,7 +5,7 @@ import { InvalidS3EventError } from "./errors"
 import { type SQSRecord } from "aws-lambda"
 import { UploadProcessorService } from "./service"
 import { S3EventSchema } from "./schemas"
-import { TracingLayer } from "@blikka/telemetry"
+import { TelemetryLayer } from "@blikka/telemetry"
 
 const effectHandler = (event: SQSEvent) =>
   Effect.gen(function* () {
@@ -32,31 +32,21 @@ const effectHandler = (event: SQSEvent) =>
               return yield* uploadProcessor.processPhoto(key)
             }),
           { concurrency: 2 }
-        ).pipe(
-          Effect.catchTag("PhotoNotFoundError", (error) =>
-            Effect.logError("Photo not found", error)
-          ),
-          Effect.catchTag("FailedToIncrementParticipantStateError", (error) =>
-            Effect.logError("Failed to increment participant state", error)
-          ),
-          Effect.catchTag("InvalidKeyFormatError", (error) =>
-            Effect.logError("Invalid S3 event", error)
-          )
         )
-      },
-      Effect.catchAll((error) =>
-        Effect.logError("Failed to process SQS record", error)
-      )
+      }
     )
 
     yield* Effect.forEach(event.Records, (record) => processSQSRecord(record), {
       concurrency: 3,
     })
-  }).pipe(Effect.withSpan("uploadProcessor.handler"))
+  }).pipe(
+    Effect.withSpan("uploadProcessor.handler"),
+    Effect.catchAll(Effect.logError)
+  )
 
 const serviceLayer = Layer.mergeAll(
   UploadProcessorService.Default,
-  TracingLayer("blikka-dev-upload-processor")
+  TelemetryLayer("blikka-dev-upload-processor")
 )
 
 export const handler = LambdaHandler.make({

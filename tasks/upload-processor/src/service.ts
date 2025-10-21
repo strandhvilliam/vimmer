@@ -1,4 +1,4 @@
-import { Effect, Option, Either, Schedule, Duration } from "effect"
+import { Effect, Option, Either, Schedule, Duration, Logger } from "effect"
 import { S3Service } from "@blikka/s3"
 import {
   ExifKVRepository,
@@ -60,14 +60,12 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
           )
 
           if (Option.isNone(participantStateOpt)) {
-            return yield* Effect.fail(
-              new FailedToFinalizeParticipantError({
-                cause: "Participant state not found",
-                message: "Participant state not found",
-                domain,
-                reference,
-              })
-            )
+            return yield* new FailedToFinalizeParticipantError({
+              cause: "Participant state not found",
+              message: "Participant state not found",
+              domain,
+              reference,
+            })
           }
           const processedIndexes = [
             ...participantStateOpt.value.processedIndexes,
@@ -165,15 +163,17 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
         Effect.retryOrElse(
           Schedule.compose(
             Schedule.exponential(Duration.millis(400)),
-            Schedule.recurs(3)
+            Schedule.recurs(1)
           ),
           (err) =>
             Effect.gen(function* () {
-              yield* setParticipantErrorState(
-                err.domain,
-                err.reference,
-                err.message ?? "Failed to finalize participant"
-              )
+              if (err instanceof FailedToFinalizeParticipantError) {
+                yield* setParticipantErrorState(
+                  err.domain,
+                  err.reference,
+                  err.message ?? "Failed to finalize participant"
+                )
+              }
               yield* Effect.logError("Failed to finalize participant", err)
             })
         )
