@@ -5,6 +5,7 @@ import { MarathonCreationCliService } from "./services/marathon-create-service"
 import { marathonCreateCommand } from "./commands/marathon-create-command"
 import { UploadFlowCliService } from "./services/upload-flow-service"
 import { uploadFlowCommand } from "./commands/upload-flow-command"
+import { TracingLayer } from "@blikka/telemetry"
 
 const blikkaCli = Command.make("blikka-cli", {}).pipe(
   Command.withHandler(() =>
