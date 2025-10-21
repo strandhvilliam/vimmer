@@ -10,7 +10,7 @@ end
 local alreadyFinalized = redis.call("HGET", KEYS[1], "finalized")
 
 
-if alreadyFinalized == 1 then
+if alreadyFinalized == "true" then
   return { "ALREADY_FINALIZED" }
 end
 
@@ -44,7 +44,7 @@ for i = 1, #processedIndexes do
 end
 
 if expectedCount <= processedCount then
-  redis.call("HSET", KEYS[1], "finalized", 1)
+  redis.call("HSET", KEYS[1], "finalized", "true")
   result[1] = "FINALIZED"
 end
 
