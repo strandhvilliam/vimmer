@@ -1,7 +1,7 @@
 export const luaIncrement = `
 local result = { "PROCESSED_SUBMISSION"}
 
-local orderIndex = tonumber(ARGV[1]) + 1 -- 1-based index
+local orderIndex = tonumber(ARGV[1]) + 1
 
 if not orderIndex or orderIndex < 0 then
   return { "INVALID_ORDER_INDEX" }

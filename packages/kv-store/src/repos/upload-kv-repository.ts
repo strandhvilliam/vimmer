@@ -52,12 +52,15 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
 
           for (const key of submissionKeys) {
             const { orderIndex } = yield* parseKey(key)
+            const formattedOrderIndex = (orderIndex + 1)
+              .toString()
+              .padStart(2, "0")
             const redisKey = keyFactory.submission(
               domain,
               reference,
-              orderIndex
+              formattedOrderIndex
             )
-            map[redisKey] = makeInitialSubmissionState(key, Number(orderIndex))
+            map[redisKey] = makeInitialSubmissionState(key, orderIndex)
           }
 
           yield* redis.use((client) => {
@@ -101,14 +104,17 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
       const incrementParticipantState = Effect.fn(
         "UploadKVRepository.incrementParticipantState"
       )(
-        function* (domain: string, ref: string, orderIndex: string) {
+        function* (domain: string, ref: string, orderIndex: number) {
+          const formattedOrderIndex = (orderIndex + 1)
+            .toString()
+            .padStart(2, "0")
           const key = keyFactory.participant(domain, ref)
           const incrementScript = luaIncrement
           const [result] = yield* redis.use((client) =>
             client.eval<string[], [string]>(
               incrementScript,
               [key],
-              [orderIndex]
+              [formattedOrderIndex]
             )
           )
           const code = yield* Schema.decodeUnknown(IncrementResultSchema)(
@@ -182,8 +188,11 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
       const getSubmissionState = Effect.fn(
         "UploadKVRepository.getSubmissionState"
       )(
-        function* (domain: string, ref: string, orderIndex: string) {
-          const key = keyFactory.submission(domain, ref, orderIndex)
+        function* (domain: string, ref: string, orderIndex: number) {
+          const formattedOrderIndex = (Number(orderIndex) + 1)
+            .toString()
+            .padStart(2, "0")
+          const key = keyFactory.submission(domain, ref, formattedOrderIndex)
           const result = yield* redis.use((client) =>
             client.get<string | null>(key)
           )
@@ -207,9 +216,12 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
       const getAllSubmissionStates = Effect.fn(
         "UploadKVRepository.getAllSubmissionStates"
       )(
-        function* (domain: string, ref: string, orderIndexes: string[]) {
-          const keys = orderIndexes.map((orderIndex) =>
-            keyFactory.submission(domain, ref, orderIndex)
+        function* (domain: string, ref: string, orderIndexes: number[]) {
+          const formattedOrderIndexes = orderIndexes.map((orderIndex) =>
+            (Number(orderIndex) + 1).toString().padStart(2, "0")
+          )
+          const keys = formattedOrderIndexes.map((formattedOrderIndex) =>
+            keyFactory.submission(domain, ref, formattedOrderIndex)
           )
 
           const result = yield* redis.use((client) => client.mget(keys))
@@ -257,10 +269,13 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
         function* (
           domain: string,
           ref: string,
-          orderIndex: string,
+          orderIndex: number,
           state: Partial<SubmissionState>
         ) {
-          const key = keyFactory.submission(domain, ref, orderIndex)
+          const formattedOrderIndex = (Number(orderIndex) + 1)
+            .toString()
+            .padStart(2, "0")
+          const key = keyFactory.submission(domain, ref, formattedOrderIndex)
           const encodedState = yield* Schema.encode(
             Schema.partial(SubmissionStateSchema)
           )(state)

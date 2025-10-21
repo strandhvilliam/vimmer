@@ -6,18 +6,18 @@ import {
   UploadKVRepository,
 } from "@blikka/kv-store"
 import { SharpImageService } from "@blikka/image-manipulation"
+import { ThumbnailService } from "./thumbnail-service"
 import { ExifParser } from "@blikka/exif-parser"
 import { BusService } from "@blikka/bus"
 import { Database } from "@blikka/db"
-import { parseKey, makeThumbnailKey } from "./utils"
+import { parseKey } from "./utils"
 import { Resource as SSTResource } from "sst"
 import {
   FailedToFinalizeParticipantError,
   FailedToIncrementParticipantStateError,
   PhotoNotFoundError,
 } from "./errors"
-
-const THUMBNAIL_WIDTH = 400
+import { effectContext } from "effect/Layer"
 
 export class UploadProcessorService extends Effect.Service<UploadProcessorService>()(
   "@blikka/tasks/UploadProcessorService",
@@ -26,42 +26,19 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
       S3Service.Default,
       UploadKVRepository.Default,
       ExifKVRepository.Default,
-      SharpImageService.Default,
       ExifParser.Default,
       BusService.Default,
       Database.Default,
+      ThumbnailService.Default,
     ],
     effect: Effect.gen(function* () {
       const s3 = yield* S3Service
       const uploadKv = yield* UploadKVRepository
       const exifKv = yield* ExifKVRepository
-      const sharp = yield* SharpImageService
       const exifParser = yield* ExifParser
       const bus = yield* BusService
       const db = yield* Database
-
-      const generateThumbnail = Effect.fn("upload-processor.generateThumbnail")(
-        function* (photo: Buffer, key: string) {
-          const { domain, reference, orderIndex, fileName } =
-            yield* parseKey(key)
-          const thumbnailKey = makeThumbnailKey({
-            domain,
-            reference,
-            orderIndex,
-            fileName,
-          })
-
-          const resized = yield* sharp.resize(Buffer.from(photo), {
-            width: THUMBNAIL_WIDTH,
-          })
-          yield* s3.putFile(
-            SSTResource.V2ThumbnailsBucket.name,
-            thumbnailKey,
-            resized
-          )
-          return thumbnailKey
-        }
-      )
+      const thumbnailService = yield* ThumbnailService
 
       const setParticipantErrorState = Effect.fnUntraced(
         function* (domain: string, reference: string, error: string) {
@@ -92,19 +69,20 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
               })
             )
           }
-          const processedIndexes = participantStateOpt.value.processedIndexes
-          const processedIndexStrings = processedIndexes.map((i) => `${i}`)
+          const processedIndexes = [
+            ...participantStateOpt.value.processedIndexes,
+          ]
           const uploadCount = processedIndexes.filter((v) => v !== 0).length
 
           const submissionStates = yield* uploadKv.getAllSubmissionStates(
             domain,
             reference,
-            processedIndexStrings
+            processedIndexes
           )
           const exifStates = yield* exifKv.getAllExifStates(
             domain,
             reference,
-            processedIndexStrings
+            processedIndexes
           )
 
           if (submissionStates.length === 0 || exifStates.length === 0) {
@@ -225,24 +203,27 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
                 (cause) =>
                   new PhotoNotFoundError({
                     cause,
-                    message: "Photo not found",
+                    message: "Unable to get photo from S3",
                   })
               )
             )
 
           if (Option.isNone(photo)) {
-            return yield* Effect.fail(
-              new PhotoNotFoundError({
-                cause: "Photo not found",
-                message: "Photo not found",
-              })
-            )
+            return yield* new PhotoNotFoundError({
+              cause: "Photo not found",
+              message: "Photo not found",
+            })
           }
 
           const [exifResult, thumbnailKeyResult] = yield* Effect.all(
             [
               Effect.either(exifParser.parse(Buffer.from(photo.value))),
-              Effect.either(generateThumbnail(Buffer.from(photo.value), key)),
+              Effect.either(
+                thumbnailService.generateThumbnail(
+                  Buffer.from(photo.value),
+                  key
+                )
+              ),
             ],
             { concurrency: 2 }
           )

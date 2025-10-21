@@ -6,21 +6,18 @@ export class InvalidKeyFormatError extends Data.TaggedError(
   message?: string
 }> {}
 
-export const parseKey = (key: string) =>
-  Effect.sync(() => {
-    const [domain, reference, orderIndex, fileName] = key.split("/")
-    if (!domain || !reference || !orderIndex || !fileName) {
-      return Effect.fail(
-        new InvalidKeyFormatError({
-          message: `Missing: domain=${domain}, reference=${reference}, orderIndex=${orderIndex}, fileName=${fileName}`,
-        })
-      )
-    }
-    const orderIndexFormatted = (Number(orderIndex) - 1).toString()
-    return Effect.succeed({
-      domain,
-      reference,
-      orderIndex: orderIndexFormatted,
-      fileName,
+export const parseKey = Effect.fn("utils.parseKey")(function* (key: string) {
+  const [domain, reference, formattedOrderIndex, fileName] = key.split("/")
+  if (!domain || !reference || !formattedOrderIndex || !fileName) {
+    return yield* new InvalidKeyFormatError({
+      message: `Missing: domain=${domain}, reference=${reference}, orderIndex=${formattedOrderIndex}, fileName=${fileName}`,
     })
-  }).pipe(Effect.flatten)
+  }
+  const orderIndex = Number(formattedOrderIndex) - 1
+  return {
+    domain,
+    reference,
+    orderIndex,
+    fileName,
+  }
+})

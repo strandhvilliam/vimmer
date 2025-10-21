@@ -34,24 +34,26 @@ export class ExifKVRepository extends Effect.Service<ExifKVRepository>()(
       )
 
       const getAllExifStates = Effect.fn("ExifKVRepository.getAllExifStates")(
-        function* (domain: string, ref: string, orderIndexes: string[]) {
-          const sortedOrderIndexes = orderIndexes.sort(
-            (a, b) => Number(a) - Number(b)
+        function* (domain: string, ref: string, orderIndexes: number[]) {
+          const formattedOrderIndexes = orderIndexes.map((orderIndex) =>
+            (Number(orderIndex) + 1).toString().padStart(2, "0")
           )
-          const keys = sortedOrderIndexes.map((orderIndex) =>
-            keyFactory.exif(domain, ref, orderIndex)
+          const keys = formattedOrderIndexes.map((formattedOrderIndex) =>
+            keyFactory.exif(domain, ref, formattedOrderIndex)
           )
           const data = yield* redis.use((client) => client.mget(keys))
           const parsed = yield* Schema.decodeUnknown(
             Schema.Array(ExifStateSchema)
           )(data)
 
-          const result = sortedOrderIndexes.map((orderIndex, index) => {
-            return {
-              orderIndex,
-              exif: parsed.at(index) ?? {},
+          const result = formattedOrderIndexes.map(
+            (formattedOrderIndex, index) => {
+              return {
+                orderIndex: Number(formattedOrderIndex) - 1,
+                exif: parsed.at(index) ?? {},
+              }
             }
-          })
+          )
 
           return result
         },
@@ -74,10 +76,13 @@ export class ExifKVRepository extends Effect.Service<ExifKVRepository>()(
         function* (
           domain: string,
           ref: string,
-          orderIndex: string,
+          orderIndex: number,
           state: ExifState
         ) {
-          const key = keyFactory.exif(domain, ref, orderIndex)
+          const formattedOrderIndex = (Number(orderIndex) + 1)
+            .toString()
+            .padStart(2, "0")
+          const key = keyFactory.exif(domain, ref, formattedOrderIndex)
           const encodedState = yield* Schema.encode(
             Schema.partial(ExifStateSchema)
           )(state)
