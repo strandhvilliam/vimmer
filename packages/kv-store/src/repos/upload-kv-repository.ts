@@ -120,9 +120,7 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
         ref: string
       ) {
         const key = keyFactory.participant(domain, ref)
-        yield* Effect.logInfo("getting participant state", key)
         const result = yield* redis.use((client) => client.hgetall(key))
-        yield* Effect.logInfo("result", result)
 
         if (result === null) {
           return Option.none<ParticipantState>()

@@ -168,6 +168,7 @@
       "name": "@blikka/bus",
       "dependencies": {
         "@aws-sdk/client-eventbridge": "^3.887.0",
+        "@effect-aws/lambda": "^1.5.1",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -597,6 +598,7 @@
         "@blikka/image-manipulation": "workspace:*",
         "@blikka/kv-store": "workspace:*",
         "@blikka/s3": "workspace:*",
+        "@blikka/telemetry": "workspace:*",
         "@effect-aws/lambda": "^1.5.1",
         "effect": "catalog:",
       },

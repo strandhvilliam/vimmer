@@ -23,20 +23,3 @@ export class InvalidValidationRuleError extends Data.TaggedError("InvalidValidat
   message?: string
   cause?: unknown
 }> {}
-
-export const parseFinalizedEvent = Effect.fn("ValidationRunner.parseFinalizedEvent")(
-  function* (input: string) {
-    const json = (yield* Effect.try({
-      try: () => JSON.parse(input),
-      catch: () => new JsonParseError({ message: "Failed to parse JSON" }),
-    })) as EventBridgeEvent<typeof EventBusDetailTypes.Finalized, typeof FinalizedEventSchema.Type>
-    return yield* Schema.decodeUnknown(FinalizedEventSchema)(json.detail)
-  },
-  Effect.mapError(
-    (error) =>
-      new InvalidBodyError({
-        message: "Failed to parse finalized event",
-        cause: error,
-      })
-  )
-)
