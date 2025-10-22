@@ -17,61 +17,43 @@ import { KVStore } from "@blikka/kv-store"
 export class ValidationRunner extends Effect.Service<ValidationRunner>()(
   "@blikka/validation-runner",
   {
-    dependencies: [
-      Database.Default,
-      S3Service.Default,
-      KVStore.Default,
-      ValidationEngine.Default,
-    ],
+    dependencies: [Database.Default, S3Service.Default, KVStore.Default, ValidationEngine.Default],
     effect: Effect.gen(function* () {
       const db = yield* Database
       const s3 = yield* S3Service
       const kv = yield* KVStore
       const validator = yield* ValidationEngine
 
-      const makeValidationRules = Effect.fn(
-        "ValidationRunner.makeValidationRules"
-      )(
+      const makeValidationRules = Effect.fn("ValidationRunner.makeValidationRules")(
         function* (rules: RuleConfig[]) {
           const validationRules: ValidationRule[] = []
           for (const rule of rules) {
-            const validationRule = yield* Schema.decodeUnknown(RuleKeySchema)(
-              rule.ruleKey
-            )
-            const parsed = yield* Schema.decodeUnknown(
-              ValidationRuleSchema(validationRule)
-            )({
+            const validationRule = yield* Schema.decodeUnknown(RuleKeySchema)(rule.ruleKey)
+            const parsed = yield* Schema.decodeUnknown(ValidationRuleSchema(validationRule))({
               ruleKey: validationRule,
               enabled: rule.enabled,
               severity: rule.severity,
-              params: rule.params,
+              params: { [validationRule]: rule.params },
             })
             validationRules.push(parsed)
           }
           return validationRules
         },
         Effect.mapError(
-          (error) => new InvalidValidationRuleError({ message: error.message })
+          (error) => new InvalidValidationRuleError({ message: error.message, cause: error })
         )
       )
 
-      const makeValidationInputs = Effect.fn(
-        "ValidationRunner.makeValidationInputs"
-      )(function* (
+      const makeValidationInputs = Effect.fn("ValidationRunner.makeValidationInputs")(function* (
         exifStates: { orderIndex: number; exif: ExifState }[],
         submissionStates: readonly SubmissionState[]
       ) {
         const validationInputs: ValidationInput[] = []
 
         for (const submissionState of submissionStates) {
-          const exifState = exifStates.find(
-            (e) => e.orderIndex === submissionState.orderIndex
-          )
+          const exifState = exifStates.find((e) => e.orderIndex === submissionState.orderIndex)
 
-          const head = yield* s3.getHead(
-            SSTResource.V2SubmissionsBucket.name,
-            submissionState.key
-          )
+          const head = yield* s3.getHead(SSTResource.V2SubmissionsBucket.name, submissionState.key)
 
           const mimeType = head.ContentType
           const fileSize = head.ContentLength
@@ -93,40 +75,33 @@ export class ValidationRunner extends Effect.Service<ValidationRunner>()(
         domain: string,
         reference: string
       ) {
-        const participantStateOpt =
-          yield* kv.uploadRepository.getParticipantState(domain, reference)
+        const participantState = yield* kv.uploadRepository
+          .getParticipantState(domain, reference)
+          .pipe(
+            Effect.andThen(
+              Option.getOrThrowWith(
+                () =>
+                  new InvalidDataFoundError({
+                    message: "Participant state not found",
+                  })
+              )
+            )
+          )
 
-        if (
-          Option.isSome(participantStateOpt) &&
-          participantStateOpt.value.validated
-        ) {
+        if (participantState.validated) {
           yield* Effect.log("Participant already validated, skipping")
           return
-        }
-
-        if (Option.isNone(participantStateOpt)) {
-          return yield* Effect.fail(
-            new InvalidDataFoundError({
-              message: `Participant not found for reference ${reference} and domain ${domain}`,
-            })
-          )
         }
 
         const rules = yield* db.rulesQueries.getRulesByDomain({
           domain,
         })
-        const orderIndexes = participantStateOpt.value.processedIndexes.map(
-          (_, i) => i
-        )
 
+        const orderIndexes = participantState.processedIndexes.map((_, i) => i)
         const [exifStates, submissionStates] = yield* Effect.all(
           [
             kv.exifRepository.getAllExifStates(domain, reference, orderIndexes),
-            kv.uploadRepository.getAllSubmissionStates(
-              domain,
-              reference,
-              orderIndexes
-            ),
+            kv.uploadRepository.getAllSubmissionStates(domain, reference, orderIndexes),
           ],
           { concurrency: 2 }
         )
@@ -137,18 +112,9 @@ export class ValidationRunner extends Effect.Service<ValidationRunner>()(
           })
         }
 
-        const [validationInputs, validationRules] = yield* Effect.all(
-          [
-            makeValidationInputs(exifStates, submissionStates),
-            makeValidationRules(rules),
-          ],
-          { concurrency: 2 }
-        )
-
-        const validationResults = yield* validator.runValidations(
-          validationRules,
-          validationInputs
-        )
+        const validationInputs = yield* makeValidationInputs(exifStates, submissionStates)
+        const validationRules = yield* makeValidationRules(rules)
+        const validationResults = yield* validator.runValidations(validationRules, validationInputs)
 
         yield* db.validationsQueries.createMultipleValidationResults({
           data: validationResults,

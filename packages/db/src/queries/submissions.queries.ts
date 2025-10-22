@@ -1,17 +1,8 @@
 import { Effect, Option } from "effect"
 import { DrizzleClient } from "../drizzle-client"
-import {
-  marathons,
-  participants,
-  submissions,
-  zippedSubmissions,
-} from "../schema"
+import { marathons, participants, submissions, zippedSubmissions } from "../schema"
 import { and, eq, inArray } from "drizzle-orm"
-import type {
-  NewSubmission,
-  NewZippedSubmission,
-  ZippedSubmission,
-} from "../types"
+import type { NewSubmission, NewZippedSubmission, ZippedSubmission } from "../types"
 import { SqlError } from "@effect/sql/SqlError"
 import { conflictUpdateSetAllColumns } from "../utils"
 
@@ -37,9 +28,11 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
         return result
       })
 
-      const getSubmissionById = Effect.fn(
-        "SubmissionsQueries.getSubmissionById"
-      )(function* ({ id }: { id: number }) {
+      const getSubmissionById = Effect.fn("SubmissionsQueries.getSubmissionById")(function* ({
+        id,
+      }: {
+        id: number
+      }) {
         const result = yield* db.query.submissions.findFirst({
           where: eq(submissions.id, id),
         })
@@ -47,9 +40,11 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
         return Option.fromNullable(result)
       })
 
-      const getSubmissionByKey = Effect.fn(
-        "SubmissionsQueries.getSubmissionByKey"
-      )(function* ({ key }: { key: string }) {
+      const getSubmissionByKey = Effect.fn("SubmissionsQueries.getSubmissionByKey")(function* ({
+        key,
+      }: {
+        key: string
+      }) {
         const result = yield* db.query.submissions.findFirst({
           where: eq(submissions.key, key),
         })
@@ -98,15 +93,15 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
         return result
       })
 
-      const getManySubmissionsByKeys = Effect.fn(
-        "SubmissionsQueries.getManySubmissionsByKeys"
-      )(function* ({ keys }: { keys: string[] }) {
-        const result = yield* db.query.submissions.findMany({
-          where: inArray(submissions.key, keys),
-        })
+      const getManySubmissionsByKeys = Effect.fn("SubmissionsQueries.getManySubmissionsByKeys")(
+        function* ({ keys }: { keys: string[] }) {
+          const result = yield* db.query.submissions.findMany({
+            where: inArray(submissions.key, keys),
+          })
 
-        return result
-      })
+          return result
+        }
+      )
 
       const getSubmissionsByParticipantId = Effect.fn(
         "SubmissionsQueries.getSubmissionsByParticipantId"
@@ -118,112 +113,98 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
         return result
       })
 
-      const getSubmissionsForJuryQuery = Effect.fn(
-        "SubmissionsQueries.getSubmissionsForJury"
-      )(function* ({
-        filters,
-      }: {
-        filters: {
-          domain: string
-          competitionClassId?: number | null
-          deviceGroupId?: number | null
-          topicId?: number | null
-        }
-      }) {
-        const marathon = yield* db.query.marathons.findFirst({
-          where: eq(marathons.domain, filters.domain),
-        })
+      const getSubmissionsForJuryQuery = Effect.fn("SubmissionsQueries.getSubmissionsForJury")(
+        function* ({
+          filters,
+        }: {
+          filters: {
+            domain: string
+            competitionClassId?: number | null
+            deviceGroupId?: number | null
+            topicId?: number | null
+          }
+        }) {
+          const marathon = yield* db.query.marathons.findFirst({
+            where: eq(marathons.domain, filters.domain),
+          })
 
-        if (!marathon) {
-          return []
-        }
+          if (!marathon) {
+            return []
+          }
 
-        const conditions = [
-          eq(submissions.marathonId, marathon.id),
-          eq(submissions.status, "uploaded"),
-        ]
+          const conditions = [
+            eq(submissions.marathonId, marathon.id),
+            eq(submissions.status, "uploaded"),
+          ]
 
-        const result = yield* db.query.submissions.findMany({
-          where: and(...conditions),
-          with: {
-            participant: {
-              with: {
-                competitionClass: true,
-                deviceGroup: true,
+          const result = yield* db.query.submissions.findMany({
+            where: and(...conditions),
+            with: {
+              participant: {
+                with: {
+                  competitionClass: true,
+                  deviceGroup: true,
+                },
               },
+              topic: true,
             },
-            topic: true,
-          },
-        })
+          })
 
-        let filteredResult = result
+          let filteredResult = result
 
-        if (
-          filters.competitionClassId !== null &&
-          filters.competitionClassId !== undefined
-        ) {
-          filteredResult = filteredResult.filter(
-            (s) =>
-              (s.participant as any).competitionClassId ===
-              filters.competitionClassId
-          )
-        }
-
-        if (
-          filters.deviceGroupId !== null &&
-          filters.deviceGroupId !== undefined
-        ) {
-          filteredResult = filteredResult.filter(
-            (s) =>
-              (s.participant as any).deviceGroupId === filters.deviceGroupId
-          )
-        }
-
-        if (filters.topicId !== null && filters.topicId !== undefined) {
-          filteredResult = filteredResult.filter(
-            (s) => s.topicId === filters.topicId
-          )
-        }
-
-        return filteredResult
-      })
-
-      const createSubmission = Effect.fn("SubmissionsQueries.createSubmission")(
-        function* ({ data }: { data: NewSubmission }) {
-          const [result] = yield* db
-            .insert(submissions)
-            .values(data)
-            .returning()
-
-          if (!result) {
-            return yield* Effect.fail(
-              new SqlError({
-                cause: "Failed to create submission",
-              })
+          if (filters.competitionClassId !== null && filters.competitionClassId !== undefined) {
+            filteredResult = filteredResult.filter(
+              (s) => (s.participant as any).competitionClassId === filters.competitionClassId
             )
           }
 
+          if (filters.deviceGroupId !== null && filters.deviceGroupId !== undefined) {
+            filteredResult = filteredResult.filter(
+              (s) => (s.participant as any).deviceGroupId === filters.deviceGroupId
+            )
+          }
+
+          if (filters.topicId !== null && filters.topicId !== undefined) {
+            filteredResult = filteredResult.filter((s) => s.topicId === filters.topicId)
+          }
+
+          return filteredResult
+        }
+      )
+
+      const createSubmission = Effect.fn("SubmissionsQueries.createSubmission")(function* ({
+        data,
+      }: {
+        data: NewSubmission
+      }) {
+        const [result] = yield* db.insert(submissions).values(data).returning()
+
+        if (!result) {
+          return yield* Effect.fail(
+            new SqlError({
+              cause: "Failed to create submission",
+            })
+          )
+        }
+
+        return result
+      })
+
+      const createMultipleSubmissions = Effect.fn("SubmissionsQueries.createMultipleSubmissions")(
+        function* ({ data }: { data: NewSubmission[] }) {
+          const [result] = yield* db.insert(submissions).values(data).returning()
+          if (!result) {
+            return yield* Effect.fail(
+              new SqlError({
+                cause: "Failed to create multiple submissions",
+              })
+            )
+          }
           return result
         }
       )
 
-      const createMultipleSubmissions = Effect.fn(
-        "SubmissionsQueries.createMultipleSubmissions"
-      )(function* ({ data }: { data: NewSubmission[] }) {
-        const [result] = yield* db.insert(submissions).values(data).returning()
-        if (!result) {
-          return yield* Effect.fail(
-            new SqlError({
-              cause: "Failed to create multiple submissions",
-            })
-          )
-        }
-        return result
-      })
-
-      const updateAllSubmissions = Effect.fn(
-        "SubmissionsQueries.updateAllSubmissions"
-      )(function* ({
+      const updateAllSubmissions = Effect.fn("SubmissionsQueries.updateAllSubmissions")(function* ({
         updates,
         reference,
         domain,
@@ -233,18 +214,12 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
         updates: {
           orderIndex: number
           data: Partial<
-            Omit<
-              NewSubmission,
-              "id" | "createdAt" | "updatedAt" | "participantId" | "marathonId"
-            >
+            Omit<NewSubmission, "id" | "createdAt" | "updatedAt" | "participantId" | "marathonId">
           >
         }[]
       }) {
         const participant = yield* db.query.participants.findFirst({
-          where: and(
-            eq(participants.reference, reference),
-            eq(participants.domain, domain)
-          ),
+          where: and(eq(participants.reference, reference), eq(participants.domain, domain)),
           with: {
             submissions: {
               with: {
@@ -269,7 +244,6 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
           }
           return acc
         }, [])
-        yield* Effect.log("participant submissions", participant.submissions)
 
         const result = yield* db
           .insert(submissions)
@@ -283,33 +257,31 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
         return result
       })
 
-      const updateSubmissionByKey = Effect.fn(
-        "SubmissionsQueries.updateSubmissionByKeyMutation"
-      )(function* ({
-        key,
+      const updateSubmissionByKey = Effect.fn("SubmissionsQueries.updateSubmissionByKeyMutation")(
+        function* ({ key, data }: { key: string; data: Partial<NewSubmission> }) {
+          const [result] = yield* db
+            .update(submissions)
+            .set(data)
+            .where(eq(submissions.key, key))
+            .returning()
+          if (!result) {
+            return yield* Effect.fail(
+              new SqlError({
+                cause: "Failed to update submission by key",
+              })
+            )
+          }
+          return result
+        }
+      )
+
+      const updateSubmissionById = Effect.fn("SubmissionsQueries.updateSubmissionById")(function* ({
+        id,
         data,
       }: {
-        key: string
+        id: number
         data: Partial<NewSubmission>
       }) {
-        const [result] = yield* db
-          .update(submissions)
-          .set(data)
-          .where(eq(submissions.key, key))
-          .returning()
-        if (!result) {
-          return yield* Effect.fail(
-            new SqlError({
-              cause: "Failed to update submission by key",
-            })
-          )
-        }
-        return result
-      })
-
-      const updateSubmissionById = Effect.fn(
-        "SubmissionsQueries.updateSubmissionById"
-      )(function* ({ id, data }: { id: number; data: Partial<NewSubmission> }) {
         const [result] = yield* db
           .update(submissions)
           .set(data)
@@ -325,61 +297,43 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
         return result
       })
 
-      const createZippedSubmission = Effect.fn(
-        "SubmissionsQueries.createZippedSubmission"
-      )(function* ({ data }: { data: NewZippedSubmission }) {
-        const [result] = yield* db
-          .insert(zippedSubmissions)
-          .values(data)
-          .returning()
-        if (!result) {
-          return yield* Effect.fail(
-            new SqlError({
-              cause: "Failed to create zipped submission",
-            })
-          )
+      const createZippedSubmission = Effect.fn("SubmissionsQueries.createZippedSubmission")(
+        function* ({ data }: { data: NewZippedSubmission }) {
+          const [result] = yield* db.insert(zippedSubmissions).values(data).returning()
+          if (!result) {
+            return yield* Effect.fail(
+              new SqlError({
+                cause: "Failed to create zipped submission",
+              })
+            )
+          }
+          return result
         }
-        return result
-      })
+      )
 
-      const updateZippedSubmission = Effect.fn(
-        "SubmissionsQueries.updateZippedSubmission"
-      )(function* ({
-        id,
-        data,
-      }: {
-        id: number
-        data: Partial<NewZippedSubmission>
-      }) {
-        const [result] = yield* db
-          .update(zippedSubmissions)
-          .set(data)
-          .where(eq(zippedSubmissions.id, id))
-          .returning()
-        if (!result) {
-          return yield* Effect.fail(
-            new SqlError({
-              cause: "Failed to update zipped submission",
-            })
-          )
+      const updateZippedSubmission = Effect.fn("SubmissionsQueries.updateZippedSubmission")(
+        function* ({ id, data }: { id: number; data: Partial<NewZippedSubmission> }) {
+          const [result] = yield* db
+            .update(zippedSubmissions)
+            .set(data)
+            .where(eq(zippedSubmissions.id, id))
+            .returning()
+          if (!result) {
+            return yield* Effect.fail(
+              new SqlError({
+                cause: "Failed to update zipped submission",
+              })
+            )
+          }
+          return result
         }
-        return result
-      })
+      )
 
       const getZippedSubmissionByParticipantRefQuery = Effect.fn(
         "SubmissionsQueries.getZippedSubmissionByParticipantRefQuery"
-      )(function* ({
-        domain,
-        participantRef,
-      }: {
-        domain: string
-        participantRef: string
-      }) {
+      )(function* ({ domain, participantRef }: { domain: string; participantRef: string }) {
         const participant = yield* db.query.participants.findFirst({
-          where: and(
-            eq(participants.domain, domain),
-            eq(participants.reference, participantRef)
-          ),
+          where: and(eq(participants.domain, domain), eq(participants.reference, participantRef)),
           with: {
             zippedSubmissions: true,
           },

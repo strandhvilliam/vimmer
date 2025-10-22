@@ -1,17 +1,8 @@
 import { Effect } from "effect"
 import { DrizzleClient } from "../drizzle-client"
 import { and, eq, inArray, notInArray } from "drizzle-orm"
-import {
-  marathons,
-  participants,
-  participantVerifications,
-  validationResults,
-} from "../schema"
-import type {
-  NewParticipantVerification,
-  NewValidationResult,
-  ValidationResult,
-} from "../types"
+import { marathons, participants, participantVerifications, validationResults } from "../schema"
+import type { NewParticipantVerification, NewValidationResult, ValidationResult } from "../types"
 import { SqlError } from "@effect/sql/SqlError"
 
 export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
@@ -50,12 +41,8 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
               return {
                 ...s,
                 participant: rest,
-                globalValidationResults: p.validationResults.filter(
-                  (vr) => !vr.fileName
-                ),
-                validationResults: p.validationResults.filter(
-                  (vr) => vr.fileName === s.key
-                ),
+                globalValidationResults: p.validationResults.filter((vr) => !vr.fileName),
+                validationResults: p.validationResults.filter((vr) => vr.fileName === s.key),
               }
             })
           }) ?? []
@@ -91,24 +78,21 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
           }))
       })
 
-      const createValidationResult = Effect.fn(
-        "ValidationsQueries.createValidationResult"
-      )(function* ({ data }: { data: NewValidationResult }) {
-        const [result] = yield* db
-          .insert(validationResults)
-          .values(data)
-          .returning()
+      const createValidationResult = Effect.fn("ValidationsQueries.createValidationResult")(
+        function* ({ data }: { data: NewValidationResult }) {
+          const [result] = yield* db.insert(validationResults).values(data).returning()
 
-        if (!result) {
-          return yield* Effect.fail(
-            new SqlError({
-              cause: "Failed to create validation result",
-            })
-          )
+          if (!result) {
+            return yield* Effect.fail(
+              new SqlError({
+                cause: "Failed to create validation result",
+              })
+            )
+          }
+
+          return result
         }
-
-        return result
-      })
+      )
 
       const createMultipleValidationResults = Effect.fn(
         "ValidationsQueries.createMultipleValidationResults"
@@ -122,24 +106,19 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
         data: Omit<NewValidationResult, "participantId">[]
       }) {
         const participant = yield* db.query.participants.findFirst({
-          where: and(
-            eq(participants.domain, domain),
-            eq(participants.reference, reference)
-          ),
+          where: and(eq(participants.domain, domain), eq(participants.reference, reference)),
         })
 
         if (!participant) {
-          return yield* Effect.fail(
-            new SqlError({
-              cause: "Participant not found",
-            })
-          )
+          return yield* new SqlError({
+            message: "Participant not found",
+            cause: new Error("Participant not found"),
+          })
         }
 
-        const existingValidationResults =
-          yield* db.query.validationResults.findMany({
-            where: eq(validationResults.participantId, participant.id),
-          })
+        const existingValidationResults = yield* db.query.validationResults.findMany({
+          where: eq(validationResults.participantId, participant.id),
+        })
 
         const existingValidationResultsMap = new Map(
           existingValidationResults.map((r) => [
@@ -177,10 +156,7 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
 
         const result: ValidationResult[] = []
         if (toCreate.length > 0) {
-          const created = yield* db
-            .insert(validationResults)
-            .values(toCreate)
-            .returning()
+          const created = yield* db.insert(validationResults).values(toCreate).returning()
           result.push(...created)
         }
 
@@ -198,38 +174,29 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
         return result
       })
 
-      const updateValidationResult = Effect.fn(
-        "ValidationsQueries.updateValidationResult"
-      )(function* ({
-        id,
-        data,
-      }: {
-        id: number
-        data: Partial<NewValidationResult>
-      }) {
-        const [result] = yield* db
-          .update(validationResults)
-          .set(data)
-          .where(eq(validationResults.id, id))
-          .returning()
+      const updateValidationResult = Effect.fn("ValidationsQueries.updateValidationResult")(
+        function* ({ id, data }: { id: number; data: Partial<NewValidationResult> }) {
+          const [result] = yield* db
+            .update(validationResults)
+            .set(data)
+            .where(eq(validationResults.id, id))
+            .returning()
 
-        if (!result) {
-          return yield* Effect.fail(
-            new SqlError({
-              cause: "Failed to update validation result",
-            })
-          )
+          if (!result) {
+            return yield* Effect.fail(
+              new SqlError({
+                cause: "Failed to update validation result",
+              })
+            )
+          }
+          return result
         }
-        return result
-      })
+      )
 
       const createParticipantVerification = Effect.fn(
         "ValidationsQueries.createParticipantVerification"
       )(function* ({ data }: { data: NewParticipantVerification }) {
-        const [result] = yield* db
-          .insert(participantVerifications)
-          .values(data)
-          .returning()
+        const [result] = yield* db.insert(participantVerifications).values(data).returning()
 
         if (!result) {
           return yield* Effect.fail(
@@ -242,24 +209,18 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
         return result
       })
 
-      const clearNonEnabledRuleResults = Effect.fn(
-        "ValidationsQueries.clearNonEnabledRuleResults"
-      )(function* ({
-        participantId,
-        ruleKeys,
-      }: {
-        participantId: number
-        ruleKeys: string[]
-      }) {
-        yield* db
-          .delete(validationResults)
-          .where(
-            and(
-              eq(validationResults.participantId, participantId),
-              notInArray(validationResults.ruleKey, ruleKeys)
+      const clearNonEnabledRuleResults = Effect.fn("ValidationsQueries.clearNonEnabledRuleResults")(
+        function* ({ participantId, ruleKeys }: { participantId: number; ruleKeys: string[] }) {
+          yield* db
+            .delete(validationResults)
+            .where(
+              and(
+                eq(validationResults.participantId, participantId),
+                notInArray(validationResults.ruleKey, ruleKeys)
+              )
             )
-          )
-      })
+        }
+      )
 
       const getAllParticipantVerifications = Effect.fn(
         "ValidationsQueries.getAllParticipantVerifications"
@@ -276,23 +237,22 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
       }) {
         const offset = (page - 1) * pageSize
 
-        const allVerifications =
-          yield* db.query.participantVerifications.findMany({
-            with: {
-              participant: {
-                with: {
-                  competitionClass: true,
-                  deviceGroup: true,
-                  validationResults: true,
-                  submissions: true,
-                  marathon: true,
-                },
+        const allVerifications = yield* db.query.participantVerifications.findMany({
+          with: {
+            participant: {
+              with: {
+                competitionClass: true,
+                deviceGroup: true,
+                validationResults: true,
+                submissions: true,
+                marathon: true,
               },
             },
-            orderBy: (participantVerifications, { desc }) => [
-              desc(participantVerifications.createdAt),
-            ],
-          })
+          },
+          orderBy: (participantVerifications, { desc }) => [
+            desc(participantVerifications.createdAt),
+          ],
+        })
 
         let filteredVerifications = allVerifications.filter(
           (v) => v.participant.marathon.domain === domain
@@ -323,13 +283,13 @@ export class ValidationsQueries extends Effect.Service<ValidationsQueries>()(
         }
       })
 
-      const clearAllValidationResults = Effect.fn(
-        "ValidationsQueries.clearAllValidationResults"
-      )(function* ({ participantId }: { participantId: number }) {
-        yield* db
-          .delete(validationResults)
-          .where(eq(validationResults.participantId, participantId))
-      })
+      const clearAllValidationResults = Effect.fn("ValidationsQueries.clearAllValidationResults")(
+        function* ({ participantId }: { participantId: number }) {
+          yield* db
+            .delete(validationResults)
+            .where(eq(validationResults.participantId, participantId))
+        }
+      )
 
       return {
         getValidationResultsByParticipantId,

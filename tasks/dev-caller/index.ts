@@ -1,24 +1,17 @@
-import { Resource } from "sst";
-import {
-  EventBridgeClient,
-  PutEventsCommand,
-} from "@aws-sdk/client-eventbridge";
+import { LambdaHandler } from "@effect-aws/lambda"
+import { Resource as SSTResource } from "sst"
+import { EventBridgeClient, PutEventsCommand } from "@aws-sdk/client-eventbridge"
+import { Effect, Layer } from "effect"
+import { BusService } from "@blikka/bus"
 
-export const handler = async () => {
-  const eb = new EventBridgeClient({});
+export const effectHandler = () =>
+  Effect.gen(function* () {
+    const bus = yield* BusService
+    const result = yield* bus.sendFinalizedEvent("uppis", "5432")
+    return Effect.succeed(void 0)
+  }).pipe(Effect.withSpan("DevCaller.handler"), Effect.catchAll(Effect.logError))
 
-  const result = await eb.send(
-    new PutEventsCommand({
-      Entries: [
-        {
-          EventBusName: Resource.SubmissionFinalizedBus.name,
-          Source: "blikka.bus.finalized",
-          Detail: JSON.stringify({ domain: "demo", reference: "1234" }),
-          DetailType: "blikka.bus.finalized",
-        },
-      ],
-    }),
-  );
-
-  return { result };
-};
+export const handler = LambdaHandler.make({
+  handler: effectHandler,
+  layer: BusService.Default,
+})

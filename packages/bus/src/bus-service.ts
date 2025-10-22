@@ -1,8 +1,9 @@
-import { EventBridgeClient, PutEventsCommand } from "@aws-sdk/client-eventbridge"
+import { PutEventsCommand } from "@aws-sdk/client-eventbridge"
 import { Data, Effect } from "effect"
-import { Console } from "effect"
 import { Resource as SSTResource } from "sst"
 import { EventBridgeEffectClient } from "./eventbridge-effect-client"
+import { FinalizedEventSchema } from "./schemas"
+import { EventBusDetailTypes } from "./event-types"
 
 export class EventBusError extends Data.TaggedError("EventBusError")<{
   message?: string
@@ -20,8 +21,9 @@ export class BusService extends Effect.Service<BusService>()("@blikka/bus/bus-se
           Entries: [
             {
               EventBusName: SSTResource.SubmissionFinalizedBus.name,
-              Source: "blikka.bus.finalized",
-              Detail: JSON.stringify({ domain, reference }),
+              Source: EventBusDetailTypes.Finalized,
+              Detail: JSON.stringify(FinalizedEventSchema.make({ domain, reference })),
+              DetailType: EventBusDetailTypes.Finalized,
             },
           ],
         })

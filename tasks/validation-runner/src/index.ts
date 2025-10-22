@@ -1,4 +1,4 @@
-import { LambdaHandler } from "@effect-aws/lambda"
+import { LambdaHandler, EventBridgeEvent } from "@effect-aws/lambda"
 import { Effect, Layer } from "effect"
 import { SQSEvent } from "@effect-aws/lambda"
 import { parseFinalizedEvent } from "./utils"
