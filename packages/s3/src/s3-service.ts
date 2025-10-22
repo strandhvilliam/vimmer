@@ -38,7 +38,7 @@ export class S3Service extends Effect.Service<S3Service>()(
                 message: "Failed to transform to byte array",
               }),
           })
-          return Option.some(buffer)
+          return Option.some<Uint8Array>(buffer)
         },
         Effect.mapError((error) => {
           return new S3ClientError({

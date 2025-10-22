@@ -124,104 +124,124 @@ export class UploadFlowCliService extends Effect.Service<UploadFlowCliService>()
       })
 
       const upload = Effect.fn("UploadFlowCliService.upload")(function* () {
-        //   const marathons = yield* db.marathonsQueries.getMarathons()
+        const marathons = yield* db.marathonsQueries.getMarathons()
 
-        //   const selectedMarathon = yield* Prompt.select({
-        //     message: "Select marathon:",
-        //     choices: marathons.map((marathon) => ({
-        //       title: marathon.name,
-        //       value: marathon.id,
-        //     })),
-        //   }).pipe(
-        //     Effect.andThen((id) =>
-        //       Array.findFirst(marathons, (marathon) => marathon.id === id)
-        //     )
-        //   )
+        const selectedMarathon = yield* Prompt.select({
+          message: "Select marathon:",
+          choices: marathons.map((marathon) => ({
+            title: marathon.name,
+            value: marathon.id,
+          })),
+        }).pipe(
+          Effect.andThen((id) =>
+            Array.findFirst(marathons, (marathon) => marathon.id === id)
+          )
+        )
 
-        //   const reference = yield* promptForUniqueReference({
-        //     domain: selectedMarathon.domain,
-        //   })
+        const reference = yield* promptForUniqueReference({
+          domain: selectedMarathon.domain,
+        })
 
-        //   const firstname = yield* Prompt.text({
-        //     message: "Enter participant firstname:",
-        //     validate: (name) =>
-        //       Schema.decode(ParticipantNameInputSchema)(name).pipe(
-        //         Effect.mapError((error) => error.message)
-        //       ),
-        //   })
+        const firstname = yield* Prompt.text({
+          message: "Enter participant firstname:",
+          validate: (name) =>
+            Schema.decode(ParticipantNameInputSchema)(name).pipe(
+              Effect.mapError((error) => error.message)
+            ),
+        })
 
-        //   const lastname = yield* Prompt.text({
-        //     message: "Enter participant lastname:",
-        //     validate: (name) =>
-        //       Schema.decode(ParticipantNameInputSchema)(name).pipe(
-        //         Effect.mapError((error) => error.message)
-        //       ),
-        //   })
+        const lastname = yield* Prompt.text({
+          message: "Enter participant lastname:",
+          validate: (name) =>
+            Schema.decode(ParticipantNameInputSchema)(name).pipe(
+              Effect.mapError((error) => error.message)
+            ),
+        })
 
-        //   const email = yield* Prompt.text({
-        //     message: "Enter participant email:",
-        //     validate: (email) =>
-        //       Schema.decode(ParticipantEmailInputSchema)(email).pipe(
-        //         Effect.mapError(() => "Invalid email format")
-        //       ),
-        //   })
+        const email = yield* Prompt.text({
+          message: "Enter participant email:",
+          validate: (email) =>
+            Schema.decode(ParticipantEmailInputSchema)(email).pipe(
+              Effect.mapError(() => "Invalid email format")
+            ),
+        })
 
-        //   const selectedClass = yield* Prompt.select({
-        //     message: "Select class:",
-        //     choices: selectedMarathon.competitionClasses.map((c) => ({
-        //       title: `${c.name} (${c.numberOfPhotos})`,
-        //       value: c.id,
-        //     })),
-        //   }).pipe(
-        //     Effect.andThen((id) =>
-        //       Array.findFirst(
-        //         selectedMarathon.competitionClasses,
-        //         (c) => c.id === id
-        //       )
-        //     )
-        //   )
+        const selectedClass = yield* Prompt.select({
+          message: "Select class:",
+          choices: selectedMarathon.competitionClasses.map((c) => ({
+            title: `${c.name} (${c.numberOfPhotos})`,
+            value: c.id,
+          })),
+        }).pipe(
+          Effect.andThen((id) =>
+            Array.findFirst(
+              selectedMarathon.competitionClasses,
+              (c) => c.id === id
+            )
+          )
+        )
 
-        //   const participant = yield* db.participantsQueries.createParticipant({
-        //     data: {
-        //       domain: selectedMarathon.domain,
-        //       reference,
-        //       firstname,
-        //       lastname,
-        //       email,
-        //       marathonId: selectedMarathon.id,
-        //       competitionClassId: selectedClass.id,
-        //     },
-        //   })
+        const participant = yield* db.participantsQueries.createParticipant({
+          data: {
+            domain: selectedMarathon.domain,
+            reference,
+            firstname,
+            lastname,
+            email,
+            marathonId: selectedMarathon.id,
+            competitionClassId: selectedClass.id,
+          },
+        })
 
-        //   const sortByOrderIndex = Order.mapInput(
-        //     Order.number,
-        //     (topic: Topic) => topic.orderIndex
-        //   )
+        const topicsForSubmissions = selectedMarathon.topics.slice(
+          selectedClass.topicStartIndex,
+          selectedClass.topicStartIndex + selectedClass.numberOfPhotos
+        )
 
-        //   const keys = yield* db.topicsQueries
-        //     .getTopicsByDomain({
-        //       domain: selectedMarathon.domain,
-        //     })
-        //     .pipe(
-        //       Effect.andThen(Array.sort(sortByOrderIndex)),
-        //       Effect.andThen(Array.drop(selectedClass.topicStartIndex)),
-        //       Effect.andThen(
-        //         Array.map((topic) =>
-        //           generateSubmissionKey(
-        //             selectedMarathon.domain,
-        //             reference,
-        //             topic.orderIndex
-        //           )
-        //         )
-        //       )
-        //     )
+        const dbSubmissions =
+          yield* db.submissionsQueries.createMultipleSubmissions({
+            data: topicsForSubmissions.map((topic) => ({
+              participantId: participant.id,
+              key: generateSubmissionKey(
+                selectedMarathon.domain,
+                reference,
+                topic.orderIndex
+              ),
+              marathonId: selectedMarathon.id,
+              topicId: topic.id,
+              status: "initialized",
+            })),
+          })
 
-        const keys = [
-          generateSubmissionKey("uppis", "9999", 0),
-          generateSubmissionKey("uppis", "9999", 1),
-        ]
+        const sortByOrderIndex = Order.mapInput(
+          Order.number,
+          (topic: Topic) => topic.orderIndex
+        )
 
-        yield* kv.initializeState("uppis", "9999", keys)
+        const keys = yield* db.topicsQueries
+          .getTopicsByDomain({
+            domain: selectedMarathon.domain,
+          })
+          .pipe(
+            Effect.andThen(Array.sort(sortByOrderIndex)),
+            Effect.andThen(Array.drop(selectedClass.topicStartIndex)),
+            Effect.andThen(
+              Array.map((topic) =>
+                generateSubmissionKey(
+                  selectedMarathon.domain,
+                  reference,
+                  topic.orderIndex
+                )
+              )
+            )
+          )
+
+        // const keys = [
+        //   generateSubmissionKey("uppis", "9999", 0),
+        //   generateSubmissionKey("uppis", "9999", 1),
+        // ]
+
+        yield* kv.initializeState(selectedMarathon.domain, reference, keys)
 
         const presignedUrls = yield* Effect.all(
           keys.map((key) =>

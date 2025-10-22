@@ -188,6 +188,11 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
       const getAllSubmissionStates = Effect.fn(
         "UploadKVRepository.getAllSubmissionStates"
       )(function* (domain: string, ref: string, orderIndexes: number[]) {
+        yield* Effect.logInfo("getAllSubmissionStates", {
+          domain,
+          ref,
+          orderIndexes,
+        })
         const formattedOrderIndexes = orderIndexes.map((orderIndex) =>
           (Number(orderIndex) + 1).toString().padStart(2, "0")
         )
@@ -195,7 +200,16 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
           keyFactory.submission(domain, ref, formattedOrderIndex)
         )
 
-        const result = yield* redis.use((client) => client.mget(keys))
+        const result = yield* redis.use((client) => {
+          const multi = keys.reduce(
+            (chain, redisKey) => chain.hgetall(redisKey),
+            client.multi()
+          )
+          return multi.exec<([string, Record<string, unknown>] | null)[]>()
+        })
+
+        yield* Effect.logInfo("keys=" + keys.join(", "))
+        yield* Effect.logInfo("result=" + result.join(", "))
 
         const parsed = yield* Schema.decodeUnknown(
           Schema.Array(SubmissionStateSchema)

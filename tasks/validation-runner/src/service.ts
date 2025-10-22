@@ -1,9 +1,9 @@
-import { Effect, Option, Schema } from "effect";
-import { Database, RuleConfig } from "@blikka/db";
-import { SubmissionState, ExifState } from "@blikka/kv-store";
-import { InvalidDataFoundError, InvalidValidationRuleError } from "./utils";
-import { S3Service } from "@blikka/s3";
-import { Resource as SSTResource } from "sst";
+import { Effect, Option, Schema } from "effect"
+import { Database, RuleConfig } from "@blikka/db"
+import { SubmissionState, ExifState } from "@blikka/kv-store"
+import { InvalidDataFoundError, InvalidValidationRuleError } from "./utils"
+import { S3Service } from "@blikka/s3"
+import { Resource as SSTResource } from "sst"
 import {
   RuleKeySchema,
   ValidationEngine,
@@ -11,8 +11,8 @@ import {
   ValidationInputSchema,
   ValidationRule,
   ValidationRuleSchema,
-} from "@blikka/validation";
-import { KVStore } from "@blikka/kv-store";
+} from "@blikka/validation"
+import { KVStore } from "@blikka/kv-store"
 
 export class ValidationRunner extends Effect.Service<ValidationRunner>()(
   "@blikka/validation-runner",
@@ -24,58 +24,58 @@ export class ValidationRunner extends Effect.Service<ValidationRunner>()(
       ValidationEngine.Default,
     ],
     effect: Effect.gen(function* () {
-      const db = yield* Database;
-      const s3 = yield* S3Service;
-      const kv = yield* KVStore;
-      const validator = yield* ValidationEngine;
+      const db = yield* Database
+      const s3 = yield* S3Service
+      const kv = yield* KVStore
+      const validator = yield* ValidationEngine
 
       const makeValidationRules = Effect.fn(
-        "ValidationRunner.makeValidationRules",
+        "ValidationRunner.makeValidationRules"
       )(
         function* (rules: RuleConfig[]) {
-          const validationRules: ValidationRule[] = [];
+          const validationRules: ValidationRule[] = []
           for (const rule of rules) {
             const validationRule = yield* Schema.decodeUnknown(RuleKeySchema)(
-              rule.ruleKey,
-            );
+              rule.ruleKey
+            )
             const parsed = yield* Schema.decodeUnknown(
-              ValidationRuleSchema(validationRule),
+              ValidationRuleSchema(validationRule)
             )({
               ruleKey: validationRule,
               enabled: rule.enabled,
               severity: rule.severity,
               params: rule.params,
-            });
-            validationRules.push(parsed);
+            })
+            validationRules.push(parsed)
           }
-          return validationRules;
+          return validationRules
         },
         Effect.mapError(
-          (error) => new InvalidValidationRuleError({ message: error.message }),
-        ),
-      );
+          (error) => new InvalidValidationRuleError({ message: error.message })
+        )
+      )
 
       const makeValidationInputs = Effect.fn(
-        "ValidationRunner.makeValidationInputs",
+        "ValidationRunner.makeValidationInputs"
       )(function* (
-        exifStates: { orderIndex: string; exif: ExifState }[],
-        submissionStates: readonly SubmissionState[],
+        exifStates: { orderIndex: number; exif: ExifState }[],
+        submissionStates: readonly SubmissionState[]
       ) {
-        const validationInputs: ValidationInput[] = [];
+        const validationInputs: ValidationInput[] = []
 
         for (const submissionState of submissionStates) {
           const exifState = exifStates.find(
-            (e) => e.orderIndex === `${submissionState.orderIndex}`,
-          );
+            (e) => e.orderIndex === submissionState.orderIndex
+          )
 
           const head = yield* s3.getHead(
             SSTResource.V2SubmissionsBucket.name,
-            submissionState.key,
-          );
+            submissionState.key
+          )
 
-          const mimeType = head.ContentType;
-          const fileSize = head.ContentLength;
-          const fileName = submissionState.key;
+          const mimeType = head.ContentType
+          const fileSize = head.ContentLength
+          const fileName = submissionState.key
 
           const validationInput = ValidationInputSchema.make({
             exif: exifState?.exif ?? {},
@@ -83,41 +83,41 @@ export class ValidationRunner extends Effect.Service<ValidationRunner>()(
             mimeType: mimeType ?? "image/jpeg",
             fileSize: fileSize ?? 0,
             orderIndex: submissionState.orderIndex,
-          });
-          validationInputs.push(validationInput);
+          })
+          validationInputs.push(validationInput)
         }
-        return validationInputs;
-      });
+        return validationInputs
+      })
 
       const execute = Effect.fn("ValidationRunner.execute")(function* (
         domain: string,
-        reference: string,
+        reference: string
       ) {
         const participantStateOpt =
-          yield* kv.uploadRepository.getParticipantState(domain, reference);
+          yield* kv.uploadRepository.getParticipantState(domain, reference)
 
         if (
           Option.isSome(participantStateOpt) &&
           participantStateOpt.value.validated
         ) {
-          yield* Effect.log("Participant already validated, skipping");
-          return;
+          yield* Effect.log("Participant already validated, skipping")
+          return
         }
 
         if (Option.isNone(participantStateOpt)) {
           return yield* Effect.fail(
             new InvalidDataFoundError({
               message: `Participant not found for reference ${reference} and domain ${domain}`,
-            }),
-          );
+            })
+          )
         }
 
         const rules = yield* db.rulesQueries.getRulesByDomain({
           domain,
-        });
+        })
         const orderIndexes = participantStateOpt.value.processedIndexes.map(
-          (_, i) => `${i}`,
-        );
+          (_, i) => i
+        )
 
         const [exifStates, submissionStates] = yield* Effect.all(
           [
@@ -125,16 +125,16 @@ export class ValidationRunner extends Effect.Service<ValidationRunner>()(
             kv.uploadRepository.getAllSubmissionStates(
               domain,
               reference,
-              orderIndexes,
+              orderIndexes
             ),
           ],
-          { concurrency: 2 },
-        );
+          { concurrency: 2 }
+        )
 
         if (exifStates.length === 0 || submissionStates.length === 0) {
           return yield* new InvalidDataFoundError({
             message: `Exif states or submission states not found for reference ${reference} and domain ${domain}`,
-          });
+          })
         }
 
         const [validationInputs, validationRules] = yield* Effect.all(
@@ -142,23 +142,23 @@ export class ValidationRunner extends Effect.Service<ValidationRunner>()(
             makeValidationInputs(exifStates, submissionStates),
             makeValidationRules(rules),
           ],
-          { concurrency: 2 },
-        );
+          { concurrency: 2 }
+        )
 
         const validationResults = yield* validator.runValidations(
           validationRules,
-          validationInputs,
-        );
+          validationInputs
+        )
 
         yield* db.validationsQueries.createMultipleValidationResults({
           data: validationResults,
           domain,
           reference,
-        });
-      });
+        })
+      })
       return {
         execute,
-      };
+      }
     }),
-  },
+  }
 ) {}

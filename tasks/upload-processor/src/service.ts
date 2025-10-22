@@ -67,20 +67,20 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
               reference,
             })
           }
-          const processedIndexes = [
-            ...participantStateOpt.value.processedIndexes,
-          ]
+          const processedIndexes = participantStateOpt.value.processedIndexes
           const uploadCount = processedIndexes.filter((v) => v !== 0).length
+          const orderIndexes = processedIndexes.map((_, i) => i)
 
           const submissionStates = yield* uploadKv.getAllSubmissionStates(
             domain,
             reference,
-            processedIndexes
+            orderIndexes
           )
+
           const exifStates = yield* exifKv.getAllExifStates(
             domain,
             reference,
-            processedIndexes
+            orderIndexes
           )
 
           if (submissionStates.length === 0 || exifStates.length === 0) {
@@ -94,9 +94,8 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
 
           const updates = submissionStates.map((state) => {
             const exif =
-              exifStates.find(
-                (e) => e.orderIndex === state.orderIndex.toString()
-              )?.exif ?? {}
+              exifStates.find((e) => e.orderIndex === state.orderIndex)?.exif ??
+              {}
 
             return {
               orderIndex: state.orderIndex,
@@ -199,30 +198,22 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
           const photo = yield* s3
             .getFile(SSTResource.V2SubmissionsBucket.name, key)
             .pipe(
-              Effect.mapError(
-                (cause) =>
-                  new PhotoNotFoundError({
-                    cause,
-                    message: "Unable to get photo from S3",
-                  })
+              Effect.andThen(
+                Option.getOrThrowWith(
+                  () =>
+                    new PhotoNotFoundError({
+                      cause: "Photo not found",
+                      message: "Photo not found",
+                    })
+                )
               )
             )
 
-          if (Option.isNone(photo)) {
-            return yield* new PhotoNotFoundError({
-              cause: "Photo not found",
-              message: "Photo not found",
-            })
-          }
-
           const [exifResult, thumbnailKeyResult] = yield* Effect.all(
             [
-              Effect.either(exifParser.parse(Buffer.from(photo.value))),
+              Effect.either(exifParser.parse(Buffer.from(photo))),
               Effect.either(
-                thumbnailService.generateThumbnail(
-                  Buffer.from(photo.value),
-                  key
-                )
+                thumbnailService.generateThumbnail(Buffer.from(photo), key)
               ),
             ],
             { concurrency: 2 }
@@ -273,10 +264,10 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
           const { finalize } = yield* uploadKv
             .incrementParticipantState(domain, reference, orderIndex)
             .pipe(
-              Effect.catchAll(
-                (error) =>
+              Effect.orElseFail(
+                () =>
                   new FailedToIncrementParticipantStateError({
-                    cause: error.cause,
+                    cause: "Failed to increment participant state",
                     message: "Failed to increment participant state",
                   })
               )

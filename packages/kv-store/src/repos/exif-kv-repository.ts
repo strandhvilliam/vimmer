@@ -57,18 +57,13 @@ export class ExifKVRepository extends Effect.Service<ExifKVRepository>()(
 
           return result
         },
-        Effect.retryOrElse(
-          Schedule.compose(
-            Schedule.exponential(Duration.millis(100)),
-            Schedule.recurs(3)
-          ),
-          () =>
-            Effect.succeed(
-              [] as {
-                orderIndex: string
-                exif: { readonly [x: string]: unknown }
-              }[]
-            )
+        Effect.orElse(() =>
+          Effect.succeed(
+            [] as {
+              orderIndex: number
+              exif: { readonly [x: string]: unknown }
+            }[]
+          )
         )
       )
 
@@ -83,10 +78,9 @@ export class ExifKVRepository extends Effect.Service<ExifKVRepository>()(
             .toString()
             .padStart(2, "0")
           const key = keyFactory.exif(domain, ref, formattedOrderIndex)
-          const encodedState = yield* Schema.encode(
-            Schema.partial(ExifStateSchema)
-          )(state)
-          return yield* redis.use((client) => client.set(key, encodedState))
+          return yield* redis.use((client) =>
+            client.set(key, JSON.stringify(state))
+          )
         },
         Effect.retry(
           Schedule.compose(
