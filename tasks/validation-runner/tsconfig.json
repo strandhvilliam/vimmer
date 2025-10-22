@@ -13,7 +13,8 @@
       "@blikka/bus": ["../../packages/bus/src"],
       "@blikka/db": ["../../packages/db/src"],
       "@blikka/validation": ["../../packages/validation/src"],
-      "@blikka/s3": ["../../packages/s3/src"]
+      "@blikka/s3": ["../../packages/s3/src"],
+      "@blikka/telemetry": ["../../packages/telemetry/src"]
     },
     "strict": true
   },

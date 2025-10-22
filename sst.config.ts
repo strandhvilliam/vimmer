@@ -77,29 +77,16 @@ export default $config({
     })
 
     /* QUEUE HANDLERS */
-
-    console.log("env", env)
-
     uploadProcessorQueue.subscribe({
       handler: "./tasks/upload-processor/src/index.handler",
       environment: env,
-      link: [
-        uploadProcessorQueue,
-        submissionsBucket,
-        thumbnailsBucket,
-        submissionFinalizedBus,
-      ],
+      link: [uploadProcessorQueue, submissionsBucket, thumbnailsBucket, submissionFinalizedBus],
     })
 
     sheetGeneratorQueue.subscribe({
       handler: "./tasks/contact-sheet-generator/src/index.handler",
       environment: env,
-      link: [
-        sheetGeneratorQueue,
-        contactSheetsBucket,
-        submissionsBucket,
-        sponsorBucket,
-      ],
+      link: [sheetGeneratorQueue, contactSheetsBucket, submissionsBucket, sponsorBucket],
     })
 
     zipWorkerQueue.subscribe({
@@ -115,20 +102,23 @@ export default $config({
       ],
     })
 
+    validationQueue.subscribe({
+      handler: "./tasks/validation-runner/src/index.handler",
+      environment: env,
+      link: [
+        validationQueue,
+        submissionsBucket,
+        thumbnailsBucket,
+        contactSheetsBucket,
+        sponsorBucket,
+      ],
+    })
+
     /* BUS SUBSCRIPTIONS */
 
-    submissionFinalizedBus.subscribeQueue(
-      "ValidationBusSubscription",
-      validationQueue
-    )
-    submissionFinalizedBus.subscribeQueue(
-      "SheetGeneratorBusSubscription",
-      sheetGeneratorQueue
-    )
-    submissionFinalizedBus.subscribeQueue(
-      "ZipGeneratorBusSubscription",
-      zipWorkerQueue
-    )
+    submissionFinalizedBus.subscribeQueue("ValidationBusSubscription", validationQueue)
+    submissionFinalizedBus.subscribeQueue("SheetGeneratorBusSubscription", sheetGeneratorQueue)
+    submissionFinalizedBus.subscribeQueue("ZipGeneratorBusSubscription", zipWorkerQueue)
 
     /* DEV CALLER */
 

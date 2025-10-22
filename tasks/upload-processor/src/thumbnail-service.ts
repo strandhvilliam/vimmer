@@ -14,23 +14,20 @@ export class ThumbnailService extends Effect.Service<ThumbnailService>()(
       const s3 = yield* S3Service
       const sharp = yield* SharpImageService
 
-      const generateThumbnail = Effect.fn("ThumbnailService.generateThumbnail")(
-        function* (photo: Buffer, key: string) {
-          const thumbnailKey = yield* parseKey(key).pipe(
-            Effect.flatMap((parsedKey) => makeThumbnailKey(parsedKey))
-          )
+      const generateThumbnail = Effect.fn("ThumbnailService.generateThumbnail")(function* (
+        photo: Buffer,
+        key: string
+      ) {
+        const thumbnailKey = yield* parseKey(key).pipe(
+          Effect.flatMap((parsedKey) => makeThumbnailKey(parsedKey))
+        )
 
-          const resized = yield* sharp.resize(Buffer.from(photo), {
-            width: THUMBNAIL_WIDTH,
-          })
-          yield* s3.putFile(
-            SSTResource.V2ThumbnailsBucket.name,
-            thumbnailKey,
-            resized
-          )
-          return thumbnailKey
-        }
-      )
+        const resized = yield* sharp.resize(Buffer.from(photo), {
+          width: THUMBNAIL_WIDTH,
+        })
+        yield* s3.putFile(SSTResource.V2ThumbnailsBucket.name, thumbnailKey, resized)
+        return thumbnailKey
+      })
 
       return {
         generateThumbnail,

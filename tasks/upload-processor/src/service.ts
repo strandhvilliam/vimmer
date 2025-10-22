@@ -1,11 +1,6 @@
-import { Effect, Option, Either, Schedule, Duration, Logger } from "effect"
+import { Effect, Option, Schedule, Duration } from "effect"
 import { S3Service } from "@blikka/s3"
-import {
-  ExifKVRepository,
-  ExifState,
-  UploadKVRepository,
-} from "@blikka/kv-store"
-import { SharpImageService } from "@blikka/image-manipulation"
+import { ExifKVRepository, ExifState, UploadKVRepository } from "@blikka/kv-store"
 import { ThumbnailService } from "./thumbnail-service"
 import { ExifParser } from "@blikka/exif-parser"
 import { BusService } from "@blikka/bus"
@@ -17,7 +12,6 @@ import {
   FailedToIncrementParticipantStateError,
   PhotoNotFoundError,
 } from "./errors"
-import { effectContext } from "effect/Layer"
 
 export class UploadProcessorService extends Effect.Service<UploadProcessorService>()(
   "@blikka/tasks/UploadProcessorService",
@@ -40,47 +34,40 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
       const db = yield* Database
       const thumbnailService = yield* ThumbnailService
 
-      const setParticipantErrorState = Effect.fnUntraced(
-        function* (domain: string, reference: string, error: string) {
-          yield* uploadKv.setParticipantErrorState(domain, reference, error)
-          yield* Effect.logError(error)
+      const handleParticipantError = Effect.fnUntraced(
+        function* (domain: string, reference: string, errorCode: string, error: Error) {
+          return yield* uploadKv
+            .setParticipantErrorState(domain, reference, errorCode)
+            .pipe(Effect.andThen(() => Effect.logError(error.message, error.cause)))
         },
-        Effect.catchAll((error) =>
-          Effect.logError("Failed to set participant error state", error)
-        )
+        Effect.catchAll((error) => Effect.logError("Failed to set participant error state", error))
       )
 
-      const finalizeParticipant = Effect.fn(
-        "upload-processor.finalizeParticipant"
-      )(
+      const finalizeParticipant = Effect.fn("UploadProcessorService.finalizeParticipant")(
         function* (domain: string, reference: string) {
-          const participantStateOpt = yield* uploadKv.getParticipantState(
-            domain,
-            reference
+          const participantState = yield* uploadKv.getParticipantState(domain, reference).pipe(
+            Effect.andThen(
+              Option.getOrThrowWith(
+                () =>
+                  new FailedToFinalizeParticipantError({
+                    cause: "Participant state not found",
+                    message: "Participant state not found",
+                    domain,
+                    reference,
+                  })
+              )
+            )
           )
 
-          if (Option.isNone(participantStateOpt)) {
-            return yield* new FailedToFinalizeParticipantError({
-              cause: "Participant state not found",
-              message: "Participant state not found",
-              domain,
-              reference,
-            })
-          }
-          const processedIndexes = participantStateOpt.value.processedIndexes
-          const uploadCount = processedIndexes.filter((v) => v !== 0).length
-          const orderIndexes = processedIndexes.map((_, i) => i)
+          const uploadCount = participantState.processedIndexes.filter((v) => v !== 0).length
+          const orderIndexes = participantState.processedIndexes.map((_, i) => i)
 
-          const submissionStates = yield* uploadKv.getAllSubmissionStates(
-            domain,
-            reference,
-            orderIndexes
-          )
-
-          const exifStates = yield* exifKv.getAllExifStates(
-            domain,
-            reference,
-            orderIndexes
+          const [submissionStates, exifStates] = yield* Effect.all(
+            [
+              uploadKv.getAllSubmissionStates(domain, reference, orderIndexes),
+              exifKv.getAllExifStates(domain, reference, orderIndexes),
+            ],
+            { concurrency: 2 }
           )
 
           if (submissionStates.length === 0 || exifStates.length === 0) {
@@ -93,9 +80,7 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
           }
 
           const updates = submissionStates.map((state) => {
-            const exif =
-              exifStates.find((e) => e.orderIndex === state.orderIndex)?.exif ??
-              {}
+            const exif = exifStates.find((e) => e.orderIndex === state.orderIndex)?.exif ?? {}
 
             return {
               orderIndex: state.orderIndex,
@@ -108,180 +93,116 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
             }
           })
 
-          yield* db.submissionsQueries
-            .updateAllSubmissions({
-              reference,
-              domain,
-              updates,
-            })
-            .pipe(
-              Effect.mapError(
-                () =>
-                  new FailedToFinalizeParticipantError({
-                    cause: "Failed to update submissions",
-                    message: "Failed to update submissions",
-                    domain,
-                    reference,
-                  })
-              )
-            )
-
-          yield* db.participantsQueries
-            .updateParticipantByReference({
-              reference,
-              domain,
-              data: {
-                uploadCount,
-                status: "completed",
-              },
-            })
-            .pipe(
-              Effect.mapError(
-                () =>
-                  new FailedToFinalizeParticipantError({
-                    cause: "Failed to update participant",
-                    message: "Failed to update participant",
-                    domain,
-                    reference,
-                  })
-              )
-            )
-
-          yield* bus.sendFinalizedEvent(domain, reference).pipe(
-            Effect.mapError(
-              () =>
-                new FailedToFinalizeParticipantError({
-                  cause: "Failed to send finalized event",
-                  message: "Failed to send finalized event",
-                  domain,
-                  reference,
-                })
-            )
-          )
-        },
-        Effect.retryOrElse(
-          Schedule.compose(
-            Schedule.exponential(Duration.millis(400)),
-            Schedule.recurs(1)
-          ),
-          (err) =>
-            Effect.gen(function* () {
-              if (err instanceof FailedToFinalizeParticipantError) {
-                yield* setParticipantErrorState(
-                  err.domain,
-                  err.reference,
-                  err.message ?? "Failed to finalize participant"
-                )
-              }
-              yield* Effect.logError("Failed to finalize participant", err)
-            })
-        )
-      )
-
-      const processPhoto = Effect.fn("upload-processor.processPhoto")(
-        function* (key: string) {
-          const { domain, reference, orderIndex } = yield* parseKey(key)
-
-          const submissionStateOpt = yield* uploadKv.getSubmissionState(
-            domain,
-            reference,
-            orderIndex
-          )
-          if (
-            Option.isSome(submissionStateOpt) &&
-            submissionStateOpt.value.uploaded
-          ) {
-            yield* Effect.logWarning("Submission already uploaded, skipping")
-            return
-          }
-
-          const photo = yield* s3
-            .getFile(SSTResource.V2SubmissionsBucket.name, key)
-            .pipe(
-              Effect.andThen(
-                Option.getOrThrowWith(
-                  () =>
-                    new PhotoNotFoundError({
-                      cause: "Photo not found",
-                      message: "Photo not found",
-                    })
-                )
-              )
-            )
-
-          const [exifResult, thumbnailKeyResult] = yield* Effect.all(
+          yield* Effect.all(
             [
-              Effect.either(exifParser.parse(Buffer.from(photo))),
-              Effect.either(
-                thumbnailService.generateThumbnail(Buffer.from(photo), key)
-              ),
+              db.submissionsQueries.updateAllSubmissions({
+                reference,
+                domain,
+                updates,
+              }),
+              db.participantsQueries.updateParticipantByReference({
+                reference,
+                domain,
+                data: {
+                  uploadCount,
+                  status: "completed",
+                },
+              }),
             ],
             { concurrency: 2 }
           )
 
-          const exifOpt = yield* Either.match(exifResult, {
-            onLeft: () =>
-              setParticipantErrorState(domain, reference, "EXIF_ERROR").pipe(
-                Effect.as(Option.none<ExifState>())
-              ),
-            onRight: (result) =>
-              exifKv.setExifState(domain, reference, orderIndex, result).pipe(
-                Effect.map(() => Option.some(result)),
-                Effect.catchAll((error) =>
-                  Effect.zipRight(
-                    Effect.logError("Failed to set exif state", error),
-                    Effect.succeed(Option.none<ExifState>())
-                  )
+          yield* bus.sendFinalizedEvent(domain, reference)
+        },
+        Effect.retryOrElse(
+          Schedule.compose(Schedule.exponential(Duration.millis(400)), Schedule.recurs(1)),
+          (err) =>
+            Effect.gen(function* () {
+              if (err instanceof FailedToFinalizeParticipantError) {
+                yield* handleParticipantError(
+                  err.domain,
+                  err.reference,
+                  err.message ?? "Failed to finalize participant",
+                  err
                 )
-              ),
-          })
-
-          const thumbnailOpt = yield* Either.match(thumbnailKeyResult, {
-            onLeft: () =>
-              setParticipantErrorState(
-                domain,
-                reference,
-                "THUMBNAIL_ERROR"
-              ).pipe(Effect.as(Option.none<string>())),
-            onRight: (key) => Effect.succeed(Option.some(key)),
-          })
-
-          yield* uploadKv
-            .updateSubmissionState(domain, reference, orderIndex, {
-              uploaded: true,
-              orderIndex: Number(orderIndex),
-              thumbnailKey: Option.isSome(thumbnailOpt)
-                ? thumbnailOpt.value
-                : null,
-              exifProcessed: Option.isSome(exifOpt),
+              }
             })
-            .pipe(
-              Effect.orElse(() =>
-                Effect.logError("Failed to update submission state")
-              )
-            )
-
-          const { finalize } = yield* uploadKv
-            .incrementParticipantState(domain, reference, orderIndex)
-            .pipe(
-              Effect.orElseFail(
-                () =>
-                  new FailedToIncrementParticipantStateError({
-                    cause: "Failed to increment participant state",
-                    message: "Failed to increment participant state",
-                  })
-              )
-            )
-
-          if (finalize) {
-            yield* finalizeParticipant(domain, reference)
-          }
-        }
+        )
       )
+
+      const processPhoto = Effect.fn("UploadProcessorService.processPhoto")(function* (
+        key: string
+      ) {
+        const { domain, reference, orderIndex } = yield* parseKey(key)
+
+        const submissionStateOpt = yield* uploadKv.getSubmissionState(domain, reference, orderIndex)
+        if (Option.isSome(submissionStateOpt) && submissionStateOpt.value.uploaded) {
+          yield* Effect.logWarning("Submission already uploaded, skipping")
+          return
+        }
+
+        const photo = yield* s3.getFile(SSTResource.V2SubmissionsBucket.name, key).pipe(
+          Effect.andThen(
+            Option.getOrThrowWith(
+              () =>
+                new PhotoNotFoundError({
+                  cause: "Photo not found",
+                  message: "Photo not found",
+                })
+            )
+          )
+        )
+
+        const exifResult = yield* exifParser.parse(Buffer.from(photo)).pipe(
+          Effect.tap((exif) => exifKv.setExifState(domain, reference, orderIndex, exif)),
+          Effect.map(Option.some),
+          Effect.catchAll((error) =>
+            handleParticipantError(domain, reference, "EXIF_ERROR", error).pipe(
+              Effect.as(Option.none<ExifState>())
+            )
+          )
+        )
+
+        const thumbnailResult = yield* thumbnailService
+          .generateThumbnail(Buffer.from(photo), key)
+          .pipe(
+            Effect.map(Option.some),
+            Effect.catchAll((error) =>
+              handleParticipantError(domain, reference, "THUMBNAIL_ERROR", error).pipe(
+                Effect.as(Option.none<string>())
+              )
+            )
+          )
+
+        yield* uploadKv
+          .updateSubmissionState(domain, reference, orderIndex, {
+            uploaded: true,
+            orderIndex: Number(orderIndex),
+            thumbnailKey: Option.getOrNull(thumbnailResult),
+            exifProcessed: Option.isSome(exifResult),
+          })
+          .pipe(Effect.orElse(() => Effect.logError("Failed to update submission state")))
+
+        const { finalize } = yield* uploadKv
+          .incrementParticipantState(domain, reference, orderIndex)
+          .pipe(
+            Effect.orElseFail(
+              () =>
+                new FailedToIncrementParticipantStateError({
+                  cause: "Failed to increment participant state",
+                  message: "Failed to increment participant state",
+                })
+            )
+          )
+
+        if (finalize) {
+          yield* finalizeParticipant(domain, reference)
+        }
+      })
 
       return {
         processPhoto,
-      }
+      } as const
     }),
   }
 ) {}

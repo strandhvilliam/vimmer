@@ -1,15 +1,4 @@
-import {
-  Data,
-  Effect,
-  Either,
-  Option,
-  Schema,
-  Array,
-  String,
-  pipe,
-  DateTime,
-  Order,
-} from "effect"
+import { Data, Effect, Either, Option, Schema, Array, String, pipe, DateTime, Order } from "effect"
 import { Prompt } from "@effect/cli"
 import { Database, SqlError, Topic } from "@blikka/db"
 import {
@@ -57,12 +46,8 @@ export class UploadFlowCliService extends Effect.Service<UploadFlowCliService>()
         domain,
       }: {
         domain: string
-      }) => Effect.Effect<
-        string,
-        SqlError | QuitException | PlatformError,
-        Terminal.Terminal
-      > = Effect.fn("UploadFlowCliService.promptForUniqueReference")(
-        function* ({ domain }) {
+      }) => Effect.Effect<string, SqlError | QuitException | PlatformError, Terminal.Terminal> =
+        Effect.fn("UploadFlowCliService.promptForUniqueReference")(function* ({ domain }) {
           const reference = yield* Prompt.text({
             message: "Enter participant reference:",
             validate: (reference) =>
@@ -71,11 +56,10 @@ export class UploadFlowCliService extends Effect.Service<UploadFlowCliService>()
               ),
           })
 
-          const exists =
-            yield* db.participantsQueries.getParticipantByReference({
-              reference,
-              domain,
-            })
+          const exists = yield* db.participantsQueries.getParticipantByReference({
+            reference,
+            domain,
+          })
 
           if (Option.isSome(exists)) {
             yield* terminal.display("Participant reference already exists\n")
@@ -83,12 +67,9 @@ export class UploadFlowCliService extends Effect.Service<UploadFlowCliService>()
           }
 
           return yield* Effect.succeed(reference)
-        }
-      )
+        })
 
-      const selectFilesForKeys = Effect.fn(
-        "UploadFlowCliService.selectFilesForKeys"
-      )(function* ({
+      const selectFilesForKeys = Effect.fn("UploadFlowCliService.selectFilesForKeys")(function* ({
         keys,
         startingPath,
       }: {
@@ -133,9 +114,7 @@ export class UploadFlowCliService extends Effect.Service<UploadFlowCliService>()
             value: marathon.id,
           })),
         }).pipe(
-          Effect.andThen((id) =>
-            Array.findFirst(marathons, (marathon) => marathon.id === id)
-          )
+          Effect.andThen((id) => Array.findFirst(marathons, (marathon) => marathon.id === id))
         )
 
         const reference = yield* promptForUniqueReference({
@@ -174,10 +153,7 @@ export class UploadFlowCliService extends Effect.Service<UploadFlowCliService>()
           })),
         }).pipe(
           Effect.andThen((id) =>
-            Array.findFirst(
-              selectedMarathon.competitionClasses,
-              (c) => c.id === id
-            )
+            Array.findFirst(selectedMarathon.competitionClasses, (c) => c.id === id)
           )
         )
 
@@ -198,25 +174,17 @@ export class UploadFlowCliService extends Effect.Service<UploadFlowCliService>()
           selectedClass.topicStartIndex + selectedClass.numberOfPhotos
         )
 
-        const dbSubmissions =
-          yield* db.submissionsQueries.createMultipleSubmissions({
-            data: topicsForSubmissions.map((topic) => ({
-              participantId: participant.id,
-              key: generateSubmissionKey(
-                selectedMarathon.domain,
-                reference,
-                topic.orderIndex
-              ),
-              marathonId: selectedMarathon.id,
-              topicId: topic.id,
-              status: "initialized",
-            })),
-          })
+        const dbSubmissions = yield* db.submissionsQueries.createMultipleSubmissions({
+          data: topicsForSubmissions.map((topic) => ({
+            participantId: participant.id,
+            key: generateSubmissionKey(selectedMarathon.domain, reference, topic.orderIndex),
+            marathonId: selectedMarathon.id,
+            topicId: topic.id,
+            status: "initialized",
+          })),
+        })
 
-        const sortByOrderIndex = Order.mapInput(
-          Order.number,
-          (topic: Topic) => topic.orderIndex
-        )
+        const sortByOrderIndex = Order.mapInput(Order.number, (topic: Topic) => topic.orderIndex)
 
         const keys = yield* db.topicsQueries
           .getTopicsByDomain({
@@ -227,11 +195,7 @@ export class UploadFlowCliService extends Effect.Service<UploadFlowCliService>()
             Effect.andThen(Array.drop(selectedClass.topicStartIndex)),
             Effect.andThen(
               Array.map((topic) =>
-                generateSubmissionKey(
-                  selectedMarathon.domain,
-                  reference,
-                  topic.orderIndex
-                )
+                generateSubmissionKey(selectedMarathon.domain, reference, topic.orderIndex)
               )
             )
           )
@@ -245,11 +209,7 @@ export class UploadFlowCliService extends Effect.Service<UploadFlowCliService>()
 
         const presignedUrls = yield* Effect.all(
           keys.map((key) =>
-            s3.getPresignedUrl(
-              "blikka-development-v2submissionsbucketbucket-xdhbcmna",
-              key,
-              "PUT"
-            )
+            s3.getPresignedUrl("blikka-development-v2submissionsbucketbucket-xdhbcmna", key, "PUT")
           )
         )
 
@@ -267,9 +227,7 @@ export class UploadFlowCliService extends Effect.Service<UploadFlowCliService>()
           if (!presignedUrl || !path || !key) {
             continue
           }
-          const file = yield* fs
-            .readFile(path)
-            .pipe(Effect.map((file) => Buffer.from(file)))
+          const file = yield* fs.readFile(path).pipe(Effect.map((file) => Buffer.from(file)))
 
           // const httpBody = yield* HttpBody.file(path)
 
