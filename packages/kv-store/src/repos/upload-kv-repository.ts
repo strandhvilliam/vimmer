@@ -1,5 +1,5 @@
 import { Duration, Effect, HashMap, Option, pipe, Schedule, Schema } from "effect"
-import { UpstashClient, RedisError } from "../upstash"
+import { RedisClient, RedisError } from "@blikka/redis"
 import { NodeFileSystem } from "@effect/platform-node"
 import { KeyFactory } from "../key-factory"
 import {
@@ -20,9 +20,9 @@ import { luaIncrement } from "../lua-scripts/lua-increment"
 export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
   "@blikka/packages/kv-store/upload-kv-repository",
   {
-    dependencies: [NodeFileSystem.layer, UpstashClient.Default, KeyFactory.Default],
+    dependencies: [NodeFileSystem.layer, RedisClient.Default, KeyFactory.Default],
     effect: Effect.gen(function* () {
-      const redis = yield* UpstashClient
+      const redis = yield* RedisClient
       const keyFactory = yield* KeyFactory
       const fs = yield* FileSystem.FileSystem
 

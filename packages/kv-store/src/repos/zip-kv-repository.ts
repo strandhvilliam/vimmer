@@ -1,96 +1,65 @@
 import { Effect, Option, Schedule, Duration, Schema } from "effect"
 import { KeyFactory } from "../key-factory"
-import { UpstashClient } from "../upstash"
+import { RedisClient } from "@blikka/redis"
 import { makeInitialZipProgress } from "../schema"
 
 export class ZipKVRepository extends Effect.Service<ZipKVRepository>()(
   "@blikka/packages/kv-store/zip-kv-repository",
   {
-    dependencies: [UpstashClient.Default, KeyFactory.Default],
+    dependencies: [RedisClient.Default, KeyFactory.Default],
     effect: Effect.gen(function* () {
-      const redis = yield* UpstashClient
+      const redis = yield* RedisClient
       const keyFactory = yield* KeyFactory
 
       const getZipProgress = Effect.fn("ZipKVRepository.getZipProgress")(
         function* (domain: string, ref: string) {
           const key = keyFactory.zipProgress(domain, ref)
-          const result = yield* redis.use((client) =>
-            client.get<string | null>(key)
-          )
+          const result = yield* redis.use((client) => client.get<string | null>(key))
           return Option.fromNullable(result)
         },
         Effect.retryOrElse(
-          Schedule.compose(
-            Schedule.exponential(Duration.millis(100)),
-            Schedule.recurs(3)
-          ),
+          Schedule.compose(Schedule.exponential(Duration.millis(100)), Schedule.recurs(3)),
           () => Effect.succeed(Option.none<string>())
         )
       )
 
-      const incrementZipProgress = Effect.fn(
-        "ZipKVRepository.updateZipProgress"
-      )(
+      const incrementZipProgress = Effect.fn("ZipKVRepository.updateZipProgress")(
         function* (domain: string, ref: string) {
           const key = keyFactory.zipProgress(domain, ref)
-          return yield* redis.use((client) =>
-            client.hincrby(key, "progress", 1)
-          )
+          return yield* redis.use((client) => client.hincrby(key, "progress", 1))
         },
         Effect.retry(
-          Schedule.compose(
-            Schedule.exponential(Duration.millis(100)),
-            Schedule.recurs(3)
-          )
+          Schedule.compose(Schedule.exponential(Duration.millis(100)), Schedule.recurs(3))
         )
       )
 
-      const completeZipProgress = Effect.fn(
-        "ZipKVRepository.completeZipProgress"
-      )(
+      const completeZipProgress = Effect.fn("ZipKVRepository.completeZipProgress")(
         function* (domain: string, ref: string) {
           const key = keyFactory.zipProgress(domain, ref)
-          return yield* redis.use((client) =>
-            client.hset(key, { status: "completed" })
-          )
+          return yield* redis.use((client) => client.hset(key, { status: "completed" }))
         },
         Effect.retry(
-          Schedule.compose(
-            Schedule.exponential(Duration.millis(100)),
-            Schedule.recurs(3)
-          )
+          Schedule.compose(Schedule.exponential(Duration.millis(100)), Schedule.recurs(3))
         )
       )
 
-      const setZipProgressError = Effect.fn(
-        "ZipKVRepository.setZipProgressError"
-      )(
+      const setZipProgressError = Effect.fn("ZipKVRepository.setZipProgressError")(
         function* (domain: string, ref: string, errors: string[]) {
           const key = keyFactory.zipProgress(domain, ref)
           return yield* redis.use((client) => client.hset(key, { errors }))
         },
         Effect.retry(
-          Schedule.compose(
-            Schedule.exponential(Duration.millis(100)),
-            Schedule.recurs(3)
-          )
+          Schedule.compose(Schedule.exponential(Duration.millis(100)), Schedule.recurs(3))
         )
       )
 
-      const initializeZipProgress = Effect.fn(
-        "ZipKVRepository.resetZipProgress"
-      )(
+      const initializeZipProgress = Effect.fn("ZipKVRepository.resetZipProgress")(
         function* (domain: string, ref: string, zipKey: string) {
           const key = keyFactory.zipProgress(domain, ref)
-          return yield* redis.use((client) =>
-            client.hset(key, makeInitialZipProgress(zipKey))
-          )
+          return yield* redis.use((client) => client.hset(key, makeInitialZipProgress(zipKey)))
         },
         Effect.retry(
-          Schedule.compose(
-            Schedule.exponential(Duration.millis(100)),
-            Schedule.recurs(3)
-          )
+          Schedule.compose(Schedule.exponential(Duration.millis(100)), Schedule.recurs(3))
         )
       )
 

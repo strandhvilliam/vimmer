@@ -6,28 +6,23 @@ export class RedisError extends Data.TaggedError("RedisError")<{
   cause?: unknown
 }> {}
 
-const makeClient = (url: string, token: string) =>
-  Effect.gen(function* () {
+const makeClient = Effect.fn("RedisClient.makeClient")(
+  function* (url: string, token: string) {
     const client = new Redis({ url, token })
     yield* Effect.tryPromise({
       try: () => client.ping(),
-      catch: (error) =>
-        new RedisError({ cause: error, message: "Redis connection failed" }),
+      catch: (error) => new RedisError({ cause: error, message: "Redis connection failed" }),
     })
     return client
-  }).pipe(
-    Effect.retry(
-      Schedule.exponential(Duration.seconds(1)).pipe(
-        Schedule.intersect(Schedule.recurs(5))
-      )
-    ),
-    Effect.tapError((error) =>
-      Effect.logError(error.message ?? "Redis connection failed after retries")
-    )
+  },
+  Effect.retry(Schedule.compose(Schedule.exponential(Duration.seconds(1)), Schedule.recurs(3))),
+  Effect.tapError((error) =>
+    Effect.logError(error.message ?? "Redis connection failed after retries")
   )
+)
 
-export class UpstashClient extends Effect.Service<UpstashClient>()(
-  "@blikka/packages/redis-store/upstash-client",
+export class RedisClient extends Effect.Service<RedisClient>()(
+  "@blikka/packages/redis/redis-client",
   {
     scoped: Effect.gen(function* () {
       const url = yield* Config.string("UPSTASH_REDIS_REST_URL")
@@ -35,9 +30,7 @@ export class UpstashClient extends Effect.Service<UpstashClient>()(
 
       const client = yield* makeClient(url, token)
 
-      const use = <T>(
-        fn: (client: Redis) => T
-      ): Effect.Effect<Awaited<T>, RedisError, never> =>
+      const use = <T>(fn: (client: Redis) => T): Effect.Effect<Awaited<T>, RedisError, never> =>
         Effect.gen(function* () {
           const result = yield* Effect.try({
             try: () => fn(client),
@@ -60,10 +53,7 @@ export class UpstashClient extends Effect.Service<UpstashClient>()(
             return result
           }
         })
-      yield* Effect.addFinalizer(() =>
-        Console.log("Shutting down Redis client")
-      )
-
+      yield* Effect.addFinalizer(() => Console.log("Shutting down Redis client"))
       return {
         use,
       }
