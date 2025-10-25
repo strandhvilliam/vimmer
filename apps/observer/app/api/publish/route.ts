@@ -1,23 +1,24 @@
 import { HttpApp, HttpServerRequest, HttpServerResponse } from "@effect/platform"
 import { Effect, Layer, ManagedRuntime, Schema } from "effect"
-import { PubSubChannel, PubSubService } from "@blikka/pubsub"
-
+import { PubSubChannel, PubSubMessage, PubSubService } from "@blikka/pubsub"
+import { PubSubLoggerLayer } from "@blikka/pubsub"
 const effectHandler = Effect.gen(function* () {
   const pubsub = yield* PubSubService
-  const { message } = yield* HttpServerRequest.schemaBodyJson(
+  const { message: messageString } = yield* HttpServerRequest.schemaBodyJson(
     Schema.Struct({
       message: Schema.String,
     })
   )
-  yield* PubSubChannel.fromString("prod:upload-flow:test").pipe(
-    Effect.andThen((channel) => pubsub.publish(channel, message))
-  )
+  yield* Effect.log("RUNNING")
+  const channel = yield* PubSubChannel.fromString("prod:upload-flow:test")
+  const message = yield* PubSubMessage.create(channel, messageString)
+  yield* pubsub.publish(channel, message)
   return yield* HttpServerResponse.json({
     message: "Message published",
   })
 })
 
-const mainLive = Layer.mergeAll(PubSubService.Default)
+const mainLive = Layer.mergeAll(PubSubService.Default, PubSubLoggerLayer)
 
 const managedRuntime = ManagedRuntime.make(mainLive)
 const runtime = await managedRuntime.runtime()

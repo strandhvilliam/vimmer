@@ -1,6 +1,6 @@
 import { Chunk, Data, Duration, Effect, Queue, Schedule, Schema, Stream } from "effect"
 import { RedisClient, RedisError } from "@blikka/redis"
-import { PubSubChannel } from "./schema"
+import { PubSubChannel, PubSubMessage } from "./schema"
 import { ChannelParseError, PubSubError } from "./utils"
 
 export class PubSubService extends Effect.Service<PubSubService>()(
@@ -11,7 +11,7 @@ export class PubSubService extends Effect.Service<PubSubService>()(
       const redis = yield* RedisClient
 
       const publish = Effect.fn("PubSubService.publish")(
-        function* (channel: PubSubChannel, message: string) {
+        function* (channel: PubSubChannel, message: PubSubMessage) {
           const channelString = yield* PubSubChannel.toString(channel)
           return yield* redis.use((client) => client.publish(channelString, message))
         },
@@ -24,12 +24,12 @@ export class PubSubService extends Effect.Service<PubSubService>()(
       )
 
       const subscribe = (channel: PubSubChannel) =>
-        Stream.asyncPush<string, ChannelParseError | PubSubError | RedisError, never>(
+        Stream.asyncPush<PubSubMessage, ChannelParseError | PubSubError | RedisError, never>(
           Effect.fnUntraced(function* (emit) {
             const channelString = yield* PubSubChannel.toString(channel)
 
             const subscription = yield* Effect.acquireRelease(
-              redis.use((client) => client.subscribe<string>(channelString)),
+              redis.use((client) => client.subscribe<PubSubMessage>(channelString)),
               (subscription) =>
                 Effect.tryPromise({
                   try: () => subscription.unsubscribe(),

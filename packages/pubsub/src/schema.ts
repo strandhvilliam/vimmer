@@ -39,3 +39,19 @@ export class PubSubChannel extends Schema.Class<PubSubChannel>("PubSubChannel")(
     }).pipe(Effect.mapError((error) => new ChannelParseError(error)))
   })
 }
+
+export class PubSubMessage extends Schema.Class<PubSubMessage>("PubSubMessage")({
+  channel: PubSubChannelString,
+  payload: Schema.Unknown,
+  timestamp: Schema.Number,
+  messageId: Schema.String,
+}) {
+  static create = Effect.fnUntraced(function* <T>(channel: PubSubChannel, payload: T) {
+    return yield* Schema.encodeUnknown(PubSubMessage)({
+      channel: yield* PubSubChannel.toString(channel),
+      payload,
+      timestamp: Date.now(),
+      messageId: crypto.randomUUID(),
+    })
+  })
+}
