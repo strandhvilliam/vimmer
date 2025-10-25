@@ -3,7 +3,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@vimmer/ui/*": ["../../packages/ui/src/*"]
+      "@vimmer/ui/*": ["../../packages/ui/src/*"],
+      "@blikka/pubsub": ["../../packages/pubsub/src/index.ts"],
+      "@blikka/db": ["../../packages/db/src/index.ts"]
     },
     "plugins": [
       {

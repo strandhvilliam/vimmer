@@ -9,7 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@effect/platform": "^0.92.1",
     "@vimmer/ui": "workspace:*",
+    "@blikka/pubsub": "workspace:*",
     "motion": "^12.23.24",
     "next": "16.0.0",
     "react": "19.2.0",

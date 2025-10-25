@@ -1,6 +1,5 @@
 {
-  "name": "@blikka/redis",
-  "module": "index.ts",
+  "name": "@blikka/pubsub",
   "type": "module",
   "private": true,
   "devDependencies": {
@@ -10,10 +9,10 @@
     "typescript": "^5"
   },
   "exports": {
-    ".": "./src/index.ts"
+    "./": "./src/index.ts"
   },
   "dependencies": {
-    "@upstash/redis": "^1.35.6",
-    "effect": "catalog:"
+    "@blikka/redis": "workspace:*",
+    "effect": "^3.18.4"
   }
 }
