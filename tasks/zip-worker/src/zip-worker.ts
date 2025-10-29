@@ -19,15 +19,6 @@ export class ZipWorker extends Effect.Service<ZipWorker>()("@blikka/tasks/zip-wo
     const db = yield* Database
     const s3 = yield* S3Service
 
-    const parseArguments = Effect.fn("ZipWorker.parseArguments")(
-      function* () {
-        const domain = yield* Schema.Config("ARG_DOMAIN", Schema.String)
-        const reference = yield* Schema.Config("ARG_REFERENCE", Schema.String)
-        return { domain, reference }
-      },
-      Effect.mapError((error) => new InvalidArgumentsError({ cause: error }))
-    )
-
     const buildZipBuffer = Effect.fn("ZipWorker.buildZipBuffer")(function* (
       domain: string,
       reference: string,
@@ -134,8 +125,10 @@ export class ZipWorker extends Effect.Service<ZipWorker>()("@blikka/tasks/zip-wo
       }
     })
 
-    const runZipTask = Effect.fn("ZipWorker.runZipTask")(function* () {
-      const { domain, reference } = yield* parseArguments()
+    const runZipTask = Effect.fn("ZipWorker.runZipTask")(function* (
+      domain: string,
+      reference: string
+    ) {
       yield* kvStore.initializeZipProgress(domain, reference, `${domain}/${reference}.zip`)
 
       const { participant, topics } = yield* fetchRequiredData(domain, reference)

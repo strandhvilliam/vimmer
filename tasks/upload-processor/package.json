@@ -14,6 +14,7 @@
     "@blikka/db": "workspace:*",
     "@blikka/exif-parser": "workspace:*",
     "@blikka/image-manipulation": "workspace:*",
+    "@blikka/pubsub": "workspace:*",
     "@blikka/telemetry": "workspace:*",
     "@blikka/kv-store": "workspace:*",
     "@blikka/s3": "workspace:*",

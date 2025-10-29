@@ -1,17 +1,31 @@
 import { LambdaHandler } from "@effect-aws/lambda"
 import { Resource as SSTResource } from "sst"
 import { EventBridgeClient, PutEventsCommand } from "@aws-sdk/client-eventbridge"
-import { Effect, Layer } from "effect"
+import { Console, Effect, Layer } from "effect"
 import { BusService } from "@blikka/bus"
+import { PubSubChannel, PubSubLoggerLayer, RunStateService } from "@blikka/pubsub"
+
+const getEnvironment = (stage: string): "prod" | "dev" | "staging" => {
+  if (stage === "production") return "prod"
+  if (stage === "dev" || stage === "development") return "dev"
+  return "staging"
+}
 
 export const effectHandler = () =>
   Effect.gen(function* () {
-    const bus = yield* BusService
-    const result = yield* bus.sendFinalizedEvent("uppis", "5432")
-    return Effect.succeed(void 0)
+    const runStateService = yield* RunStateService
+    const environment = getEnvironment(SSTResource.App.stage)
+    const domain = "uppis"
+    const reference = "6750"
+
+    const channel = yield* PubSubChannel.fromString(
+      `${environment}:upload-flow:${domain}-${reference}`
+    )
+
+    yield* runStateService.withRunStateEvents("dev-caller", channel, Console.log("Hello, world!"))
   }).pipe(Effect.withSpan("DevCaller.handler"), Effect.catchAll(Effect.logError))
 
 export const handler = LambdaHandler.make({
   handler: effectHandler,
-  layer: BusService.Default,
+  layer: Layer.mergeAll(BusService.Default, RunStateService.Default, PubSubLoggerLayer),
 })

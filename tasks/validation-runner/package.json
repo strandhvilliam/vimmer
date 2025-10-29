@@ -12,6 +12,7 @@
   "dependencies": {
     "@effect-aws/lambda": "^1.5.1",
     "effect": "catalog:",
-    "@blikka/telemetry": "workspace:*"
+    "@blikka/telemetry": "workspace:*",
+    "@blikka/bus": "workspace:*"
   }
 }

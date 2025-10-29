@@ -123,6 +123,7 @@ export default $config({
     /* DEV CALLER */
 
     const devCallerFn = new sst.aws.Function("DevCaller", {
+      environment: env,
       url: true,
       handler: "./tasks/dev-caller/index.handler",
       link: [submissionFinalizedBus],
