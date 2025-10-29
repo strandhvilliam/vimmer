@@ -20,16 +20,12 @@ export const parseKey = Effect.fn("utils.parseKey")(function* (key: string) {
   return { domain, reference, orderIndex, fileName }
 })
 
-export const makeThumbnailKey = Effect.fn("utils.makeThumbnailKey")(
-  function* (params: {
-    domain: string
-    reference: string
-    orderIndex: number
-    fileName: string
-  }) {
-    const formattedOrderIndex = (params.orderIndex + 1)
-      .toString()
-      .padStart(2, "0")
-    return `${params.domain}/${params.reference}/${formattedOrderIndex}/thumbnail_${params.fileName}`
-  }
-)
+export const makeThumbnailKey = Effect.fn("utils.makeThumbnailKey")(function* (params: {
+  domain: string
+  reference: string
+  orderIndex: number
+  fileName: string
+}) {
+  const formattedOrderIndex = (params.orderIndex + 1).toString().padStart(2, "0")
+  return `${params.domain}/${params.reference}/${formattedOrderIndex}/thumbnail_${params.fileName}`
+})

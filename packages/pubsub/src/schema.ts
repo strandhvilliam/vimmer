@@ -38,6 +38,12 @@ export class PubSubChannel extends Schema.Class<PubSubChannel>("PubSubChannel")(
       identifier,
     }).pipe(Effect.mapError((error) => new ChannelParseError(error)))
   })
+
+  static parse = Effect.fnUntraced(function* (str: string) {
+    return yield* Schema.decodeUnknown(PubSubChannelString)(str)
+      .pipe(Effect.mapError((error) => new ChannelParseError(error)))
+      .pipe(Effect.andThen(PubSubChannel.fromString))
+  })
 }
 
 export class PubSubMessage extends Schema.Class<PubSubMessage>("PubSubMessage")({

@@ -71,6 +71,14 @@ export default function ObserverDashboard() {
 
   const activeStep = useMemo(() => MOCK_STEPS[activeStepIndex]?.id, [activeStepIndex])
 
+  useEffect(() => {
+    const eventSource = new EventSource("/api/subscribe/dev:upload-flow:test")
+    eventSource.onmessage = (event) => {
+      console.log(event.data)
+    }
+    return () => eventSource.close()
+  }, [])
+
   return (
     <div className="h-screen bg-background p-4 sm:p-6">
       <ResizablePanelGroup direction="vertical" className="h-full gap-2">
