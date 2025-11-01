@@ -55,7 +55,7 @@ export class RunStateService extends Effect.Service<RunStateService>()(
                 return yield* Effect.fail(error)
               })
             ),
-            Effect.tapError((result) =>
+            Effect.tap((result) =>
               Effect.gen(function* () {
                 const duration = Date.now() - startTime
                 yield* sendRunStateEvent(taskName, channel, "end", { duration }).pipe(

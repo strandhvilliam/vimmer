@@ -194,11 +194,9 @@ export class SubmissionsQueries extends Effect.Service<SubmissionsQueries>()(
         function* ({ data }: { data: NewSubmission[] }) {
           const [result] = yield* db.insert(submissions).values(data).returning()
           if (!result) {
-            return yield* Effect.fail(
-              new SqlError({
-                cause: "Failed to create multiple submissions",
-              })
-            )
+            return yield* new SqlError({
+              cause: "Failed to create multiple submissions",
+            })
           }
           return result
         }

@@ -27,6 +27,7 @@ import {
 } from "@vimmer/ui/components/resizable"
 import { PrimaryButton } from "@vimmer/ui/components/primary-button"
 import { Button } from "@vimmer/ui/components/button"
+import { UploadDialog } from "./components/upload-dialog"
 
 interface Step {
   id: string
@@ -56,11 +57,27 @@ const MOCK_IMAGES: { id: string; fileName: string }[] = [
 
 export default function ObserverDashboard() {
   const [activeStepIndex, setActiveStepIndex] = useState(0)
-  const [domain, setDomain] = useState("uppis")
-  const [deviceGroup, setDeviceGroup] = useState("default")
+  const [domain, setDomain] = useState("")
+  const [deviceGroupId, setDeviceGroupId] = useState<number | null>(null)
   const [shouldValidate, setShouldValidate] = useState(true)
   const [shouldGenerateContactSheet, setShouldGenerateContactSheet] = useState(true)
   const [shouldZip, setShouldZip] = useState(false)
+  const [reference, setReference] = useState("")
+  const [firstname, setFirstname] = useState("")
+  const [lastname, setLastname] = useState("")
+  const [email, setEmail] = useState("")
+  const [competitionClassId, setCompetitionClassId] = useState<number | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [presignedUrls, setPresignedUrls] = useState<Array<{ key: string; url: string }>>([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Form options state
+  const [marathons, setMarathons] = useState<Array<{ domain: string; name: string }>>([])
+  const [competitionClasses, setCompetitionClasses] = useState<Array<{ id: number; name: string }>>(
+    []
+  )
+  const [deviceGroups, setDeviceGroups] = useState<Array<{ id: number; name: string }>>([])
+  const [isLoadingOptions, setIsLoadingOptions] = useState(false)
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -79,6 +96,100 @@ export default function ObserverDashboard() {
     return () => eventSource.close()
   }, [])
 
+  // Fetch marathons on mount
+  useEffect(() => {
+    async function fetchMarathons() {
+      try {
+        const response = await fetch("/api/form-options")
+        if (!response.ok) throw new Error("Failed to fetch marathons")
+        const data = await response.json()
+        setMarathons(data.marathons || [])
+      } catch (error) {
+        console.error("Error fetching marathons:", error)
+      }
+    }
+    fetchMarathons()
+  }, [])
+
+  // Fetch competition classes and device groups when domain changes
+  useEffect(() => {
+    if (!domain) {
+      setCompetitionClasses([])
+      setDeviceGroups([])
+      setCompetitionClassId(null)
+      setDeviceGroupId(null)
+      return
+    }
+
+    setIsLoadingOptions(true)
+    async function fetchOptions() {
+      try {
+        const response = await fetch(`/api/form-options?domain=${encodeURIComponent(domain)}`)
+        if (!response.ok) throw new Error("Failed to fetch options")
+        const data = await response.json()
+        setCompetitionClasses(data.competitionClasses || [])
+        setDeviceGroups(data.deviceGroups || [])
+        // Reset selections when domain changes
+        setCompetitionClassId(data.competitionClasses?.[0]?.id || null)
+        setDeviceGroupId(data.deviceGroups?.[0]?.id || null)
+      } catch (error) {
+        console.error("Error fetching options:", error)
+      } finally {
+        setIsLoadingOptions(false)
+      }
+    }
+    fetchOptions()
+  }, [domain])
+
+  async function handleRunUploadFlow() {
+    if (
+      !reference ||
+      !firstname ||
+      !lastname ||
+      !email ||
+      !domain ||
+      !competitionClassId ||
+      !deviceGroupId
+    ) {
+      alert("Please fill in all required fields")
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await fetch("/api/run-upload-flow", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          domain,
+          reference,
+          firstname,
+          lastname,
+          email,
+          competitionClassId,
+          deviceGroupId,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = response.statusText
+        console.error(error)
+        throw new Error(error || "Failed to start upload flow")
+      }
+
+      const data = await response.json()
+      setPresignedUrls(data.presignedUrls || [])
+      setIsDialogOpen(true)
+    } catch (error) {
+      console.error("Error starting upload flow:", error)
+      alert(error instanceof Error ? error.message : "Failed to start upload flow")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="h-screen bg-background p-4 sm:p-6">
       <ResizablePanelGroup direction="vertical" className="h-full gap-2">
@@ -93,7 +204,12 @@ export default function ObserverDashboard() {
                 <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 overflow-auto flex-1">
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="reference">Reference</Label>
-                    <Input id="reference" placeholder="P-99812" />
+                    <Input
+                      id="reference"
+                      placeholder="P-99812"
+                      value={reference}
+                      onChange={(e) => setReference(e.target.value)}
+                    />
                   </div>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="domain">Domain</Label>
@@ -102,33 +218,77 @@ export default function ObserverDashboard() {
                         <SelectValue placeholder="Choose domain" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="uppis">uppis</SelectItem>
-                        <SelectItem value="gymnasiet">gymnasiet</SelectItem>
-                        <SelectItem value="demo">demo</SelectItem>
+                        {marathons.map((marathon) => (
+                          <SelectItem key={marathon.domain} value={marathon.domain}>
+                            {marathon.name} ({marathon.domain})
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="firstname">Firstname</Label>
-                    <Input id="firstname" placeholder="Ada" />
+                    <Input
+                      id="firstname"
+                      placeholder="Ada"
+                      value={firstname}
+                      onChange={(e) => setFirstname(e.target.value)}
+                    />
                   </div>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="lastname">Lastname</Label>
-                    <Input id="lastname" placeholder="Lovelace" />
+                    <Input
+                      id="lastname"
+                      placeholder="Lovelace"
+                      value={lastname}
+                      onChange={(e) => setLastname(e.target.value)}
+                    />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor="class">Class</Label>
-                    <Input id="class" placeholder="9B" />
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="ada@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="competitionClassId">Competition Class</Label>
+                    <Select
+                      value={competitionClassId?.toString() || ""}
+                      onValueChange={(value) => setCompetitionClassId(parseInt(value) || null)}
+                      disabled={!domain || isLoadingOptions}
+                    >
+                      <SelectTrigger id="competitionClassId">
+                        <SelectValue placeholder="Choose competition class" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {competitionClasses.map((cc) => (
+                          <SelectItem key={cc.id} value={cc.id.toString()}>
+                            {cc.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="deviceGroup">Device Group</Label>
-                    <Select value={deviceGroup} onValueChange={setDeviceGroup}>
+                    <Select
+                      value={deviceGroupId?.toString() || ""}
+                      onValueChange={(value) => setDeviceGroupId(parseInt(value) || null)}
+                      disabled={!domain || isLoadingOptions}
+                    >
                       <SelectTrigger id="deviceGroup">
                         <SelectValue placeholder="Choose group" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="default">default</SelectItem>
-                        <SelectItem value="beta">beta</SelectItem>
+                        {deviceGroups.map((dg) => (
+                          <SelectItem key={dg.id} value={dg.id.toString()}>
+                            {dg.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -160,12 +320,8 @@ export default function ObserverDashboard() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex gap-3 flex-shrink-0">
-                  <PrimaryButton
-                    onClick={() => {
-                      /* mock action */
-                    }}
-                  >
-                    Run Upload Processor
+                  <PrimaryButton onClick={handleRunUploadFlow} disabled={isLoading}>
+                    {isLoading ? "Starting..." : "Run Upload Processor"}
                   </PrimaryButton>
                   <Button variant="secondary">Reset</Button>
                 </CardFooter>
@@ -284,6 +440,11 @@ export default function ObserverDashboard() {
           </ResizablePanelGroup>
         </ResizablePanel>
       </ResizablePanelGroup>
+      <UploadDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        presignedUrls={presignedUrls}
+      />
     </div>
   )
 }
