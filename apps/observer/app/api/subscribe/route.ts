@@ -1,30 +1,27 @@
 import { Chunk, Effect, Layer, Schema, Stream } from "effect"
 import { HttpServerRequest, HttpServerResponse } from "@effect/platform"
-import { PubSubChannel, PubSubService } from "@blikka/pubsub"
+import { PubSubChannel, PubSubMessage, PubSubService } from "@blikka/pubsub"
 import { createEffectWebHandler, parseSearchParams } from "app/lib/utils"
 
 const effectHandler = Effect.gen(function* () {
   const pubsub = yield* PubSubService
   const request = yield* HttpServerRequest.HttpServerRequest
 
-  return yield* parseSearchParams(request, Schema.Struct({ channel: Schema.String })).pipe(
-    Effect.andThen(({ channel }) => PubSubChannel.parse(channel)),
-    Effect.andThen((parsedChannel) => pubsub.subscribe(parsedChannel)),
-    Effect.andThen((subscription) =>
-      Stream.prepend(subscription, Chunk.of('data: {"message":"connected"}\n\n')).pipe(
-        Stream.map((data) => new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`))
-      )
-    ),
-    Effect.andThen((stream) =>
-      HttpServerResponse.stream(stream, {
-        headers: {
-          "Content-Type": "text/event-stream",
-          "Cache-Control": "no-cache",
-          Connection: "keep-alive",
-        },
-      })
-    )
+  const channel = yield* parseSearchParams(request, Schema.Struct({ channel: Schema.String })).pipe(
+    Effect.andThen(({ channel }) => PubSubChannel.parse(channel))
   )
+  const initialMessage = yield* PubSubMessage.create(channel, { message: "connected" })
+  const subscription = pubsub.subscribe(channel).pipe(
+    Stream.prepend(Chunk.of(`data: ${JSON.stringify(initialMessage)}\n\n`)),
+    Stream.map((data) => new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`))
+  )
+  return HttpServerResponse.stream(subscription, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  })
 }).pipe(
   Effect.withSpan("subscribe-to-channel"),
   Effect.tapError((error) => Effect.logError(error.message)),

@@ -5,7 +5,7 @@ import { EventBusDetailTypes, parseBusEvent } from "@blikka/bus"
 import { FinalizedEventSchema } from "@blikka/bus"
 import { ValidationRunner } from "./service"
 import { TelemetryLayer } from "@blikka/telemetry"
-import { PubSubChannel, PubSubLoggerLayer, RunStateService } from "@blikka/pubsub"
+import { PubSubChannel, PubSubLoggerService, RunStateService } from "@blikka/pubsub"
 import { Resource as SSTResource } from "sst"
 
 const getEnvironment = (stage: string): "prod" | "dev" | "staging" => {
@@ -43,7 +43,7 @@ const effectHandler = (event: SQSEvent) =>
 const serviceLayer = Layer.mergeAll(
   ValidationRunner.Default,
   RunStateService.Default,
-  PubSubLoggerLayer,
+  PubSubLoggerService.withTaskName("validation-runner"),
   TelemetryLayer("blikka-dev-validation-runner")
 )
 

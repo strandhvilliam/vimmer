@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Card,
   CardContent,
@@ -28,6 +28,7 @@ import {
 import { PrimaryButton } from "@vimmer/ui/components/primary-button"
 import { Button } from "@vimmer/ui/components/button"
 import { UploadDialog } from "./components/upload-dialog"
+import { useSSE } from "./hooks/use-sse"
 
 interface Step {
   id: string
@@ -35,7 +36,7 @@ interface Step {
   description: string
 }
 
-const MOCK_STEPS: Step[] = [
+const STEPS: Step[] = [
   { id: "upload-processor", name: "Upload Processor", description: "Process uploads" },
   { id: "bus", name: "Bus", description: "Publish events" },
   { id: "validator", name: "Validator", description: "Validate photos" },
@@ -43,9 +44,13 @@ const MOCK_STEPS: Step[] = [
   { id: "zip-worker", name: "Zip Worker", description: "Create export zip" },
 ]
 
-const MOCK_LOGS: string[] = Array.from({ length: 60 }).map(
-  (_, i) => `${"2025-10-23T12:00:00.000Z"}  [upload-processor] event-${i} processed \u2713`
-)
+interface RunStateEvent {
+  state: "start" | "end"
+  taskName: string
+  timestamp: number
+  error: string | null
+  duration: number | null
+}
 
 const MOCK_IMAGES: { id: string; fileName: string }[] = [
   { id: "1", fileName: "IMG_0001.JPG" },
@@ -56,7 +61,6 @@ const MOCK_IMAGES: { id: string; fileName: string }[] = [
 ]
 
 export default function ObserverDashboard() {
-  const [activeStepIndex, setActiveStepIndex] = useState(0)
   const [domain, setDomain] = useState("")
   const [deviceGroupId, setDeviceGroupId] = useState<number | null>(null)
   const [shouldValidate, setShouldValidate] = useState(true)
@@ -78,22 +82,49 @@ export default function ObserverDashboard() {
   )
   const [deviceGroups, setDeviceGroups] = useState<Array<{ id: number; name: string }>>([])
   const [isLoadingOptions, setIsLoadingOptions] = useState(false)
+  const [logs, setLogs] = useState<string[]>([])
+  const [stepStates, setStepStates] = useState<
+    Record<string, "pending" | "running" | "done" | "error">
+  >({})
 
+  // Subscribe to logger events
+  useSSE("dev:logger:*", {
+    onMessage: (message) => {
+      if (typeof message.payload === "string") {
+        setLogs((prev) => [...prev.slice(-199), message.payload as string])
+      }
+    },
+    onError: (error) => {
+      console.error("SSE logger error:", error)
+    },
+  })
+
+  // Subscribe to upload flow status events
+  const uploadFlowChannel = reference ? `dev:upload-flow:${reference}` : null
+  useSSE(uploadFlowChannel, {
+    onMessage: (message) => {
+      const payload = message.payload as RunStateEvent
+      if (payload.state === "start") {
+        setStepStates((prev) => ({ ...prev, [payload.taskName]: "running" }))
+      } else if (payload.state === "end") {
+        setStepStates((prev) => ({
+          ...prev,
+          [payload.taskName]: payload.error ? "error" : "done",
+        }))
+      }
+    },
+    onError: (error) => {
+      console.error("SSE upload flow error:", error)
+    },
+  })
+
+  // Initialize step states
   useEffect(() => {
-    const id = setInterval(() => {
-      setActiveStepIndex((i) => (i + 1) % MOCK_STEPS.length)
-    }, 2000)
-    return () => clearInterval(id)
-  }, [])
-
-  const activeStep = useMemo(() => MOCK_STEPS[activeStepIndex]?.id, [activeStepIndex])
-
-  useEffect(() => {
-    const eventSource = new EventSource("/api/subscribe/dev:upload-flow:test")
-    eventSource.onmessage = (event) => {
-      console.log(event.data)
-    }
-    return () => eventSource.close()
+    const initialStates: Record<string, "pending"> = {}
+    STEPS.forEach((step) => {
+      initialStates[step.id] = "pending"
+    })
+    setStepStates(initialStates)
   }, [])
 
   // Fetch marathons on mount
@@ -336,9 +367,11 @@ export default function ObserverDashboard() {
                 </CardHeader>
                 <CardContent className="overflow-auto flex-1">
                   <div className="flex items-center gap-4">
-                    {MOCK_STEPS.map((step, index) => {
-                      const isActive = activeStep === step.id
-                      const isDone = index < activeStepIndex
+                    {STEPS.map((step, index) => {
+                      const stepState = stepStates[step.id] || "pending"
+                      const isActive = stepState === "running"
+                      const isDone = stepState === "done"
+                      const hasError = stepState === "error"
                       return (
                         <div key={step.id} className="flex items-center gap-4">
                           <div
@@ -346,16 +379,23 @@ export default function ObserverDashboard() {
                               "rounded-md border px-3 py-2 text-sm",
                               isActive && "border-amber-500 bg-amber-50",
                               isDone && "border-emerald-500 bg-emerald-50",
+                              hasError && "border-red-500 bg-red-50",
                             ]
                               .filter(Boolean)
                               .join(" ")}
                           >
                             <p className="font-medium">{step.name}</p>
                             <p className="text-xs text-muted-foreground">
-                              {isDone ? "done" : isActive ? "running" : "queued"}
+                              {hasError
+                                ? "error"
+                                : isDone
+                                  ? "done"
+                                  : isActive
+                                    ? "running"
+                                    : "queued"}
                             </p>
                           </div>
-                          {index < MOCK_STEPS.length - 1 && (
+                          {index < STEPS.length - 1 && (
                             <span className="text-muted-foreground">→</span>
                           )}
                         </div>
@@ -426,12 +466,12 @@ export default function ObserverDashboard() {
               <Card className="h-full flex flex-col overflow-hidden">
                 <CardHeader className="flex-shrink-0">
                   <CardTitle className="font-semibold">Logs</CardTitle>
-                  <CardDescription>Streamed output (mock)</CardDescription>
+                  <CardDescription>Streamed output from dev:logger:*</CardDescription>
                 </CardHeader>
                 <CardContent className="overflow-auto flex-1">
                   <ScrollArea className="h-full">
                     <pre className="text-xs leading-relaxed whitespace-pre-wrap font-mono">
-                      {MOCK_LOGS.join("\n")}
+                      {logs.length === 0 ? "Waiting for logs..." : logs.join("\n")}
                     </pre>
                   </ScrollArea>
                 </CardContent>

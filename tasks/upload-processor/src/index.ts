@@ -6,7 +6,7 @@ import { type SQSRecord } from "aws-lambda"
 import { UploadProcessorService } from "./service"
 import { S3EventSchema } from "./schemas"
 import { TelemetryLayer } from "@blikka/telemetry"
-import { PubSubLoggerLayer, PubSubChannel, RunStateService } from "@blikka/pubsub"
+import { PubSubChannel, RunStateService, PubSubLoggerService } from "@blikka/pubsub"
 import { Resource as SSTResource } from "sst"
 
 const getEnvironment = (stage: string): "prod" | "dev" | "staging" => {
@@ -66,7 +66,7 @@ const effectHandler = (event: SQSEvent) =>
 const serviceLayer = Layer.mergeAll(
   UploadProcessorService.Default,
   RunStateService.Default,
-  PubSubLoggerLayer,
+  PubSubLoggerService.withTaskName("upload-processor"),
   TelemetryLayer("blikka-dev-upload-processor")
 )
 

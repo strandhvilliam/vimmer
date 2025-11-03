@@ -3,7 +3,7 @@ import { type SQSEvent, LambdaHandler } from "@effect-aws/lambda"
 import { SheetGeneratorService } from "./sheet-generator-service"
 import { TelemetryLayer } from "@blikka/telemetry"
 import { EventBusDetailTypes, FinalizedEventSchema, parseBusEvent } from "@blikka/bus"
-import { PubSubLoggerLayer, PubSubChannel, RunStateService } from "@blikka/pubsub"
+import { PubSubChannel, RunStateService, PubSubLoggerService } from "@blikka/pubsub"
 import { Resource as SSTResource } from "sst"
 
 const getEnvironment = (stage: string): "prod" | "dev" | "staging" => {
@@ -44,7 +44,7 @@ const effectHandler = (event: SQSEvent) =>
 const serviceLayer = Layer.mergeAll(
   SheetGeneratorService.Default,
   RunStateService.Default,
-  PubSubLoggerLayer,
+  PubSubLoggerService.withTaskName("contact-sheet-generator"),
   TelemetryLayer("blikka-dev-contact-sheet-generator")
 )
 

@@ -2,7 +2,7 @@ import { Effect, Schema } from "effect"
 import { ChannelParseError } from "./utils"
 
 const PubSubChannelEnvironment = Schema.Literal("prod", "dev", "staging")
-const PubSubChannelType = Schema.Literal("upload-flow")
+const PubSubChannelType = Schema.Literal("upload-flow", "logger")
 
 const PubSubChannelString = Schema.TemplateLiteral(
   PubSubChannelEnvironment,
@@ -52,10 +52,14 @@ export class PubSubMessage extends Schema.Class<PubSubMessage>("PubSubMessage")(
   timestamp: Schema.Number,
   messageId: Schema.String,
 }) {
-  static create = Effect.fnUntraced(function* <T>(channel: PubSubChannel, payload: T) {
+  static create = Effect.fnUntraced(function* <T>(
+    channel: PubSubChannel,
+    payload: T,
+    schema?: Schema.Schema<T>
+  ) {
     return yield* Schema.encodeUnknown(PubSubMessage)({
       channel: yield* PubSubChannel.toString(channel),
-      payload,
+      payload: schema ? yield* Schema.encode(schema)(payload) : payload,
       timestamp: Date.now(),
       messageId: crypto.randomUUID(),
     })

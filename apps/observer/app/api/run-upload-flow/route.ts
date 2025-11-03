@@ -1,5 +1,5 @@
-import { PubSubLoggerLayer } from "@blikka/pubsub"
-import { Effect, Layer, Option, Schema, Array, Data, Order, pipe, Config, Console } from "effect"
+import { PubSubLoggerService } from "@blikka/pubsub"
+import { Effect, Layer, Option, Schema, Array, Data, Order, pipe, Config } from "effect"
 import { Database, Topic } from "@blikka/db"
 import { UploadKVRepository } from "@blikka/kv-store"
 import { HttpServerRequest, HttpServerResponse } from "@effect/platform"
@@ -148,7 +148,7 @@ const effectHandler = Effect.gen(function* () {
 )
 
 const mainLive = Layer.mergeAll(
-  PubSubLoggerLayer,
+  PubSubLoggerService.withTaskName("upload-processor"),
   Database.Default,
   UploadKVRepository.Default,
   S3Service.Default

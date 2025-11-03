@@ -1,11 +1,14 @@
-import { Effect, Config, Console } from "effect"
+import { Effect, Config, Console, Schema } from "effect"
 import { PubSubService } from "./service"
 import { PubSubChannel, PubSubMessage } from "./schema"
 
-export interface RunStateMetadata {
-  error?: string
-  duration?: number
-}
+export const RunStateEventSchema = Schema.Struct({
+  state: Schema.Literal("start", "end"),
+  taskName: Schema.String,
+  timestamp: Schema.Number,
+  error: Schema.NullOr(Schema.String),
+  duration: Schema.NullOr(Schema.Number),
+})
 
 export class RunStateService extends Effect.Service<RunStateService>()(
   "@blikka/pubsub/run-state-service",
@@ -18,14 +21,22 @@ export class RunStateService extends Effect.Service<RunStateService>()(
         taskName: string,
         channel: PubSubChannel,
         state: "start" | "end",
-        metadata?: RunStateMetadata
+        metadata?: {
+          error?: string
+          duration?: number
+        }
       ) {
-        const message = yield* PubSubMessage.create(channel, {
-          state,
-          taskName,
-          timestamp: Date.now(),
-          ...metadata,
-        })
+        const message = yield* PubSubMessage.create(
+          channel,
+          {
+            state,
+            taskName,
+            timestamp: Date.now(),
+            error: metadata?.error ?? null,
+            duration: metadata?.duration ?? null,
+          },
+          RunStateEventSchema
+        )
 
         return yield* pubsub
           .publish(channel, message)

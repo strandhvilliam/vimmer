@@ -2,7 +2,7 @@ import { Effect, Layer, Schema } from "effect"
 import { ZipWorker } from "./zip-worker"
 import { UploadKVRepository } from "@blikka/kv-store"
 import { TelemetryLayer } from "@blikka/telemetry"
-import { PubSubChannel, PubSubLoggerLayer, RunStateService } from "@blikka/pubsub"
+import { PubSubChannel, PubSubLoggerService, RunStateService } from "@blikka/pubsub"
 import { Resource as SSTResource } from "sst"
 import { InvalidArgumentsError } from "./utils"
 
@@ -10,7 +10,7 @@ const mainLayer = Layer.mergeAll(
   ZipWorker.Default,
   UploadKVRepository.Default,
   RunStateService.Default,
-  PubSubLoggerLayer,
+  PubSubLoggerService.withTaskName("zip-worker"),
   TelemetryLayer("blikka-dev-zip-worker")
 )
 
