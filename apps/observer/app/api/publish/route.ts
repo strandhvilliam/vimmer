@@ -1,7 +1,6 @@
 import { HttpServerRequest, HttpServerResponse } from "@effect/platform"
 import { Effect, Layer, Schema } from "effect"
 import { PubSubChannel, PubSubMessage, PubSubService } from "@blikka/pubsub"
-import { PubSubLoggerLayer } from "@blikka/pubsub"
 import { createEffectWebHandler, parseSearchParams } from "app/lib/utils"
 
 const effectHandler = Effect.gen(function* () {
@@ -15,6 +14,8 @@ const effectHandler = Effect.gen(function* () {
   const channel = yield* parseSearchParams(request, Schema.Struct({ channel: Schema.String })).pipe(
     Effect.andThen(({ channel }) => PubSubChannel.parse(channel))
   )
+
+  console.log("channel", channel)
 
   return yield* PubSubMessage.create(channel, messageString).pipe(
     Effect.andThen((message) => pubsub.publish(channel, message)),
@@ -39,7 +40,7 @@ const effectHandler = Effect.gen(function* () {
   Effect.catchAllCause(() => HttpServerResponse.empty({ status: 500 }))
 )
 
-const mainLive = Layer.mergeAll(PubSubService.Default, PubSubLoggerLayer)
+const mainLive = Layer.mergeAll(PubSubService.Default)
 const handler = await createEffectWebHandler(mainLive, effectHandler)
 
 export const POST = handler

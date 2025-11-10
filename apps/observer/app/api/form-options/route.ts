@@ -1,6 +1,5 @@
-import { PubSubLoggerLayer } from "@blikka/pubsub"
 import { createEffectWebHandler, parseSearchParams } from "app/lib/utils"
-import { Effect, Layer, Option, Schema, pipe } from "effect"
+import { Effect, Layer, Schema } from "effect"
 import { Database } from "@blikka/db"
 import { HttpServerRequest, HttpServerResponse } from "@effect/platform"
 
@@ -19,7 +18,7 @@ const effectHandler = Effect.gen(function* () {
     name: m.name,
   }))
 
-  let competitionClasses: Array<{ id: number; name: string }> = []
+  let competitionClasses: Array<{ id: number; name: string; numberOfPhotos: number }> = []
   let deviceGroups: Array<{ id: number; name: string }> = []
 
   // If domain is provided, get competition classes and device groups
@@ -29,6 +28,7 @@ const effectHandler = Effect.gen(function* () {
     competitionClasses = competitionClassesResult.map((cc) => ({
       id: cc.id,
       name: cc.name,
+      numberOfPhotos: cc.numberOfPhotos,
     }))
 
     const deviceGroupsResult = yield* db.deviceGroupsQueries.getDeviceGroupsByDomain({
@@ -47,7 +47,7 @@ const effectHandler = Effect.gen(function* () {
   })
 }).pipe(Effect.catchAll(() => HttpServerResponse.empty({ status: 500 })))
 
-const mainLive = Layer.mergeAll(PubSubLoggerLayer, Database.Default)
+const mainLive = Layer.mergeAll(Database.Default)
 const handler = await createEffectWebHandler(mainLive, effectHandler)
 
 export const GET = handler

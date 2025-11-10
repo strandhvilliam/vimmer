@@ -34,3 +34,7 @@ export const createEffectWebHandler = async <R, E>(
   const runtime = await managedRuntime.runtime()
   return HttpApp.toWebHandlerRuntime(runtime)(program)
 }
+
+export const InitialMessagePayload = Schema.Struct({
+  message: Schema.String,
+})

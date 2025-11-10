@@ -9,8 +9,7 @@ import {
   DialogTitle,
 } from "@vimmer/ui/components/dialog"
 import { Button } from "@vimmer/ui/components/button"
-import { Progress } from "@vimmer/ui/components/progress"
-import { Upload, CheckCircle2, AlertCircle } from "lucide-react"
+import { Upload } from "lucide-react"
 
 interface PresignedUrl {
   key: string
@@ -23,120 +22,43 @@ interface UploadState {
   progress: number
   status: "pending" | "uploading" | "success" | "error"
   error?: string
+  thumbnail?: string
 }
 
 interface UploadDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   presignedUrls: PresignedUrl[]
+  onFileSelect: (files: File[]) => void
+  onUpload: () => void
+  uploadStates: UploadState[]
+  isUploading: boolean
 }
 
-export function UploadDialog({ open, onOpenChange, presignedUrls }: UploadDialogProps) {
+export function UploadDialog({
+  open,
+  onOpenChange,
+  presignedUrls,
+  onFileSelect,
+  onUpload,
+  uploadStates,
+  isUploading,
+}: UploadDialogProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [uploadStates, setUploadStates] = useState<UploadState[]>([])
-  const [isUploading, setIsUploading] = useState(false)
 
   useEffect(() => {
     if (!open) {
-      setUploadStates([])
-      setIsUploading(false)
+      // Reset file input when dialog closes
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
     }
   }, [open])
 
   function handleFileSelect(event: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files || [])
     if (files.length === 0) return
-
-    // Match files to presigned URLs
-    const states: UploadState[] = files.slice(0, presignedUrls.length).map((file, index) => ({
-      key: presignedUrls[index].key,
-      file,
-      progress: 0,
-      status: "pending" as const,
-    }))
-
-    setUploadStates(states)
-  }
-
-  async function uploadFile(state: UploadState, presignedUrl: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest()
-
-      xhr.upload.addEventListener("progress", (e) => {
-        if (e.lengthComputable) {
-          const progress = Math.round((e.loaded / e.total) * 100)
-          setUploadStates((prev) =>
-            prev.map((s) => (s.key === state.key ? { ...s, progress } : s))
-          )
-        }
-      })
-
-      xhr.addEventListener("load", () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          setUploadStates((prev) =>
-            prev.map((s) =>
-              s.key === state.key ? { ...s, status: "success" as const, progress: 100 } : s
-            )
-          )
-          resolve()
-        } else {
-          const error = `Upload failed: ${xhr.status} ${xhr.statusText}`
-          setUploadStates((prev) =>
-            prev.map((s) =>
-              s.key === state.key ? { ...s, status: "error" as const, error } : s
-            )
-          )
-          reject(new Error(error))
-        }
-      })
-
-      xhr.addEventListener("error", () => {
-        const error = "Network error occurred"
-        setUploadStates((prev) =>
-          prev.map((s) =>
-            s.key === state.key ? { ...s, status: "error" as const, error } : s
-          )
-        )
-        reject(new Error(error))
-      })
-
-      xhr.open("PUT", presignedUrl)
-      xhr.setRequestHeader("Content-Type", "image/jpeg")
-      xhr.send(state.file)
-    })
-  }
-
-  async function handleUpload() {
-    if (uploadStates.length === 0) return
-
-    setIsUploading(true)
-
-    // Update all to uploading
-    setUploadStates((prev) =>
-      prev.map((s) => ({ ...s, status: "uploading" as const }))
-    )
-
-    // Upload files concurrently
-    const uploadPromises = uploadStates.map((state) => {
-      const presignedUrl = presignedUrls.find((p) => p.key === state.key)?.url
-      if (!presignedUrl) {
-        setUploadStates((prev) =>
-          prev.map((s) =>
-            s.key === state.key
-              ? { ...s, status: "error" as const, error: "No presigned URL found" }
-              : s
-          )
-        )
-        return Promise.resolve()
-      }
-      return uploadFile(state, presignedUrl)
-    })
-
-    try {
-      await Promise.allSettled(uploadPromises)
-    } finally {
-      setIsUploading(false)
-    }
+    onFileSelect(files)
   }
 
   const allSuccess = uploadStates.length > 0 && uploadStates.every((s) => s.status === "success")
@@ -175,46 +97,10 @@ export function UploadDialog({ open, onOpenChange, presignedUrls }: UploadDialog
               />
             </div>
           ) : (
-            <div className="space-y-4">
-              {uploadStates.map((state) => {
-                const presignedUrl = presignedUrls.find((p) => p.key === state.key)
-                return (
-                  <div key={state.key} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {state.status === "success" && (
-                          <CheckCircle2 className="h-5 w-5 text-green-500" />
-                        )}
-                        {state.status === "error" && (
-                          <AlertCircle className="h-5 w-5 text-red-500" />
-                        )}
-                        {state.status === "uploading" && (
-                          <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                        )}
-                        {state.status === "pending" && (
-                          <div className="h-5 w-5 border-2 border-muted-foreground rounded-full" />
-                        )}
-                        <span className="text-sm font-medium">{state.file.name}</span>
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {state.status === "success"
-                          ? "Complete"
-                          : state.status === "error"
-                            ? "Failed"
-                            : state.status === "uploading"
-                              ? `${state.progress}%`
-                              : "Pending"}
-                      </span>
-                    </div>
-                    {state.status === "uploading" && (
-                      <Progress value={state.progress} className="h-2" />
-                    )}
-                    {state.error && (
-                      <p className="text-sm text-red-500">{state.error}</p>
-                    )}
-                  </div>
-                )
-              })}
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                {uploadStates.length} file{uploadStates.length !== 1 ? "s" : ""} selected
+              </p>
             </div>
           )}
 
@@ -225,14 +111,22 @@ export function UploadDialog({ open, onOpenChange, presignedUrls }: UploadDialog
               )}
               {!allSuccess && !isUploading && (
                 <>
-                  <Button variant="outline" onClick={() => setUploadStates([])}>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = ""
+                      }
+                      onFileSelect([])
+                    }}
+                  >
                     Change Files
                   </Button>
                   {hasError && (
-                    <Button onClick={handleUpload}>Retry Failed</Button>
+                    <Button onClick={onUpload}>Retry Failed</Button>
                   )}
                   {!hasError && (
-                    <Button onClick={handleUpload}>Upload</Button>
+                    <Button onClick={onUpload}>Upload</Button>
                   )}
                 </>
               )}
@@ -243,4 +137,3 @@ export function UploadDialog({ open, onOpenChange, presignedUrls }: UploadDialog
     </Dialog>
   )
 }
-

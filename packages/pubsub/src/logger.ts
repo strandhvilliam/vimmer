@@ -32,9 +32,19 @@ export class PubSubLoggerService extends Effect.Service<PubSubLoggerService>()(
   }
 ) {
   static withTaskName(taskName: string) {
+    const constantConfig = ConfigProvider.fromMap(
+      new Map([
+        // Provide only the constants you want to lock in
+        ["TASK_NAME", taskName],
+      ])
+    )
+
+    // Fallback to environment for everything else
     return Layer.provide(
       this.Default,
-      Layer.setConfigProvider(ConfigProvider.fromMap(new Map([["TASK_NAME", taskName]])))
+      Layer.setConfigProvider(
+        constantConfig.pipe(ConfigProvider.orElse(() => ConfigProvider.fromEnv()))
+      )
     )
   }
 }

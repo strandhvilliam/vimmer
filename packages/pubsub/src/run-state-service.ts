@@ -10,6 +10,8 @@ export const RunStateEventSchema = Schema.Struct({
   duration: Schema.NullOr(Schema.Number),
 })
 
+export type RunStateEvent = Schema.Schema.Type<typeof RunStateEventSchema>
+
 export class RunStateService extends Effect.Service<RunStateService>()(
   "@blikka/pubsub/run-state-service",
   {

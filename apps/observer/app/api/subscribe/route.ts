@@ -1,7 +1,7 @@
 import { Chunk, Effect, Layer, Schema, Stream } from "effect"
 import { HttpServerRequest, HttpServerResponse } from "@effect/platform"
 import { PubSubChannel, PubSubMessage, PubSubService } from "@blikka/pubsub"
-import { createEffectWebHandler, parseSearchParams } from "app/lib/utils"
+import { createEffectWebHandler, InitialMessagePayload, parseSearchParams } from "app/lib/utils"
 
 const effectHandler = Effect.gen(function* () {
   const pubsub = yield* PubSubService
@@ -10,11 +10,10 @@ const effectHandler = Effect.gen(function* () {
   const channel = yield* parseSearchParams(request, Schema.Struct({ channel: Schema.String })).pipe(
     Effect.andThen(({ channel }) => PubSubChannel.parse(channel))
   )
-  const initialMessage = yield* PubSubMessage.create(channel, { message: "connected" })
-  const subscription = pubsub.subscribe(channel).pipe(
-    Stream.prepend(Chunk.of(`data: ${JSON.stringify(initialMessage)}\n\n`)),
-    Stream.map((data) => new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`))
-  )
+  const subscription = pubsub
+    .subscribe(channel)
+    .pipe(Stream.map((data) => new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`)))
+
   return HttpServerResponse.stream(subscription, {
     headers: {
       "Content-Type": "text/event-stream",

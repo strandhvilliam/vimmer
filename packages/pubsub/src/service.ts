@@ -1,4 +1,4 @@
-import { Chunk, Data, Duration, Effect, Queue, Schedule, Schema, Stream } from "effect"
+import { Chunk, Console, Data, Duration, Effect, Queue, Schedule, Schema, Stream } from "effect"
 import { RedisClient, RedisError } from "@blikka/redis"
 import { PubSubChannel, PubSubMessage } from "./schema"
 import { ChannelParseError, PubSubError } from "./utils"
@@ -29,7 +29,7 @@ export class PubSubService extends Effect.Service<PubSubService>()(
             const channelString = yield* PubSubChannel.toString(channel)
 
             const subscription = yield* Effect.acquireRelease(
-              redis.use((client) => client.subscribe<PubSubMessage>(channelString)),
+              redis.use((client) => client.psubscribe<PubSubMessage>(channelString)),
               (subscription) =>
                 Effect.tryPromise({
                   try: () => subscription.unsubscribe(),
@@ -45,7 +45,12 @@ export class PubSubService extends Effect.Service<PubSubService>()(
                 )
             )
 
-            subscription.on("message", (data) => emit.single(data.message))
+            subscription.on("pmessage", (data) => {
+              if (data.message instanceof Error) {
+                Console.error("Error in pmessage", data.message.message)
+              }
+              emit.single(data.message)
+            })
             subscription.on("error", (error) =>
               emit.fail(
                 new PubSubError({ cause: error, message: "Failed to subscribe to channel" })

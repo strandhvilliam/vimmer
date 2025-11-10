@@ -51,6 +51,7 @@ export class PubSubMessage extends Schema.Class<PubSubMessage>("PubSubMessage")(
   payload: Schema.Unknown,
   timestamp: Schema.Number,
   messageId: Schema.String,
+  pattern: Schema.optional(Schema.String),
 }) {
   static create = Effect.fnUntraced(function* <T>(
     channel: PubSubChannel,
