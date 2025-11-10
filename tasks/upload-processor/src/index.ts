@@ -42,6 +42,10 @@ const effectHandler = (event: SQSEvent) =>
             const key = record.s3.object.key
             const { domain, reference } = yield* parseKey(key)
 
+            yield* Effect.log(
+              `Processing photo ${key} for domain ${domain} and reference ${reference}`
+            )
+
             return yield* PubSubChannel.fromString(
               `${environment}:upload-flow:${domain}-${reference}`
             ).pipe(

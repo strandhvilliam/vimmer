@@ -23,8 +23,7 @@
       "@vimmer/api/*": ["src/*"],
       "@vimmer/validation/*": ["../../packages/validation/old/*"],
       "@vimmer/image-processing/*": ["../../packages/image-processing/src/*"]
-    },
-    "types": ["bun-types"]
+    }
   },
   "exclude": ["node_modules"],
   "include": ["src/**/*.ts", "sst-env.d.ts"]

@@ -75,6 +75,7 @@ export default function ObserverDashboard() {
 
   // Subscribe to upload flow status events - only when upload flow is started
   const uploadFlowChannel = reference && isUploadFlowStarted ? `dev:upload-flow:${reference}` : null
+
   useSSE(uploadFlowChannel, {
     enabled: isUploadFlowStarted,
     onMessage: (message) => {

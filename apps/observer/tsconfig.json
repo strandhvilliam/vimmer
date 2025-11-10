@@ -3,6 +3,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "@/*": ["app/*"],
       "@vimmer/ui/*": ["../../packages/ui/src/*"],
       "@blikka/kv-store": ["../../packages/kv-store/src/index.ts"],
       "@blikka/pubsub": ["../../packages/pubsub/src/index.ts"],

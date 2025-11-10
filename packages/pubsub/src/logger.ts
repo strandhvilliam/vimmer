@@ -15,6 +15,8 @@ export class PubSubLoggerService extends Effect.Service<PubSubLoggerService>()(
         const level = logLevel.label
         const logMessage = `[${timestamp}] ${level}: ${message}`
 
+        console.log(logMessage)
+
         return Effect.runFork(
           PubSubChannel.fromString(`dev:logger:${taskName}`).pipe(
             Effect.flatMap((channel) =>

@@ -8,59 +8,14 @@ import {
   CardDescription,
 } from "@vimmer/ui/components/card"
 import { ScrollArea } from "@vimmer/ui/components/scroll-area"
-import { Atom, Result, useAtom, useAtomMount, useAtomValue } from "@effect-atom/atom-react"
-import { Chunk, Effect, Schema, Stream, Schedule, Console } from "effect"
-import { PubSubMessage } from "@blikka/pubsub"
-import { useEffect, useState } from "react"
-import { useMounted } from "app/hooks/use-mounted"
+import { Atom, Result, useAtomValue } from "@effect-atom/atom-react"
+import { useMounted } from "@/hooks/use-mounted"
+import { sseAtom } from "@/lib/atoms"
 
-class SseListener extends Effect.Service<SseListener>()("@blikka/observer/sse-listener", {
-  scoped: Effect.gen(function* () {
-    const createStream = Effect.fnUntraced(function* (url: string) {
-      if (typeof window === "undefined") {
-        return Effect.die(new Error("EventSource is only available in browser"))
-      }
-
-      return Stream.acquireRelease(
-        Effect.sync(() => new EventSource(url)),
-        (source) =>
-          Effect.log("Closing source for url: " + url).pipe(Effect.andThen(() => source.close()))
-      ).pipe(
-        Stream.flatMap((source) =>
-          Stream.fromEventListener<MessageEvent>(source, "message").pipe(
-            Stream.flatMap((event) => Effect.try(() => JSON.parse(event.data))),
-            Stream.flatMap((json) => Schema.decodeUnknown(PubSubMessage)(json)),
-            Stream.mapAccum(Chunk.empty<PubSubMessage>(), (state, message) => [
-              Chunk.append(state, message),
-              [...state, message],
-            ]),
-            Stream.catchAll((error) => Stream.die(error))
-          )
-        )
-      )
-    })
-
-    return {
-      createStream,
-    }
-  }),
-}) {}
-
-const sseListenerRuntime = Atom.runtime(SseListener.Default)
-
-const sseStreamAtom = Atom.family((url: string) =>
-  sseListenerRuntime.atom(() =>
-    Stream.unwrap(
-      Effect.gen(function* () {
-        const sseStream = yield* SseListener
-        return yield* sseStream.createStream(url)
-      })
-    )
-  )
-)
+const loggerAtom = Atom.make((get) => get(sseAtom("dev:logger:*")))
 
 export function LogsPanel() {
-  const result = useAtomValue(sseStreamAtom("/api/subscribe?channel=dev:logger:*"))
+  const result = useAtomValue(loggerAtom)
   const mounted = useMounted()
 
   return (
