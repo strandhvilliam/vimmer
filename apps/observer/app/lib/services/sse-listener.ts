@@ -1,5 +1,5 @@
 import { PubSubMessage } from "@blikka/pubsub"
-import { Chunk, Effect, Schema, Stream } from "effect"
+import { Chunk, Effect, Schema, Stream, Console } from "effect"
 
 export class SseListener extends Effect.Service<SseListener>()("@blikka/observer/sse-listener", {
   scoped: Effect.gen(function* () {

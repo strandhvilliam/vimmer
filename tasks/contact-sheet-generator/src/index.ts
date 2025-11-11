@@ -31,7 +31,11 @@ const effectHandler = (event: SQSEvent) =>
                 runStateService.withRunStateEvents(
                   "contact-sheet-generator",
                   channel,
-                  sheetGeneratorService.generateContactSheet({ domain, reference })
+                  sheetGeneratorService.generateContactSheet({ domain, reference }),
+                  {
+                    domain,
+                    reference,
+                  }
                 )
               )
             )

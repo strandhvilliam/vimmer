@@ -40,20 +40,25 @@ const effectHandler = (event: SQSEvent) =>
         (record) =>
           Effect.gen(function* () {
             const key = record.s3.object.key
-            const { domain, reference } = yield* parseKey(key)
+            const { domain, reference, orderIndex } = yield* parseKey(key)
 
             yield* Effect.log(
               `Processing photo ${key} for domain ${domain} and reference ${reference}`
             )
 
-            return yield* PubSubChannel.fromString(
-              `${environment}:upload-flow:${domain}-${reference}`
-            ).pipe(
-              Effect.andThen((channel) =>
-                runStateService.withRunStateEvents(
-                  "upload-processor",
-                  channel,
-                  uploadProcessor.processPhoto(key)
+            return yield* Effect.runFork(
+              PubSubChannel.fromString(`${environment}:upload-flow:${domain}-${reference}`).pipe(
+                Effect.andThen((channel) =>
+                  runStateService.withRunStateEvents(
+                    "upload-processor",
+                    channel,
+                    uploadProcessor.processPhoto(key),
+                    {
+                      domain,
+                      reference,
+                      orderIndex,
+                    }
+                  )
                 )
               )
             )

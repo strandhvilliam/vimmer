@@ -31,7 +31,11 @@ const effectHandler = (event: SQSEvent) =>
               runStateService.withRunStateEvents(
                 "validation-runner",
                 channel,
-                validationRunner.execute(domain, reference)
+                validationRunner.execute(domain, reference),
+                {
+                  domain,
+                  reference,
+                }
               )
             )
           )

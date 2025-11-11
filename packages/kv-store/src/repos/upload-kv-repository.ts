@@ -27,7 +27,6 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
       const initializeState = Effect.fn("UploadKVRepository.initState")(
         function* (domain: string, reference: string, submissionKeys: string[]) {
           const participantState = makeInitialParticipantState(submissionKeys.length)
-          console.log("got here 3", participantState)
 
           const map: Record<string, SubmissionState> = {}
 
@@ -37,7 +36,6 @@ export class UploadKVRepository extends Effect.Service<UploadKVRepository>()(
             const redisKey = keyFactory.submission(domain, reference, formattedOrderIndex)
             map[redisKey] = makeInitialSubmissionState(key, orderIndex)
           }
-          console.log("got here 4", map)
 
           yield* redis.use((client) => {
             const participantKey = keyFactory.participant(domain, reference)

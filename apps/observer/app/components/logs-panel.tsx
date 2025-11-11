@@ -15,8 +15,8 @@ import { sseAtom } from "@/lib/atoms"
 const loggerAtom = Atom.make((get) => get(sseAtom("dev:logger:*")))
 
 export function LogsPanel() {
-  const result = useAtomValue(loggerAtom)
   const mounted = useMounted()
+  const result = useAtomValue(loggerAtom)
 
   return (
     <Card className="h-full flex flex-col overflow-hidden">

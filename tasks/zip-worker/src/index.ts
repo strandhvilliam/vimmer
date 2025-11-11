@@ -41,7 +41,10 @@ const runnable = Effect.gen(function* () {
   )
 
   yield* runStateService
-    .withRunStateEvents("zip-worker", channel, handler.runZipTask(domain, reference))
+    .withRunStateEvents("zip-worker", channel, handler.runZipTask(domain, reference), {
+      domain,
+      reference,
+    })
     .pipe(Effect.catchAll((error) => Effect.logError("Error running zip task", error)))
 }).pipe(Effect.provide(mainLayer))
 

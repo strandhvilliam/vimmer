@@ -9,7 +9,7 @@ import {
 import { UploadDialog } from "./components/upload-dialog"
 import { ControlsPanel } from "./components/controls-panel"
 import { FlowVisualization } from "./components/flow-visualization"
-import { ResultsPanel } from "./components/results-panel"
+import { ValidationsPanel } from "./components/results-panel"
 import { LogsPanel } from "./components/logs-panel"
 import { useSSE } from "./hooks/use-sse"
 
@@ -320,6 +320,19 @@ export default function ObserverDashboard() {
     }
   }
 
+  const isSummaryVisible = isUploadFlowStarted && hasImagesSelected
+  const selectedUploads = uploadStates.map((state) => ({
+    key: state.key,
+    name: state.file.name,
+    thumbnail: state.thumbnail,
+    status: state.status,
+  }))
+  const validationStates = {
+    validator: stepStates["validator"],
+    contactSheet: stepStates["contact-sheet"],
+    zipWorker: stepStates["zip-worker"],
+  }
+
   return (
     <div className="h-screen bg-background p-4 sm:p-6">
       <ResizablePanelGroup direction="vertical" className="h-full gap-2">
@@ -330,15 +343,13 @@ export default function ObserverDashboard() {
                 onRunUploadFlow={handleRunUploadFlow}
                 onReset={handleReset}
                 onCompetitionClassChange={setNumberOfPhotos}
+                selectedUploads={selectedUploads}
+                isSummaryVisible={isSummaryVisible}
               />
             </ResizablePanel>
             <ResizableHandle withHandle />
             <ResizablePanel defaultSize={50} minSize={35} className="overflow-hidden">
-              <FlowVisualization
-                stepStates={stepStates}
-                numberOfPhotos={numberOfPhotos || 0}
-                hasImagesSelected={hasImagesSelected}
-              />
+              <FlowVisualization expectedProcessorCount={numberOfPhotos} />
             </ResizablePanel>
           </ResizablePanelGroup>
         </ResizablePanel>
@@ -346,7 +357,7 @@ export default function ObserverDashboard() {
         <ResizablePanel defaultSize={45} minSize={35}>
           <ResizablePanelGroup direction="horizontal" className="gap-2">
             <ResizablePanel defaultSize={55} minSize={35} className="overflow-hidden">
-              <ResultsPanel uploadStates={uploadStates} />
+              <ValidationsPanel validationStates={validationStates} />
             </ResizablePanel>
             <ResizableHandle withHandle />
             <ResizablePanel defaultSize={45} minSize={30} className="overflow-hidden">

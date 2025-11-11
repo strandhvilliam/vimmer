@@ -3,7 +3,10 @@ import { PubSubService } from "./service"
 import { PubSubChannel, PubSubMessage } from "./schema"
 
 export const RunStateEventSchema = Schema.Struct({
-  state: Schema.Literal("start", "end"),
+  domain: Schema.NullOr(Schema.String),
+  reference: Schema.NullOr(Schema.String),
+  orderIndex: Schema.NullOr(Schema.Number),
+  state: Schema.Literal("start", "end", "once"),
   taskName: Schema.String,
   timestamp: Schema.Number,
   error: Schema.NullOr(Schema.String),
@@ -22,8 +25,11 @@ export class RunStateService extends Effect.Service<RunStateService>()(
       const sendRunStateEvent = Effect.fn("RunStateService.sendRunStateEvent")(function* (
         taskName: string,
         channel: PubSubChannel,
-        state: "start" | "end",
+        state: "start" | "end" | "once",
         metadata?: {
+          domain?: string
+          reference?: string
+          orderIndex?: number
           error?: string
           duration?: number
         }
@@ -33,6 +39,9 @@ export class RunStateService extends Effect.Service<RunStateService>()(
           {
             state,
             taskName,
+            domain: metadata?.domain ?? null,
+            reference: metadata?.reference ?? null,
+            orderIndex: metadata?.orderIndex ?? null,
             timestamp: Date.now(),
             error: metadata?.error ?? null,
             duration: metadata?.duration ?? null,
@@ -50,18 +59,23 @@ export class RunStateService extends Effect.Service<RunStateService>()(
       const withRunStateEvents = <E, A, R>(
         taskName: string,
         channel: PubSubChannel,
-        effect: Effect.Effect<A, E, R>
+        effect: Effect.Effect<A, E, R>,
+        metadata?: {
+          domain?: string
+          reference?: string
+          orderIndex?: number
+        }
       ) =>
         Effect.gen(function* () {
           const startTime = Date.now()
-
-          yield* sendRunStateEvent(taskName, channel, "start")
+          yield* sendRunStateEvent(taskName, channel, "start", metadata)
 
           return yield* effect.pipe(
             Effect.tapError((error) =>
               Effect.gen(function* () {
                 const duration = Date.now() - startTime
                 yield* sendRunStateEvent(taskName, channel, "end", {
+                  ...metadata,
                   error: error instanceof Error ? error.message : String(error),
                   duration,
                 }).pipe(Effect.catchAll(Effect.logError))
@@ -71,9 +85,10 @@ export class RunStateService extends Effect.Service<RunStateService>()(
             Effect.tap((result) =>
               Effect.gen(function* () {
                 const duration = Date.now() - startTime
-                yield* sendRunStateEvent(taskName, channel, "end", { duration }).pipe(
-                  Effect.catchAll(Effect.logError)
-                )
+                yield* sendRunStateEvent(taskName, channel, "end", {
+                  ...metadata,
+                  duration,
+                }).pipe(Effect.catchAll(Effect.logError))
                 return yield* Effect.succeed(result)
               })
             )

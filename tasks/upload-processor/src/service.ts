@@ -12,7 +12,9 @@ import {
   FailedToIncrementParticipantStateError,
   PhotoNotFoundError,
 } from "./errors"
+import { PubSubChannel, RunStateService } from "@blikka/pubsub"
 
+const isDev = SSTResource.App.stage !== "production"
 export class UploadProcessorService extends Effect.Service<UploadProcessorService>()(
   "@blikka/tasks/UploadProcessorService",
   {
@@ -24,6 +26,7 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
       BusService.Default,
       Database.Default,
       ThumbnailService.Default,
+      RunStateService.Default,
     ],
     effect: Effect.gen(function* () {
       const s3 = yield* S3Service
@@ -33,9 +36,11 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
       const bus = yield* BusService
       const db = yield* Database
       const thumbnailService = yield* ThumbnailService
+      const runStateService = yield* RunStateService
 
       const handleParticipantError = Effect.fnUntraced(
         function* (domain: string, reference: string, errorCode: string, error: Error) {
+          yield* Effect.logError(error.message, { domain, reference, errorCode })
           return yield* uploadKv
             .setParticipantErrorState(domain, reference, errorCode)
             .pipe(Effect.andThen(() => Effect.logError(error.message, error.cause)))
@@ -112,6 +117,13 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
             { concurrency: 2 }
           )
 
+          const channel = yield* PubSubChannel.fromString(
+            `${isDev ? "dev" : "prod"}:upload-flow:${domain}-${reference}`
+          )
+          yield* runStateService.sendRunStateEvent("bus-event", channel, "once", {
+            domain,
+            reference,
+          })
           yield* bus.sendFinalizedEvent(domain, reference)
         },
         Effect.retryOrElse(
@@ -134,6 +146,8 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
         key: string
       ) {
         const { domain, reference, orderIndex } = yield* parseKey(key)
+
+        yield* Effect.log("Processing photo", { domain, reference, orderIndex })
 
         const submissionStateOpt = yield* uploadKv.getSubmissionState(domain, reference, orderIndex)
         if (Option.isSome(submissionStateOpt) && submissionStateOpt.value.uploaded) {
