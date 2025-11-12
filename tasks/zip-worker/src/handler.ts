@@ -30,7 +30,11 @@ const effectHandler = (event: SQSEvent) =>
         }
 
         yield* Effect.tryPromise({
-          try: () => task.run(SSTResource.ZipHandlerTask, {}),
+          try: () =>
+            task.run(SSTResource.ZipHandlerTask, {
+              ARG_DOMAIN: domain,
+              ARG_REFERENCE: reference,
+            }),
           catch: (error) => new UnableToRunZipHandlerTaskError({ cause: error }),
         })
       })

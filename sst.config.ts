@@ -71,9 +71,12 @@ export default $config({
     const zipHandlerTask = new sst.aws.Task("ZipHandlerTask", {
       cluster,
       image: {
-        dockerfile: "/tasks/zip-handler/Dockerfile",
+        dockerfile: "/tasks/zip-worker/Dockerfile",
       },
       link: [submissionsBucket, zipsBucket],
+      dev: {
+        command: "bun run ./tasks/zip-worker/src/index.ts",
+      },
     })
 
     /* QUEUE HANDLERS */

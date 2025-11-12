@@ -5,6 +5,7 @@ import { TelemetryLayer } from "@blikka/telemetry"
 import { PubSubChannel, PubSubLoggerService, RunStateService } from "@blikka/pubsub"
 import { Resource as SSTResource } from "sst"
 import { InvalidArgumentsError } from "./utils"
+import { BunRuntime } from "@effect/platform-bun"
 
 const mainLayer = Layer.mergeAll(
   ZipWorker.Default,
@@ -32,7 +33,7 @@ const parseArguments = Effect.fn("ZipWorker.parseArguments")(
 const runnable = Effect.gen(function* () {
   const handler = yield* ZipWorker
   const runStateService = yield* RunStateService
-  const environment = getEnvironment(SSTResource.App.stage)
+  const environment = getEnvironment("development")
 
   const { domain, reference } = yield* parseArguments()
 
@@ -45,7 +46,7 @@ const runnable = Effect.gen(function* () {
       domain,
       reference,
     })
-    .pipe(Effect.catchAll((error) => Effect.logError("Error running zip task", error)))
+    .pipe(Effect.catchAll((error) => Effect.logError("Error running zip task", error.message)))
 }).pipe(Effect.provide(mainLayer))
 
 Effect.runPromise(runnable)

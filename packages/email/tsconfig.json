@@ -1,5 +1,5 @@
 {
-  "extends": "@vimmer/typescript-config/react-library.json",
+  "extends": "../typescript-config/react-library.json",
   "include": ["src", "."],
   "exclude": ["node_modules"]
 }
