@@ -1,7 +1,14 @@
-FROM oven/bun:1 as base
+FROM oven/bun:1.1.35 as base
 WORKDIR /app
 
 RUN echo "Building generate-participant-zip"
+
+# Install system dependencies for sharp
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY package.json bun.lock ./
 
@@ -13,8 +20,11 @@ COPY services/generate-participant-zip/ ./services/generate-participant-zip/
 
 RUN echo "Installing dependencies"
 
-# Install dependencies
-RUN bun install
+# Set environment for sharp to use prebuilt binaries for Linux
+ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
+
+# Install dependencies with proper flags for workspace
+RUN bun install --frozen-lockfile
 
 RUN echo "Building the app"
 
@@ -23,8 +33,13 @@ WORKDIR /app/services/generate-participant-zip
 RUN bun run build
 
 # Production stage
-FROM oven/bun:1-slim as production
+FROM oven/bun:1.1.35-slim as production
 WORKDIR /app
+
+# Install runtime dependencies for sharp
+RUN apt-get update && apt-get install -y \
+    libvips42 \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN echo "Copying built application"
 

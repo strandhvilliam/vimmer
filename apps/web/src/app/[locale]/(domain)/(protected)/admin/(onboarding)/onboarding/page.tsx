@@ -1,23 +1,18 @@
-import { getSession } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import { OnboardingFlow } from "@/components/admin/onboarding-flow";
-import { OnboardingLoading } from "@/components/admin/onboarding-loading";
-import {
-  batchPrefetch,
-  getQueryClient,
-  HydrateClient,
-  trpc,
-} from "@/trpc/server";
-import { Suspense } from "react";
-import { getDomain } from "@/lib/get-domain";
-import { Resource } from "sst";
-import { notFound } from "next/navigation";
+import { getSession } from "@/lib/auth"
+import { redirect } from "next/navigation"
+import { OnboardingFlow } from "@/components/admin/onboarding-flow"
+import { OnboardingLoading } from "@/components/admin/onboarding-loading"
+import { batchPrefetch, getQueryClient, HydrateClient, trpc } from "@/trpc/server"
+import { Suspense } from "react"
+import { getDomain } from "@/lib/get-domain"
+import { Resource } from "sst"
+import { notFound } from "next/navigation"
 
 export default async function OnboardingPage() {
-  const queryClient = getQueryClient();
-  const session = await getSession();
+  const queryClient = getQueryClient()
+  const session = await getSession()
 
-  const domain = await getDomain();
+  const domain = await getDomain()
 
   batchPrefetch([
     trpc.marathons.getByDomain.queryOptions({
@@ -35,33 +30,31 @@ export default async function OnboardingPage() {
     trpc.rules.getByDomain.queryOptions({
       domain,
     }),
-  ]);
+  ])
 
   const marathon = await queryClient.fetchQuery(
     trpc.marathons.getByDomain.queryOptions({
       domain,
-    }),
-  );
+    })
+  )
 
   if (!session) {
-    return redirect("/auth/admin/login");
+    return redirect("/auth/admin/login")
   }
 
   if (!marathon) {
-    notFound();
+    notFound()
   }
 
   if (marathon.setupCompleted) {
-    redirect(`/admin/dashboard`);
+    redirect(`/admin/dashboard`)
   }
 
   return (
     <HydrateClient>
       <Suspense fallback={<OnboardingLoading />}>
-        <OnboardingFlow
-          marathonSettingsRouterUrl={Resource.MarathonSettingsRouter.url}
-        />
+        <OnboardingFlow marathonSettingsRouterUrl={Resource.MarathonSettingsRouter.url} />
       </Suspense>
     </HydrateClient>
-  );
+  )
 }

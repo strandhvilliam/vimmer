@@ -20,8 +20,7 @@ export default $config({
       TEMP_ENV: "true",
     }
 
-    const allowOrigins =
-      process.env.SUBMISSION_BUCKETS_ALLOW_ORIGINS?.split(",") ?? []
+    const allowOrigins = process.env.SUBMISSION_BUCKETS_ALLOW_ORIGINS?.split(",") ?? []
 
     const submissionBucket = new sst.aws.Bucket("SubmissionBucket", {
       access: "cloudfront",
@@ -48,15 +47,12 @@ export default $config({
         allowHeaders: ["*"],
       },
     })
-    const marathonSettingsBucket = new sst.aws.Bucket(
-      "MarathonSettingsBucket",
-      {
-        access: "cloudfront",
-        cors: {
-          allowOrigins,
-        },
-      }
-    )
+    const marathonSettingsBucket = new sst.aws.Bucket("MarathonSettingsBucket", {
+      access: "cloudfront",
+      cors: {
+        allowOrigins,
+      },
+    })
 
     const contactSheetsBucket = new sst.aws.Bucket("ContactSheetsBucket", {
       access: "public",
@@ -94,16 +90,13 @@ export default $config({
       },
     })
 
-    const marathonSettingsRouter = new sst.aws.Router(
-      "MarathonSettingsRouter",
-      {
-        routes: {
-          "/*": {
-            bucket: marathonSettingsBucket,
-          },
+    const marathonSettingsRouter = new sst.aws.Router("MarathonSettingsRouter", {
+      routes: {
+        "/*": {
+          bucket: marathonSettingsBucket,
         },
-      }
-    )
+      },
+    })
 
     const api = new sst.aws.Function("Api", {
       handler: "./apps/api/src/index.handler",
@@ -140,13 +133,7 @@ export default $config({
       handler: "./services/variants-generator/index.handler",
       environment: env,
       url: true,
-      link: [
-        submissionBucket,
-        thumbnailBucket,
-        previewBucket,
-        exportsBucket,
-        api,
-      ],
+      link: [submissionBucket, thumbnailBucket, previewBucket, exportsBucket, api],
       nodejs: {
         install: ["sharp"],
       },
@@ -287,34 +274,34 @@ export default $config({
     //   },
     // );
 
-    const generateParticipantZipTask = new sst.aws.Task(
-      "GenerateParticipantZipTask",
-      {
-        cluster,
-        image: {
-          dockerfile: "/services/generate-participant-zip/Dockerfile",
-        },
-        environment: env,
-        link: [
-          submissionBucket,
-          thumbnailBucket,
-          previewBucket,
-          exportsBucket,
-          api,
-        ],
-        memory: "4 GB",
-        cpu: "2 vCPU",
-        permissions: [
-          {
-            actions: ["s3:GetObject", "s3:PutObject"],
-            resources: [previewBucket.arn, exportsBucket.arn],
-          },
-        ],
-        dev: {
-          command: "bun run services/generate-participant-zip/index.ts",
-        },
-      }
-    )
+    // const generateParticipantZipTask = new sst.aws.Task(
+    //   "GenerateParticipantZipTask",
+    //   {
+    //     cluster,
+    //     image: {
+    //       dockerfile: "/services/generate-participant-zip/Dockerfile",
+    //     },
+    //     environment: env,
+    //     link: [
+    //       submissionBucket,
+    //       thumbnailBucket,
+    //       previewBucket,
+    //       exportsBucket,
+    //       api,
+    //     ],
+    //     memory: "4 GB",
+    //     cpu: "2 vCPU",
+    //     permissions: [
+    //       {
+    //         actions: ["s3:GetObject", "s3:PutObject"],
+    //         resources: [previewBucket.arn, exportsBucket.arn],
+    //       },
+    //     ],
+    //     dev: {
+    //       command: "bun run services/generate-participant-zip/index.ts",
+    //     },
+    //   }
+    // )
 
     // new sst.aws.Function("ExportCaller", {
     //   handler: "services/export-caller/index.handler",
@@ -345,43 +332,26 @@ export default $config({
       },
     })
 
-    const validateSubmissionQueue = new sst.aws.Queue(
-      "ValidateSubmissionQueue",
-      {
-        dlq: validateSubmissionDlq.arn,
-      }
-    )
+    const validateSubmissionQueue = new sst.aws.Queue("ValidateSubmissionQueue", {
+      dlq: validateSubmissionDlq.arn,
+    })
 
-    const contactSheetGeneratorQueue = new sst.aws.Queue(
-      "ContactSheetGeneratorQueue"
-    )
+    const contactSheetGeneratorQueue = new sst.aws.Queue("ContactSheetGeneratorQueue")
 
     contactSheetGeneratorQueue.subscribe({
       handler: "./services/contact-sheet-generator/index.handler",
       memory: "4 GB",
-      link: [
-        contactSheetsBucket,
-        marathonSettingsBucket,
-        previewBucket,
-        exportsBucket,
-        api,
-      ],
+      link: [contactSheetsBucket, marathonSettingsBucket, previewBucket, exportsBucket, api],
       environment: { ...env, FONTCONFIG_PATH: "/opt/etc/fonts" },
       url: true,
       nodejs: {
         install: ["sharp"],
       },
-      layers: [
-        "arn:aws:lambda:eu-north-1:347599033421:layer:amazon_linux_fonts:1",
-      ],
+      layers: ["arn:aws:lambda:eu-north-1:347599033421:layer:amazon_linux_fonts:1"],
       permissions: [
         {
           actions: ["s3:GetObject", "s3:PutObject"],
-          resources: [
-            previewBucket.arn,
-            exportsBucket.arn,
-            contactSheetsBucket.arn,
-          ],
+          resources: [previewBucket.arn, exportsBucket.arn, contactSheetsBucket.arn],
         },
       ],
     })
@@ -412,7 +382,7 @@ export default $config({
         thumbnailBucket,
         previewBucket,
         validateSubmissionQueue,
-        generateParticipantZipTask,
+        // generateParticipantZipTask,
         contactSheetGeneratorQueue,
         api,
       ],
@@ -420,11 +390,7 @@ export default $config({
       permissions: [
         {
           actions: ["s3:GetObject", "s3:PutObject"],
-          resources: [
-            submissionBucket.arn,
-            thumbnailBucket.arn,
-            previewBucket.arn,
-          ],
+          resources: [submissionBucket.arn, thumbnailBucket.arn, previewBucket.arn],
         },
       ],
     })
@@ -458,7 +424,7 @@ export default $config({
         // apiService,
         realtime,
         // exportSubmissionsTask,
-        generateParticipantZipTask,
+        // generateParticipantZipTask,
         variantGenerator,
         contactSheetGeneratorQueue,
         contactSheetsBucket,

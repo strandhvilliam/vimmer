@@ -30,7 +30,8 @@
     "mqtt": "^5.13.2",
     "postgres": "^3.4.7",
     "posthog-node": "^5.6.0",
-    "superjson": "^2.2.2"
+    "superjson": "^2.2.2",
+    "zod": "^4.1.12"
   },
   "exports": {
     "./trpc/routers/_app": "./src/trpc/routers/_app.ts"

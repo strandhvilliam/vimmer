@@ -6,39 +6,35 @@ import type {
   ValidationFunction,
   ValidationInput,
   ValidationOutcome,
-} from "./types";
-import type { ValidationResult } from "./types";
-import { z } from "zod";
-import { RULE_KEYS, VALIDATION_OUTCOME } from "./constants";
+} from "./types"
+import type { ValidationResult } from "./types"
+import { z } from "zod/v4"
+import { RULE_KEYS, VALIDATION_OUTCOME } from "./constants"
 
 export const createValidationResult = (
   outcome: ValidationOutcome,
   ruleKey: RuleKey,
-  message: string,
+  message: string
 ): ValidationResult => ({
   outcome,
   ruleKey,
   message,
   severity: "error",
-});
+})
 
 export function withErrorHandling<K extends RuleKey>(
   ruleKey: K,
-  validationFunction: ValidationFunction<K>,
+  validationFunction: ValidationFunction<K>
 ): ValidationFunction<K> {
   return (rule, input) => {
     try {
-      return validationFunction(rule, input);
+      return validationFunction(rule, input)
     } catch (error) {
       return [
-        createValidationResult(
-          VALIDATION_OUTCOME.FAILED,
-          ruleKey,
-          "Unknown validation error",
-        ),
-      ];
+        createValidationResult(VALIDATION_OUTCOME.FAILED, ruleKey, "Unknown validation error"),
+      ]
     }
-  };
+  }
 }
 
 const ruleSchemas: Record<RuleKey, z.ZodSchema> = {
@@ -55,124 +51,112 @@ const ruleSchemas: Record<RuleKey, z.ZodSchema> = {
     end: z.union([z.string(), z.instanceof(Date)]),
   }),
   [RULE_KEYS.MODIFIED]: z.object({}),
-} as const;
+} as const
 
-function validateRuleParams<K extends RuleKey>(
-  ruleKey: K,
-  params: unknown,
-): [boolean, string?] {
+function validateRuleParams<K extends RuleKey>(ruleKey: K, params: unknown): [boolean, string?] {
   try {
-    const schema = ruleSchemas[ruleKey];
-    if (!schema) return [false, "Invalid rule key"];
-    schema.parse(params);
-    return [true];
+    const schema = ruleSchemas[ruleKey]
+    if (!schema) return [false, "Invalid rule key"]
+    schema.parse(params)
+    return [true]
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const errorMessages = error.errors.map(
-        (err) => `${err.path.join(".")}: ${err.message}`,
-      );
-      return [false, errorMessages.join("; ")];
+      return [false, error.message]
     }
-    return [false, "Invalid rule parameters"];
+    return [false, "Invalid rule parameters"]
   }
 }
 
 export function withParamValidation<K extends RuleKey>(
   ruleKey: K,
-  validationFunction: ValidationFunction<K>,
+  validationFunction: ValidationFunction<K>
 ): ValidationFunction<K> {
   return (rule, input) => {
-    const [isValid, errorMessage] = validateRuleParams(ruleKey, rule);
+    const [isValid, errorMessage] = validateRuleParams(ruleKey, rule)
 
     if (!isValid) {
       return [
         createValidationResult(
           VALIDATION_OUTCOME.FAILED,
           ruleKey,
-          `Invalid rule configuration: ${errorMessage}`,
+          `Invalid rule configuration: ${errorMessage}`
         ),
-      ];
+      ]
     }
 
-    return validationFunction(rule, input);
-  };
+    return validationFunction(rule, input)
+  }
 }
 
 export const validationInputSchema = z.object({
-  exif: z.record(z.unknown(), { message: "No exif data found" }),
+  exif: z.record(z.string(), z.unknown(), { message: "No exif data found" }),
   fileName: z.string().min(1, { message: "File name is required" }),
   fileSize: z.number().nonnegative({ message: "File size is required" }),
   orderIndex: z.number().int().nonnegative(),
   mimeType: z.string().min(1, { message: "Mime type is required" }),
-});
+})
 
 function validateInput(input: unknown): [boolean, string?] {
   try {
-    validationInputSchema.parse(input);
-    return [true];
+    validationInputSchema.parse(input)
+    return [true]
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const errorMessages = error.errors.map((err) => {
-        return `${err.message}`;
-      });
-      return [false, errorMessages.join("; ")];
+      return [false, error.message]
     }
-    return [false, "Invalid validation inputs"];
+    return [false, "Invalid validation inputs"]
   }
 }
 
 export function withInputValidation<K extends RuleKey>(
   ruleKey: K,
-  validationFunction: ValidationFunction<K>,
+  validationFunction: ValidationFunction<K>
 ): ValidationFunction<K> {
   return (rule, input) => {
     const validationResults = input.reduce((acc, inp) => {
-      const [isValid, errorMessage] = validateInput(inp);
+      const [isValid, errorMessage] = validateInput(inp)
       if (!isValid) {
         acc.push(
           attachFileName(
             createValidationResult(
               VALIDATION_OUTCOME.FAILED,
               ruleKey,
-              errorMessage ?? "Invalid input data",
+              errorMessage ?? "Invalid input data"
             ),
-            inp,
-          ),
-        );
+            inp
+          )
+        )
       }
-      return acc;
-    }, [] as ValidationResult[]);
+      return acc
+    }, [] as ValidationResult[])
 
     if (validationResults.length > 0) {
-      return validationResults;
+      return validationResults
     }
-    return validationFunction(rule, input);
-  };
+    return validationFunction(rule, input)
+  }
 }
 
 export function pipe<K extends RuleKey>(
   ...fns: Array<(fn: ValidationFunction<K>) => ValidationFunction<K>>
 ): (fn: ValidationFunction<K>) => ValidationFunction<K> {
   return (baseFunction: ValidationFunction<K>) => {
-    return fns.reduceRight((acc, fn) => fn(acc), baseFunction);
-  };
+    return fns.reduceRight((acc, fn) => fn(acc), baseFunction)
+  }
 }
 
 export function createValidationPipeline<K extends RuleKey>(
-  ruleKey: K,
+  ruleKey: K
 ): (fn: ValidationFunction<K>) => ValidationFunction<K> {
   return pipe(
     (fn) => withErrorHandling(ruleKey, fn),
     (fn) => withParamValidation(ruleKey, fn),
-    (fn) => withInputValidation(ruleKey, fn),
-  );
+    (fn) => withInputValidation(ruleKey, fn)
+  )
 }
 
-export function attachFileName(
-  result: ValidationResult,
-  input: ValidationInput,
-): ValidationResult {
-  return { ...result, fileName: input.fileName };
+export function attachFileName(result: ValidationResult, input: ValidationInput): ValidationResult {
+  return { ...result, fileName: input.fileName }
 }
 
 export function createMockInput(overrides = {}): ValidationInput {
@@ -191,5 +175,5 @@ export function createMockInput(overrides = {}): ValidationInput {
     orderIndex: 0,
     mimeType: "image/jpeg",
     ...overrides,
-  };
+  }
 }

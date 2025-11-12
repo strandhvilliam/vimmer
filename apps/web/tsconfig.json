@@ -1,6 +1,22 @@
 {
-  "extends": "@vimmer/typescript-config/nextjs.json",
   "compilerOptions": {
+    "lib": ["ESNext"],
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleDetection": "force",
+    "allowJs": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noPropertyAccessFromIndexSignature": false,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
@@ -8,6 +24,7 @@
       "@vimmer/validation/*": ["../../packages/validation/src/*"],
       "@vimmer/ui/*": ["../../packages/ui/src/*"],
       "@vimmer/image-processing": ["../../packages/image-processing/src"],
+      "@vimmer/email/*": ["../../packages/email/src/*"],
       "next-international/*": ["../../node_modules/next-international/*"]
     },
     "plugins": [
@@ -24,7 +41,41 @@
     "next-env.d.ts",
     "next.config.js",
     "tailwind.config.ts",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "sst-env.d.ts"
   ],
   "exclude": ["node_modules, .next"]
 }
+
+// {
+//   "compilerOptions": {
+//     "lib": ["ESNext"],
+//     "target": "ESNext",
+//     "module": "ESNext",
+//     "moduleDetection": "force",
+//     "allowJs": true,
+//     "moduleResolution": "bundler",
+//     "allowImportingTsExtensions": true,
+//     "verbatimModuleSyntax": true,
+//     "noEmit": true,
+//     "strict": true,
+//     "skipLibCheck": true,
+//     "noFallthroughCasesInSwitch": true,
+//     "noUncheckedIndexedAccess": true,
+//     "noUnusedLocals": false,
+//     "noUnusedParameters": false,
+//     "noPropertyAccessFromIndexSignature": false,
+//     "jsx": "react-jsx",
+//     "jsxImportSource": "react",
+//     "baseUrl": ".",
+//     "paths": {
+//       "@vimmer/scripts/*": ["src/*"],
+//       "@vimmer/validation/*": ["../../packages/validation/src/*"],
+//       "@vimmer/supabase/*": ["../../packages/supabase/src/*"],
+//       "@vimmer/api/*": ["../api/src/*"]
+//     },
+//     "types": ["bun-types"]
+//   },
+//   "exclude": ["node_modules"],
+//   "include": ["src/**/*.ts", "sst-env.d.ts"]
+// }

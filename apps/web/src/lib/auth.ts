@@ -1,4 +1,4 @@
-import { betterAuth, Session, User } from "better-auth"
+import { betterAuth, type Session, type User } from "better-auth"
 import { Pool } from "pg"
 import { headers } from "next/headers"
 import { nextCookies } from "better-auth/next-js"

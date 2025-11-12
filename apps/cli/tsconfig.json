@@ -24,8 +24,7 @@
       "@vimmer/supabase/*": ["../../packages/supabase/src/*"],
       "@vimmer/email/*": ["../../packages/email/src/*"],
       "@vimmer/api/*": ["../../apps/api/src/*"]
-    },
-    "types": ["bun-types"]
+    }
   },
   "exclude": ["node_modules", "dist"],
   "include": ["src/**/*.ts", "sst-env.d.ts"]
