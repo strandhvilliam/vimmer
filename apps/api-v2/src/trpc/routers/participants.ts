@@ -3,8 +3,18 @@ import { Schema, Effect } from "effect"
 import { Database } from "@blikka/db"
 
 export const participantRouter = createTRPCRouter({
-  getByDomain: publicProcedure
-    .input(Schema.standardSchemaV1(Schema.Struct({ domain: Schema.String })))
+  getByDomainInfinite: publicProcedure
+    .input(
+      Schema.standardSchemaV1(
+        Schema.Struct({
+          domain: Schema.String,
+          cursor: Schema.NullishOr(Schema.String),
+          limit: Schema.NullishOr(
+            Schema.Number.pipe(Schema.greaterThan(0), Schema.lessThanOrEqualTo(100))
+          ),
+        })
+      )
+    )
     .query(
       trpcEffect(({ input }) =>
         Effect.gen(function* () {
@@ -14,11 +24,9 @@ export const participantRouter = createTRPCRouter({
       )
     ),
 
-  // getParticipantsWithoutSubmissions: publicProcedure.input().query(() => {}),
-
-  // getByDomainPaginated: publicProcedure.input().query(() => {}),
-
-  // getById: publicProcedure.input().query(() => {}),
+  getById: publicProcedure
+    .input(Schema.standardSchemaV1(Schema.Struct({ id: Schema.Number })))
+    .query(() => {}),
 
   // getByReference: publicProcedure.input().query(() => {}),
 

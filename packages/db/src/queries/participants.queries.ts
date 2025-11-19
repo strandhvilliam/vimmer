@@ -14,22 +14,22 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
       const db = yield* DrizzleClient
       // const supabase = yield* SupabaseClient
 
-      const getParticipantById = Effect.fn(
-        "ParticipantsQueries.getParticipantByIdQuery"
-      )(function* ({ id }: { id: number }) {
-        const result = yield* db.query.participants.findFirst({
-          where: eq(participants.id, id),
-          with: {
-            submissions: true,
-            competitionClass: true,
-            deviceGroup: true,
-            validationResults: true,
-            zippedSubmissions: true,
-          },
-        })
+      const getParticipantById = Effect.fn("ParticipantsQueries.getParticipantByIdQuery")(
+        function* ({ id }: { id: number }) {
+          const result = yield* db.query.participants.findFirst({
+            where: eq(participants.id, id),
+            with: {
+              submissions: true,
+              competitionClass: true,
+              deviceGroup: true,
+              validationResults: true,
+              zippedSubmissions: true,
+            },
+          })
 
-        return Option.fromNullable(result)
-      })
+          return Option.fromNullable(result)
+        }
+      )
 
       const getParticipantsWithoutSubmissions = Effect.fn(
         "ParticipantsQueries.getParticipantsWithoutSubmissionsQuery"
@@ -48,18 +48,9 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
 
       const getParticipantByReference = Effect.fn(
         "ParticipantsQueries.getParticipantByReferenceQuery"
-      )(function* ({
-        reference,
-        domain,
-      }: {
-        reference: string
-        domain: string
-      }) {
+      )(function* ({ reference, domain }: { reference: string; domain: string }) {
         const result = yield* db.query.participants.findFirst({
-          where: and(
-            eq(participants.reference, reference),
-            eq(participants.domain, domain)
-          ),
+          where: and(eq(participants.reference, reference), eq(participants.domain, domain)),
           with: {
             submissions: {
               with: {
@@ -76,19 +67,20 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         return Option.fromNullable(result)
       })
 
-      const getParticipantsByDomain = Effect.fn(
-        "ParticipantsQueries.getParticipantsByDomainQuery"
-      )(function* ({ domain }: { domain: string }) {
-        const result = yield* db.query.participants.findMany({
-          where: eq(participants.domain, domain),
-          with: {
-            competitionClass: true,
-            deviceGroup: true,
-          },
-        })
+      const getParticipantsByDomain = Effect.fn("ParticipantsQueries.getParticipantsByDomainQuery")(
+        function* ({ domain }: { domain: string }) {
+          const result = yield* db.query.participants.findMany({
+            where: eq(participants.domain, domain),
+            with: {
+              competitionClass: true,
+              deviceGroup: true,
+              submissions: true,
+            },
+          })
 
-        return result
-      })
+          return result
+        }
+      )
 
       const getParticipantsByDomainPaginated = Effect.fn(
         "ParticipantsQueries.getParticipantsByDomainPaginatedQuery"
@@ -110,12 +102,7 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         status?: string | string[]
         competitionClassId?: number | number[]
         deviceGroupId?: number | number[]
-        sortBy:
-          | "createdAt"
-          | "reference"
-          | "firstname"
-          | "lastname"
-          | "uploadCount"
+        sortBy: "createdAt" | "reference" | "firstname" | "lastname" | "uploadCount"
         sortOrder: "asc" | "desc"
       }) {
         const offset = (page - 1) * pageSize
@@ -132,21 +119,15 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
 
         if (competitionClassId) {
           if (Array.isArray(competitionClassId)) {
-            whereConditions.push(
-              inArray(participants.competitionClassId, competitionClassId)
-            )
+            whereConditions.push(inArray(participants.competitionClassId, competitionClassId))
           } else {
-            whereConditions.push(
-              eq(participants.competitionClassId, competitionClassId)
-            )
+            whereConditions.push(eq(participants.competitionClassId, competitionClassId))
           }
         }
 
         if (deviceGroupId) {
           if (Array.isArray(deviceGroupId)) {
-            whereConditions.push(
-              inArray(participants.deviceGroupId, deviceGroupId)
-            )
+            whereConditions.push(inArray(participants.deviceGroupId, deviceGroupId))
           } else {
             whereConditions.push(eq(participants.deviceGroupId, deviceGroupId))
           }
@@ -168,48 +149,35 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         const orderBy = []
         if (sortBy === "createdAt") {
           orderBy.push(
-            sortOrder === "asc"
-              ? asc(participants.createdAt)
-              : desc(participants.createdAt)
+            sortOrder === "asc" ? asc(participants.createdAt) : desc(participants.createdAt)
           )
         } else if (sortBy === "reference") {
           orderBy.push(
-            sortOrder === "asc"
-              ? asc(participants.reference)
-              : desc(participants.reference)
+            sortOrder === "asc" ? asc(participants.reference) : desc(participants.reference)
           )
         } else if (sortBy === "firstname") {
           orderBy.push(
-            sortOrder === "asc"
-              ? asc(participants.firstname)
-              : desc(participants.firstname)
+            sortOrder === "asc" ? asc(participants.firstname) : desc(participants.firstname)
           )
         } else if (sortBy === "lastname") {
           orderBy.push(
-            sortOrder === "asc"
-              ? asc(participants.lastname)
-              : desc(participants.lastname)
+            sortOrder === "asc" ? asc(participants.lastname) : desc(participants.lastname)
           )
         } else if (sortBy === "uploadCount") {
           orderBy.push(
-            sortOrder === "asc"
-              ? asc(participants.uploadCount)
-              : desc(participants.uploadCount)
+            sortOrder === "asc" ? asc(participants.uploadCount) : desc(participants.uploadCount)
           )
         }
 
         const totalCountResult = yield* db
           .select({ count: count() })
           .from(participants)
-          .where(
-            whereConditions.length > 0 ? and(...whereConditions) : undefined
-          )
+          .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
 
         const totalCount = totalCountResult[0]?.count || 0
 
         const result = yield* db.query.participants.findMany({
-          where:
-            whereConditions.length > 0 ? and(...whereConditions) : undefined,
+          where: whereConditions.length > 0 ? and(...whereConditions) : undefined,
           with: {
             submissions: true,
             competitionClass: true,
@@ -231,56 +199,50 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         }
       })
 
-      const createParticipant = Effect.fn(
-        "ParticipantsQueries.createParticipantMutation"
-      )(function* ({ data }: { data: NewParticipant }) {
-        if (!data.domain) {
-          return yield* Effect.fail(
-            new SqlError({
-              cause: "Domain is required",
-            })
-          )
+      const createParticipant = Effect.fn("ParticipantsQueries.createParticipantMutation")(
+        function* ({ data }: { data: NewParticipant }) {
+          if (!data.domain) {
+            return yield* Effect.fail(
+              new SqlError({
+                cause: "Domain is required",
+              })
+            )
+          }
+
+          const [result] = yield* db.insert(participants).values(data).returning()
+
+          if (!result) {
+            return yield* Effect.fail(
+              new SqlError({
+                cause: "Failed to create participant",
+                message: "Failed to create participant",
+              })
+            )
+          }
+
+          return result
         }
+      )
 
-        const [result] = yield* db.insert(participants).values(data).returning()
+      const updateParticipantById = Effect.fn("ParticipantsQueries.updateParticipantMutation")(
+        function* ({ id, data }: { id: number; data: Partial<NewParticipant> }) {
+          const [result] = yield* db
+            .update(participants)
+            .set(data)
+            .where(eq(participants.id, id))
+            .returning({ id: participants.id })
 
-        if (!result) {
-          return yield* Effect.fail(
-            new SqlError({
-              cause: "Failed to create participant",
-              message: "Failed to create participant",
-            })
-          )
+          if (!result) {
+            return yield* Effect.fail(
+              new SqlError({
+                cause: "Failed to update participant",
+              })
+            )
+          }
+
+          return result
         }
-
-        return result
-      })
-
-      const updateParticipantById = Effect.fn(
-        "ParticipantsQueries.updateParticipantMutation"
-      )(function* ({
-        id,
-        data,
-      }: {
-        id: number
-        data: Partial<NewParticipant>
-      }) {
-        const [result] = yield* db
-          .update(participants)
-          .set(data)
-          .where(eq(participants.id, id))
-          .returning({ id: participants.id })
-
-        if (!result) {
-          return yield* Effect.fail(
-            new SqlError({
-              cause: "Failed to update participant",
-            })
-          )
-        }
-
-        return result
-      })
+      )
 
       const updateParticipantByReference = Effect.fn(
         "ParticipantsQueries.updateParticipantByReference"
@@ -296,12 +258,7 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         const [result] = yield* db
           .update(participants)
           .set(data)
-          .where(
-            and(
-              eq(participants.reference, reference),
-              eq(participants.domain, domain)
-            )
-          )
+          .where(and(eq(participants.reference, reference), eq(participants.domain, domain)))
           .returning({ id: participants.id })
         if (!result) {
           return yield* Effect.fail(
@@ -313,32 +270,26 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         return result
       })
 
-      const deleteParticipant = Effect.fn(
-        "ParticipantsQueries.deleteParticipantMutation"
-      )(function* ({ id }: { id: number }) {
-        const [result] = yield* db
-          .delete(participants)
-          .where(eq(participants.id, id))
-          .returning()
-        if (!result) {
-          return yield* Effect.fail(
-            new SqlError({
-              cause: "Failed to delete participant",
-            })
-          )
+      const deleteParticipant = Effect.fn("ParticipantsQueries.deleteParticipantMutation")(
+        function* ({ id }: { id: number }) {
+          const [result] = yield* db.delete(participants).where(eq(participants.id, id)).returning()
+          if (!result) {
+            return yield* Effect.fail(
+              new SqlError({
+                cause: "Failed to delete participant",
+              })
+            )
+          }
+          return result
         }
-        return result
-      })
+      )
 
       const getVerifiedParticipantsWithCompletePreviewKeys = Effect.fn(
         "ParticipantsQueries.getVerifiedParticipantsWithCompletePreviewKeysQuery"
       )(function* ({ domain }: { domain: string }) {
         // Get all verified participants with their submissions
         const verifiedParticipants = yield* db.query.participants.findMany({
-          where: and(
-            eq(participants.domain, domain),
-            eq(participants.status, "verified")
-          ),
+          where: and(eq(participants.domain, domain), eq(participants.status, "verified")),
           with: {
             submissions: {
               columns: {
@@ -357,10 +308,7 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
         })
 
         const readyParticipants = verifiedParticipants.filter((participant) => {
-          if (
-            !participant.submissions ||
-            participant.submissions.length === 0
-          ) {
+          if (!participant.submissions || participant.submissions.length === 0) {
             return false
           }
 
@@ -369,9 +317,7 @@ export class ParticipantsQueries extends Effect.Service<ParticipantsQueries>()(
           }
 
           // All submissions must have preview keys
-          return participant.submissions.every(
-            (submission) => submission.previewKey
-          )
+          return participant.submissions.every((submission) => submission.previewKey)
         })
 
         console.log(

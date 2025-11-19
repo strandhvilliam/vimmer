@@ -7,7 +7,7 @@ export default function ClientPage() {
   const trpc = useTRPC()
   const domain = "uppis"
   const { data: participants } = useSuspenseQuery(
-    trpc.participants.getByDomain.queryOptions({ domain })
+    trpc.participants.getByDomainInfinite.queryOptions({ domain })
   )
   return <pre>{JSON.stringify(participants, null, 2)}</pre>
 }
