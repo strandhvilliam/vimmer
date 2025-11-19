@@ -46,8 +46,6 @@ export class UploadProcessorService extends Effect.Service<UploadProcessorServic
       ) {
         const { domain, reference, orderIndex } = yield* parseKey(key)
 
-        yield* Effect.log("Processing photo", { domain, reference, orderIndex })
-
         const submissionStateOpt = yield* uploadKv.getSubmissionState(domain, reference, orderIndex)
         if (Option.isSome(submissionStateOpt) && submissionStateOpt.value.uploaded) {
           yield* Effect.logWarning("Submission already uploaded, skipping")

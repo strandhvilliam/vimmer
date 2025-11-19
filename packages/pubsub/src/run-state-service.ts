@@ -1,5 +1,5 @@
 import { Effect, Config, Console, Schema } from "effect"
-import { PubSubService } from "./service"
+import { PubSubService } from "./pubsub-service"
 import { PubSubChannel, PubSubMessage } from "./schema"
 
 export const RunStateEventSchema = Schema.Struct({

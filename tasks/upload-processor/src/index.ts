@@ -3,7 +3,7 @@ import { type SQSEvent, LambdaHandler } from "@effect-aws/lambda"
 import { parseJson, parseKey } from "./utils"
 import { InvalidS3EventError } from "./errors"
 import { type SQSRecord } from "aws-lambda"
-import { UploadProcessorService } from "./service"
+import { UploadProcessorService } from "./processor-service"
 import { S3EventSchema } from "./schemas"
 import { TelemetryLayer } from "@blikka/telemetry"
 import { PubSubChannel, RunStateService, PubSubLoggerService } from "@blikka/pubsub"
@@ -41,27 +41,27 @@ const effectHandler = (event: SQSEvent) =>
           Effect.gen(function* () {
             const key = record.s3.object.key
             const { domain, reference, orderIndex } = yield* parseKey(key)
+            yield* Effect.logInfo(`[${reference}|${domain}] Processing photo '${key}'`)
 
-            yield* Effect.log(
-              `Processing photo ${key} for domain ${domain} and reference ${reference}`
-            )
-
-            return yield* Effect.runFork(
-              PubSubChannel.fromString(`${environment}:upload-flow:${domain}-${reference}`).pipe(
-                Effect.andThen((channel) =>
-                  runStateService.withRunStateEvents({
-                    taskName: "upload-processor",
-                    channel,
-                    effect: uploadProcessor.processPhoto(key),
-                    metadata: {
-                      domain,
-                      reference,
-                      orderIndex,
-                    },
-                  })
+            return yield* runStateService.withRunStateEvents({
+              taskName: "upload-processor",
+              channel: yield* PubSubChannel.fromString(
+                `${environment}:upload-flow:${domain}-${reference}`
+              ),
+              effect: uploadProcessor.processPhoto(key).pipe(
+                Effect.tap(() =>
+                  Effect.logInfo(`[${reference}|${domain}] Photo processed '${key}'`)
+                ),
+                Effect.tapError((error) =>
+                  Effect.logError(`[${reference}|${domain}] Error processing photo '${key}'`, error)
                 )
-              )
-            )
+              ),
+              metadata: {
+                domain,
+                reference,
+                orderIndex,
+              },
+            })
           }),
         { concurrency: 2 }
       )

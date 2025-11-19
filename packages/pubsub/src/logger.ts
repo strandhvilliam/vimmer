@@ -1,5 +1,5 @@
 import { Console, Effect, Layer, Logger, Runtime } from "effect"
-import { PubSubService } from "./service"
+import { PubSubService } from "./pubsub-service"
 import { PubSubChannel, PubSubMessage } from "./schema"
 
 export const makePubSubLogger = (taskName: string) =>

@@ -7,6 +7,7 @@ import { ValidationRunner } from "./service"
 import { TelemetryLayer } from "@blikka/telemetry"
 import { PubSubChannel, PubSubLoggerService, RunStateService } from "@blikka/pubsub"
 import { Resource as SSTResource } from "sst"
+import { SQSRecord } from "aws-lambda"
 
 const getEnvironment = (stage: string): "prod" | "dev" | "staging" => {
   if (stage === "production") return "prod"
@@ -20,28 +21,35 @@ const effectHandler = (event: SQSEvent) =>
     const runStateService = yield* RunStateService
     const environment = getEnvironment(SSTResource.App.stage)
 
-    yield* Effect.forEach(event.Records, (record) =>
-      parseBusEvent<typeof EventBusDetailTypes.Finalized, typeof FinalizedEventSchema.Type>(
-        record.body,
-        FinalizedEventSchema
-      ).pipe(
-        Effect.flatMap(({ domain, reference }) =>
-          PubSubChannel.fromString(`${environment}:upload-flow:${domain}-${reference}`).pipe(
-            Effect.andThen((channel) =>
-              runStateService.withRunStateEvents({
-                taskName: "validation-runner",
-                channel,
-                effect: validationRunner.execute(domain, reference),
-                metadata: {
-                  domain,
-                  reference,
-                },
-              })
-            )
+    const processSQSRecord = Effect.fn("validation-runner.processSQSRecord")(function* (
+      record: SQSRecord
+    ) {
+      const { domain, reference } = yield* parseBusEvent<
+        typeof EventBusDetailTypes.Finalized,
+        typeof FinalizedEventSchema.Type
+      >(record.body, FinalizedEventSchema)
+
+      yield* Effect.logInfo(`[${reference}|${domain}] Executing validation`)
+
+      return yield* runStateService.withRunStateEvents({
+        taskName: "validation-runner",
+        channel: yield* PubSubChannel.fromString(
+          `${environment}:upload-flow:${domain}-${reference}`
+        ),
+        effect: validationRunner.execute(domain, reference).pipe(
+          Effect.tap(() => Effect.logInfo(`[${reference}|${domain}] Validation executed`)),
+          Effect.tapError((error) =>
+            Effect.logError(`[${reference}|${domain}] Error executing validation`, error)
           )
-        )
-      )
-    )
+        ),
+        metadata: {
+          domain,
+          reference,
+        },
+      })
+    })
+
+    yield* Effect.forEach(event.Records, (record) => processSQSRecord(record), { concurrency: 2 })
   }).pipe(Effect.withSpan("ValidationRunner.handler"), Effect.catchAll(Effect.logError))
 
 const serviceLayer = Layer.mergeAll(
