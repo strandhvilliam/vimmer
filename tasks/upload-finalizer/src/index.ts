@@ -21,21 +21,21 @@ const effectHandler = (event: SQSEvent) =>
         Effect.andThen(({ domain, reference }) =>
           PubSubChannel.fromString(`${environment}:upload-flow:${domain}-${reference}`).pipe(
             Effect.andThen((channel) =>
-              runStateService.withRunStateEvents(
-                "upload-finalizer",
+              runStateService.withRunStateEvents({
+                taskName: "upload-finalizer",
                 channel,
-                uploadFinalizerService.finalizeParticipant(domain, reference),
-                {
+                effect: uploadFinalizerService.finalizeParticipant(domain, reference),
+                metadata: {
                   domain,
                   reference,
-                }
-              )
+                },
+              })
             )
           )
         )
       )
     )
-  }).pipe(Effect.withSpan("uploadFinalizer.handler"), Effect.catchAll(Effect.logError))
+  }).pipe(Effect.withSpan("UploadFinalizer.handler"), Effect.catchAll(Effect.logError))
 
 const serviceLayer = Layer.mergeAll(
   RunStateService.Default,

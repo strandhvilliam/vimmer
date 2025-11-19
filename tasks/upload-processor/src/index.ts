@@ -49,16 +49,16 @@ const effectHandler = (event: SQSEvent) =>
             return yield* Effect.runFork(
               PubSubChannel.fromString(`${environment}:upload-flow:${domain}-${reference}`).pipe(
                 Effect.andThen((channel) =>
-                  runStateService.withRunStateEvents(
-                    "upload-processor",
+                  runStateService.withRunStateEvents({
+                    taskName: "upload-processor",
                     channel,
-                    uploadProcessor.processPhoto(key),
-                    {
+                    effect: uploadProcessor.processPhoto(key),
+                    metadata: {
                       domain,
                       reference,
                       orderIndex,
-                    }
-                  )
+                    },
+                  })
                 )
               )
             )

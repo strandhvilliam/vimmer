@@ -28,15 +28,15 @@ const effectHandler = (event: SQSEvent) =>
         Effect.flatMap(({ domain, reference }) =>
           PubSubChannel.fromString(`${environment}:upload-flow:${domain}-${reference}`).pipe(
             Effect.andThen((channel) =>
-              runStateService.withRunStateEvents(
-                "validation-runner",
+              runStateService.withRunStateEvents({
+                taskName: "validation-runner",
                 channel,
-                validationRunner.execute(domain, reference),
-                {
+                effect: validationRunner.execute(domain, reference),
+                metadata: {
                   domain,
                   reference,
-                }
-              )
+                },
+              })
             )
           )
         )

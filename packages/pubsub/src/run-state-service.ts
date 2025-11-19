@@ -56,16 +56,21 @@ export class RunStateService extends Effect.Service<RunStateService>()(
           )
       })
 
-      const withRunStateEvents = <E, A, R>(
-        taskName: string,
-        channel: PubSubChannel,
-        effect: Effect.Effect<A, E, R>,
+      const withRunStateEvents = <E, A, R>({
+        taskName,
+        channel,
+        effect,
+        metadata,
+      }: {
+        taskName: string
+        channel: PubSubChannel
+        effect: Effect.Effect<A, E, R>
         metadata?: {
           domain?: string
           reference?: string
           orderIndex?: number
         }
-      ) =>
+      }) =>
         Effect.gen(function* () {
           const startTime = Date.now()
           yield* sendRunStateEvent(taskName, channel, "start", metadata)

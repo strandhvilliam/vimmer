@@ -28,15 +28,15 @@ const effectHandler = (event: SQSEvent) =>
           Effect.flatMap(({ domain, reference }) =>
             PubSubChannel.fromString(`${environment}:upload-flow:${domain}-${reference}`).pipe(
               Effect.andThen((channel) =>
-                runStateService.withRunStateEvents(
-                  "contact-sheet-generator",
+                runStateService.withRunStateEvents({
+                  taskName: "contact-sheet-generator",
                   channel,
-                  sheetGeneratorService.generateContactSheet({ domain, reference }),
-                  {
+                  effect: sheetGeneratorService.generateContactSheet({ domain, reference }),
+                  metadata: {
                     domain,
                     reference,
-                  }
-                )
+                  },
+                })
               )
             )
           )
