@@ -5,6 +5,73 @@
 
 declare module "sst" {
   export interface Resource {
+    "Api": {
+      "name": string
+      "type": "sst.aws.Function"
+      "url": string
+    }
+    "BlikkaMainVPC": {
+      "type": "sst.aws.Vpc"
+    }
+    "DevCaller": {
+      "name": string
+      "type": "sst.aws.Function"
+      "url": string
+    }
+    "SheetGeneratorQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
+    }
+    "SubmissionFinalizedBus": {
+      "arn": string
+      "name": string
+      "type": "sst.aws.Bus"
+    }
+    "UploadFinalizerQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
+    }
+    "UploadStatusQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
+    }
+    "V2ContactSheetsBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
+    "V2SponsorBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
+    "V2SubmissionsBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
+    "V2ThumbnailsBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
+    "V2ZipsBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
+    "ValidationQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
+    }
+    "ZipGeneratorQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
+    }
+    "ZipHandlerTask": {
+      "assignPublicIp": boolean
+      "cluster": string
+      "containers": any
+      "securityGroups": any
+      "subnets": any
+      "taskDefinition": string
+      "type": "sst.aws.Task"
+    }
   }
 }
 /// <reference path="sst-env.d.ts" />

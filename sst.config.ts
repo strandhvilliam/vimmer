@@ -139,6 +139,12 @@ export default $config({
       link: [submissionFinalizedBus],
     })
 
+    const api = new sst.aws.Function("Api", {
+      handler: "./apps/api-v2/src/index.handler",
+      url: true,
+      environment: env,
+    })
+
     return {
       devCaller: devCallerFn.url,
       submissionsBucket: submissionsBucket.name,

@@ -4,8 +4,11 @@
   "type": "module",
   "private": true,
   "dependencies": {
+    "@blikka/db": "workspace:*",
+    "@hono/trpc-server": "^0.4.0",
     "@trpc/server": "^11.7.1",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "hono": "^4.10.6"
   },
   "devDependencies": {
     "@types/bun": "latest"
