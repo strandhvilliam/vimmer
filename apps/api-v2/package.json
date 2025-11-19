@@ -1,0 +1,16 @@
+{
+  "name": "@blikka/api-v2",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@trpc/server": "^11.7.1",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
