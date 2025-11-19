@@ -1,0 +1,22 @@
+{
+  "name": "upload-finalizer",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "dependencies": {
+    "@blikka/bus": "workspace:*",
+    "@blikka/db": "workspace:*",
+    "@blikka/pubsub": "workspace:*",
+    "@blikka/telemetry": "workspace:*",
+    "@blikka/kv-store": "workspace:*",
+    "@blikka/s3": "workspace:*",
+    "@effect-aws/lambda": "^1.5.1",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

@@ -49,6 +49,7 @@ export default $config({
 
     const submissionFinalizedBus = new sst.aws.Bus("SubmissionFinalizedBus")
     const uploadProcessorQueue = new sst.aws.Queue("UploadStatusQueue")
+    const uploadFinalizerQueue = new sst.aws.Queue("UploadFinalizerQueue")
     const validationQueue = new sst.aws.Queue("ValidationQueue")
     const sheetGeneratorQueue = new sst.aws.Queue("SheetGeneratorQueue")
     const zipWorkerQueue = new sst.aws.Queue("ZipGeneratorQueue")
@@ -90,6 +91,12 @@ export default $config({
       handler: "./tasks/contact-sheet-generator/src/index.handler",
       environment: env,
       link: [sheetGeneratorQueue, contactSheetsBucket, submissionsBucket, sponsorBucket],
+    })
+
+    uploadFinalizerQueue.subscribe({
+      handler: "./tasks/upload-finalizer/src/index.handler",
+      environment: env,
+      link: [uploadFinalizerQueue],
     })
 
     zipWorkerQueue.subscribe({
