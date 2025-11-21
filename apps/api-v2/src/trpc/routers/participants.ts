@@ -12,6 +12,12 @@ export const participantRouter = createTRPCRouter({
           limit: Schema.NullishOr(
             Schema.Number.pipe(Schema.greaterThan(0), Schema.lessThanOrEqualTo(100))
           ),
+          search: Schema.NullishOr(Schema.String),
+          sortOrder: Schema.NullishOr(Schema.Union(Schema.Literal("asc"), Schema.Literal("desc"))),
+          competitionClassId: Schema.NullishOr(
+            Schema.Union(Schema.Number, Schema.Array(Schema.Number))
+          ),
+          deviceGroupId: Schema.NullishOr(Schema.Union(Schema.Number, Schema.Array(Schema.Number))),
         })
       )
     )
@@ -19,7 +25,15 @@ export const participantRouter = createTRPCRouter({
       trpcEffect(({ input }) =>
         Effect.gen(function* () {
           const db = yield* Database
-          return yield* db.participantsQueries.getParticipantsByDomain({ domain: input.domain })
+          return yield* db.participantsQueries.getParticipantsByDomain({
+            domain: input.domain,
+            cursor: input.cursor ?? undefined,
+            limit: input.limit ?? undefined,
+            search: input.search ?? undefined,
+            sortOrder: input.sortOrder ?? undefined,
+            competitionClassId: input.competitionClassId ?? undefined,
+            deviceGroupId: input.deviceGroupId ?? undefined,
+          })
         })
       )
     ),

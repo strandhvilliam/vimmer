@@ -15,13 +15,7 @@ import {
 } from "drizzle-orm/pg-core"
 import { relations, sql } from "drizzle-orm"
 
-export const inviteType = pgEnum("invite_type", [
-  "topic",
-  "class",
-  "custom",
-  "all",
-  "device",
-])
+export const inviteType = pgEnum("invite_type", ["topic", "class", "custom", "all", "device"])
 export const uploadStatus = pgEnum("upload_status", [
   "initialized",
   "processing",
@@ -158,10 +152,7 @@ export const participants = pgTable(
     contactSheetSent: boolean("contact_sheet_sent").default(false).notNull(),
   },
   (table) => [
-    index("participants_domain_idx").using(
-      "btree",
-      table.domain.asc().nullsLast().op("text_ops")
-    ),
+    index("participants_domain_idx").using("btree", table.domain.asc().nullsLast().op("text_ops")),
     index("participants_reference_domain_idx").using(
       "btree",
       table.reference.asc().nullsLast().op("text_ops"),
@@ -322,10 +313,7 @@ export const marathons = pgTable(
     termsAndConditionsKey: text("terms_and_conditions_key"),
   },
   (table) => [
-    index("marathons_domain_idx").using(
-      "btree",
-      table.domain.asc().nullsLast().op("text_ops")
-    ),
+    index("marathons_domain_idx").using("btree", table.domain.asc().nullsLast().op("text_ops")),
   ]
 )
 
@@ -437,10 +425,7 @@ export const submissions = pgTable(
     status: text().default("initialized").notNull(),
   },
   (table) => [
-    index("submissions_key_idx").using(
-      "btree",
-      table.key.asc().nullsLast().op("text_ops")
-    ),
+    index("submissions_key_idx").using("btree", table.key.asc().nullsLast().op("text_ops")),
     index("submissions_marathon_id_idx").using(
       "btree",
       table.marathonId.asc().nullsLast().op("int8_ops")
@@ -507,13 +492,9 @@ export const zippedSubmissions = pgTable(
       .defaultNow()
       .notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-    zipKey: text("zip_key"),
+    key: text("key").notNull(),
     marathonId: bigint("marathon_id", { mode: "number" }).notNull(),
-    exportType: text("export_type").notNull(),
-    progress: integer().default(0).notNull(),
-    status: text().default("pending").notNull(),
     participantId: bigint("participant_id", { mode: "number" }).notNull(),
-    errors: jsonb(),
   },
   (table) => [
     foreignKey({
@@ -525,6 +506,32 @@ export const zippedSubmissions = pgTable(
       columns: [table.participantId],
       foreignColumns: [participants.id],
       name: "zipped_submissions_participant_id_fkey",
+    }).onDelete("cascade"),
+  ]
+)
+
+export const contactSheets = pgTable(
+  "contact_sheets",
+  {
+    id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+    key: text("key").notNull(),
+    marathonId: bigint("marathon_id", { mode: "number" }).notNull(),
+    participantId: bigint("participant_id", { mode: "number" }).notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.marathonId],
+      foreignColumns: [marathons.id],
+      name: "contact_sheets_marathon_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.participantId],
+      foreignColumns: [participants.id],
+      name: "contact_sheets_participant_id_fkey",
     }).onDelete("cascade"),
   ]
 )
@@ -586,28 +593,25 @@ export const juryRatingsRelations = relations(juryRatings, ({ one }) => ({
   }),
 }))
 
-export const juryInvitationsRelations = relations(
-  juryInvitations,
-  ({ one, many }) => ({
-    juryRatings: many(juryRatings),
-    competitionClass: one(competitionClasses, {
-      fields: [juryInvitations.competitionClassId],
-      references: [competitionClasses.id],
-    }),
-    deviceGroup: one(deviceGroups, {
-      fields: [juryInvitations.deviceGroupId],
-      references: [deviceGroups.id],
-    }),
-    marathon: one(marathons, {
-      fields: [juryInvitations.marathonId],
-      references: [marathons.id],
-    }),
-    topic: one(topics, {
-      fields: [juryInvitations.topicId],
-      references: [topics.id],
-    }),
-  })
-)
+export const juryInvitationsRelations = relations(juryInvitations, ({ one, many }) => ({
+  juryRatings: many(juryRatings),
+  competitionClass: one(competitionClasses, {
+    fields: [juryInvitations.competitionClassId],
+    references: [competitionClasses.id],
+  }),
+  deviceGroup: one(deviceGroups, {
+    fields: [juryInvitations.deviceGroupId],
+    references: [deviceGroups.id],
+  }),
+  marathon: one(marathons, {
+    fields: [juryInvitations.marathonId],
+    references: [marathons.id],
+  }),
+  topic: one(topics, {
+    fields: [juryInvitations.topicId],
+    references: [topics.id],
+  }),
+}))
 
 export const marathonsRelations = relations(marathons, ({ many }) => ({
   juryRatings: many(juryRatings),
@@ -623,28 +627,26 @@ export const marathonsRelations = relations(marathons, ({ many }) => ({
   sponsors: many(sponsors),
 }))
 
-export const participantsRelations = relations(
-  participants,
-  ({ one, many }) => ({
-    juryRatings: many(juryRatings),
-    competitionClass: one(competitionClasses, {
-      fields: [participants.competitionClassId],
-      references: [competitionClasses.id],
-    }),
-    deviceGroup: one(deviceGroups, {
-      fields: [participants.deviceGroupId],
-      references: [deviceGroups.id],
-    }),
-    marathon: one(marathons, {
-      fields: [participants.marathonId],
-      references: [marathons.id],
-    }),
-    validationResults: many(validationResults),
-    participantVerifications: many(participantVerifications),
-    submissions: many(submissions),
-    zippedSubmissions: many(zippedSubmissions),
-  })
-)
+export const participantsRelations = relations(participants, ({ one, many }) => ({
+  juryRatings: many(juryRatings),
+  competitionClass: one(competitionClasses, {
+    fields: [participants.competitionClassId],
+    references: [competitionClasses.id],
+  }),
+  deviceGroup: one(deviceGroups, {
+    fields: [participants.deviceGroupId],
+    references: [deviceGroups.id],
+  }),
+  marathon: one(marathons, {
+    fields: [participants.marathonId],
+    references: [marathons.id],
+  }),
+  validationResults: many(validationResults),
+  participantVerifications: many(participantVerifications),
+  submissions: many(submissions),
+  zippedSubmissions: many(zippedSubmissions),
+  contactSheets: many(contactSheets),
+}))
 
 export const ruleConfigsRelations = relations(ruleConfigs, ({ one }) => ({
   marathon: one(marathons, {
@@ -653,29 +655,23 @@ export const ruleConfigsRelations = relations(ruleConfigs, ({ one }) => ({
   }),
 }))
 
-export const competitionClassesRelations = relations(
-  competitionClasses,
-  ({ one, many }) => ({
-    juryInvitations: many(juryInvitations),
-    participants: many(participants),
-    marathon: one(marathons, {
-      fields: [competitionClasses.marathonId],
-      references: [marathons.id],
-    }),
-  })
-)
+export const competitionClassesRelations = relations(competitionClasses, ({ one, many }) => ({
+  juryInvitations: many(juryInvitations),
+  participants: many(participants),
+  marathon: one(marathons, {
+    fields: [competitionClasses.marathonId],
+    references: [marathons.id],
+  }),
+}))
 
-export const deviceGroupsRelations = relations(
-  deviceGroups,
-  ({ one, many }) => ({
-    juryInvitations: many(juryInvitations),
-    participants: many(participants),
-    marathon: one(marathons, {
-      fields: [deviceGroups.marathonId],
-      references: [marathons.id],
-    }),
-  })
-)
+export const deviceGroupsRelations = relations(deviceGroups, ({ one, many }) => ({
+  juryInvitations: many(juryInvitations),
+  participants: many(participants),
+  marathon: one(marathons, {
+    fields: [deviceGroups.marathonId],
+    references: [marathons.id],
+  }),
+}))
 
 export const topicsRelations = relations(topics, ({ one, many }) => ({
   juryInvitations: many(juryInvitations),
@@ -718,29 +714,23 @@ export const userMarathonsRelations = relations(userMarathons, ({ one }) => ({
   }),
 }))
 
-export const validationResultsRelations = relations(
-  validationResults,
-  ({ one }) => ({
-    participant: one(participants, {
-      fields: [validationResults.participantId],
-      references: [participants.id],
-    }),
-  })
-)
+export const validationResultsRelations = relations(validationResults, ({ one }) => ({
+  participant: one(participants, {
+    fields: [validationResults.participantId],
+    references: [participants.id],
+  }),
+}))
 
-export const participantVerificationsRelations = relations(
-  participantVerifications,
-  ({ one }) => ({
-    user: one(user, {
-      fields: [participantVerifications.staffId],
-      references: [user.id],
-    }),
-    participant: one(participants, {
-      fields: [participantVerifications.participantId],
-      references: [participants.id],
-    }),
-  })
-)
+export const participantVerificationsRelations = relations(participantVerifications, ({ one }) => ({
+  user: one(user, {
+    fields: [participantVerifications.staffId],
+    references: [user.id],
+  }),
+  participant: one(participants, {
+    fields: [participantVerifications.participantId],
+    references: [participants.id],
+  }),
+}))
 
 export const submissionsRelations = relations(submissions, ({ one }) => ({
   marathon: one(marathons, {
@@ -757,19 +747,27 @@ export const submissionsRelations = relations(submissions, ({ one }) => ({
   }),
 }))
 
-export const zippedSubmissionsRelations = relations(
-  zippedSubmissions,
-  ({ one }) => ({
-    marathon: one(marathons, {
-      fields: [zippedSubmissions.marathonId],
-      references: [marathons.id],
-    }),
-    participant: one(participants, {
-      fields: [zippedSubmissions.participantId],
-      references: [participants.id],
-    }),
-  })
-)
+export const zippedSubmissionsRelations = relations(zippedSubmissions, ({ one }) => ({
+  marathon: one(marathons, {
+    fields: [zippedSubmissions.marathonId],
+    references: [marathons.id],
+  }),
+  participant: one(participants, {
+    fields: [zippedSubmissions.participantId],
+    references: [participants.id],
+  }),
+}))
+
+export const contactSheetsRelations = relations(contactSheets, ({ one }) => ({
+  marathon: one(marathons, {
+    fields: [contactSheets.marathonId],
+    references: [marathons.id],
+  }),
+  participant: one(participants, {
+    fields: [contactSheets.participantId],
+    references: [participants.id],
+  }),
+}))
 
 export const sponsorsRelations = relations(sponsors, ({ one }) => ({
   marathon: one(marathons, {
