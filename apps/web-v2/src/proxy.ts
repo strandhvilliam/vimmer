@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { rootDomain } from "./config"
+import createMiddleware from "next-intl/middleware"
+import { routing } from "./i18n/routing.public"
 
 function extractSubdomain(request: NextRequest): string | null {
   const url = request.url
@@ -46,7 +48,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // On the root domain, allow normal access
-  return NextResponse.next()
+  return createMiddleware(routing)(request)
 }
 
 // export const config = {
