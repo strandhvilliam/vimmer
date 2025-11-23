@@ -1,4 +1,8 @@
 {
-  "welcome": "Welcome to the marathon",
-  "title": "My Index"
+  "HomePage": {
+    "title": "Home Page"
+  },
+  "DomainPage": {
+    "welcome": "Welcome to the domain"
+  }
 }

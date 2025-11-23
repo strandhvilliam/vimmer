@@ -16,7 +16,6 @@ export const metadata: Metadata = {
 export default async function LocaleLayout({ children, params }: LayoutProps<"/[locale]">) {
   // Ensure that the incoming locale is valid
   const { locale } = await params
-  console.log("locale", locale)
   if (!hasLocale(locales, locale)) {
     notFound()
   }

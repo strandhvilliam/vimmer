@@ -8,6 +8,6 @@ export default function Index({ params }: PageProps<"/[locale]">) {
   // Enable static rendering
   setRequestLocale(locale as Locale)
 
-  const t = useTranslations("Index")
+  const t = useTranslations("HomePage")
   return <h1>{t("title")}</h1>
 }

@@ -1,11 +1,10 @@
-import { protocol } from "@/lib/utils"
 import Link from "next/link"
-import { rootDomain } from "@/lib/utils"
+import { rootDomain, protocol } from "@/config"
 import { getTranslations } from "next-intl/server"
 
 export default async function SubdomainPage({ params }: { params: Promise<{ domain: string }> }) {
   const { domain } = await params
-  const t = await getTranslations()
+  const t = await getTranslations("DomainPage")
   return (
     <div className="flex min-h-screen flex-col p-4">
       <div className="absolute top-4 right-4">

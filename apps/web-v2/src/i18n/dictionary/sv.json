@@ -1,4 +1,8 @@
 {
-  "welcome": "Välkommen till maratontävlingen",
-  "title": "Min Index"
+  "HomePage": {
+    "title": "Hemsida"
+  },
+  "DomainPage": {
+    "welcome": "Välkommen till domänen"
+  }
 }
