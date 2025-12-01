@@ -12,7 +12,7 @@
       "@blikka/kv-store": ["../../packages/kv-store/src"],
       "@blikka/bus": ["../../packages/bus/src"],
       "@blikka/db": ["../../packages/db/src"],
-      "@blikka/validation": ["../../packages/validation/src"],
+      "@vimmer/validation": ["../../packages/validation/src"],
       "@blikka/s3": ["../../packages/s3/src"],
       "@blikka/telemetry": ["../../packages/telemetry/src"],
       "@blikka/pubsub": ["../../packages/pubsub/src"]

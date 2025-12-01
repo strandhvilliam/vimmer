@@ -1,11 +1,6 @@
 {
   "name": "@vimmer/validation",
   "type": "module",
-  "exports": {
-    "./constants": "./src/constants.ts",
-    "./validator": "./src/validator.ts",
-    "./types": "./src/types.ts"
-  },
   "scripts": {
     "test": "vitest"
   },

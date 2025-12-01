@@ -4,7 +4,7 @@ import * as PgDrizzle from "@effect/sql-drizzle/Pg"
 import * as schema from "./schema"
 
 const PgLive = PgClient.layerConfig({
-  url: Config.redacted("DEV_DATABASE_URL"),
+  url: Config.redacted("DATABASE_URL"),
   // password: Config.redacted("DEV_DATABASE_PASSWORD"),
   // username: Config.string("DEV_DATABASE_USERNAME"),
   // host: Config.string("DEV_DATABASE_HOST"),
@@ -12,15 +12,13 @@ const PgLive = PgClient.layerConfig({
   // database: Config.string("DEV_DATABASE_NAME"),
 })
 
-export class DrizzleClient extends Effect.Service<DrizzleClient>()(
-  "@blikka/db/drizzle-client",
-  {
-    dependencies: [PgLive],
-    effect: Effect.gen(function* () {
-      const db = yield* PgDrizzle.make<typeof schema>({
-        schema,
-      })
-      return db
-    }),
-  }
-) {}
+export class DrizzleClient extends Effect.Service<DrizzleClient>()("@blikka/db/drizzle-client", {
+  dependencies: [PgLive],
+  effect: Effect.gen(function* () {
+    console.log("db")
+    const db = yield* PgDrizzle.make<typeof schema>({
+      schema,
+    })
+    return db
+  }),
+}) {}

@@ -27,7 +27,7 @@
     "noPropertyAccessFromIndexSignature": false,
     "baseUrl": ".",
     "paths": {
-      "@blikka/validation": ["../../packages/validation/src"]
+      "@vimmer/validation": ["../../packages/validation/src"]
     }
   }
 }

@@ -11,11 +11,11 @@ import {
   ValidationInputSchema,
   ValidationRule,
   ValidationRuleSchema,
-} from "@blikka/validation"
+} from "@vimmer/validation"
 import { KVStore } from "@blikka/kv-store"
 
 export class ValidationRunner extends Effect.Service<ValidationRunner>()(
-  "@blikka/validation-runner",
+  "@vimmer/validation-runner",
   {
     dependencies: [Database.Default, S3Service.Default, KVStore.Default, ValidationEngine.Default],
     effect: Effect.gen(function* () {
