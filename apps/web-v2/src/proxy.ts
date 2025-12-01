@@ -42,7 +42,7 @@ export async function proxy(request: NextRequest) {
   if (subdomain) {
     // For the root path on a subdomain, rewrite to the subdomain page
     if (pathname === "/") {
-      console.log("rewrite to", `/s/${subdomain}`)
+      console.log("rewrite to", `/marathon/${subdomain}`)
       return NextResponse.rewrite(new URL(`/marathon/${subdomain}`, request.url))
     }
   }
@@ -51,10 +51,6 @@ export async function proxy(request: NextRequest) {
   return createMiddleware(routing)(request)
 }
 
-// export const config = {
-//   matcher: ["/((?!api|_next|[\\w-]+\\.\\w+).*)"],
-// }
-
 export const config = {
-  matcher: ["/", "/((?!.+\\.[\\w]+$|_next|static|favicon.ico|robots.txt).*)", "/(api|trpc)(.*)"],
+  matcher: ["/((?!api|_next|[\\w-]+\\.\\w+).*)"],
 }

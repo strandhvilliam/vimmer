@@ -1,8 +1,8 @@
 import { Locale } from "next-intl"
 
-export const locales = ["en", "sv"] satisfies Locale[]
+export const LOCALES = ["en", "sv"] satisfies Locale[]
 
-export const defaultLocale: Locale = "en"
+export const DEFAULT_LOCALE: Locale = "en"
 
 // This cookie name is used by `next-intl` on the public pages too. By
 // reading/writing to this locale, we can ensure that the user's locale

@@ -1,35 +1,33 @@
 import { Metadata } from "next"
-import { notFound } from "next/navigation"
-import { NextIntlClientProvider, hasLocale } from "next-intl"
-import { setRequestLocale } from "next-intl/server"
+import { NextIntlClientProvider } from "next-intl"
 import Document from "@/components/document"
-import { locales } from "@/config"
+import { LOCALES } from "@/config"
+import { Effect, Schema } from "effect"
+import { Layout } from "@/lib/runtime"
+import { decodeParams } from "@/lib/utils"
 
 export function generateStaticParams() {
-  return locales.map((locale) => ({ locale }))
+  return LOCALES.map((locale) => ({ locale }))
 }
 
 export const metadata: Metadata = {
   title: "next-intl-mixed-routing (public)",
 }
 
-export default async function LocaleLayout({ children, params }: LayoutProps<"/[locale]">) {
-  // Ensure that the incoming locale is valid
-  const { locale } = await params
-  if (!hasLocale(locales, locale)) {
-    notFound()
-  }
+const _LocaleLayout = Effect.fn("@blikka/web/LocaleLayout")(
+  function* ({ children, params }: LayoutProps<"/[locale]">) {
+    const { locale } = yield* decodeParams(Schema.Struct({ locale: Schema.String }))(params)
+    return (
+      <Document locale={locale}>
+        <NextIntlClientProvider>
+          <div className="m-auto max-w-240 p-4">
+            <div className="-mx-4 min-h-[200px] bg-slate-100 p-4">{children}</div>
+          </div>
+        </NextIntlClientProvider>
+      </Document>
+    )
+  },
+  Effect.catchAll((error) => Effect.succeed(<div>Error: {error.message}</div>))
+)
 
-  // Enable static rendering
-  setRequestLocale(locale)
-
-  return (
-    <Document locale={locale}>
-      <NextIntlClientProvider>
-        <div className="m-auto max-w-240 p-4">
-          <div className="-mx-4 min-h-[200px] bg-slate-100 p-4">{children}</div>
-        </div>
-      </NextIntlClientProvider>
-    </Document>
-  )
-}
+export default Layout(_LocaleLayout)

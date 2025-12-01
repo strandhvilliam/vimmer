@@ -1,13 +1,19 @@
-import { Locale, useTranslations } from "next-intl"
-import { setRequestLocale } from "next-intl/server"
-import { use } from "react"
+import { getTranslations } from "next-intl/server"
+import { LocaleSwitcher } from "./locale-switcher"
+import { Effect } from "effect"
+import { Page } from "@/lib/runtime"
 
-export default function Index({ params }: PageProps<"/[locale]">) {
-  const { locale } = use(params)
+const _HomePage = Effect.fn("@blikka/web/HomePage")(
+  function* () {
+    const t = yield* Effect.tryPromise(() => getTranslations("HomePage"))
+    return (
+      <div>
+        <h1>{t("title")}</h1>
+        <LocaleSwitcher />
+      </div>
+    )
+  },
+  Effect.catchAll((error) => Effect.succeed(<div>Error: {error.message}</div>))
+)
 
-  // Enable static rendering
-  setRequestLocale(locale as Locale)
-
-  const t = useTranslations("HomePage")
-  return <h1>{t("title")}</h1>
-}
+export default Page(_HomePage)
