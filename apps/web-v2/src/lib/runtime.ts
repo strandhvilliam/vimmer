@@ -1,13 +1,16 @@
 import { Layer, ManagedRuntime, Effect, Cause, Exit, Chunk } from "effect"
-import { DrizzleClient } from "@blikka/db"
+import { DrizzleClient, Database } from "@blikka/db"
 import { EmailService } from "@blikka/email"
 import { AuthLayer } from "./auth/server"
 import { unstable_rethrow } from "next/navigation"
 import { NodeContext } from "@effect/platform-node"
 
-const MainLayer = Layer.mergeAll(DrizzleClient.Default, EmailService.Default, AuthLayer).pipe(
-  Layer.provide(NodeContext.layer)
-)
+const MainLayer = Layer.mergeAll(
+  DrizzleClient.Default,
+  Database.Default,
+  EmailService.Default,
+  AuthLayer
+).pipe(Layer.provide(NodeContext.layer))
 
 export const serverRuntime = ManagedRuntime.make(MainLayer)
 
@@ -55,6 +58,7 @@ export function toActionResponse<T>(
 ): Effect.Effect<ActionResponse<T>, never, RuntimeDependencies> {
   return effect.pipe(
     Effect.map((data) => ({ data, error: null as string | null }) as ActionResponse<T>),
+    Effect.tapError((error) => Effect.logError(error)),
     Effect.catchAll((error) =>
       Effect.succeed({
         data: undefined as T extends void ? undefined : T,

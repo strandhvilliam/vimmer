@@ -47,6 +47,11 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // for the domain selector
+  if (pathname === "/marathon") {
+    return NextResponse.next()
+  }
+
   // On the root domain, allow normal access
   return createMiddleware(routing)(request)
 }

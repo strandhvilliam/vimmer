@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { Effect, Schema } from "effect"
-import { getLocale as getLocaleServer } from "next-intl/server"
+import { protocol, rootDomain } from "@/config"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -9,9 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 
 type NextBaseParams = Promise<Record<string, string | Array<string> | undefined>>
 
-type NextBaseSearchParams = {
-  searchParams: Promise<Record<string, string | Array<string> | undefined>>
-}
+type NextBaseSearchParams = Promise<Record<string, string | Array<string> | undefined>>
 
 export const decodeParams =
   <T, P extends NextBaseParams>(schema: Schema.Schema<T>) =>
@@ -23,8 +21,10 @@ export const decodeParams =
 
 export const decodeSearchParams =
   <T, P extends NextBaseSearchParams>(schema: Schema.Schema<T>) =>
-  (props: P) =>
+  (search: P) =>
     Effect.gen(function* () {
-      const searchParams = yield* Effect.promise(() => props.searchParams)
+      const searchParams = yield* Effect.promise(() => search)
       return yield* Schema.decodeUnknown(schema)(searchParams)
     })
+
+export const formatSubdomainUrl = (subdomain: string) => `${protocol}://${subdomain}.${rootDomain}`

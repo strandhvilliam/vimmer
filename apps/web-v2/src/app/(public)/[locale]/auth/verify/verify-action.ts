@@ -4,30 +4,39 @@ import { Auth } from "@/lib/auth/server"
 import { Action, toActionResponse } from "@/lib/runtime"
 import { Data, Effect } from "effect"
 import { headers } from "next/headers"
+import { redirect } from "next/navigation"
 
-class LoginError extends Data.TaggedError("LoginError")<{
+class VerifyError extends Data.TaggedError("VerifyError")<{
   message?: string
   cause?: unknown
 }> {}
 
-const _loginAction = Effect.fn("@blikka/web/loginAction")(function* ({ email }: { email: string }) {
+const _verifyAction = Effect.fn("@blikka/web/verifyAction")(function* ({
+  email,
+  otp,
+}: {
+  email: string
+  otp: string
+}) {
   const auth = yield* Auth
   const readonlyHeaders = yield* Effect.tryPromise(() => headers())
   yield* Effect.tryPromise({
     try: () =>
-      auth.api.sendVerificationOTP({
+      auth.api.signInEmailOTP({
         headers: readonlyHeaders,
         body: {
           email,
-          type: "sign-in",
+          otp,
         },
       }),
     catch: (error) =>
-      new LoginError({
+      new VerifyError({
         cause: error,
-        message: "Failed to send verification OTP",
+        message: error instanceof Error ? error.message : "Failed to verify email",
       }),
   })
+
+  redirect("/marathon/")
 }, toActionResponse)
 
-export const loginAction = async (input: { email: string }) => Action(_loginAction)(input)
+export const verifyAction = Action(_verifyAction)

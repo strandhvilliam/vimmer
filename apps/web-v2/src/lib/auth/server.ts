@@ -2,7 +2,7 @@ import "server-only"
 
 import { AuthConfig, BetterAuthService, type Session } from "@blikka/auth"
 import { Effect, Layer, Option } from "effect"
-import { getHeaders } from "../server-utils"
+import { headers } from "next/headers"
 
 const baseUrl = "http://localhost:3002"
 
@@ -20,12 +20,14 @@ export const AuthLayer = Layer.provide(BetterAuthService.Default, AuthConfigLaye
 export const getAppSession = Effect.fnUntraced(
   function* () {
     const auth = yield* BetterAuthService
-    const headers = yield* getHeaders()
+    const readonlyHeaders = yield* Effect.tryPromise(() => headers())
     const session = yield* Effect.tryPromise(() =>
       auth.api.getSession({
-        headers,
+        headers: readonlyHeaders,
       })
     )
+
+    console.log("session", session)
 
     return Option.fromNullable<Session | null>(session)
   },

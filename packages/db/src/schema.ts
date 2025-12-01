@@ -219,7 +219,6 @@ export const session = pgTable(
     ipAddress: text(),
     userAgent: text(),
     userId: text().notNull(),
-    impersonatedBy: text(),
   },
   (table) => [
     foreignKey({
@@ -546,9 +545,6 @@ export const user = pgTable(
     image: text(),
     createdAt: timestamp({ mode: "string" }).notNull(),
     updatedAt: timestamp({ mode: "string" }).notNull(),
-    banned: boolean(),
-    banReason: text(),
-    banExpires: timestamp({ mode: "string" }),
   },
   (table) => [unique("user_email_key").on(table.email)]
 )
