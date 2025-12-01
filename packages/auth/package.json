@@ -1,5 +1,5 @@
 {
-  "name": "auth",
+  "name": "@blikka/auth",
   "module": "index.ts",
   "type": "module",
   "private": true,
@@ -8,5 +8,10 @@
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "better-auth": "^1.4.1",
+    "effect": "catalog:",
+    "@blikka/email": "workspace:*"
   }
 }

@@ -1,6 +1,6 @@
 import { hasLocale } from "next-intl"
 import { getRequestConfig } from "next-intl/server"
-import { LOCALE_COOKIE_NAME, defaultLocale, locales } from "../config"
+import { LOCALE_COOKIE_NAME, DEFAULT_LOCALE, LOCALES } from "../config"
 import { cookies } from "next/headers"
 
 export default getRequestConfig(async ({ requestLocale }) => {
@@ -14,7 +14,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     candidate = store.get(LOCALE_COOKIE_NAME)?.value
   }
 
-  const locale = hasLocale(locales, candidate) ? candidate : defaultLocale
+  const locale = hasLocale(LOCALES, candidate) ? candidate : DEFAULT_LOCALE
   return {
     locale,
     messages: (await import(`./dictionary/${locale}.json`)).default,
