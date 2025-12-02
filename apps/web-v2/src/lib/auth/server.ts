@@ -3,8 +3,9 @@ import "server-only"
 import { AuthConfig, BetterAuthService, type Session } from "@blikka/auth"
 import { Effect, Layer, Option } from "effect"
 import { headers } from "next/headers"
+import { protocol } from "@/config"
 
-const baseUrl = "http://localhost:3002"
+const baseUrl = `${protocol}://${process.env.VERCEL_URL || "localhost:3002"}`
 
 export const AuthConfigLayer = Layer.succeed(AuthConfig, {
   baseUrl,
