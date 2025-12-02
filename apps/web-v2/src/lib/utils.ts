@@ -27,4 +27,10 @@ export const decodeSearchParams =
       return yield* Schema.decodeUnknown(schema)(searchParams)
     })
 
-export const formatSubdomainUrl = (subdomain: string) => `${protocol}://${subdomain}.${rootDomain}`
+export const formatSubdomainUrl = (subdomain: string) => {
+  if (process.env.NODE_ENV === "production") {
+    return `${protocol}://${subdomain}.${rootDomain}`
+  }
+  // for local development since we don't have a subdomain
+  return `${protocol}://localhost:3002/marathon/${subdomain}`
+}
