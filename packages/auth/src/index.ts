@@ -18,41 +18,8 @@ export class AuthConfig extends Context.Tag("AuthConfig")<
   }
 >() {}
 
-// Extract domain without port for cookie domain
-// Browsers treat localhost specially - they may ignore Domain attribute
-// For localhost, we might need to omit domain or use a custom domain like myapp.local
-function getCookieDomainForCrossSubDomain(): string | undefined {
-  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3002"
-  const domainWithoutPort = rootDomain.split(":")[0]
-
-  // For localhost, browsers may ignore Domain attribute
-  // Consider using a custom domain like myapp.local instead
-  if (domainWithoutPort === "localhost") {
-    // Try returning undefined to let Better Auth handle it
-    // Or return without dot - Better Auth might add it
-    return domainWithoutPort
-  }
-
-  // For custom domains, return without leading dot (Better Auth may add it)
-  return domainWithoutPort
-}
-
-// For explicit domain setting in defaultCookieAttributes
-function getCookieDomainWithDot(): string | undefined {
-  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3002"
-  const domainWithoutPort = rootDomain.split(":")[0]
-
-  // For localhost, browsers may strip the leading dot
-  // Try with dot anyway - some browsers might respect it
-  if (domainWithoutPort === "localhost") {
-    return `.${domainWithoutPort}`
-  }
-
-  return `.${domainWithoutPort}`
-}
-
 function getTrustedOrigins(): string[] {
-  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3002"
+  const rootDomain = process.env.VERCEL_URL || "localhost:3002"
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http"
   const domainWithoutPort = rootDomain.split(":")[0]
   const port = rootDomain.includes(":") ? rootDomain.split(":")[1] : null
@@ -79,10 +46,6 @@ export class BetterAuthService extends Effect.Service<BetterAuthService>()(
       const db = yield* DrizzleClient
       const emailService = yield* EmailService
 
-      const cookieDomain = getCookieDomainForCrossSubDomain()
-      console.log("[Better Auth] Cookie domain configured as:", cookieDomain)
-      console.log("[Better Auth] Cookie domain with dot:", getCookieDomainWithDot())
-
       const config = {
         database: drizzleAdapter(db, {
           provider: "pg",
@@ -93,18 +56,12 @@ export class BetterAuthService extends Effect.Service<BetterAuthService>()(
         advanced: {
           crossSubDomainCookies: {
             enabled: true,
-            // Try without leading dot - Better Auth might add it
-            domain: cookieDomain,
+            domain: process.env.VERCEL_URL || "localhost:3002",
           },
           defaultCookieAttributes: {
             secure: isProduction, // HTTPS required in production
             httpOnly: true,
-            // For localhost subdomains, "lax" should work since they're same-site
-            // For production with HTTPS, "none" allows cross-subdomain cookies
             sameSite: isProduction ? "none" : "lax",
-            // Explicitly set domain WITH leading dot
-            // Note: Browsers may ignore this for localhost - consider using myapp.local instead
-            ...(getCookieDomainWithDot() ? { domain: getCookieDomainWithDot() } : {}),
           },
         },
         plugins: [
