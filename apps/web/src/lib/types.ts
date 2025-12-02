@@ -2,7 +2,7 @@ import {
   ValidationOutcome,
   RuleKey,
   SeverityLevel,
-} from "@vimmer/validation/types";
+} from "../../../../packages/validation/old/types";
 import { FILE_STATUS, PARTICIPANT_STATUS, UPLOAD_PHASE } from "./constants";
 
 export interface PresignedSubmission {

@@ -1,0 +1,19 @@
+{
+  "name": "@blikka/exif-parser",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "effect": "^3.17.13",
+    "exifr": "^7.1.3"
+  }
+}

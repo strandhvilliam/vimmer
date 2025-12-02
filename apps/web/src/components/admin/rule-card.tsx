@@ -7,7 +7,7 @@ import { motion } from "motion/react";
 import { AnyFieldApi } from "@tanstack/react-form";
 import { RulesSeverityToggle } from "./rules-severity-toggle";
 import { Switch } from "@vimmer/ui/components/switch";
-import { SeverityLevel } from "@vimmer/validation/types";
+import { SeverityLevel } from "../../../../../packages/validation/old/types";
 
 interface RuleCardProps {
   title: string;

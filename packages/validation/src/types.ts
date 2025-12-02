@@ -1,51 +1,34 @@
-import type {
-  RULE_KEYS,
-  SEVERITY_LEVELS,
-  VALIDATION_OUTCOME,
-} from "./constants";
+import { Data } from "effect";
+import { RULE_KEYS } from "./constants";
+import {
+  RuleParamsSchema,
+  SeverityLevelSchema,
+  ValidationInputSchema,
+  ValidationResultSchema,
+} from "./schemas";
 
-export type ValidationOutcome =
-  (typeof VALIDATION_OUTCOME)[keyof typeof VALIDATION_OUTCOME];
+export class ValidationFailure extends Data.TaggedError("ValidationFailure")<{
+  readonly ruleKey: RuleKey;
+  readonly message: string;
+  readonly context?: Record<string, unknown>;
+}> {}
+
+export class ValidationSkipped extends Data.TaggedError("ValidationSkipped")<{
+  readonly ruleKey: RuleKey;
+  readonly reason: string;
+}> {}
+
 export type RuleKey = (typeof RULE_KEYS)[keyof typeof RULE_KEYS];
-export type SeverityLevel =
-  (typeof SEVERITY_LEVELS)[keyof typeof SEVERITY_LEVELS];
 
-export interface ExifData {
-  [key: string]: unknown;
-}
+export type RuleParams = typeof RuleParamsSchema.Type;
 
-export interface ValidationResult {
-  outcome: ValidationOutcome;
-  ruleKey: RuleKey;
-  message: string;
-  fileName?: string;
-  severity: SeverityLevel;
-}
+export type SeverityLevel = typeof SeverityLevelSchema.Type;
+export type ValidationInput = typeof ValidationInputSchema.Type;
+export type ValidationResult = typeof ValidationResultSchema.Type;
 
-export interface RuleParams {
-  [RULE_KEYS.ALLOWED_FILE_TYPES]: { allowedFileTypes: string[] };
-  [RULE_KEYS.MAX_FILE_SIZE]: { maxBytes: number };
-  [RULE_KEYS.STRICT_TIMESTAMP_ORDERING]: {};
-  [RULE_KEYS.SAME_DEVICE]: {};
-  [RULE_KEYS.WITHIN_TIMERANGE]: { start: string | Date; end: string | Date };
-  [RULE_KEYS.MODIFIED]: {};
-}
-
-export interface ValidationInput {
-  exif: ExifData;
-  fileName: string;
-  fileSize: number;
-  orderIndex: number;
-  mimeType: string;
-}
-
-export interface RuleConfig<K extends RuleKey> {
-  key: K;
+export interface ValidationRule<K extends RuleKey = RuleKey> {
+  ruleKey: K;
+  enabled: boolean;
   severity: SeverityLevel;
   params: RuleParams[K];
 }
-
-export type ValidationFunction<K extends RuleKey> = (
-  rule: RuleParams[K],
-  input: ValidationInput[],
-) => ValidationResult[];

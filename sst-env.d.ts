@@ -10,86 +10,70 @@ declare module "sst" {
       "type": "sst.aws.Function"
       "url": string
     }
-    "ContactSheetGeneratorQueue": {
-      "type": "sst.aws.Queue"
-      "url": string
+    "BlikkaMainVPC": {
+      "type": "sst.aws.Vpc"
     }
-    "ContactSheetsBucket": {
-      "name": string
-      "type": "sst.aws.Bucket"
-    }
-    "ExportsBucket": {
-      "name": string
-      "type": "sst.aws.Bucket"
-    }
-    "MarathonSettingsBucket": {
-      "name": string
-      "type": "sst.aws.Bucket"
-    }
-    "MarathonSettingsRouter": {
-      "type": "sst.aws.Router"
-      "url": string
-    }
-    "PreviewBucket": {
-      "name": string
-      "type": "sst.aws.Bucket"
-    }
-    "PreviewsRouter": {
-      "type": "sst.aws.Router"
-      "url": string
-    }
-    "ProcessPhotoQueue": {
-      "type": "sst.aws.Queue"
-      "url": string
-    }
-    "ProcessSubmissionDlq": {
-      "type": "sst.aws.Queue"
-      "url": string
-    }
-    "Realtime": {
-      "authorizer": string
-      "endpoint": string
-      "type": "sst.aws.Realtime"
-    }
-    "SubmissionBucket": {
-      "name": string
-      "type": "sst.aws.Bucket"
-    }
-    "SubmissionsRouter": {
-      "type": "sst.aws.Router"
-      "url": string
-    }
-    "ThumbnailBucket": {
-      "name": string
-      "type": "sst.aws.Bucket"
-    }
-    "ThumbnailsRouter": {
-      "type": "sst.aws.Router"
-      "url": string
-    }
-    "ValidateSubmissionDlq": {
-      "type": "sst.aws.Queue"
-      "url": string
-    }
-    "ValidateSubmissionQueue": {
-      "type": "sst.aws.Queue"
-      "url": string
-    }
-    "VariantsGenerator": {
+    "DevCaller": {
       "name": string
       "type": "sst.aws.Function"
       "url": string
     }
-    "VimmerVPC": {
-      "type": "sst.aws.Vpc"
-    }
-    "WebApp": {
-      "type": "sst.aws.Nextjs"
+    "SheetGeneratorQueue": {
+      "type": "sst.aws.Queue"
       "url": string
+    }
+    "SubmissionFinalizedBus": {
+      "arn": string
+      "name": string
+      "type": "sst.aws.Bus"
+    }
+    "UploadFinalizerQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
+    }
+    "UploadStatusQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
+    }
+    "V2ContactSheetsBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
+    "V2SponsorBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
+    "V2SubmissionsBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
+    "V2ThumbnailsBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
+    "V2ZipsBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
+    "ValidationQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
+    }
+    "ZipGeneratorQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
+    }
+    "ZipHandlerTask": {
+      "assignPublicIp": boolean
+      "cluster": string
+      "containers": any
+      "securityGroups": any
+      "subnets": any
+      "taskDefinition": string
+      "type": "sst.aws.Task"
     }
   }
 }
 /// <reference path="sst-env.d.ts" />
 
 import "sst"
-export {}

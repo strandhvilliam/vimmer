@@ -7,7 +7,7 @@ import {
 import { TooltipProvider } from "@vimmer/ui/components/tooltip";
 import { InfoIcon } from "lucide-react";
 import { motion } from "motion/react";
-import { SeverityLevel } from "@vimmer/validation/types";
+import { SeverityLevel } from "../../../../../packages/validation/old/types";
 interface SeverityToggleProps {
   severity: SeverityLevel;
   onSeverityChange: (severity: SeverityLevel) => void;

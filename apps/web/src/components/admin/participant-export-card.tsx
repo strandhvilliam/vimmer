@@ -1,74 +1,74 @@
-import { runZipGenerationAction } from "@/actions/run-zip-generation"
-import { useTRPC } from "@/trpc/client"
-import { useQueryClient } from "@tanstack/react-query"
+import { runZipGenerationAction } from "@/actions/run-zip-generation";
+import { useTRPC } from "@/trpc/client";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ZippedSubmission,
   Participant,
   CompetitionClass,
   DeviceGroup,
   Submission,
-} from "@vimmer/api/db/types"
-import { Button } from "@vimmer/ui/components/button"
-import { Card, CardContent } from "@vimmer/ui/components/card"
+} from "@vimmer/api/db/types";
+import { Button } from "@vimmer/ui/components/button";
+import { Card, CardContent } from "@vimmer/ui/components/card";
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
-} from "@vimmer/ui/components/popover"
-import { PrimaryButton } from "@vimmer/ui/components/primary-button"
-import { Slider } from "@vimmer/ui/components/slider"
-import { toast } from "sonner"
-import { cn } from "@vimmer/ui/lib/utils"
-import { AlertTriangle, Download, RefreshCcw, Loader2 } from "lucide-react"
-import { useAction } from "next-safe-action/hooks"
+} from "@vimmer/ui/components/popover";
+import { PrimaryButton } from "@vimmer/ui/components/primary-button";
+import { Slider } from "@vimmer/ui/components/slider";
+import { toast } from "sonner";
+import { cn } from "@vimmer/ui/lib/utils";
+import { AlertTriangle, Download, RefreshCcw, Loader2 } from "lucide-react";
+import { useAction } from "next-safe-action/hooks";
 
 interface ParticipantExportCardProps {
   participant: Participant & {
-    competitionClass: CompetitionClass | null
-    deviceGroup: DeviceGroup | null
-    submissions?: Submission[]
-    zippedSubmissions?: ZippedSubmission[]
-  }
+    competitionClass: CompetitionClass | null;
+    deviceGroup: DeviceGroup | null;
+    submissions?: Submission[];
+    zippedSubmissions?: ZippedSubmission[];
+  };
 }
 
 export function ParticipantExportCard({
   participant,
 }: ParticipantExportCardProps) {
-  const trpc = useTRPC()
-  const queryClient = useQueryClient()
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
   const { execute: runZipGeneration, result: zipGenerationResult } = useAction(
     runZipGenerationAction,
     {
       onSuccess: () => {
-        toast.success("Zip generation started - come back soon!")
+        toast.success("Zip generation started - come back soon!");
       },
       onError: () => {
-        toast.error("Failed to start zip generation")
+        toast.error("Failed to start zip generation");
       },
       onSettled: () => {
         queryClient.invalidateQueries({
           queryKey: trpc.submissions.pathKey(),
-        })
+        });
       },
-    }
-  )
+    },
+  );
 
   const parseErrors = (errors: unknown) => {
     try {
-      console.log(errors)
-      if (errors === undefined) return {}
-      if (typeof errors === "object") return errors
-      return JSON.parse(errors as string)
+      console.log(errors);
+      if (errors === undefined) return {};
+      if (typeof errors === "object") return errors;
+      return JSON.parse(errors as string);
     } catch (error) {
-      console.error("Error parsing errors:", error)
+      console.error("Error parsing errors:", error);
     }
-  }
+  };
 
-  const zippedSubmission = participant.zippedSubmissions?.[0]
+  const zippedSubmission = participant.zippedSubmissions?.[0];
 
   if (zippedSubmission?.zipKey && zippedSubmission.status === "completed") {
-    return null
+    return null;
   }
 
   return (
@@ -81,7 +81,7 @@ export function ParticipantExportCard({
               (zippedSubmission.status === "error" ||
                 Object.keys(parseErrors(zippedSubmission.errors)).length !== 0)
             ? "border-red-200 bg-red-50"
-            : "border-orange-200 bg-orange-50"
+            : "border-orange-200 bg-orange-50",
       )}
     >
       <CardContent className="p-4">
@@ -96,7 +96,7 @@ export function ParticipantExportCard({
                       Object.keys(parseErrors(zippedSubmission.errors))
                         .length !== 0)
                   ? "text-red-600"
-                  : "text-orange-600"
+                  : "text-orange-600",
             )}
           >
             {zippedSubmission && zippedSubmission.status === "processing" ? (
@@ -121,7 +121,7 @@ export function ParticipantExportCard({
                         Object.keys(parseErrors(zippedSubmission.errors))
                           .length !== 0)
                     ? "text-red-600"
-                    : "text-orange-600"
+                    : "text-orange-600",
               )}
             >
               <span className="font-normal text-muted-foreground">Export:</span>{" "}
@@ -242,5 +242,5 @@ export function ParticipantExportCard({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

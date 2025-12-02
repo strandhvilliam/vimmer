@@ -19,7 +19,10 @@ import {
 import { UploadProgress } from "@/components/participate/upload-progress";
 import { StepNavigationHandlers } from "@/lib/types";
 import { usePhotoStore } from "@/lib/stores/photo-store";
-import { RuleKey, RuleConfig } from "@vimmer/validation/types";
+import {
+  RuleKey,
+  RuleConfig,
+} from "../../../../../packages/validation/old/types";
 import { SubmissionsList } from "@/components/participate/submission-list";
 import { useSubmissionQueryState } from "@/hooks/use-submission-query-state";
 import { combinePhotos } from "@/lib/combine-photos";
@@ -35,7 +38,7 @@ import {
   RULE_KEYS,
   SEVERITY_LEVELS,
   VALIDATION_OUTCOME,
-} from "@vimmer/validation/constants";
+} from "../../../../../packages/validation/old/constants";
 import { toast } from "sonner";
 import { useI18n } from "@/locales/client";
 import { useTRPC } from "@/trpc/client";

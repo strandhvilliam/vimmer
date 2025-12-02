@@ -11,7 +11,7 @@ import { Participant, PARTICIPANT_STATUS } from "@vimmer/supabase/types";
 import {
   SEVERITY_LEVELS,
   VALIDATION_OUTCOME,
-} from "@vimmer/validation/constants";
+} from "../../../../../packages/validation/old/constants";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useDomain } from "@/contexts/domain-context";
 import { useTRPC } from "@/trpc/client";

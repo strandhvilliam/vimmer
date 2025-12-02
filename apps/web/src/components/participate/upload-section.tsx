@@ -9,11 +9,14 @@ import { useI18n } from "@/locales/client";
 import { usePhotoStore } from "@/lib/stores/photo-store";
 
 import { Marathon, Topic } from "@vimmer/api/db/types";
-import { RuleConfig, RuleKey } from "@vimmer/validation/types";
+import {
+  RuleConfig,
+  RuleKey,
+} from "../../../../../packages/validation/old/types";
 import {
   SEVERITY_LEVELS,
   VALIDATION_OUTCOME,
-} from "@vimmer/validation/constants";
+} from "../../../../../packages/validation/old/constants";
 
 interface UploadSectionProps {
   maxPhotos: number;

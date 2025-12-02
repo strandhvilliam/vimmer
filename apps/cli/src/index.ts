@@ -1,30 +1,30 @@
-#!/usr/bin/env node
+import { BunContext, BunRuntime } from "@effect/platform-bun"
+import { Command } from "@effect/cli"
+import { Effect, Console, Layer } from "effect"
+import { MarathonCreationCliService } from "./services/marathon-create-service"
+import { marathonCreateCommand } from "./commands/marathon-create-command"
+import { UploadFlowCliService } from "./services/upload-flow-service"
+import { uploadFlowCommand } from "./commands/upload-flow-command"
 
-import { Command } from "commander";
-import { tools } from "./tools/index.js";
+const blikkaCli = Command.make("blikka-cli", {}).pipe(
+  Command.withHandler(() =>
+    Console.log(
+      "Welcome to blikka-cli. Run `blikka-cli --help` for more information."
+    )
+  ),
+  Command.withSubcommands([marathonCreateCommand, uploadFlowCommand])
+)
+const run = Command.run(blikkaCli, {
+  name: "Blikka CLI - Photo event platform CLI",
+  version: "0.0.1",
+})
+const Services = Layer.mergeAll(
+  MarathonCreationCliService.Default,
+  UploadFlowCliService.Default
+)
 
-const program = new Command();
-
-program
-  .name("vimmer")
-  .description("CLI for Vimmer photo marathon platform")
-  .version("0.1.0");
-
-// Register all tools
-for (const tool of tools) {
-  tool.register(program);
-}
-
-// Add help command that lists available tools
-program
-  .command("tools")
-  .description("List all available tools")
-  .action(() => {
-    console.log("🛠️  Available Tools:\n");
-    for (const tool of tools) {
-      console.log(`📦 ${tool.name.padEnd(12)} - ${tool.description}`);
-    }
-    console.log("\nUse 'vimmer <tool> --help' for tool-specific commands");
-  });
-
-program.parse();
+Effect.suspend(() => run(process.argv)).pipe(
+  Effect.provide(Services),
+  Effect.provide(BunContext.layer),
+  BunRuntime.runMain
+)

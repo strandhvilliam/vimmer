@@ -1,34 +1,34 @@
-"use client"
+"use client";
 
-import { useState, useMemo, useCallback, useEffect, useRef } from "react"
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   ImageOff,
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
   Star,
-} from "lucide-react"
-import { Button } from "@vimmer/ui/components/button"
-import { useTRPC } from "@/trpc/client"
+} from "lucide-react";
+import { Button } from "@vimmer/ui/components/button";
+import { useTRPC } from "@/trpc/client";
 import {
   useInfiniteQuery,
   useMutation,
   useQueryClient,
-} from "@tanstack/react-query"
-import { JurySidebar } from "./jury-sidebar"
-import { parseAsArrayOf, parseAsInteger, useQueryState } from "nuqs"
-import { toast } from "sonner"
+} from "@tanstack/react-query";
+import { JurySidebar } from "./jury-sidebar";
+import { parseAsArrayOf, parseAsInteger, useQueryState } from "nuqs";
+import { toast } from "sonner";
 
 interface ParticipantSubmissionsProps {
-  token: string
-  initialParticipantId?: number
-  onBack: () => void
-  previewBaseUrl: string
-  domain: string
-  submissionBaseUrl: string
-  ratingsData: { participantId: number; rating: number; notes?: string }[]
-  invitationData: { inviteType: string } | undefined
-  allParticipantsCount: number
+  token: string;
+  initialParticipantId?: number;
+  onBack: () => void;
+  previewBaseUrl: string;
+  domain: string;
+  submissionBaseUrl: string;
+  ratingsData: { participantId: number; rating: number; notes?: string }[];
+  invitationData: { inviteType: string } | undefined;
+  allParticipantsCount: number;
 }
 
 export function SubmissionViewer({
@@ -44,27 +44,27 @@ export function SubmissionViewer({
 }: ParticipantSubmissionsProps) {
   const [currentParticipantIndex, setCurrentParticipantIndex] = useQueryState(
     "current-participant-index",
-    parseAsInteger.withDefault(0)
-  )
-  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
-  const [isSaving, setIsSaving] = useState(false)
-  const [hasSetInitialIndex, setHasSetInitialIndex] = useState(false)
+    parseAsInteger.withDefault(0),
+  );
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasSetInitialIndex, setHasSetInitialIndex] = useState(false);
   const [keyboardNavigationFeedback, setKeyboardNavigationFeedback] = useState<
     "prev" | "next" | "rating" | null
-  >(null)
+  >(null);
 
   // Rate limiting for navigation to prevent spam clicking
-  const lastNavigationTimeRef = useRef<number>(0)
-  const NAVIGATION_THROTTLE_MS = 200 // 0.2 second throttle
+  const lastNavigationTimeRef = useRef<number>(0);
+  const NAVIGATION_THROTTLE_MS = 200; // 0.2 second throttle
 
   // Rating filter state (same as parent component)
   const [selectedRatings, setSelectedRatings] = useQueryState(
     "rating-filter",
-    parseAsArrayOf(parseAsInteger).withDefault([])
-  )
+    parseAsArrayOf(parseAsInteger).withDefault([]),
+  );
 
-  const trpc = useTRPC()
-  const queryClient = useQueryClient()
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
   const {
     data: participantsData,
@@ -80,17 +80,17 @@ export function SubmissionViewer({
       },
       {
         getNextPageParam: (lastPage) => lastPage?.nextCursor,
-      }
-    )
-  )
+      },
+    ),
+  );
 
   // Flatten participants from all pages
   const participants = useMemo(
     () =>
       participantsData?.pages?.flatMap((page) => page.participants || []) || [],
-    [participantsData]
-  )
-  const invitation = invitationData
+    [participantsData],
+  );
+  const invitation = invitationData;
 
   // Find the initial participant index if provided (only once)
   const handleSetInitialIndex = useCallback(() => {
@@ -99,10 +99,12 @@ export function SubmissionViewer({
       participants.length > 0 &&
       !hasSetInitialIndex
     ) {
-      const index = participants.findIndex((p) => p.id === initialParticipantId)
+      const index = participants.findIndex(
+        (p) => p.id === initialParticipantId,
+      );
       if (index !== -1) {
-        setCurrentParticipantIndex(index)
-        setHasSetInitialIndex(true)
+        setCurrentParticipantIndex(index);
+        setHasSetInitialIndex(true);
       }
     }
   }, [
@@ -110,7 +112,7 @@ export function SubmissionViewer({
     participants,
     hasSetInitialIndex,
     setCurrentParticipantIndex,
-  ])
+  ]);
 
   // Set initial index when participants load
   useEffect(() => {
@@ -119,43 +121,43 @@ export function SubmissionViewer({
       participants.length > 0 &&
       !hasSetInitialIndex
     ) {
-      handleSetInitialIndex()
+      handleSetInitialIndex();
     }
   }, [
     initialParticipantId,
     participants,
     hasSetInitialIndex,
     handleSetInitialIndex,
-  ])
+  ]);
 
   const currentParticipant = useMemo(
     () => participants[currentParticipantIndex],
-    [participants, currentParticipantIndex]
-  )
-  const currentParticipantId = currentParticipant?.id
+    [participants, currentParticipantIndex],
+  );
+  const currentParticipantId = currentParticipant?.id;
 
   // Mark participant as viewed when switching (now handled in useEffect)
 
   // Get existing rating for current participant
   const existingRating = useMemo(() => {
-    return ratingsData.find((r) => r.participantId === currentParticipantId)
-  }, [ratingsData, currentParticipantId])
+    return ratingsData.find((r) => r.participantId === currentParticipantId);
+  }, [ratingsData, currentParticipantId]);
 
   // Local state for rating and notes (no debounce, direct updates)
-  const [localRating, setLocalRating] = useState(0)
-  const [localNotes, setLocalNotes] = useState("")
-  const notesTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
+  const [localRating, setLocalRating] = useState(0);
+  const [localNotes, setLocalNotes] = useState("");
+  const notesTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Update local state when participant changes (using useEffect to avoid infinite renders)
   useEffect(() => {
     if (existingRating) {
-      setLocalRating(existingRating.rating || 0)
-      setLocalNotes(existingRating.notes || "")
+      setLocalRating(existingRating.rating || 0);
+      setLocalNotes(existingRating.notes || "");
     } else {
-      setLocalRating(0)
-      setLocalNotes("")
+      setLocalRating(0);
+      setLocalNotes("");
     }
-  }, [existingRating, currentParticipantId])
+  }, [existingRating, currentParticipantId]);
 
   // Mark participant as viewed when switching (using useEffect to avoid side effects in render)
   // useEffect(() => {
@@ -170,84 +172,84 @@ export function SubmissionViewer({
   useEffect(() => {
     return () => {
       if (notesTimeoutRef.current) {
-        clearTimeout(notesTimeoutRef.current)
+        clearTimeout(notesTimeoutRef.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   // Clear keyboard feedback after a short delay
   useEffect(() => {
     if (keyboardNavigationFeedback) {
       const timeout = setTimeout(() => {
-        setKeyboardNavigationFeedback(null)
-      }, 300)
-      return () => clearTimeout(timeout)
+        setKeyboardNavigationFeedback(null);
+      }, 300);
+      return () => clearTimeout(timeout);
     }
-  }, [keyboardNavigationFeedback])
+  }, [keyboardNavigationFeedback]);
 
   const createRatingMutation = useMutation(
     trpc.jury.createRating.mutationOptions({
       onSettled: () => {
         queryClient.invalidateQueries({
           queryKey: trpc.jury.getRating.queryKey(),
-        })
+        });
         queryClient.invalidateQueries({
           queryKey: trpc.jury.getJuryRatingsByInvitation.queryKey(),
-        })
+        });
         queryClient.invalidateQueries({
           queryKey: trpc.jury.getJurySubmissionsFromToken.infiniteQueryKey(),
-        })
+        });
       },
-    })
-  )
+    }),
+  );
 
   const updateRatingMutation = useMutation(
     trpc.jury.updateRating.mutationOptions({
       onSettled: () => {
         queryClient.invalidateQueries({
           queryKey: trpc.jury.getRating.queryKey(),
-        })
+        });
         queryClient.invalidateQueries({
           queryKey: trpc.jury.getJuryRatingsByInvitation.queryKey(),
-        })
+        });
         queryClient.invalidateQueries({
           queryKey: trpc.jury.getJurySubmissionsFromToken.queryKey(),
-        })
+        });
         queryClient.invalidateQueries({
           queryKey: trpc.jury.getJurySubmissionsFromToken.infiniteQueryKey(),
-        })
+        });
       },
-    })
-  )
+    }),
+  );
 
   const deleteRatingMutation = useMutation(
     trpc.jury.deleteRating.mutationOptions({
       onSettled: () => {
         queryClient.invalidateQueries({
           queryKey: trpc.jury.getRating.queryKey(),
-        })
+        });
         queryClient.invalidateQueries({
           queryKey: trpc.jury.getJuryRatingsByInvitation.queryKey(),
-        })
+        });
       },
-    })
-  )
+    }),
+  );
 
-  const participantName = currentParticipant?.reference || "Unknown"
+  const participantName = currentParticipant?.reference || "Unknown";
 
   // Direct save function without debouncing
   const saveRating = useCallback(
     async (newRating: number, newNotes: string) => {
-      if (!currentParticipantId) return
+      if (!currentParticipantId) return;
 
-      setIsSaving(true)
+      setIsSaving(true);
       try {
         const data = {
           token,
           participantId: currentParticipantId,
           rating: newRating,
           notes: newNotes,
-        }
+        };
 
         if (existingRating) {
           if (newRating === 0 && !newNotes.trim()) {
@@ -255,23 +257,23 @@ export function SubmissionViewer({
             await deleteRatingMutation.mutateAsync({
               token,
               participantId: currentParticipantId,
-            })
+            });
           } else {
-            await updateRatingMutation.mutateAsync(data)
+            await updateRatingMutation.mutateAsync(data);
             if (!selectedRatings.includes(newRating)) {
               toast.info(
-                "New rating not included in filtering. Going to previous participant"
-              )
+                "New rating not included in filtering. Going to previous participant",
+              );
             }
           }
         } else if (newRating > 0 || newNotes.trim()) {
           // Create new rating if rating > 0 or has notes
-          await createRatingMutation.mutateAsync(data)
+          await createRatingMutation.mutateAsync(data);
         }
       } catch (error) {
-        console.error("Failed to save rating:", error)
+        console.error("Failed to save rating:", error);
       } finally {
-        setIsSaving(false)
+        setIsSaving(false);
       }
     },
     [
@@ -282,105 +284,105 @@ export function SubmissionViewer({
       updateRatingMutation,
       selectedRatings,
       createRatingMutation,
-    ]
-  )
+    ],
+  );
 
   const handleImageError = (submissionId: string) => {
-    setImageErrors((prev) => new Set(prev).add(submissionId))
-  }
+    setImageErrors((prev) => new Set(prev).add(submissionId));
+  };
 
   const handleRatingClickWithFeedback = useCallback(
     (star: number, fromKeyboard = false) => {
-      const newRating = star === localRating ? 0 : star
-      setLocalRating(newRating)
-      saveRating(newRating, localNotes)
+      const newRating = star === localRating ? 0 : star;
+      setLocalRating(newRating);
+      saveRating(newRating, localNotes);
       if (fromKeyboard) {
-        setKeyboardNavigationFeedback("rating")
+        setKeyboardNavigationFeedback("rating");
       }
     },
-    [localRating, localNotes, saveRating]
-  )
+    [localRating, localNotes, saveRating],
+  );
 
   const handleRatingClick = useCallback(
     (star: number) => {
-      handleRatingClickWithFeedback(star, false)
+      handleRatingClickWithFeedback(star, false);
     },
-    [handleRatingClickWithFeedback]
-  )
+    [handleRatingClickWithFeedback],
+  );
 
   const handleNotesChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const newNotes = e.target.value
-      setLocalNotes(newNotes)
+      const newNotes = e.target.value;
+      setLocalNotes(newNotes);
 
       // Clear existing timeout
       if (notesTimeoutRef.current) {
-        clearTimeout(notesTimeoutRef.current)
+        clearTimeout(notesTimeoutRef.current);
       }
 
       // Save notes after a short delay to avoid excessive API calls
       notesTimeoutRef.current = setTimeout(() => {
-        saveRating(localRating, newNotes)
-      }, 1000)
+        saveRating(localRating, newNotes);
+      }, 1000);
     },
-    [localRating, saveRating]
-  )
+    [localRating, saveRating],
+  );
 
   const toggleRatingFilter = (rating: number) => {
     setSelectedRatings((prev) =>
       prev.includes(rating)
         ? prev.filter((r) => r !== rating)
-        : [...prev, rating]
-    )
-  }
+        : [...prev, rating],
+    );
+  };
 
   const handlePreviousParticipant = useCallback(
     (fromKeyboard = false) => {
       if (currentParticipantIndex <= 0) {
-        return
+        return;
       }
 
-      const now = Date.now()
-      const timeSinceLastNavigation = now - lastNavigationTimeRef.current
+      const now = Date.now();
+      const timeSinceLastNavigation = now - lastNavigationTimeRef.current;
 
       // Apply rate limiting only for non-keyboard interactions (button clicks/holds)
       if (timeSinceLastNavigation < NAVIGATION_THROTTLE_MS) {
-        return
+        return;
       }
 
-      lastNavigationTimeRef.current = now
-      setCurrentParticipantIndex(currentParticipantIndex - 1)
+      lastNavigationTimeRef.current = now;
+      setCurrentParticipantIndex(currentParticipantIndex - 1);
       if (fromKeyboard) {
-        setKeyboardNavigationFeedback("prev")
+        setKeyboardNavigationFeedback("prev");
       }
     },
-    [currentParticipantIndex, setCurrentParticipantIndex]
-  )
+    [currentParticipantIndex, setCurrentParticipantIndex],
+  );
 
   const handleNextParticipant = useCallback(
     (fromKeyboard = false) => {
       if (currentParticipantIndex >= participants.length - 1) {
-        return
+        return;
       }
 
-      const now = Date.now()
-      const timeSinceLastNavigation = now - lastNavigationTimeRef.current
+      const now = Date.now();
+      const timeSinceLastNavigation = now - lastNavigationTimeRef.current;
 
       // Apply rate limiting only for non-keyboard interactions (button clicks/holds)
       if (timeSinceLastNavigation < NAVIGATION_THROTTLE_MS) {
-        return
+        return;
       }
-      lastNavigationTimeRef.current = now
-      setCurrentParticipantIndex(currentParticipantIndex + 1)
+      lastNavigationTimeRef.current = now;
+      setCurrentParticipantIndex(currentParticipantIndex + 1);
 
       // Prefetch more data when approaching the end
-      const remainingItems = participants.length - currentParticipantIndex - 1
+      const remainingItems = participants.length - currentParticipantIndex - 1;
       if (remainingItems <= 5 && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage()
+        fetchNextPage();
       }
 
       if (fromKeyboard) {
-        setKeyboardNavigationFeedback("next")
+        setKeyboardNavigationFeedback("next");
       }
     },
     [
@@ -390,14 +392,14 @@ export function SubmissionViewer({
       isFetchingNextPage,
       fetchNextPage,
       setCurrentParticipantIndex,
-    ]
-  )
+    ],
+  );
 
   // Auto-prefetch when approaching end of list (using useEffect to avoid calling during render)
   useEffect(() => {
-    const remainingItems = participants.length - currentParticipantIndex - 1
+    const remainingItems = participants.length - currentParticipantIndex - 1;
     if (remainingItems <= 3 && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage()
+      fetchNextPage();
     }
   }, [
     currentParticipantIndex,
@@ -405,7 +407,7 @@ export function SubmissionViewer({
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
-  ])
+  ]);
 
   // Keyboard navigation with proper event handling
   useEffect(() => {
@@ -416,22 +418,22 @@ export function SubmissionViewer({
         e.target instanceof HTMLInputElement ||
         (e.target as HTMLElement)?.contentEditable === "true"
       ) {
-        return
+        return;
       }
 
       switch (e.key) {
         case "ArrowLeft":
-          e.preventDefault()
-          handlePreviousParticipant(true)
-          break
+          e.preventDefault();
+          handlePreviousParticipant(true);
+          break;
         case "ArrowRight":
-          e.preventDefault()
-          handleNextParticipant(true)
-          break
+          e.preventDefault();
+          handleNextParticipant(true);
+          break;
         case "Escape":
-          e.preventDefault()
-          onBack()
-          break
+          e.preventDefault();
+          onBack();
+          break;
         case "1":
         case "2":
         case "3":
@@ -439,75 +441,75 @@ export function SubmissionViewer({
         case "5":
           if (e.metaKey || e.ctrlKey) {
             // Lightroom-style star ratings with Cmd/Ctrl + number keys
-            e.preventDefault()
-            const ratingValue = parseInt(e.key, 10)
-            handleRatingClickWithFeedback(ratingValue, true)
+            e.preventDefault();
+            const ratingValue = parseInt(e.key, 10);
+            handleRatingClickWithFeedback(ratingValue, true);
           }
-          break
+          break;
         case "0":
           if (e.metaKey || e.ctrlKey) {
             // Clear rating with Cmd/Ctrl + 0 key (like Lightroom)
-            e.preventDefault()
-            handleRatingClickWithFeedback(0, true)
+            e.preventDefault();
+            handleRatingClickWithFeedback(0, true);
           }
-          break
+          break;
         case " ": {
           // Spacebar for quick rating toggle (1 star if unrated, 0 if rated)
-          e.preventDefault()
-          const newRating = localRating === 0 ? 1 : 0
-          handleRatingClickWithFeedback(newRating, true)
-          break
+          e.preventDefault();
+          const newRating = localRating === 0 ? 1 : 0;
+          handleRatingClickWithFeedback(newRating, true);
+          break;
         }
         default:
-          break
+          break;
       }
-    }
+    };
 
     // Add event listener
-    window.addEventListener("keydown", handleKeyDown)
+    window.addEventListener("keydown", handleKeyDown);
 
     // Cleanup on unmount
     return () => {
-      window.removeEventListener("keydown", handleKeyDown)
-    }
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [
     handlePreviousParticipant,
     handleNextParticipant,
     onBack,
     handleRatingClickWithFeedback,
     localRating,
-  ])
+  ]);
 
   // Determine what to display based on invitation type
-  const isTopicInvitation = invitation?.inviteType === "topic"
-  const isClassInvitation = invitation?.inviteType === "class"
+  const isTopicInvitation = invitation?.inviteType === "topic";
+  const isClassInvitation = invitation?.inviteType === "class";
 
   // Get image URL based on invitation type
   const getImageUrl = () => {
     const bucketurl =
-      "https://vimmer-production-contactsheetsbucketbucket-sswnzfxo.s3.eu-north-1.amazonaws.com/"
+      "https://vimmer-production-contactsheetsbucketbucket-sswnzfxo.s3.eu-north-1.amazonaws.com/";
 
     if (isClassInvitation && currentParticipant?.contactSheetKey) {
-      return `${bucketurl}/${currentParticipant.contactSheetKey}`
+      return `${bucketurl}/${currentParticipant.contactSheetKey}`;
     } else if (isTopicInvitation && currentParticipant?.submission?.key) {
-      return `${submissionBaseUrl}/${currentParticipant.submission.key}`
+      return `${submissionBaseUrl}/${currentParticipant.submission.key}`;
     }
-    return null
-  }
+    return null;
+  };
 
-  const imageUrl = getImageUrl()
+  const imageUrl = getImageUrl();
   const imageId =
     currentParticipant?.submission?.id?.toString() ||
     currentParticipant?.id?.toString() ||
-    ""
+    "";
 
   // Get total participant count
   const totalParticipantCount = useMemo(() => {
     if (selectedRatings.length > 0) {
-      return participants.length
+      return participants.length;
     }
-    return allParticipantsCount
-  }, [participants.length, allParticipantsCount, selectedRatings])
+    return allParticipantsCount;
+  }, [participants.length, allParticipantsCount, selectedRatings]);
 
   if (participantsLoading) {
     return (
@@ -519,7 +521,7 @@ export function SubmissionViewer({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (participants.length === 0) {
@@ -545,7 +547,7 @@ export function SubmissionViewer({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -677,5 +679,5 @@ export function SubmissionViewer({
         />
       </div>
     </div>
-  )
+  );
 }

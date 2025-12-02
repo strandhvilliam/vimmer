@@ -4,7 +4,7 @@ import {
   RuleConfig,
   RuleKey,
   ValidationResult,
-} from "@vimmer/validation/types";
+} from "../../../../../packages/validation/old/types";
 import { parseAndValidateFiles } from "@/lib/parse-and-validate-files";
 
 interface AddPhotoDto {

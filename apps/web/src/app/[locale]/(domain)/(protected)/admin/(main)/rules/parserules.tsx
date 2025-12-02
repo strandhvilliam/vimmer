@@ -5,8 +5,8 @@ import {
   RulesFormValues,
   withinTimerangeParamsSchema,
 } from "./_lib/schemas";
-import { RULE_KEYS } from "@vimmer/validation/constants";
-import { RuleKey } from "@vimmer/validation/types";
+import { RULE_KEYS } from "../../../../../../../../../../packages/validation/old/constants";
+import { RuleKey } from "../../../../../../../../../../packages/validation/old/types";
 
 const DEFAULT_RULE_CONFIGS: RulesFormValues = {
   max_file_size: {

@@ -1,0 +1,17 @@
+{
+  "extends": "../../packages/typescript-config/base.json",
+  "include": ["src", "."],
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "noEmit": true,
+    "allowJs": true,
+    "paths": {
+      "@/*": ["src/*"],
+      "@blikka/redis": ["../../packages/redis/src/index.ts"]
+    },
+    "strict": true
+  },
+  "exclude": ["node_modules"]
+}

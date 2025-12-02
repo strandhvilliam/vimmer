@@ -22,7 +22,7 @@ import {
   getRulesByDomainQuery,
   updateRuleConfigMutation,
 } from "@vimmer/api/db/queries/rules.queries";
-import { RULE_KEYS } from "@vimmer/validation/constants";
+import { RULE_KEYS } from "../../../../../packages/validation/old/constants";
 import { TRPCError } from "@trpc/server";
 import { resetS3Uploads } from "@vimmer/api/utils/reset-s3-uploads";
 import { eq } from "drizzle-orm";

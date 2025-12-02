@@ -1,0 +1,24 @@
+{
+  "name": "@blikka/kv-store",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@effect/vitest": "^0.26.0",
+    "@types/bun": "latest",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@effect/platform": "^0.90.7",
+    "@effect/platform-node": "^0.96.1",
+    "@upstash/redis": "^1.35.3",
+    "@blikka/redis": "workspace:*",
+    "effect": "catalog:"
+  }
+}

@@ -1,7 +1,7 @@
-"use client"
-"use no memo"
+"use client";
+"use no memo";
 
-import { useRouter } from "next/navigation"
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -9,7 +9,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@vimmer/ui/components/table"
+} from "@vimmer/ui/components/table";
 import {
   createColumnHelper,
   flexRender,
@@ -19,8 +19,8 @@ import {
   SortingState,
   ColumnFiltersState,
   getFilteredRowModel,
-} from "@tanstack/react-table"
-import { Badge } from "@vimmer/ui/components/badge"
+} from "@tanstack/react-table";
+import { Badge } from "@vimmer/ui/components/badge";
 import {
   AlertTriangle,
   Smartphone,
@@ -36,15 +36,15 @@ import {
   RefreshCw,
   Clock,
   ShieldAlert,
-} from "lucide-react"
+} from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@vimmer/ui/components/tooltip"
-import { Input } from "@vimmer/ui/components/input"
-import { Button } from "@vimmer/ui/components/button"
+} from "@vimmer/ui/components/tooltip";
+import { Input } from "@vimmer/ui/components/input";
+import { Button } from "@vimmer/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,12 +53,12 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-} from "@vimmer/ui/components/dropdown-menu"
-import { useState, useMemo } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { format, formatDistanceToNow, isSameDay } from "date-fns"
-import { useQueryClient } from "@tanstack/react-query"
-import { useTRPC } from "@/trpc/client"
+} from "@vimmer/ui/components/dropdown-menu";
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { format, formatDistanceToNow, isSameDay } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
 import {
   Pagination,
   PaginationContent,
@@ -67,26 +67,26 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@vimmer/ui/components/pagination"
-import { useDomain } from "@/contexts/domain-context"
+} from "@vimmer/ui/components/pagination";
+import { useDomain } from "@/contexts/domain-context";
 import {
   CompetitionClass,
   DeviceGroup,
   Participant,
   ValidationResult,
   ZippedSubmission,
-} from "@vimmer/api/db/types"
+} from "@vimmer/api/db/types";
 
-import { Icon } from "@iconify/react/dist/iconify.js"
+import { Icon } from "@iconify/react/dist/iconify.js";
 
 type TableRowParticipant = Participant & {
-  validationResults: ValidationResult[]
-  competitionClass?: CompetitionClass | null
-  deviceGroup?: DeviceGroup | null
-  zippedSubmissions?: ZippedSubmission[]
-}
+  validationResults: ValidationResult[];
+  competitionClass?: CompetitionClass | null;
+  deviceGroup?: DeviceGroup | null;
+  zippedSubmissions?: ZippedSubmission[];
+};
 
-const columnHelper = createColumnHelper<TableRowParticipant>()
+const columnHelper = createColumnHelper<TableRowParticipant>();
 
 const columnInfoMap: Record<string, { label: string; icon: LucideIcon }> = {
   reference: { label: "Participant", icon: Hash },
@@ -97,7 +97,7 @@ const columnInfoMap: Record<string, { label: string; icon: LucideIcon }> = {
   deviceGroup: { label: "Device", icon: Smartphone },
   issues: { label: "Issues", icon: AlertTriangle },
   createdAt: { label: "Submitted At", icon: Clock },
-}
+};
 
 const columns = [
   columnHelper.accessor("reference", {
@@ -122,28 +122,28 @@ const columns = [
     id: "status",
     header: "Status",
     cell: (info) => {
-      const status = info.getValue()
+      const status = info.getValue();
 
       const getStatusStyle = (status: string) => {
         switch (status?.toLowerCase()) {
           case "verified":
-            return "bg-green-100 text-green-800 border-green-200 hover:bg-green-200"
+            return "bg-green-100 text-green-800 border-green-200 hover:bg-green-200";
           case "uploaded":
-            return "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200"
+            return "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200";
           case "rejected":
-            return "bg-red-100 text-red-800 border-red-200 hover:bg-red-200"
+            return "bg-red-100 text-red-800 border-red-200 hover:bg-red-200";
           case "ready_to_upload":
-            return "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200"
+            return "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200";
           default:
-            return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200"
+            return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200";
         }
-      }
+      };
 
       return (
         <Badge variant="outline" className={getStatusStyle(status)}>
           {status}
         </Badge>
-      )
+      );
     },
     sortingFn: "alphanumeric",
   }),
@@ -151,23 +151,23 @@ const columns = [
     id: "createdAt",
     header: "Created",
     cell: (info) => {
-      const date = info.getValue()
+      const date = info.getValue();
       try {
         if (!isSameDay(new Date(), new Date(date))) {
-          return format(new Date(date), "dd/MM/yyyy HH:mm")
+          return format(new Date(date), "dd/MM/yyyy HH:mm");
         }
 
         return formatDistanceToNow(new Date(date), {
           addSuffix: true,
-        })
+        });
       } catch {
-        return date || "-"
+        return date || "-";
       }
     },
     sortingFn: (rowA, rowB) => {
-      const dateA = new Date(rowA.original.createdAt).getTime()
-      const dateB = new Date(rowB.original.createdAt).getTime()
-      return dateA - dateB
+      const dateA = new Date(rowA.original.createdAt).getTime();
+      const dateB = new Date(rowB.original.createdAt).getTime();
+      return dateA - dateB;
     },
   }),
   columnHelper.accessor((row) => row.competitionClass?.name, {
@@ -180,7 +180,7 @@ const columns = [
     id: "deviceGroup",
     header: "Device",
     cell: (data) => {
-      const deviceGroup = data?.getValue()
+      const deviceGroup = data?.getValue();
 
       const getDeviceIcon = (icon: string | undefined) => {
         switch (icon) {
@@ -191,7 +191,7 @@ const columns = [
                 className="w-4 h-4"
                 style={{ transform: "rotate(-5deg)" }}
               />
-            )
+            );
           case "camera":
           default:
             return (
@@ -200,9 +200,9 @@ const columns = [
                 className="w-4 h-4"
                 style={{ transform: "rotate(-5deg)" }}
               />
-            )
+            );
         }
-      }
+      };
       return (
         <TooltipProvider>
           <Tooltip>
@@ -210,7 +210,7 @@ const columns = [
             <TooltipContent>{deviceGroup?.name || "Unknown"}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
-      )
+      );
     },
     sortingFn: "alphanumeric",
   }),
@@ -224,26 +224,26 @@ const columns = [
       id: "issues",
       header: "Issues",
       cell: (info) => {
-        const { validationResults, zippedSubmission, status } = info.getValue()
-        if (!validationResults.length) return null
+        const { validationResults, zippedSubmission, status } = info.getValue();
+        if (!validationResults.length) return null;
 
         const failedResults = validationResults.filter(
-          (result) => result.outcome === "failed"
-        )
+          (result) => result.outcome === "failed",
+        );
 
         if (failedResults.length === 0 && zippedSubmission?.[0]?.zipKey) {
-          return null
+          return null;
         }
 
         const errorCount = failedResults.filter(
-          (result) => result.severity === "error"
-        ).length
+          (result) => result.severity === "error",
+        ).length;
         const warningCount = failedResults.filter(
-          (result) => result.severity === "warning"
-        ).length
+          (result) => result.severity === "warning",
+        ).length;
 
         const isMissingZip =
-          !zippedSubmission?.[0]?.zipKey && status === "verified"
+          !zippedSubmission?.[0]?.zipKey && status === "verified";
 
         return (
           <TooltipProvider>
@@ -328,69 +328,69 @@ const columns = [
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-        )
+        );
       },
       sortingFn: (rowA, rowB) => {
         // Sort by failed validation count
         const failedA =
           rowA.original.validationResults?.filter(
-            (result) => result.outcome === "failed"
-          ).length || 0
+            (result) => result.outcome === "failed",
+          ).length || 0;
         const failedB =
           rowB.original.validationResults?.filter(
-            (result) => result.outcome === "failed"
-          ).length || 0
+            (result) => result.outcome === "failed",
+          ).length || 0;
 
-        if (failedA !== failedB) return failedA - failedB
+        if (failedA !== failedB) return failedA - failedB;
 
         // If same number of failed validations, sort by error count
         const errorsA =
           rowA.original.validationResults?.filter(
             (result) =>
-              result.outcome === "failed" && result.severity === "error"
-          ).length || 0
+              result.outcome === "failed" && result.severity === "error",
+          ).length || 0;
         const errorsB =
           rowB.original.validationResults?.filter(
             (result) =>
-              result.outcome === "failed" && result.severity === "error"
-          ).length || 0
+              result.outcome === "failed" && result.severity === "error",
+          ).length || 0;
 
-        if (errorsA !== errorsB) return errorsA - errorsB
+        if (errorsA !== errorsB) return errorsA - errorsB;
 
         // If same number of errors, sort by warning count
         const warningsA =
           rowA.original.validationResults?.filter(
             (result) =>
-              result.outcome === "failed" && result.severity === "warning"
-          ).length || 0
+              result.outcome === "failed" && result.severity === "warning",
+          ).length || 0;
         const warningsB =
           rowB.original.validationResults?.filter(
             (result) =>
-              result.outcome === "failed" && result.severity === "warning"
-          ).length || 0
+              result.outcome === "failed" && result.severity === "warning",
+          ).length || 0;
 
-        return warningsA - warningsB
+        return warningsA - warningsB;
       },
-    }
+    },
   ),
-]
+];
 
 interface SubmissionsParticipantsTableProps {
-  participants: TableRowParticipant[]
-  totalCount: number
-  currentPage: number
-  pageSize: number
-  totalPages: number
-  searchTerm: string
-  statusFilters: string[]
-  classFilters: number[]
-  deviceFilters: number[]
-  onPageChange: (page: number) => void
-  onPageSizeChange: (pageSize: number) => void
-  onSearchChange: (search: string) => void
-  onStatusFiltersChange: (filters: string[]) => void
-  onClassFiltersChange: (filters: number[]) => void
-  onDeviceFiltersChange: (filters: number[]) => void
+  participants: TableRowParticipant[];
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  searchTerm: string;
+  statusFilters: string[];
+  classFilters: number[];
+  deviceFilters: number[];
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
+  onSearchChange: (search: string) => void;
+  onStatusFiltersChange: (filters: string[]) => void;
+  onClassFiltersChange: (filters: number[]) => void;
+  onDeviceFiltersChange: (filters: number[]) => void;
 }
 
 export function SubmissionsParticipantsTable({
@@ -410,103 +410,103 @@ export function SubmissionsParticipantsTable({
   onClassFiltersChange,
   onDeviceFiltersChange,
 }: SubmissionsParticipantsTableProps) {
-  const { domain } = useDomain()
-  const router = useRouter()
-  const queryClient = useQueryClient()
-  const trpc = useTRPC()
+  const { domain } = useDomain();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const trpc = useTRPC();
 
   const [sorting, setSorting] = useState<SortingState>([
     { id: "createdAt", desc: true },
-  ])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [globalFilter, setGlobalFilter] = useState("")
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [issueFilters, setIssueFilters] = useState<string[]>([])
+  ]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [issueFilters, setIssueFilters] = useState<string[]>([]);
 
   // Fetch competition classes and device groups for filter options
   const { data: competitionClasses = [] } = useQuery(
-    trpc.competitionClasses.getByDomain.queryOptions({ domain })
-  )
+    trpc.competitionClasses.getByDomain.queryOptions({ domain }),
+  );
   const { data: deviceGroups = [] } = useQuery(
-    trpc.deviceGroups.getByDomain.queryOptions({ domain })
-  )
+    trpc.deviceGroups.getByDomain.queryOptions({ domain }),
+  );
 
   // Get unique values for filters from current participants data
   const uniqueStatuses = Array.from(
-    new Set(participants.map((p) => p.status).filter(Boolean))
-  )
+    new Set(participants.map((p) => p.status).filter(Boolean)),
+  );
 
-  const issueTypes = ["Has Errors", "Has Warnings", "No Issues"]
+  const issueTypes = ["Has Errors", "Has Warnings", "No Issues"];
 
   // Filter participants by issue type (client-side since this requires validation results analysis)
   const filteredData = useMemo(() => {
     if (issueFilters.length === 0) {
-      return participants
+      return participants;
     }
 
     return participants.filter((participant) => {
       const failedResults =
         participant.validationResults?.filter((r) => r.outcome === "failed") ||
-        []
-      const hasErrors = failedResults.some((r) => r.severity === "error")
-      const hasWarnings = failedResults.some((r) => r.severity === "warning")
-      const hasNoIssues = failedResults.length === 0
+        [];
+      const hasErrors = failedResults.some((r) => r.severity === "error");
+      const hasWarnings = failedResults.some((r) => r.severity === "warning");
+      const hasNoIssues = failedResults.length === 0;
 
       return issueFilters.some((filter) => {
-        if (filter === "Has Errors" && hasErrors) return true
-        if (filter === "Has Warnings" && hasWarnings && !hasErrors) return true
-        if (filter === "No Issues" && hasNoIssues) return true
-        return false
-      })
-    })
-  }, [participants, issueFilters])
+        if (filter === "Has Errors" && hasErrors) return true;
+        if (filter === "Has Warnings" && hasWarnings && !hasErrors) return true;
+        if (filter === "No Issues" && hasNoIssues) return true;
+        return false;
+      });
+    });
+  }, [participants, issueFilters]);
 
   const activeFilterCount =
     statusFilters.length +
     classFilters.length +
     deviceFilters.length +
-    issueFilters.length
+    issueFilters.length;
 
   const clearAllFilters = () => {
-    onStatusFiltersChange([])
-    onClassFiltersChange([])
-    onDeviceFiltersChange([])
-    setIssueFilters([])
-  }
+    onStatusFiltersChange([]);
+    onClassFiltersChange([]);
+    onDeviceFiltersChange([]);
+    setIssueFilters([]);
+  };
 
   const toggleStatusFilter = (status: string) => {
     const newFilters = statusFilters.includes(status)
       ? statusFilters.filter((s) => s !== status)
-      : [...statusFilters, status]
-    onStatusFiltersChange(newFilters)
-  }
+      : [...statusFilters, status];
+    onStatusFiltersChange(newFilters);
+  };
 
   const toggleClassFilter = (classId: number) => {
     const newFilters = classFilters.includes(classId)
       ? classFilters.filter((c) => c !== classId)
-      : [...classFilters, classId]
-    onClassFiltersChange(newFilters)
-  }
+      : [...classFilters, classId];
+    onClassFiltersChange(newFilters);
+  };
 
   const toggleDeviceFilter = (deviceId: number) => {
     const newFilters = deviceFilters.includes(deviceId)
       ? deviceFilters.filter((d) => d !== deviceId)
-      : [...deviceFilters, deviceId]
-    onDeviceFiltersChange(newFilters)
-  }
+      : [...deviceFilters, deviceId];
+    onDeviceFiltersChange(newFilters);
+  };
 
   const toggleIssueFilter = (issueType: string) => {
     setIssueFilters((prev) =>
       prev.includes(issueType)
         ? prev.filter((i) => i !== issueType)
-        : [...prev, issueType]
-    )
-  }
+        : [...prev, issueType],
+    );
+  };
 
   const handleRefresh = async () => {
-    if (isRefreshing) return
+    if (isRefreshing) return;
 
-    setIsRefreshing(true)
+    setIsRefreshing(true);
     try {
       await queryClient.invalidateQueries({
         queryKey: trpc.participants.getByDomainPaginated.queryOptions({
@@ -517,13 +517,13 @@ export function SubmissionsParticipantsTable({
           sortBy: "createdAt",
           sortOrder: "desc",
         }).queryKey,
-      })
+      });
     } catch (error) {
-      console.error("Error refreshing participants data:", error)
+      console.error("Error refreshing participants data:", error);
     } finally {
-      setIsRefreshing(false)
+      setIsRefreshing(false);
     }
-  }
+  };
 
   const table = useReactTable({
     data: filteredData,
@@ -543,21 +543,21 @@ export function SubmissionsParticipantsTable({
     // Use external pagination
     manualPagination: true,
     pageCount: totalPages,
-  })
+  });
 
   const getColumnDisplayName = (columnId: string): string => {
-    const columnInfo = columnInfoMap[columnId]
-    return columnInfo ? columnInfo.label : columnId
-  }
+    const columnInfo = columnInfoMap[columnId];
+    return columnInfo ? columnInfo.label : columnId;
+  };
 
   const getColumnIcon = (columnId: string): React.ReactNode => {
-    const columnInfo = columnInfoMap[columnId]
-    return columnInfo ? <columnInfo.icon className="h-3.5 w-3.5" /> : null
-  }
+    const columnInfo = columnInfoMap[columnId];
+    return columnInfo ? <columnInfo.icon className="h-3.5 w-3.5" /> : null;
+  };
 
   const handleRowClick = (row: TableRowParticipant) => {
-    router.push(`/admin/submissions/${row.reference}`)
-  }
+    router.push(`/admin/submissions/${row.reference}`);
+  };
 
   return (
     <div className="space-y-2">
@@ -602,7 +602,7 @@ export function SubmissionsParticipantsTable({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {columns.map((column) => {
-                if (!column.id) return null
+                if (!column.id) return null;
 
                 return (
                   <DropdownMenuItem
@@ -616,7 +616,7 @@ export function SubmissionsParticipantsTable({
                       {getColumnDisplayName(column.id)}
                     </div>
                   </DropdownMenuItem>
-                )
+                );
               })}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -714,7 +714,7 @@ export function SubmissionsParticipantsTable({
                   <div className="flex items-center gap-1">
                     {flexRender(
                       header.column.columnDef.header,
-                      header.getContext()
+                      header.getContext(),
                     )}
                   </div>
                 </TableHead>
@@ -733,7 +733,7 @@ export function SubmissionsParticipantsTable({
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -792,7 +792,7 @@ export function SubmissionsParticipantsTable({
                           {pageNumber}
                         </PaginationLink>
                       </PaginationItem>
-                    )
+                    );
                   }
 
                   if (
@@ -804,11 +804,11 @@ export function SubmissionsParticipantsTable({
                       <PaginationItem key={pageNumber}>
                         <PaginationEllipsis />
                       </PaginationItem>
-                    )
+                    );
                   }
 
-                  return null
-                }
+                  return null;
+                },
               )}
 
             <PaginationItem>
@@ -833,10 +833,10 @@ export function SubmissionsParticipantsTable({
           <select
             value={pageSize}
             onChange={(e) => {
-              const newPageSize = Number(e.target.value)
-              onPageSizeChange(newPageSize)
+              const newPageSize = Number(e.target.value);
+              onPageSizeChange(newPageSize);
               // Reset to first page when changing page size
-              onPageChange(1)
+              onPageChange(1);
             }}
             className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm"
           >
@@ -849,5 +849,5 @@ export function SubmissionsParticipantsTable({
         </div>
       </div>
     </div>
-  )
+  );
 }

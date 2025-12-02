@@ -17,12 +17,6 @@ import {
 import type { NewMarathon } from "@vimmer/api/db/types";
 import { TRPCError } from "@trpc/server";
 
-// export interface MarathonResponse extends Marathon {
-//   competitionClasses: CompetitionClass[];
-//   deviceGroups: DeviceGroup[];
-//   topics: Topic[];
-// }
-
 export async function getMarathonByIdQuery(
   db: Database,
   { id }: { id: number },

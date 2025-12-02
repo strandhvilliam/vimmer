@@ -49,3 +49,6 @@ yarn-error.log*
 .open-next
 
 # migrations
+
+
+scripts 

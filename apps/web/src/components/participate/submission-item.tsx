@@ -9,11 +9,11 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { ValidationStatusBadge } from "@/components/validation-status-badge";
-import { ValidationResult } from "@vimmer/validation/types";
+import { ValidationResult } from "../../../../../packages/validation/old/types";
 import {
   VALIDATION_OUTCOME,
   SEVERITY_LEVELS,
-} from "@vimmer/validation/constants";
+} from "../../../../../packages/validation/old/constants";
 import { useMemo, useState } from "react";
 import { Button } from "@vimmer/ui/components/button";
 import {

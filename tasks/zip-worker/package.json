@@ -1,0 +1,19 @@
+{
+  "name": "@blikka/zip-worker",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@blikka/bus": "workspace:*",
+    "@effect-aws/lambda": "^1.5.1",
+    "@effect/platform-bun": "^0.83.0",
+    "effect": "catalog:",
+    "jszip": "^3.10.1"
+  }
+}
