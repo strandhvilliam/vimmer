@@ -9,7 +9,6 @@ import { getLocale } from "@/lib/server-utils"
 const _MarathonLayout = Effect.fn("@blikka/web/MarathonLayout")(function* ({
   children,
 }: LayoutProps<"/marathon">) {
-  console.log("MarathonLayout")
   const locale = yield* getLocale()
   const session = yield* getAppSession()
 
