@@ -4,7 +4,7 @@ import { AuthConfig, BetterAuthService, type Session } from "@blikka/auth"
 import { Effect, Layer, Option } from "effect"
 import { headers } from "next/headers"
 
-const baseUrl = "http://localhost:3002"
+const baseUrl = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3002"
 
 export const AuthConfigLayer = Layer.succeed(AuthConfig, {
   baseUrl,
