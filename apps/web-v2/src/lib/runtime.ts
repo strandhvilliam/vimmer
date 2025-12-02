@@ -4,12 +4,14 @@ import { EmailService } from "@blikka/email"
 import { AuthLayer } from "./auth/server"
 import { unstable_rethrow } from "next/navigation"
 import { NodeContext } from "@effect/platform-node"
+import { TRPCClient } from "./trpc/effect-client"
 
 const MainLayer = Layer.mergeAll(
   DrizzleClient.Default,
   Database.Default,
   EmailService.Default,
-  AuthLayer
+  AuthLayer,
+  TRPCClient.Default
 ).pipe(Layer.provide(NodeContext.layer))
 
 export const serverRuntime = ManagedRuntime.make(MainLayer)

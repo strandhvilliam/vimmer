@@ -1,12 +1,12 @@
 import { Page } from "@/lib/runtime"
 import { Effect } from "effect"
-import { Database } from "@blikka/db"
 import { ClientPage } from "./client-page"
+import { TRPCClient } from "@/lib/trpc/effect-client"
 
 const _MarathonPage = Effect.fn("@blikka/web/MarathonPage")(
   function* () {
-    const db = yield* Database
-    const marathons = yield* db.marathonsQueries.getMarathons()
+    const trpc = yield* TRPCClient
+    const marathons = yield* trpc.query((client) => client.marathons.getAllMarathons.query())
 
     return (
       <>

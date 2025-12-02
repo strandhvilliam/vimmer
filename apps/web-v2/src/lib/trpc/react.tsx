@@ -5,7 +5,6 @@ import { useState } from "react"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { createTRPCClient, httpBatchStreamLink, loggerLink } from "@trpc/client"
 import { createTRPCContext } from "@trpc/tanstack-react-query"
-import SuperJSON from "superjson"
 
 import type { AppRouter } from "@blikka/api-v2/trpc/routers/_app"
 
@@ -36,7 +35,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
             (op.direction === "down" && op.result instanceof Error),
         }),
         httpBatchStreamLink({
-          url: getBaseUrl() + "/trpc",
+          url: getBaseUrl() + "trpc",
           headers() {
             const headers = new Headers()
             headers.set("x-trpc-source", "nextjs-react")
@@ -57,6 +56,9 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
 }
 
 const getBaseUrl = () => {
-  //   if (typeof window !== "undefined") return window.location.origin
-  return `https://ahjtvn7n4ujnjwzptczktatuh40aefbq.lambda-url.eu-north-1.on.aws`
+  // Use environment variable if available, otherwise fall back to default
+  return (
+    process.env.NEXT_PUBLIC_TRPC_API_URL ||
+    "https://ahjtvn7n4ujnjwzptczktatuh40aefbq.lambda-url.eu-north-1.on.aws/"
+  )
 }

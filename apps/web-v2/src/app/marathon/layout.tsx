@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import Document from "@/components/document"
 import { NextIntlClientProvider } from "next-intl"
 import { getLocale } from "@/lib/server-utils"
+import { TRPCReactProvider } from "@/lib/trpc/react"
 
 const _MarathonLayout = Effect.fn("@blikka/web/MarathonLayout")(function* ({
   children,
@@ -19,7 +20,9 @@ const _MarathonLayout = Effect.fn("@blikka/web/MarathonLayout")(function* ({
 
   return (
     <Document locale={locale}>
-      <NextIntlClientProvider>{children}</NextIntlClientProvider>
+      <NextIntlClientProvider>
+        <TRPCReactProvider>{children}</TRPCReactProvider>
+      </NextIntlClientProvider>
     </Document>
   )
 })

@@ -18,6 +18,7 @@ export default $config({
       DEV_DATABASE_HOST: process.env.DEV_DATABASE_HOST!,
       DEV_DATABASE_PORT: process.env.DEV_DATABASE_PORT!,
       DEV_DATABASE_NAME: process.env.DEV_DATABASE_NAME!,
+      DATABASE_URL: process.env.DATABASE_URL!,
     }
 
     /* BUCKETS */
