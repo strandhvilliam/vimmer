@@ -48,7 +48,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // for the domain selector
-  if (pathname === "/marathon") {
+  if (pathname.startsWith("/marathon")) {
     return NextResponse.next()
   }
 
