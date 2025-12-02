@@ -18,25 +18,8 @@ export class AuthConfig extends Context.Tag("AuthConfig")<
   }
 >() {}
 
-function getTrustedOrigins(): string[] {
-  const rootDomain = process.env.VERCEL_URL || "localhost:3002"
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http"
-  const domainWithoutPort = rootDomain.split(":")[0]
-  const port = rootDomain.includes(":") ? rootDomain.split(":")[1] : null
-
-  const baseUrl = port
-    ? `${protocol}://${domainWithoutPort}:${port}`
-    : `${protocol}://${domainWithoutPort}`
-
-  return [
-    baseUrl,
-    `${protocol}://*.${domainWithoutPort}${port ? `:${port}` : ""}`,
-    `${protocol}://www.${domainWithoutPort}${port ? `:${port}` : ""}`,
-  ]
-}
-
 const isProduction = process.env.NODE_ENV === "production"
-
+const rootDomain = process.env.NEXT_PUBLIC_VERCEL_URL || "localhost:3002"
 export class BetterAuthService extends Effect.Service<BetterAuthService>()(
   "@blikka/auth/better-auth-service",
   {
@@ -52,16 +35,16 @@ export class BetterAuthService extends Effect.Service<BetterAuthService>()(
         }),
         secret: authConfig.secret,
         baseURL: authConfig.baseUrl,
-        trustedOrigins: getTrustedOrigins(),
+        trustedOrigins: [`http://${rootDomain}`, `https://*.${rootDomain}`, `*.${rootDomain}`],
+
         advanced: {
           crossSubDomainCookies: {
-            enabled: true,
-            domain: process.env.VERCEL_URL || "localhost:3002",
+            enabled: isProduction,
+            domain: `.${rootDomain}`,
           },
           defaultCookieAttributes: {
-            secure: isProduction, // HTTPS required in production
-            httpOnly: true,
-            sameSite: isProduction ? "none" : "lax",
+            secure: isProduction,
+            sameSite: "lax",
           },
         },
         plugins: [
