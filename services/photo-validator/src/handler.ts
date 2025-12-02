@@ -1,8 +1,8 @@
 import type { SQSEvent } from "aws-lambda"
-import { createRule, runValidations } from "@vimmer/validation/validator"
+import { createRule, runValidations } from "@vimmer/validation/old/validator"
 
 import { z } from "zod"
-import { RuleConfig, RuleKey } from "@vimmer/validation/types"
+import { RuleConfig, RuleKey } from "@vimmer/validation/old/types"
 import type { RuleConfig as DbRuleConfig } from "@vimmer/api/db/types"
 import { db } from "@vimmer/api/db"
 import { getParticipantByIdQuery } from "@vimmer/api/db/queries/participants.queries"

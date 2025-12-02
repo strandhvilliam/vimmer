@@ -35,16 +35,10 @@ export function VerifyForm({ email, className }: VerifyFormProps) {
     setError(null)
 
     try {
-      const result = await verifyAction({
+      await verifyAction({
         email,
         otp,
       })
-
-      if (result.error) {
-        setError(result.error)
-        setIsSubmitting(false)
-        return
-      }
     } catch (err) {
       console.error("OTP verification error:", err)
       setError("Invalid verification code. Please try again.")
