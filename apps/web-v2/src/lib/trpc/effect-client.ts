@@ -4,6 +4,7 @@ import { Context, Effect, Layer, Data, Config } from "effect"
 import { createTRPCProxyClient, httpBatchLink } from "@trpc/client"
 import type { AppRouter } from "@blikka/api-v2/trpc/routers/_app"
 import { headers } from "next/headers"
+import { getAppSession } from "../auth/server"
 
 // =============================================================================
 // Types
@@ -65,21 +66,8 @@ export class TRPCClient extends Effect.Service<TRPCClient>()("@blikka/web-v2/TRP
           async headers() {
             // Forward headers from the incoming request for auth
             const hdrs = await headers()
-            const result = new Headers()
-            result.set("x-trpc-source", "nextjs-rsc")
 
-            // Forward auth-related headers
-            const authHeader = hdrs.get("authorization")
-            if (authHeader) {
-              result.set("authorization", authHeader)
-            }
-
-            const cookie = hdrs.get("cookie")
-            if (cookie) {
-              result.set("cookie", cookie)
-            }
-
-            return result
+            return hdrs
           },
         }),
       ],

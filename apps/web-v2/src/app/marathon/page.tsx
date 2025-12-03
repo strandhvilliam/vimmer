@@ -8,6 +8,10 @@ const _MarathonPage = Effect.fn("@blikka/web/MarathonPage")(
     const trpc = yield* TRPCClient
     const marathons = yield* trpc.query((client) => client.marathons.getAllMarathons.query())
 
+    const something = yield* trpc.query((client) =>
+      client.authtest.getSomething.query({ name: "John" })
+    )
+
     return (
       <>
         <ClientPage marathons={marathons} />

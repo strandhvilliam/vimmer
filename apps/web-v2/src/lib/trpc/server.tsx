@@ -44,21 +44,7 @@ const createServerTRPCClient = cache(() => {
         url: TRPC_API_URL + "trpc",
         async headers() {
           const hdrs = await headers()
-          const result = new Headers()
-          result.set("x-trpc-source", "nextjs-rsc")
-
-          // Forward auth-related headers
-          const authHeader = hdrs.get("authorization")
-          if (authHeader) {
-            result.set("authorization", authHeader)
-          }
-
-          const cookie = hdrs.get("cookie")
-          if (cookie) {
-            result.set("cookie", cookie)
-          }
-
-          return result
+          return hdrs
         },
       }),
     ],

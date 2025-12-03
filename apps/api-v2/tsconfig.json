@@ -27,7 +27,9 @@
     "noPropertyAccessFromIndexSignature": false,
     "baseUrl": ".",
     "paths": {
-      "@blikka/db": ["../../packages/db/src"]
+      "@blikka/db": ["../../packages/db/src"],
+      "@blikka/auth": ["../../packages/auth/src"],
+      "@blikka/email": ["../../packages/email/src"]
     }
   }
 }

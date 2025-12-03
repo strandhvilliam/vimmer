@@ -1,8 +1,8 @@
 import { Effect, Schema } from "effect"
-import { createTRPCRouter, publicProcedure, trpcEffect } from "../trpc"
+import { createTRPCRouter, authProcedure, trpcEffect } from "../trpc"
 
 export const authTestRouter = createTRPCRouter({
-  getSomething: publicProcedure
+  getSomething: authProcedure
     .input(
       Schema.standardSchemaV1(
         Schema.Struct({
