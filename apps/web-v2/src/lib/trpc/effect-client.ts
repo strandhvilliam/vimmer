@@ -17,7 +17,7 @@ type TRPCProxyClient = ReturnType<typeof createTRPCProxyClient<AppRouter>>
 // Errors
 // =============================================================================
 
-export class TRPCClientError extends Data.TaggedError("TRPCClientError")<{
+export class TRPCServerError extends Data.TaggedError("TRPCClientError")<{
   message: string
   cause?: unknown
 }> {}
@@ -65,9 +65,10 @@ export class TRPCClient extends Effect.Service<TRPCClient>()("@blikka/web-v2/TRP
           url: apiUrl + "trpc",
           async headers() {
             // Forward headers from the incoming request for auth
-            const hdrs = await headers()
+            // const hdrs = await headers()
 
-            return hdrs
+            // return hdrs
+            return new Headers()
           },
         }),
       ],
@@ -75,11 +76,11 @@ export class TRPCClient extends Effect.Service<TRPCClient>()("@blikka/web-v2/TRP
 
     const wrapCall = <T>(
       fn: (client: TRPCProxyClient) => Promise<T>
-    ): Effect.Effect<T, TRPCClientError> =>
+    ): Effect.Effect<T, TRPCServerError> =>
       Effect.tryPromise({
         try: () => fn(client),
         catch: (error) =>
-          new TRPCClientError({
+          new TRPCServerError({
             message: error instanceof Error ? error.message : "TRPC call failed",
             cause: error,
           }),

@@ -3,13 +3,14 @@ import "server-only"
 import type { TRPCQueryOptions } from "@trpc/tanstack-react-query"
 import { cache } from "react"
 import { headers } from "next/headers"
-import { dehydrate, HydrationBoundary } from "@tanstack/react-query"
+import { dehydrate, FetchQueryOptions, HydrationBoundary } from "@tanstack/react-query"
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query"
 import { createTRPCProxyClient, httpBatchLink } from "@trpc/client"
 import { Effect } from "effect"
 
 import type { AppRouter } from "@blikka/api-v2/trpc/routers/_app"
 import { createQueryClient } from "./query-client"
+import { TRPCServerError } from "./effect-client"
 
 // =============================================================================
 // Configuration
@@ -174,9 +175,24 @@ export function batchPrefetch<T extends ReturnType<TRPCQueryOptions<any>>>(query
   }
 }
 
+export function fetchEffectQuery<
+  T extends FetchQueryOptions<unknown, Error, unknown, readonly unknown[], never>,
+>(queryOptions: T) {
+  const queryClient = getQueryClient()
+
+  return Effect.tryPromise({
+    try: () => queryClient.fetchQuery(queryOptions),
+    catch: (error) =>
+      new TRPCServerError({
+        message: error instanceof Error ? error.message : "TRPC call failed",
+        cause: error,
+      }),
+  })
+}
+
 // =============================================================================
 // Re-exports for convenience
 // =============================================================================
 
 // Re-export the Effect-based TRPC client utilities
-export { TRPCClient, TRPCClientError } from "./effect-client"
+export { TRPCClient, TRPCServerError as TRPCClientError } from "./effect-client"

@@ -1,7 +1,9 @@
-import { Page } from "@/lib/runtime"
+import { Page } from "@/lib/next-utils"
 import { Effect } from "effect"
 import { ClientPage } from "./client-page"
 import { TRPCClient } from "@/lib/trpc/effect-client"
+import { cacheLife, cacheTag } from "next/cache"
+import { serverRuntime } from "@/lib/runtime"
 
 const _MarathonPage = Effect.fn("@blikka/web/MarathonPage")(
   function* () {
