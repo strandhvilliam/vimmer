@@ -1,26 +1,20 @@
 import { Page } from "@/lib/next-utils"
 import { Effect } from "effect"
 import { ClientPage } from "./client-page"
-import { TRPCClient } from "@/lib/trpc/effect-client"
-import { cacheLife, cacheTag } from "next/cache"
-import { serverRuntime } from "@/lib/runtime"
+import { prefetch, trpc } from "@/lib/trpc/server"
+import { Suspense } from "react"
 
 const _MarathonPage = Effect.fn("@blikka/web/MarathonPage")(
   function* () {
-    const trpc = yield* TRPCClient
-    const marathons = yield* trpc.query((client) => client.marathons.getAllMarathons.query())
-
-    const something = yield* trpc.query((client) =>
-      client.authtest.getSomething.query({ name: "John" })
-    )
+    prefetch(trpc.marathons.getAllMarathons.queryOptions())
 
     return (
-      <>
-        <ClientPage marathons={marathons} />
-      </>
+      <Suspense fallback={<div>lodain...</div>}>
+        <ClientPage />
+      </Suspense>
     )
-  },
-  Effect.catchAll((error) => Effect.succeed(<div>Error: {error.message}</div>))
+  }
+  // Effect.catchAll((error) => Effect.succeed(<div>Error: {error.message}</div>))
 )
 
 export default Page(_MarathonPage)

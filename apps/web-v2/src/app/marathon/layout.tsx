@@ -3,20 +3,19 @@ import { Layout } from "@/lib/next-utils"
 import { Effect, Option } from "effect"
 import { redirect } from "next/navigation"
 import Document from "@/components/document"
-import { getLocale } from "@/lib/server-utils"
+import { getHeaders, getLocale } from "@/lib/server-utils"
 import { TRPCReactProvider } from "@/lib/trpc/react"
 import { Providers } from "./providers"
-import { getMessages } from "next-intl/server"
-import { Suspense } from "react"
 
+import { getI18nMessages } from "@/i18n/utils"
 const _MarathonLayout = Effect.fn("@blikka/web/MarathonLayout")(
   function* ({ children }: LayoutProps<"/marathon">) {
-    const locale = yield* getLocale()
-    const session = yield* getAppSession()
-    const messages = yield* Effect.tryPromise({
-      try: () => getMessages(),
-      catch: () => new Error("Failed to get messages"),
-    })
+    const [locale, session, headersStore, messages] = yield* Effect.all([
+      getLocale(),
+      getAppSession(),
+      getHeaders(),
+      getI18nMessages(),
+    ])
 
     if (Option.isNone(session)) {
       console.log("redirecting to login")
@@ -26,7 +25,7 @@ const _MarathonLayout = Effect.fn("@blikka/web/MarathonLayout")(
     return (
       <Document locale={locale}>
         <Providers locale={locale} messages={messages}>
-          <TRPCReactProvider>{children}</TRPCReactProvider>
+          <TRPCReactProvider headers={headersStore}>{children}</TRPCReactProvider>
         </Providers>
       </Document>
     )

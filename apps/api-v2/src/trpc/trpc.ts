@@ -37,15 +37,15 @@ type LiveServices = ProvidedOf<typeof servicesLayer>
 const serverRuntime = ManagedRuntime.make(servicesLayer)
 
 export const createTRPCContext = async (_: unknown, ctx: HonoContext) => {
-  // Extract headers from the request
-
-  // Get session using better-auth
   const getSessionEffect = Effect.gen(function* () {
     const auth = yield* BetterAuthService
+
+    const headers = new Headers(ctx.req.raw.headers)
+
     const session = yield* Effect.tryPromise({
       try: () =>
         auth.api.getSession({
-          headers: ctx.req.raw.headers,
+          headers,
         }),
       catch: (error) => error as Error,
     })

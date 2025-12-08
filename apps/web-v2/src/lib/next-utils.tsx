@@ -9,43 +9,21 @@ import { Suspense, use } from "react"
 export function Next<I extends Array<unknown>, A>(
   effectFn: (...args: I) => Effect.Effect<A, never, RuntimeDependencies>
 ) {
-  return (...args: I): A =>
-    use(
-      (async () => {
-        await connection()
-        const res = await serverRuntime.runPromiseExit(effectFn(...args))
-        if (Exit.isFailure(res)) {
-          const defects = Chunk.toArray(Cause.defects(res.cause))
+  return async (...args: I): Promise<A> => {
+    return serverRuntime.runPromiseExit(effectFn(...args)).then((res) => {
+      if (Exit.isFailure(res)) {
+        const defects = Chunk.toArray(Cause.defects(res.cause))
 
-          if (defects.length === 1) {
-            unstable_rethrow(defects[0])
-          }
-
-          const errors = Cause.prettyErrors(res.cause)
-          throw errors[0]
+        if (defects.length === 1) {
+          unstable_rethrow(defects[0])
         }
 
-        return res.value
-      })()
-    )
-}
+        const errors = Cause.prettyErrors(res.cause)
+        throw errors[0]
+      }
 
-export const Page = Next
-export const Component = Next
-
-export function Layout<I extends Array<unknown>, A>(
-  effectFn: (...args: I) => Effect.Effect<A, never, RuntimeDependencies>
-) {
-  const ComponentWithData = Next(effectFn)
-  return function SuspenseLayout(
-    props: I extends [] ? { children?: unknown } : I extends [infer P] ? P : unknown
-  ) {
-    return (
-      <Suspense fallback={null}>
-        {/* @ts-expect-error passthrough props shape depends on caller */}
-        <ComponentWithData {...(props as unknown as I[number])} />
-      </Suspense>
-    )
+      return res.value
+    })
   }
 }
 
@@ -76,3 +54,47 @@ export function toActionResponse<T>(
     )
   )
 }
+
+export function NextSuspense<I extends Array<unknown>, A>(
+  effectFn: (...args: I) => Effect.Effect<A, never, RuntimeDependencies>
+) {
+  return (...args: I): A =>
+    use(
+      (async () => {
+        await connection()
+        const res = await serverRuntime.runPromiseExit(effectFn(...args))
+        if (Exit.isFailure(res)) {
+          const defects = Chunk.toArray(Cause.defects(res.cause))
+
+          if (defects.length === 1) {
+            unstable_rethrow(defects[0])
+          }
+
+          const errors = Cause.prettyErrors(res.cause)
+          throw errors[0]
+        }
+
+        return res.value
+      })()
+    )
+}
+
+function LayoutSuspense<I extends Array<unknown>, A>(
+  effectFn: (...args: I) => Effect.Effect<A, never, RuntimeDependencies>
+) {
+  const ComponentWithData = NextSuspense(effectFn)
+  return function SuspenseLayout(
+    props: I extends [] ? { children?: unknown } : I extends [infer P] ? P : unknown
+  ) {
+    return (
+      <Suspense fallback={null}>
+        {/* @ts-expect-error passthrough props shape depends on caller */}
+        <ComponentWithData {...(props as unknown as I[number])} />
+      </Suspense>
+    )
+  }
+}
+
+export const Page = NextSuspense
+export const Component = NextSuspense
+export const Layout = LayoutSuspense

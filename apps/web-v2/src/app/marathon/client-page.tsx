@@ -16,12 +16,20 @@ import { Button } from "@/components/ui/button"
 import { useTranslations } from "next-intl"
 import { LOCALES } from "@/config"
 import { updateLocaleAction } from "./actions"
+import { useTRPC } from "@/lib/trpc/react"
+import { useSuspenseQuery } from "@tanstack/react-query"
 
-export const ClientPage = ({ marathons }: { marathons: Marathon[] }) => {
+export const ClientPage = () => {
+  const trpc = useTRPC()
   const t = useTranslations("MarathonPage")
+
+  const authTest = useSuspenseQuery(trpc.authtest.getSomething.queryOptions({ name: "test" }))
+
+  const { data: marathons } = useSuspenseQuery(trpc.marathons.getAllMarathons.queryOptions())
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <pre>{JSON.stringify(authTest.data, null, 2)}</pre>
       <div className="mb-8">
         <div className="flex flex-row gap-2">
           {LOCALES.map((locale) => (

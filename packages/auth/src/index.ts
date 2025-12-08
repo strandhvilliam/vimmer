@@ -4,7 +4,7 @@ import { DrizzleClient } from "@blikka/db"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { EmailService, MagicLinkEmail, magicLinkEmailSubject, OTPEmail } from "@blikka/email"
 import { nextCookies } from "better-auth/next-js"
-import { emailOTP, magicLink } from "better-auth/plugins"
+import { bearer, emailOTP, magicLink } from "better-auth/plugins"
 
 export class AuthConfig extends Context.Tag("AuthConfig")<
   AuthConfig,
@@ -78,6 +78,7 @@ export class BetterAuthService extends Effect.Service<BetterAuthService>()(
               }
             },
           }),
+          bearer(),
           nextCookies(),
         ],
       } satisfies BetterAuthOptions

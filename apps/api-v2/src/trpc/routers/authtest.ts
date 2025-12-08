@@ -13,7 +13,9 @@ export const authTestRouter = createTRPCRouter({
     .query(
       trpcEffect(({ input }) =>
         Effect.gen(function* () {
-          return Effect.succeed({ message: `Something, ${input.name}!` })
+          // wait 2 sec
+          yield* Effect.sleep(2000)
+          return yield* Effect.succeed({ message: `Something, ${input.name}!` })
         })
       )
     ),

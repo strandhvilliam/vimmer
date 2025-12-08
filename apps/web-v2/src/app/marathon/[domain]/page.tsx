@@ -2,7 +2,7 @@ import Link from "next/link"
 import { rootDomain, protocol } from "@/config"
 import { Effect, Schema } from "effect"
 import { decodeParams } from "@/lib/utils"
-import { Page } from "@/lib/runtime"
+import { Page } from "@/lib/next-utils"
 import { getTranslations } from "@/lib/server-utils"
 
 const _SubdomainPage = Effect.fn("@blikka/web/SubdomainPage")(

@@ -1,5 +1,5 @@
 import { getAppSession } from "@/lib/auth/server"
-import { Layout } from "@/lib/runtime"
+import { Layout } from "@/lib/next-utils"
 import { Effect, Option } from "effect"
 import { redirect } from "next/navigation"
 

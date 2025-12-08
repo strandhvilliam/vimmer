@@ -59,13 +59,13 @@ export class TRPCClient extends Effect.Service<TRPCClient>()("@blikka/web-v2/TRP
   effect: Effect.gen(function* () {
     const apiUrl = yield* TRPCApiUrl
 
-    const client = createTRPCProxyClient<AppRouter>({
+    return createTRPCProxyClient<AppRouter>({
       links: [
         httpBatchLink({
           url: apiUrl + "trpc",
           async headers() {
             // Forward headers from the incoming request for auth
-            // const hdrs = await headers()
+            const hdrs = await headers()
 
             // return hdrs
             return new Headers()
@@ -74,22 +74,22 @@ export class TRPCClient extends Effect.Service<TRPCClient>()("@blikka/web-v2/TRP
       ],
     })
 
-    const wrapCall = <T>(
-      fn: (client: TRPCProxyClient) => Promise<T>
-    ): Effect.Effect<T, TRPCServerError> =>
-      Effect.tryPromise({
-        try: () => fn(client),
-        catch: (error) =>
-          new TRPCServerError({
-            message: error instanceof Error ? error.message : "TRPC call failed",
-            cause: error,
-          }),
-      })
+    // const wrapCall = <T>(
+    //   fn: (client: TRPCProxyClient) => Promise<T>
+    // ): Effect.Effect<T, TRPCServerError> =>
+    //   Effect.tryPromise({
+    //     try: () => fn(client),
+    //     catch: (error) =>
+    //       new TRPCServerError({
+    //         message: error instanceof Error ? error.message : "TRPC call failed",
+    //         cause: error,
+    //       }),
+    //   })
 
-    return {
-      client,
-      query: wrapCall,
-      mutate: wrapCall,
-    }
+    // return {
+    //   client,
+    //   query: wrapCall,
+    //   mutate: wrapCall,
+    // }
   }),
 }) {}

@@ -175,9 +175,7 @@ export function batchPrefetch<T extends ReturnType<TRPCQueryOptions<any>>>(query
   }
 }
 
-export function fetchEffectQuery<
-  T extends FetchQueryOptions<unknown, Error, unknown, readonly unknown[], never>,
->(queryOptions: T) {
+export function fetchEffectQuery<T extends ReturnType<TRPCQueryOptions<any>>>(queryOptions: T) {
   const queryClient = getQueryClient()
 
   return Effect.tryPromise({

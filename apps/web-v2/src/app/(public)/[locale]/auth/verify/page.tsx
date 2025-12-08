@@ -1,4 +1,4 @@
-import { Page } from "@/lib/runtime"
+import { Page } from "@/lib/next-utils"
 import { decodeSearchParams } from "@/lib/utils"
 import { Effect, Schema } from "effect"
 import { VerifyForm } from "./verify-form"
