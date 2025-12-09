@@ -3,6 +3,8 @@
 import Link from "next/link"
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty"
+import { Trophy } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { LOCALES } from "@/config"
 import { updateLocaleAction } from "./actions"
@@ -18,9 +20,15 @@ export const ClientPage = () => {
 
   if (marathons.length === 0) {
     return (
-      <div className="text-center p-4">
-        <p className="text-muted-foreground">{t("noMarathonsAvailable")}</p>
-      </div>
+      <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Trophy className="size-6" />
+          </EmptyMedia>
+          <EmptyTitle>{t("noMarathonsTitle")}</EmptyTitle>
+          <EmptyDescription>{t("noMarathonsDescription")}</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     )
   }
 
