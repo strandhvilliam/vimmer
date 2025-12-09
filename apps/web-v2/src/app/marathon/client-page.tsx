@@ -1,81 +1,52 @@
 "use client"
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import Image from "next/image"
 import Link from "next/link"
-import { formatSubdomainUrl } from "@/lib/utils"
-import { Marathon } from "@blikka/db"
+import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useTranslations } from "next-intl"
 import { LOCALES } from "@/config"
 import { updateLocaleAction } from "./actions"
 import { useTRPC } from "@/lib/trpc/react"
 import { useSuspenseQuery } from "@tanstack/react-query"
+import { formatSubdomainUrl } from "@/lib/utils"
 
 export const ClientPage = () => {
   const trpc = useTRPC()
   const t = useTranslations("MarathonPage")
 
-  const authTest = useSuspenseQuery(trpc.authtest.getSomething.queryOptions({ name: "test" }))
+  const { data: marathons } = useSuspenseQuery(trpc.marathons.getUserMarathons.queryOptions())
 
-  const { data: marathons } = useSuspenseQuery(trpc.marathons.getAllMarathons.queryOptions())
+  if (marathons.length === 0) {
+    return (
+      <div className="text-center p-4">
+        <p className="text-muted-foreground">{t("noMarathonsAvailable")}</p>
+      </div>
+    )
+  }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <pre>{JSON.stringify(authTest.data, null, 2)}</pre>
-      <div className="mb-8">
-        <div className="flex flex-row gap-2">
-          {LOCALES.map((locale) => (
-            <Button key={locale} onClick={() => updateLocaleAction({ locale })}>
-              {locale}
-            </Button>
-          ))}
-        </div>
-        <h1 className="text-3xl font-bold mb-2">{t("selectMarathon")}</h1>
-        <p className="text-muted-foreground">{t("chooseMarathonDomain")}</p>
+    <div className="flex flex-col w-full gap-4">
+      <div className="flex flex-row gap-2 mb-4">
+        {LOCALES.map((locale) => (
+          <Button key={locale} onClick={() => updateLocaleAction({ locale })}>
+            {locale}
+          </Button>
+        ))}
       </div>
-      {marathons.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">{t("noMarathonsAvailable")}</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {marathons.map((marathon) => (
-            <Card key={marathon.id} className="flex flex-col hover:shadow-lg transition-shadow">
-              {marathon.logoUrl && (
-                <div className="relative w-full h-48 overflow-hidden rounded-t-lg">
-                  <Image src={marathon.logoUrl} alt={marathon.name} fill className="object-cover" />
-                </div>
-              )}
-              <CardHeader>
-                <CardTitle>{marathon.name}</CardTitle>
-                <CardDescription>
-                  {t("domain")}: <span className="font-mono">{marathon.domain}</span>
-                </CardDescription>
-              </CardHeader>
-              {marathon.description && (
-                <CardContent className="flex-1">
-                  <p className="text-sm text-muted-foreground line-clamp-3">
-                    {marathon.description}
-                  </p>
-                </CardContent>
-              )}
-              <CardFooter>
-                <Button asChild className="w-full">
-                  <Link href={formatSubdomainUrl(marathon.domain)}>{t("selectDomain")}</Link>
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      )}
+
+      <div className="flex flex-col gap-3 w-full">
+        {marathons.map((marathon) => (
+          <Card key={marathon.id} className="flex flex-row items-center p-4 w-full">
+            <div className="flex flex-col w-full">
+              <CardTitle className="text-lg">{marathon.name}</CardTitle>
+              <CardDescription>Stockholm | {marathon.domain}</CardDescription>
+            </div>
+            <Button asChild className="ml-auto">
+              <Link href={formatSubdomainUrl(marathon.domain)}>{t("selectDomain")}</Link>
+            </Button>
+          </Card>
+        ))}
+      </div>
     </div>
   )
 }

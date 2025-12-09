@@ -1,4 +1,4 @@
-import { Effect } from "effect"
+import { Effect, Schema } from "effect"
 import { RuntimeDependencies } from "./runtime"
 import { connection } from "next/server"
 import { serverRuntime } from "./runtime"
@@ -6,7 +6,52 @@ import { Exit, Chunk, Cause } from "effect"
 import { unstable_rethrow } from "next/navigation"
 import { Suspense, use } from "react"
 
-export function Next<I extends Array<unknown>, A>(
+type NextBaseParams = Promise<Record<string, string | Array<string> | undefined>>
+
+type NextBaseSearchParams = Promise<Record<string, string | Array<string> | undefined>>
+
+export type ActionResponse<T> = T extends void
+  ? {
+      data: undefined
+      error: string | null
+    }
+  : {
+      data: T
+      error: string | null
+    }
+
+export const decodeParams =
+  <T, P extends NextBaseParams>(schema: Schema.Schema<T>) =>
+  (p: P) =>
+    Effect.gen(function* () {
+      const params = yield* Effect.promise(() => p)
+      return yield* Schema.decodeUnknown(schema)(params)
+    })
+
+export const decodeSearchParams =
+  <T, P extends NextBaseSearchParams>(schema: Schema.Schema<T>) =>
+  (search: P) =>
+    Effect.gen(function* () {
+      const searchParams = yield* Effect.promise(() => search)
+      return yield* Schema.decodeUnknown(schema)(searchParams)
+    })
+
+export function toActionResponse<T>(
+  effect: Effect.Effect<T, unknown, RuntimeDependencies>
+): Effect.Effect<ActionResponse<T>, never, RuntimeDependencies> {
+  return effect.pipe(
+    Effect.map((data) => ({ data, error: null as string | null }) as ActionResponse<T>),
+    Effect.tapError((error) => Effect.logError(error)),
+    Effect.catchAll((error) =>
+      Effect.succeed({
+        data: undefined as T extends void ? undefined : T,
+        error: error instanceof Error ? error.message : String(error),
+      } as ActionResponse<T>)
+    )
+  )
+}
+
+function Next<I extends Array<unknown>, A>(
   effectFn: (...args: I) => Effect.Effect<A, never, RuntimeDependencies>
 ) {
   return async (...args: I): Promise<A> => {
@@ -27,35 +72,7 @@ export function Next<I extends Array<unknown>, A>(
   }
 }
 
-export const Route = Next
-export const Action = Next
-
-export type ActionResponse<T> = T extends void
-  ? {
-      data: undefined
-      error: string | null
-    }
-  : {
-      data: T
-      error: string | null
-    }
-
-export function toActionResponse<T>(
-  effect: Effect.Effect<T, unknown, RuntimeDependencies>
-): Effect.Effect<ActionResponse<T>, never, RuntimeDependencies> {
-  return effect.pipe(
-    Effect.map((data) => ({ data, error: null as string | null }) as ActionResponse<T>),
-    Effect.tapError((error) => Effect.logError(error)),
-    Effect.catchAll((error) =>
-      Effect.succeed({
-        data: undefined as T extends void ? undefined : T,
-        error: error instanceof Error ? error.message : String(error),
-      } as ActionResponse<T>)
-    )
-  )
-}
-
-export function NextSuspense<I extends Array<unknown>, A>(
+function NextSuspense<I extends Array<unknown>, A>(
   effectFn: (...args: I) => Effect.Effect<A, never, RuntimeDependencies>
 ) {
   return (...args: I): A =>
@@ -98,3 +115,6 @@ function LayoutSuspense<I extends Array<unknown>, A>(
 export const Page = NextSuspense
 export const Component = NextSuspense
 export const Layout = LayoutSuspense
+
+export const Route = Next
+export const Action = Next

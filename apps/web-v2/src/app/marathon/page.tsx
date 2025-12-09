@@ -1,17 +1,27 @@
 import { Page } from "@/lib/next-utils"
 import { Effect } from "effect"
-import { ClientPage } from "./client-page"
 import { prefetch, trpc } from "@/lib/trpc/server"
 import { Suspense } from "react"
+import { SelectDomainTitle } from "./_components/select-domain-title"
+import { SelectDomainSkeleton } from "./_components/select-domain-skeleton"
+import { ClientPage } from "./client-page"
 
 const _MarathonPage = Effect.fn("@blikka/web/MarathonPage")(
   function* () {
-    prefetch(trpc.marathons.getAllMarathons.queryOptions())
+    prefetch(trpc.marathons.getUserMarathons.queryOptions())
 
     return (
-      <Suspense fallback={<div>lodain...</div>}>
-        <ClientPage />
-      </Suspense>
+      <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-black relative overflow-hidden flex-col gap-4">
+        <div className="absolute z-0 inset-0 pointer-events-none opacity-70 dark:opacity-0 bg-dot-pattern-light" />
+        <div className="absolute z-0 inset-0 opacity-0 dark:opacity-70 pointer-events-none bg-dot-pattern-dark" />
+
+        <SelectDomainTitle />
+        <div className="w-full max-w-md relative z-10 mt-4 min-h-[500px]">
+          <Suspense fallback={<SelectDomainSkeleton />}>
+            <ClientPage />
+          </Suspense>
+        </div>
+      </div>
     )
   }
   // Effect.catchAll((error) => Effect.succeed(<div>Error: {error.message}</div>))

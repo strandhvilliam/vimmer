@@ -3,10 +3,7 @@ import { NextIntlClientProvider } from "next-intl"
 import Document from "@/components/document"
 import { LOCALES } from "@/config"
 import { Effect, Schema } from "effect"
-import { Layout } from "@/lib/next-utils"
-import { decodeParams } from "@/lib/utils"
-import { Suspense } from "react"
-import Loading from "./loading"
+import { Layout, decodeParams } from "@/lib/next-utils"
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }))

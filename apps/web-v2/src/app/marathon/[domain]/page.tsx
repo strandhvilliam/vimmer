@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { rootDomain, protocol } from "@/config"
 import { Effect, Schema } from "effect"
-import { decodeParams } from "@/lib/utils"
+import { decodeParams } from "@/lib/next-utils"
 import { Page } from "@/lib/next-utils"
 import { getTranslations } from "@/lib/server-utils"
 

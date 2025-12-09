@@ -9,7 +9,6 @@ import { createTRPCContext } from "@trpc/tanstack-react-query"
 import type { AppRouter } from "@blikka/api-v2/trpc/routers/_app"
 
 import { createQueryClient } from "./query-client"
-import { Session } from "@blikka/auth"
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined
 const getQueryClient = () => {
@@ -24,7 +23,7 @@ const getQueryClient = () => {
 
 export const { useTRPC, TRPCProvider } = createTRPCContext<AppRouter>()
 
-export function TRPCReactProvider(props: { children: React.ReactNode; headers: Headers }) {
+export function TRPCReactProvider(props: { children: React.ReactNode; sessionToken: string }) {
   const queryClient = getQueryClient()
 
   const [trpcClient] = useState(() =>
@@ -38,21 +37,10 @@ export function TRPCReactProvider(props: { children: React.ReactNode; headers: H
         httpBatchStreamLink({
           url: getBaseUrl() + "trpc",
           headers() {
-            const headers = new Map(props.headers)
+            const headers = new Headers()
             headers.set("x-trpc-source", "blikka-web")
-            const cookieString = headers.get("cookie")
-            if (cookieString) {
-              const token = cookieString
-                .split("; ")
-                .find((row: string) => row.startsWith("better-auth.session_token="))
-                ?.split("=")[1]
-
-              if (token) {
-                headers.set("Authorization", `Bearer ${token}`)
-              }
-            }
-
-            return Object.fromEntries(headers)
+            headers.set("Authorization", `Bearer ${props.sessionToken}`)
+            return headers
           },
         }),
       ],
@@ -69,7 +57,6 @@ export function TRPCReactProvider(props: { children: React.ReactNode; headers: H
 }
 
 const getBaseUrl = () => {
-  // Use environment variable if available, otherwise fall back to default
   return (
     process.env.NEXT_PUBLIC_TRPC_API_URL ||
     "https://ahjtvn7n4ujnjwzptczktatuh40aefbq.lambda-url.eu-north-1.on.aws/"

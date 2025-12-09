@@ -1,5 +1,4 @@
-import { Page } from "@/lib/next-utils"
-import { decodeSearchParams } from "@/lib/utils"
+import { decodeSearchParams, Page } from "@/lib/next-utils"
 import { Effect, Schema } from "effect"
 import { VerifyForm } from "./verify-form"
 import { redirect } from "next/navigation"

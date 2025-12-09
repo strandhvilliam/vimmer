@@ -1,6 +1,6 @@
 import { Metadata } from "next"
 import { Effect } from "effect"
-import { Layout } from "@/lib/runtime"
+import { Layout } from "@/lib/next-utils"
 
 export const metadata: Metadata = {
   title: "Blikka App",

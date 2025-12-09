@@ -64,6 +64,9 @@ export const createTRPCContext = async (_: unknown, ctx: HonoContext) => {
 }
 
 type Context = Awaited<ReturnType<typeof createTRPCContext>>
+type ContextWithoutRuntime = Omit<Context, "runtime">
+type AuthenticatedContext = Omit<Context, "session"> & { session: Session }
+type AuthenticatedContextWithoutRuntime = Omit<AuthenticatedContext, "runtime">
 
 const t = initTRPC.context<Context>().create()
 
@@ -79,26 +82,35 @@ export const authProcedure = t.procedure.use(async ({ next, ctx }) => {
     })
   }
 
-  console.log("ctx", ctx.session)
-
   return next({
     ctx: {
       ...ctx,
       session: ctx.session,
-    },
+    } as AuthenticatedContext,
   })
 })
 
-export function trpcEffect<TInput, A, E = never, R extends LiveServices = LiveServices>(
-  effectFn: (params: { input: TInput; ctx: Record<string, unknown> }) => Effect.Effect<A, E, R>
+export function trpcEffect<
+  TInput,
+  A,
+  E = never,
+  R extends LiveServices = LiveServices,
+  TCtx extends Context | AuthenticatedContext = Context,
+>(
+  effectFn: (params: {
+    input: TInput
+    ctx: TCtx extends AuthenticatedContext
+      ? AuthenticatedContextWithoutRuntime
+      : ContextWithoutRuntime
+  }) => Effect.Effect<A, E, R>
 ) {
-  return async (params: { input: TInput; ctx: Context }): Promise<A> => {
+  return async (params: { input: TInput; ctx: TCtx }): Promise<A> => {
     const { runtime, ...ctxRest } = params.ctx
     const cleanParams = {
       input: params.input,
       ctx: ctxRest,
     }
-    const exit = await runtime.runPromiseExit(effectFn(cleanParams))
+    const exit = await runtime.runPromiseExit(effectFn(cleanParams as any))
 
     if (exit._tag === "Failure") {
       const error = Cause.squash(exit.cause)

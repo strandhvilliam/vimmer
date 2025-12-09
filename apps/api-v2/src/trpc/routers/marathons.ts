@@ -1,13 +1,13 @@
 import { Effect, Schema } from "effect"
-import { createTRPCRouter, publicProcedure, trpcEffect } from "../trpc"
+import { authProcedure, createTRPCRouter, publicProcedure, trpcEffect } from "../trpc"
 import { Database } from "@blikka/db"
 
 export const marathonRouter = createTRPCRouter({
-  getAllMarathons: publicProcedure.query(
+  getUserMarathons: authProcedure.query(
     trpcEffect(
-      Effect.fn("@blikka/api/marathonRouter/getAllMarathons")(function* () {
+      Effect.fn("@blikka/api/marathonRouter/getAllMarathons")(function* ({ ctx }) {
         const db = yield* Database
-        return yield* db.marathonsQueries.getMarathons()
+        return yield* db.usersQueries.getMarathonsByUserId({ userId: ctx.session.user.id })
       })
     )
   ),
