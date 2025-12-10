@@ -10,15 +10,6 @@ import { getI18nMessages } from "@/i18n/utils"
 import { Toaster } from "sonner"
 import { DotPattern } from "@/components/dot-pattern"
 
-const parseTokenFromCookie = (cookie: string | null | undefined) => {
-  return Option.fromNullable(
-    cookie
-      ?.split("; ")
-      .find((row: string) => row.startsWith("better-auth.session_token="))
-      ?.split("=")[1]
-  )
-}
-
 const _MarathonLayout = Effect.fn("@blikka/web/MarathonLayout")(
   function* ({ children }: LayoutProps<"/marathon">) {
     const [locale, session, headersStore, messages] = yield* Effect.all([
@@ -32,16 +23,10 @@ const _MarathonLayout = Effect.fn("@blikka/web/MarathonLayout")(
       console.log("redirecting to login")
       redirect("/auth/login")
     }
-    const sessionToken = parseTokenFromCookie(headersStore.get("cookie"))
-
-    if (Option.isNone(sessionToken)) {
-      console.log("no session token")
-      redirect("/auth/login")
-    }
 
     return (
       <Document locale={locale}>
-        <Providers locale={locale} messages={messages} sessionToken={sessionToken.value}>
+        <Providers locale={locale} messages={messages}>
           <DotPattern />
           <Toaster />
           {children}

@@ -6,7 +6,7 @@ import { Database } from "@blikka/db"
 export const marathonRouter = createTRPCRouter({
   getUserMarathons: authProcedure.query(
     trpcEffect(
-      Effect.fn("@blikka/api/marathonRouter/getAllMarathons")(function* ({ ctx }) {
+      Effect.fn("MarathonRouter.getUserMarathons")(function* ({ ctx }) {
         const db = yield* Database
         return yield* db.usersQueries.getMarathonsByUserId({ userId: ctx.session.user.id })
       })

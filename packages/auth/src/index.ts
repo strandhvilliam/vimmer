@@ -47,6 +47,12 @@ export class BetterAuthService extends Effect.Service<BetterAuthService>()(
             sameSite: "lax",
           },
         },
+        session: {
+          cookieCache: {
+            enabled: true,
+            maxAge: 60 * 60 * 2,
+          },
+        },
         plugins: [
           emailOTP({
             expiresIn: 60 * 60 * 2,

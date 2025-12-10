@@ -1,6 +1,7 @@
 import { Layer, ManagedRuntime, ConfigError } from "effect"
 import { DrizzleClient, Database } from "@blikka/db"
 import { EmailService } from "@blikka/email"
+import { RedisClient } from "@blikka/redis"
 import { AuthLayer } from "./auth/server"
 import { NodeContext } from "@effect/platform-node"
 
@@ -8,6 +9,7 @@ const MainLayer = Layer.mergeAll(
   DrizzleClient.Default,
   Database.Default,
   EmailService.Default,
+  RedisClient.Default,
   AuthLayer
 ).pipe(
   Layer.provide(NodeContext.layer),

@@ -5,15 +5,17 @@ import {
   type ContextWithoutRuntime,
   type AuthenticatedContextWithoutRuntime,
 } from "./root"
-import { type MainServices } from "./root"
+import { type RequiredServices } from "./root"
 import { TRPCError } from "@trpc/server"
 import { BetterAuthService } from "@blikka/auth"
+import { Database } from "@blikka/db"
+import { RedisClient } from "@blikka/redis"
 
 export function trpcEffect<
   TInput,
   A,
   E = never,
-  R extends MainServices = MainServices,
+  R extends RequiredServices = RequiredServices,
   TCtx extends Context | AuthenticatedContext = Context,
 >(
   effectFn: (params: {
@@ -64,4 +66,20 @@ export const getSession = Effect.fnUntraced(function* ({ headers }: { headers: H
         cause: error,
       }),
   })
+})
+
+export const getPermissions = Effect.fnUntraced(function* ({ userId }: { userId?: string }) {
+  console.log("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+  console.log("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+  console.log("RUNNING GET PERMISSIONS EFFECT")
+  console.log("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+  console.log("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+
+  const redis = yield* RedisClient
+
+  if (!userId) {
+    return yield* Effect.succeed([])
+  }
+  const db = yield* Database
+  return yield* db.permissionsQueries.getPermissionsByUserId({ userId })
 })
