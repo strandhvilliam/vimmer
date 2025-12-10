@@ -1,4 +1,5 @@
-import { createTRPCRouter, publicProcedure, trpcEffect } from "../root"
+import { createTRPCRouter, publicProcedure } from "../root"
+import { trpcEffect } from "../utils"
 import { Schema, Effect } from "effect"
 import { Database } from "@blikka/db"
 

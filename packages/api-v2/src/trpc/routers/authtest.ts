@@ -1,5 +1,6 @@
 import { Effect, Schema } from "effect"
-import { createTRPCRouter, authProcedure, trpcEffect } from "../root"
+import { createTRPCRouter, authProcedure } from "../root"
+import { trpcEffect } from "../utils"
 
 export const authTestRouter = createTRPCRouter({
   getSomething: authProcedure
@@ -13,7 +14,6 @@ export const authTestRouter = createTRPCRouter({
     .query(
       trpcEffect(({ input }) =>
         Effect.gen(function* () {
-          // wait 2 sec
           yield* Effect.sleep(2000)
           return yield* Effect.succeed({ message: `Something, ${input.name}!` })
         })
