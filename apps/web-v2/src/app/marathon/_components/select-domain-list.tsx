@@ -1,12 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { Card, CardDescription, CardTitle } from "@/components/ui/card"
+import { Card, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty"
 import { Trophy, ArrowRight, MapPin } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { useTRPC } from "@/lib/trpc/react"
+import { useTRPC } from "@/lib/trpc/client"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { formatSubdomainUrl } from "@/lib/utils"
 

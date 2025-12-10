@@ -1,6 +1,6 @@
 "use client"
 
-import { TRPCReactProvider } from "@/lib/trpc/react"
+import { TRPCReactProvider } from "@/lib/trpc/client"
 import { NextIntlClientProvider } from "next-intl"
 
 export function Providers({

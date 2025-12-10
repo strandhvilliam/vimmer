@@ -1,5 +1,5 @@
 import { Effect, Schema } from "effect"
-import { authProcedure, createTRPCRouter, publicProcedure, trpcEffect } from "../trpc"
+import { authProcedure, createTRPCRouter, publicProcedure, trpcEffect } from "../root"
 import { Database } from "@blikka/db"
 
 export const marathonRouter = createTRPCRouter({

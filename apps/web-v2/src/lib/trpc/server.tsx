@@ -3,140 +3,55 @@ import "server-only"
 import type { TRPCQueryOptions } from "@trpc/tanstack-react-query"
 import { cache } from "react"
 import { headers } from "next/headers"
-import { dehydrate, FetchQueryOptions, HydrationBoundary } from "@tanstack/react-query"
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query"
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query"
 import { createTRPCProxyClient, httpBatchLink } from "@trpc/client"
 import { Effect } from "effect"
 
-import type { AppRouter } from "@blikka/api-v2/trpc/routers/_app"
+import { appRouter, type AppRouter } from "@blikka/api-v2/trpc/routers/_app"
 import { createQueryClient } from "./query-client"
 import { TRPCServerError } from "./effect-client"
-
-// =============================================================================
-// Configuration
-// =============================================================================
-
-/**
- * TRPC API URL - matches the URL used in the client.
- * This should be the external TRPC server URL.
- */
-const TRPC_API_URL =
-  process.env.NEXT_PUBLIC_TRPC_API_URL ||
-  "https://ahjtvn7n4ujnjwzptczktatuh40aefbq.lambda-url.eu-north-1.on.aws/"
-
-// =============================================================================
-// Query Client
-// =============================================================================
+import { createTRPCContext } from "@blikka/api-v2/trpc"
+import { serverRuntime } from "../runtime"
 
 export const getQueryClient = cache(createQueryClient)
 
-// =============================================================================
-// Server TRPC Client (HTTP-based, for external TRPC server)
-// =============================================================================
+const createContext = cache(async () => {
+  const heads = new Headers(await headers())
+  heads.set("x-trpc-source", "blikka-web-rsc")
 
-/**
- * Creates a server-side TRPC proxy client.
- * This uses HTTP to call the external TRPC server (not direct router calls).
- */
-const createServerTRPCClient = cache(() => {
-  return createTRPCProxyClient<AppRouter>({
-    links: [
-      httpBatchLink({
-        url: TRPC_API_URL + "trpc",
-        async headers() {
-          const hdrs = await headers()
-          return hdrs
-        },
-      }),
-    ],
+  return createTRPCContext({
+    headers: heads,
+    runtime: serverRuntime,
   })
 })
 
-// =============================================================================
-// TRPC Options Proxy (for prefetching with TanStack Query)
-// =============================================================================
+// const createServerTRPCClient = cache(() => {
+//   return createTRPCProxyClient<AppRouter>({
+//     links: [
+//       httpBatchLink({
+//         url: TRPC_API_URL + "trpc",
+//         async headers() {
+//           const hdrs = await headers()
+//           return hdrs
+//         },
+//       }),
+//     ],
+//   })
+// })
 
-/**
- * TRPC options proxy for server-side prefetching.
- * Use this to generate query options for prefetching.
- *
- * @example
- * ```tsx
- * // In a server component
- * prefetch(trpc.participants.getById.queryOptions({ id: 123 }))
- *
- * return (
- *   <HydrateClient>
- *     <ClientComponent />
- *   </HydrateClient>
- * )
- * ```
- */
 export const trpc = createTRPCOptionsProxy<AppRouter>({
   queryClient: getQueryClient,
-  client: createServerTRPCClient(),
+  router: appRouter,
+  ctx: createContext,
+  // client: createServerTRPCClient(),
 })
 
-// =============================================================================
-// Server API Client (for direct server-side calls)
-// =============================================================================
-
-/**
- * Get the server-side TRPC client for direct queries.
- * Use this when you need to call TRPC procedures directly in server components
- * without going through the prefetch/hydration pattern.
- *
- * @example
- * ```tsx
- * // In a server component
- * const api = getServerApi()
- * const data = await api.participants.getById.query({ id: 123 })
- * ```
- */
-export const getServerApi = createServerTRPCClient
-
-export type ServerApi = ReturnType<typeof getServerApi>
-
-// =============================================================================
-// Hydration Components
-// =============================================================================
-
-/**
- * Wraps children with HydrationBoundary to transfer prefetched data to client.
- * Use this in server components to hydrate prefetched queries.
- *
- * @example
- * ```tsx
- * export default async function Page() {
- *   prefetch(trpc.participants.getAll.queryOptions())
- *
- *   return (
- *     <HydrateClient>
- *       <ClientComponent />
- *     </HydrateClient>
- *   )
- * }
- * ```
- */
 export function HydrateClient(props: { children: React.ReactNode }) {
   const queryClient = getQueryClient()
   return <HydrationBoundary state={dehydrate(queryClient)}>{props.children}</HydrationBoundary>
 }
 
-// =============================================================================
-// Prefetch Helpers
-// =============================================================================
-
-/**
- * Prefetch a single TRPC query.
- * The prefetched data will be available to client components via HydrateClient.
- *
- * @example
- * ```tsx
- * // In a server component
- * prefetch(trpc.participants.getById.queryOptions({ id: 123 }))
- * ```
- */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(queryOptions: T) {
   const queryClient = getQueryClient()
@@ -148,19 +63,6 @@ export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(queryOptio
   }
 }
 
-/**
- * Prefetch multiple TRPC queries in a single batch.
- * More efficient than calling prefetch multiple times.
- *
- * @example
- * ```tsx
- * // In a server component
- * batchPrefetch([
- *   trpc.participants.getById.queryOptions({ id: 123 }),
- *   trpc.marathons.getByDomain.queryOptions({ domain: "test" }),
- * ])
- * ```
- */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function batchPrefetch<T extends ReturnType<TRPCQueryOptions<any>>>(queryOptionsArray: T[]) {
   const queryClient = getQueryClient()
@@ -188,9 +90,4 @@ export function fetchEffectQuery<T extends ReturnType<TRPCQueryOptions<any>>>(qu
   })
 }
 
-// =============================================================================
-// Re-exports for convenience
-// =============================================================================
-
-// Re-export the Effect-based TRPC client utilities
 export { TRPCClient, TRPCServerError as TRPCClientError } from "./effect-client"

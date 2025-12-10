@@ -4,7 +4,6 @@ import { Effect, Option } from "effect"
 import { redirect } from "next/navigation"
 import Document from "@/components/document"
 import { getHeaders, getLocale } from "@/lib/server-utils"
-import { TRPCReactProvider } from "@/lib/trpc/react"
 import { Providers } from "./providers"
 
 import { getI18nMessages } from "@/i18n/utils"

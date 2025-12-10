@@ -1,5 +1,5 @@
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server"
-import { createTRPCRouter } from "../trpc"
+import { createTRPCRouter } from "../root"
 import { participantRouter } from "./participants"
 import { authTestRouter } from "./authtest"
 import { marathonRouter } from "./marathons"

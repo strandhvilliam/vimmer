@@ -2,7 +2,7 @@ import "server-only"
 
 import { Context, Effect, Layer, Data, Config } from "effect"
 import { createTRPCProxyClient, httpBatchLink } from "@trpc/client"
-import type { AppRouter } from "@blikka/api-v2/trpc/routers/_app"
+import type { AppRouter } from "../../../../../packages/api-v2/src/trpc/routers/_app"
 import { headers } from "next/headers"
 import { getAppSession } from "../auth/server"
 

@@ -9,7 +9,6 @@ import { createTRPCContext } from "@trpc/tanstack-react-query"
 import type { AppRouter } from "@blikka/api-v2/trpc/routers/_app"
 
 import { createQueryClient } from "./query-client"
-import { authClient } from "../auth/client"
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined
 const getQueryClient = () => {
@@ -36,18 +35,10 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
             (op.direction === "down" && op.result instanceof Error),
         }),
         httpBatchStreamLink({
-          url: getBaseUrl() + "trpc",
+          url: getBaseUrl() + "/api/trpc",
           async headers() {
             const headers = new Headers()
-            headers.set("x-trpc-source", "blikka-web")
-            const { data, error } = await authClient.token()
-            if (error) {
-              console.error(error)
-              return headers
-            }
-            if (data?.token) {
-              headers.set("Authorization", `Bearer ${data.token}`)
-            }
+            headers.set("x-trpc-source", "blikka-web-client")
             return headers
           },
         }),
@@ -65,8 +56,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
 }
 
 const getBaseUrl = () => {
-  return (
-    process.env.NEXT_PUBLIC_TRPC_API_URL ||
-    "https://ahjtvn7n4ujnjwzptczktatuh40aefbq.lambda-url.eu-north-1.on.aws/"
-  )
+  if (typeof window !== "undefined") return window.location.origin
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
+  return `http://localhost:${process.env.PORT ?? 3000}`
 }
