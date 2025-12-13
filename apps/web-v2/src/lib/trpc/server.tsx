@@ -22,7 +22,6 @@ export const getQueryClient = cache(createQueryClient)
 
 const createContext = cache(async () => {
   const heads = new Headers(await headers())
-  heads.set("x-trpc-source", "blikka-web-rsc")
 
   return createTRPCContext({
     headers: heads,

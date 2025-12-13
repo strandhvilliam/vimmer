@@ -2,6 +2,7 @@
 
 import { TRPCReactProvider } from "@/lib/trpc/client"
 import { NextIntlClientProvider } from "next-intl"
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 
 export function Providers({
   children,
@@ -14,7 +15,11 @@ export function Providers({
 }) {
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <TRPCReactProvider>{children}</TRPCReactProvider>
+      <TRPCReactProvider>
+        <ReactQueryDevtools initialIsOpen={false} />
+
+        {children}
+      </TRPCReactProvider>
     </NextIntlClientProvider>
   )
 }

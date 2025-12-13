@@ -1,4 +1,4 @@
-import { Cause, Effect } from "effect"
+import { Cause, Effect, Option } from "effect"
 import {
   type Context,
   type AuthenticatedContext,
@@ -68,18 +68,55 @@ export const getSession = Effect.fnUntraced(function* ({ headers }: { headers: H
   })
 })
 
+type Permission = {
+  userId: string
+  relationId: number
+  marathonId: number
+  domain: string
+  role: string
+}
+
 export const getPermissions = Effect.fnUntraced(function* ({ userId }: { userId?: string }) {
-  console.log("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-  console.log("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-  console.log("RUNNING GET PERMISSIONS EFFECT")
-  console.log("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-  console.log("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-
   const redis = yield* RedisClient
-
   if (!userId) {
-    return yield* Effect.succeed([])
+    return []
+  }
+  const result = yield* redis
+    .use((client) => client.get<Permission[] | null>(`permissions:${userId}`))
+    .pipe(
+      Effect.tapError((error) =>
+        Effect.logError("Error getting cached permissions: " + error.message)
+      ),
+      Effect.orElseSucceed(() => null)
+    )
+
+  if (result !== null) {
+    return result
   }
   const db = yield* Database
-  return yield* db.permissionsQueries.getPermissionsByUserId({ userId })
+  const userWithMarathons = yield* db.usersQueries.getUserWithMarathons({ userId }).pipe(
+    Effect.tapError((error) =>
+      Effect.logError("Error getting user with marathons: " + error.message)
+    ),
+    Effect.catchAll(() => Effect.succeed(Option.none()))
+  )
+  if (Option.isNone(userWithMarathons)) {
+    return []
+  }
+  const user = userWithMarathons.value.userMarathons
+
+  const permissions: Permission[] = user.map((userMarathon) => ({
+    userId: userMarathon.userId,
+    relationId: userMarathon.id,
+    marathonId: userMarathon.marathonId,
+    domain: userMarathon.marathon.domain,
+    role: userMarathon.role,
+  }))
+
+  yield* redis
+    .use((client) => client.set(`permissions:${userId}`, permissions, { ex: 60 * 5 }))
+    .pipe(
+      Effect.catchAll((error) => Effect.logError("Error caching permissions: " + error.message))
+    )
+  return permissions
 })

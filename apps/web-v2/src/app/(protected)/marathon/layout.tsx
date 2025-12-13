@@ -29,6 +29,7 @@ const _MarathonLayout = Effect.fn("@blikka/web/MarathonLayout")(
         <Providers locale={locale} messages={messages}>
           <DotPattern />
           <Toaster />
+
           {children}
         </Providers>
       </Document>

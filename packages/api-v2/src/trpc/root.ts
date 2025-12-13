@@ -43,6 +43,7 @@ export const createTRPCContext = async <T extends ManagedRuntime.ManagedRuntime<
 ) => {
   const session = await opts.runtime.runPromise(getSession({ headers: opts.headers }))
   const permissions = await opts.runtime.runPromise(getPermissions({ userId: session?.user.id }))
+
   return { runtime: opts.runtime, session, permissions }
 }
 
