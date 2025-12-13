@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 const _DomainLayout = Effect.fn("@blikka/web/DomainLayout")(function* ({
   children,
-}: LayoutProps<"/marathon/[domain]">) {
+}: LayoutProps<"/admin/[domain]">) {
   const session = yield* getAppSession()
 
   return <pre>{JSON.stringify(session, null, 2)}</pre>

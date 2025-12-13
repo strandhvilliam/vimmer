@@ -6,7 +6,7 @@ import { Page } from "@/lib/next-utils"
 import { getTranslations } from "@/lib/server-utils"
 
 const _SubdomainPage = Effect.fn("@blikka/web/SubdomainPage")(
-  function* ({ params }: PageProps<"/m/admin/[domain]">) {
+  function* ({ params }: PageProps<"/admin/[domain]">) {
     const { domain } = yield* decodeParams(Schema.Struct({ domain: Schema.String }))(params)
     const t = yield* getTranslations("DomainPage")
 
