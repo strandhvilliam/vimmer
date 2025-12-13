@@ -18,11 +18,7 @@ const _LocaleLayout = Effect.fn("@blikka/web/LocaleLayout")(
     const { locale } = yield* decodeParams(Schema.Struct({ locale: Schema.String }))(params)
     return (
       <Document locale={locale}>
-        <NextIntlClientProvider>
-          <div className="m-auto max-w-240 p-4">
-            <div className="-mx-4 min-h-[200px] bg-slate-100 p-4">{children}</div>
-          </div>
-        </NextIntlClientProvider>
+        <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </Document>
     )
   },

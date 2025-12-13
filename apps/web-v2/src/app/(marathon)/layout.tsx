@@ -11,25 +11,16 @@ import { Toaster } from "sonner"
 import { DotPattern } from "@/components/dot-pattern"
 
 const _MarathonLayout = Effect.fn("@blikka/web/MarathonLayout")(
-  function* ({ children }: LayoutProps<"/marathon">) {
-    const [locale, session, headersStore, messages] = yield* Effect.all([
-      getLocale(),
-      getAppSession(),
-      getHeaders(),
-      getI18nMessages(),
-    ])
+  function* ({ children }: LayoutProps<"/">) {
+    const [locale, messages] = yield* Effect.all([getLocale(), getI18nMessages()])
 
-    if (Option.isNone(session)) {
-      console.log("redirecting to login")
-      redirect("/auth/login")
-    }
+    console.log("MarathonLayout")
 
     return (
       <Document locale={locale}>
         <Providers locale={locale} messages={messages}>
           <DotPattern />
           <Toaster />
-
           {children}
         </Providers>
       </Document>

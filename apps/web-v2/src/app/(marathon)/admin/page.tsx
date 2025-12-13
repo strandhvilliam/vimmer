@@ -7,7 +7,7 @@ import { SelectDomainList } from "./_components/select-domain-list"
 import { LanguageSwitcher } from "./_components/language-switcher"
 import { HydrateClient, prefetch, trpc } from "@/lib/trpc/server"
 
-const _MarathonPage = Effect.fn("@blikka/web/MarathonPage")(function* () {
+const _AdminPage = Effect.fn("@blikka/web/AdminPage")(function* () {
   prefetch(trpc.marathons.getUserMarathons.queryOptions())
 
   return (
@@ -27,4 +27,4 @@ const _MarathonPage = Effect.fn("@blikka/web/MarathonPage")(function* () {
   )
 })
 
-export default Page(_MarathonPage)
+export default Page(_AdminPage)

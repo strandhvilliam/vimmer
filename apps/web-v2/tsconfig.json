@@ -25,7 +25,8 @@
       "@blikka/auth": ["../../packages/auth/src"],
       "@blikka/db": ["../../packages/db/src"],
       "@blikka/email": ["../../packages/email/src"],
-      "@vimmer/validation": ["../../packages/validation/src"]
+      "@vimmer/validation": ["../../packages/validation/src"],
+      "@blikka/pubsub": ["../../packages/pubsub/src"]
     }
   },
   "include": [

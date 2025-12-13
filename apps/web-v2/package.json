@@ -12,6 +12,7 @@
     "@blikka/api-v2": "workspace:*",
     "@blikka/auth": "workspace:*",
     "@blikka/db": "workspace:*",
+    "@blikka/pubsub": "workspace:*",
     "@blikka/email": "workspace:*",
     "@effect/platform-node": "^0.103.0",
     "@hookform/resolvers": "^5.2.2",

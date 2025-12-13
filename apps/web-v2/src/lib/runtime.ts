@@ -4,13 +4,15 @@ import { EmailService } from "@blikka/email"
 import { RedisClient } from "@blikka/redis"
 import { AuthLayer } from "./auth/server"
 import { NodeContext } from "@effect/platform-node"
+import { PubSubService } from "@blikka/pubsub"
 
 const MainLayer = Layer.mergeAll(
   DrizzleClient.Default,
   Database.Default,
   EmailService.Default,
   RedisClient.Default,
-  AuthLayer
+  AuthLayer,
+  PubSubService.Default
 ).pipe(
   Layer.provide(NodeContext.layer),
   Layer.catchAll((error) => {
